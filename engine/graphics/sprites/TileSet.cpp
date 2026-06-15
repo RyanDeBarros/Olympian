@@ -5,8 +5,6 @@
 
 #include "definitions/Keys.h"
 
-// TODO v9 after editor implementation for tileset/tilemap asset editor, define LUTs to simplify get_assignment()/get_configuration()
-
 namespace oly::rendering
 {
 	TileSet::TileSet(const std::vector<Assignment>& assignments)
@@ -23,733 +21,65 @@ namespace oly::rendering
 			if (texture_it == tiles.end())
 				tiles.push_back(a.desc);
 			tile.transformation |= a.transformation;
-			assignment[a.config] = tile;
+			this->assignments[a.config] = tile;
 		}
 	}
 
-	bool TileSet::valid_configuration(detail::TileConfiguration configuration) const
+	TileSet::TileDesc TileSet::get_tile_desc(const detail::TileConfigGrid tile, detail::TileTransformation& transformation) const
 	{
-		auto it = assignment.find(configuration);
-		if (it == assignment.end())
-			return false;
+		std::unordered_set<detail::TileConfig> fallbacks_seen{};
+		if (auto t = get_assignment(detail::tile_config_from_grid(tile), transformation, fallbacks_seen))
+		{
+			transformation |= t->transformation;
+			return tiles[t->tex_index];
+		}
 		else
-			return it->second.tex_index < tiles.size();
-	}
+		{
+			std::stringstream ss;
+			ss << "[" << tile[0][0] << ", " << tile[0][1] << ", " << tile[0][2] << "]";
+			ss << "[" << tile[1][0] << ", ---, " << tile[1][2] << "]";
+			ss << "[" << tile[2][0] << ", " << tile[2][1] << ", " << tile[2][2] << "]";
 
-	bool TileSet::valid_6() const
-	{
-		return valid_configuration(detail::TileConfiguration::Single) && valid_configuration(detail::TileConfiguration::End1)		 && valid_configuration(detail::TileConfiguration::CornerPrime1)
-			&& valid_configuration(detail::TileConfiguration::ILine1) && valid_configuration(detail::TileConfiguration::TBonePrime1) && valid_configuration(detail::TileConfiguration::MiddlePrime);
-	}
-
-	bool TileSet::valid_4x4() const
-	{
-		return valid_configuration(detail::TileConfiguration::Single)		&& valid_configuration(detail::TileConfiguration::End1)			&& valid_configuration(detail::TileConfiguration::End2)
-			&& valid_configuration(detail::TileConfiguration::End3)			&& valid_configuration(detail::TileConfiguration::End4)			&& valid_configuration(detail::TileConfiguration::CornerPrime1)
-			&& valid_configuration(detail::TileConfiguration::CornerPrime2)	&& valid_configuration(detail::TileConfiguration::CornerPrime3)	&& valid_configuration(detail::TileConfiguration::CornerPrime4)
-			&& valid_configuration(detail::TileConfiguration::ILine1)		&& valid_configuration(detail::TileConfiguration::ILine2)		&& valid_configuration(detail::TileConfiguration::TBonePrime1)
-			&& valid_configuration(detail::TileConfiguration::TBonePrime2)	&& valid_configuration(detail::TileConfiguration::TBonePrime3)	&& valid_configuration(detail::TileConfiguration::TBonePrime4)
-			&& valid_configuration(detail::TileConfiguration::MiddlePrime);
-	}
-
-	bool TileSet::valid_4x4_2x2() const
-	{
-		return valid_4x4() && valid_configuration(detail::TileConfiguration::Corner1) && valid_configuration(detail::TileConfiguration::Corner2)
-							&& valid_configuration(detail::TileConfiguration::Corner3) && valid_configuration(detail::TileConfiguration::Corner4);
-	}
-
-	TileSet::TileDesc TileSet::get_tile_desc(PaintedTile tile, detail::TileTransformation& transformation) const
-	{
-		Tile t = get_assignment(get_configuration(tile), transformation);
-		transformation |= t.transformation;
-		return tiles[t.tex_index];
-	}
-
-	TileSet::Tile TileSet::get_assignment(detail::TileConfiguration config, detail::TileTransformation& transformation) const
-	{
-		auto it = assignment.find(config);
-		if (it != assignment.end())
-			return it->second;
-		if (!valid_6())
+			// TODO v9 logger api is too restrictive - allow for passing to LOG directly. Just revamp the whole system
+			_OLY_ENGINE_LOG_ERROR("Tileset") << "Tileset cannot resolve tile configuration [" << ss.str() << "]" << LOG.endl;
 			throw Error(ErrorCode::IncompleteTileset);
-		switch (config)
-		{
-			case detail::TileConfiguration::End2:
-				transformation |= detail::TileTransformation::Rotate90;
-				return assignment.find(detail::TileConfiguration::End1)->second;
-			case detail::TileConfiguration::End3:
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::End1)->second;
-			case detail::TileConfiguration::End4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::End2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				else
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return assignment.find(detail::TileConfiguration::End1)->second;
-				}
-			}
-			case detail::TileConfiguration::Corner1:
-				return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-			case detail::TileConfiguration::Corner2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Corner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::CornerPrime2);
-				if (it != assignment.end())
-					return it->second;
-				else
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-				}
-			}
-			case detail::TileConfiguration::Corner3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Corner2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Corner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate180;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::CornerPrime3);
-				if (it != assignment.end())
-					return it->second;
-				it = assignment.find(detail::TileConfiguration::CornerPrime2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				transformation |= detail::TileTransformation::Rotate180;
-				return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-			}
-			case detail::TileConfiguration::Corner4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Corner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::CornerPrime4);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::ReflectY;
-				return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-			}
-			case detail::TileConfiguration::ILine2:
-				transformation |= detail::TileTransformation::Rotate180;
-				return assignment.find(detail::TileConfiguration::ILine1)->second;
-			case detail::TileConfiguration::TBone1:
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			case detail::TileConfiguration::TBone2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate90;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime2);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate90;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBone3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime3);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBone4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime4);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate270;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::Middle:
-				return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			case detail::TileConfiguration::CornerPrime2:
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-			case detail::TileConfiguration::CornerPrime3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::CornerPrime2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				else
-				{
-					transformation |= detail::TileTransformation::Rotate180;
-					return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-				}
-			}
-			case detail::TileConfiguration::CornerPrime4:
-				transformation |= detail::TileTransformation::ReflectY;
-				return assignment.find(detail::TileConfiguration::CornerPrime1)->second;
-			case detail::TileConfiguration::TBonePlus1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBoneMinus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBonePlus2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBonePlus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate90;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBoneMinus2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime2);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate90;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBonePlus3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBonePlus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBoneMinus3);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime3);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBonePlus4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBonePlus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBoneMinus4);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime4);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate270;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBoneMinus1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBonePlus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBoneMinus2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBoneMinus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate90;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePlus2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime2);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate90;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBoneMinus3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBoneMinus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePlus3);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime3);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBoneMinus4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBoneMinus1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePlus4);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::TBonePrime4);
-				if (it != assignment.end())
-					return it->second;
-				transformation |= detail::TileTransformation::Rotate270;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			}
-			case detail::TileConfiguration::TBonePrime2:
-				transformation |= detail::TileTransformation::Rotate90;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			case detail::TileConfiguration::TBonePrime3:
-				transformation |= detail::TileTransformation::ReflectX;
-				return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-			case detail::TileConfiguration::TBonePrime4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::TBonePrime2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				else
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return assignment.find(detail::TileConfiguration::TBonePrime1)->second;
-				}
-			}
-			case detail::TileConfiguration::MiddleCorner1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleCorner2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleCorner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleCorner3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleCorner2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::MiddleCorner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate180;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleCorner4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleCorner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleTBone1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleTBone2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleTBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate90;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleTBone3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleTBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleTBone4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleTBone2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::MiddleTBone1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate270;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleAcross1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleAcross2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleAcross1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleDiagonal1:
-			{
-				auto it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleDiagonal2:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleDiagonal1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectX;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleDiagonal3:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleCorner2);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::MiddleDiagonal1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::Rotate180;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
-			case detail::TileConfiguration::MiddleDiagonal4:
-			{
-				auto it = assignment.find(detail::TileConfiguration::MiddleCorner1);
-				if (it != assignment.end())
-				{
-					transformation |= detail::TileTransformation::ReflectY;
-					return it->second;
-				}
-				it = assignment.find(detail::TileConfiguration::Middle);
-				if (it != assignment.end())
-					return it->second;
-				else
-					return assignment.find(detail::TileConfiguration::MiddlePrime)->second;
-			}
 		}
-		throw Error(ErrorCode::IncompleteTileset);
 	}
 
-	detail::TileConfiguration TileSet::get_configuration(PaintedTile tile)
+	std::optional<TileSet::Tile> TileSet::get_assignment(detail::TileConfig config, detail::TileTransformation& transformation, std::unordered_set<detail::TileConfig>& fallbacks_seen) const
 	{
-		if (tile.orthogonal[0])
+		auto it = assignments.find(config);
+		if (it != assignments.end())
+			return it->second;
+
+		std::vector<std::pair<detail::TileConfig, detail::TileTransformation>> fallback_queue;
+		int fallback_idx = 0;
+		detail::TileConfig test_config = config;
+		detail::TileTransformation test_transformation = transformation;
+		while (detail::tile_config_fallback(test_config, test_transformation, fallback_idx))
 		{
-			if (tile.orthogonal[1])
+			auto it = assignments.find(test_config);
+			if (it != assignments.end())
+				return it->second;
+
+			if (!fallbacks_seen.contains(test_config))
 			{
-				if (tile.orthogonal[2])
-				{
-					if (tile.orthogonal[3])
-					{
-						if (tile.diagonal[0])
-						{
-							if (tile.diagonal[1])
-							{
-								if (tile.diagonal[2])
-								{
-									if (tile.diagonal[3])
-										return detail::TileConfiguration::MiddlePrime;
-									else
-										return detail::TileConfiguration::MiddleDiagonal4;
-								}
-								else if (tile.diagonal[3])
-									return detail::TileConfiguration::MiddleDiagonal3;
-								else
-									return detail::TileConfiguration::MiddleTBone2;
-							}
-							else if (tile.diagonal[2])
-							{
-								if (tile.diagonal[3])
-									return detail::TileConfiguration::MiddleDiagonal2;
-								else
-									return detail::TileConfiguration::MiddleAcross1;
-							}
-							else if (tile.diagonal[3])
-								return detail::TileConfiguration::MiddleTBone1;
-							else
-								return detail::TileConfiguration::MiddleCorner1;
-						}
-						else if (tile.diagonal[1])
-						{
-							if (tile.diagonal[2])
-							{
-								if (tile.diagonal[3])
-									return detail::TileConfiguration::MiddleDiagonal1;
-								else
-									return detail::TileConfiguration::MiddleTBone3;
-							}
-							else if (tile.diagonal[3])
-								return detail::TileConfiguration::MiddleAcross2;
-							else
-								return detail::TileConfiguration::MiddleCorner2;
-						}
-						else if (tile.diagonal[2])
-						{
-							if (tile.diagonal[3])
-								return detail::TileConfiguration::MiddleTBone4;
-							else
-								return detail::TileConfiguration::MiddleCorner3;
-						}
-						else if (tile.diagonal[3])
-							return detail::TileConfiguration::MiddleCorner4;
-						else
-							return detail::TileConfiguration::Middle;
-					}
-					else
-					{
-						if (tile.diagonal[0])
-						{
-							if (tile.diagonal[1])
-								return detail::TileConfiguration::TBonePrime2;
-							else
-								return detail::TileConfiguration::TBoneMinus2;
-						}
-						else if (tile.diagonal[1])
-							return detail::TileConfiguration::TBonePlus2;
-						else
-							return detail::TileConfiguration::TBone2;
-					}
-				}
-				else if (tile.orthogonal[3])
-				{
-					if (tile.diagonal[0])
-					{
-						if (tile.diagonal[3])
-							return detail::TileConfiguration::TBonePrime1;
-						else
-							return detail::TileConfiguration::TBonePlus1;
-					}
-					else if (tile.diagonal[3])
-						return detail::TileConfiguration::TBoneMinus1;
-					else
-						return detail::TileConfiguration::TBone1;
-				}
-				else if (tile.diagonal[0])
-					return detail::TileConfiguration::CornerPrime1;
-				else
-					return detail::TileConfiguration::Corner1;
+				fallbacks_seen.insert(test_config);
+				fallback_queue.push_back(std::make_pair(test_config, test_transformation));
+				test_config = config;
+				test_transformation = transformation;
 			}
-			else if (tile.orthogonal[2])
-			{
-				if (tile.orthogonal[3])
-				{
-					if (tile.diagonal[2])
-					{
-						if (tile.diagonal[3])
-							return detail::TileConfiguration::TBonePrime4;
-						else
-							return detail::TileConfiguration::TBoneMinus4;
-					}
-					else if (tile.diagonal[3])
-						return detail::TileConfiguration::TBonePlus4;
-					else
-						return detail::TileConfiguration::TBone4;
-				}
-				else
-					return detail::TileConfiguration::ILine1;
-			}
-			else if (tile.orthogonal[3])
-			{
-				if (tile.diagonal[3])
-					return detail::TileConfiguration::CornerPrime4;
-				else
-					return detail::TileConfiguration::Corner4;
-			}
-			else
-				return detail::TileConfiguration::End1;
+
+			++fallback_idx;
 		}
-		else if (tile.orthogonal[1])
+
+		for (auto [c, t] : fallback_queue)
 		{
-			if (tile.orthogonal[2])
-			{
-				if (tile.orthogonal[3])
-				{
-					if (tile.diagonal[1])
-					{
-						if (tile.diagonal[2])
-							return detail::TileConfiguration::TBonePrime3;
-						else
-							return detail::TileConfiguration::TBoneMinus3;
-					}
-					else if (tile.diagonal[2])
-						return detail::TileConfiguration::TBonePlus3;
-					else
-						return detail::TileConfiguration::TBone3;
-				}
-				else
-				{
-					if (tile.diagonal[1])
-						return detail::TileConfiguration::CornerPrime2;
-					else
-						return detail::TileConfiguration::Corner2;
-				}
-			}
-			else if (tile.orthogonal[3])
-				return detail::TileConfiguration::ILine2;
-			else
-				return detail::TileConfiguration::End2;
+			// TODO v8 transformations don't get transformed properly - rotations/reflections aren't combined because of bit flags
+			if (auto tile = get_assignment(c, t, fallbacks_seen))
+				return *tile;
 		}
-		else if (tile.orthogonal[2])
-		{
-			if (tile.orthogonal[3])
-			{
-				if (tile.diagonal[2])
-					return detail::TileConfiguration::CornerPrime3;
-				else
-					return detail::TileConfiguration::Corner3;
-			}
-			else
-				return detail::TileConfiguration::End3;
-		}
-		else if (tile.orthogonal[3])
-			return detail::TileConfiguration::End4;
-		else
-			return detail::TileConfiguration::Single;
+		return std::nullopt;
 	}
 
 	void TileSet::overload(TOMLNode node)
@@ -761,7 +91,7 @@ namespace oly::rendering
 
 		std::vector<rendering::TileSet::Assignment> assignments;
 		tiles.clear();
-		assignment.clear();
+		assignments.clear();
 
 		size_t _a_idx = 0;
 		toml_assignments->for_each([&assignments, &_a_idx](auto&& node) {
@@ -771,17 +101,9 @@ namespace oly::rendering
 				assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
 
 				const auto texture = parser.required<std::string>(detail::Key::TextureFile)();
-				const auto config = parser.required<detail::TileConfiguration>(detail::Key::Configuration)();
 
 				rendering::TileSet::Assignment assignment;
-
-				if (static_cast<int>(config) >= 0 && static_cast<int>(config) < static_cast<int>(detail::TileConfiguration::_c))
-					assignment.config = config;
-				else
-				{
-					_OLY_ENGINE_LOG_ERROR("CONTEXT") << "unrecognized configuration (" << static_cast<int>(config) << ") in tileset assignment #" << a_idx << LOG.nl;
-					throw Error(ErrorCode::LoadAsset);
-				}
+				assignment.config = parser.required<detail::TileConfig>(detail::Key::Configuration)();
 
 				assignment.desc.file = detail::ResourcePath(texture);
 				parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);

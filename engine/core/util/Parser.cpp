@@ -57,6 +57,18 @@ namespace oly::assets::internal
 	}
 
 	template<>
+	bool try_parse(TOMLNode node, unsigned char& v)
+	{
+		if (auto i = node.value<int64_t>())
+		{
+			v = (unsigned char)*i;
+			return true;
+		}
+		else
+			return false;
+	}
+
+	template<>
 	bool try_parse(TOMLNode node, float& v)
 	{
 		if (auto i = node.value<double>())

@@ -93,17 +93,12 @@ namespace oly::rendering
 			return;
 		Sprite& sprite = it->second;
 
-		TileSet::PaintedTile painted_tile;
-		painted_tile.orthogonal[0] = sprite_map.count(tile + glm::ivec2{  1,  0 });
-		painted_tile.orthogonal[1] = sprite_map.count(tile + glm::ivec2{  0,  1 });
-		painted_tile.orthogonal[2] = sprite_map.count(tile + glm::ivec2{ -1,  0 });
-		painted_tile.orthogonal[3] = sprite_map.count(tile + glm::ivec2{  0, -1 });
-		painted_tile.diagonal[0]   = sprite_map.count(tile + glm::ivec2{  1,  1 });
-		painted_tile.diagonal[1]   = sprite_map.count(tile + glm::ivec2{ -1,  1 });
-		painted_tile.diagonal[2]   = sprite_map.count(tile + glm::ivec2{ -1, -1 });
-		painted_tile.diagonal[3]   = sprite_map.count(tile + glm::ivec2{  1, -1 });
-			
-		detail::TileTransformation transformation;
+		detail::TileConfigGrid painted_tile{};
+		for (int y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
+			for (int x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
+				painted_tile[y][x] = sprite_map.count(tile + glm::ivec2{ 1 - y, x - 1 });
+
+		detail::TileTransformation transformation = detail::TileTransformation::None;
 		TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
 		sprite.set_texture(tile_desc.file, tile_desc.file_index);

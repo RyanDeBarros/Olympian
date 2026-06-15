@@ -114,7 +114,7 @@ namespace oly::editor
 		DRAW_FIELD(texture_index);
 		DRAW_FIELD(config); // TODO v8 should be derived from grid
 		DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
-		DRAW_FIELD(transformations); // TODO v8 should be bitflag checkbox
+		DRAW_FIELD(transformations); // TODO v8 should be two combos (reflect + rotate)
 	}
 
 	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)

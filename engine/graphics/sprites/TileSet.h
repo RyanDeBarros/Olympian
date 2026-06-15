@@ -12,14 +12,6 @@ namespace oly::rendering
 {
 	class TileSet
 	{
-	public:
-		struct PaintedTile
-		{
-			bool orthogonal[4] = { false, false, false, false }; // right, top, left, bottom
-			bool diagonal[4] = { false, false, false, false }; // top-right, top-left, bottom-left, bottom-right
-		};
-
-	private:
 		struct Tile
 		{
 			size_t tex_index;
@@ -39,30 +31,25 @@ namespace oly::rendering
 		struct Assignment
 		{
 			TileDesc desc;
-			detail::TileConfiguration config = detail::TileConfiguration::Single;
+			detail::TileConfig config = 0;
 			detail::TileTransformation transformation = detail::TileTransformation::None;
 		};
 
 	private:
 		std::vector<TileDesc> tiles;
-		std::unordered_map<detail::TileConfiguration, Tile> assignment;
+		std::unordered_map<detail::TileConfig, Tile> assignments;
 
 	public:
 		TileSet(const std::vector<Assignment>& assignments = {});
 
 	private:
 		void load_assignments(const std::vector<Assignment>& assignments);
-		bool valid_configuration(detail::TileConfiguration configuration) const;
 
 	public:
-		bool valid_6() const;
-		bool valid_4x4() const;
-		bool valid_4x4_2x2() const;
-		TileDesc get_tile_desc(PaintedTile tile, detail::TileTransformation& transformation) const;
+		TileDesc get_tile_desc(const detail::TileConfigGrid tile, detail::TileTransformation& transformation) const;
 
 	private:
-		Tile get_assignment(detail::TileConfiguration config, detail::TileTransformation& transformation) const;
-		static detail::TileConfiguration get_configuration(PaintedTile tile);
+		std::optional<Tile> get_assignment(detail::TileConfig config, detail::TileTransformation& transformation, std::unordered_set<detail::TileConfig>& fallbacks_seen) const;
 
 	public:
 		void overload(TOMLNode node);
