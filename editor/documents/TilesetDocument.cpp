@@ -11,6 +11,13 @@
 
 namespace oly::editor
 {
+	IndividualEditorState::IndividualEditorState()
+	{
+		for (size_t y = 0; y < 3; ++y)
+			for (size_t x = 0; x < 3; ++x)
+				grid[y][x] = false;
+	}
+
 	const char* TilesetDocument::GetVersion()
 	{
 		return "1.0";
@@ -24,6 +31,7 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
+		_individual_editor = {};
 		Load();
 	}
 
@@ -110,22 +118,73 @@ namespace oly::editor
 		if (ImGui::BeginTable("##Table", 2))
 		{
 			ImGui::TableNextColumn();
-			// TODO v8
+			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			{
+				const float avail = std::min(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+				const float cell_width = 0.2f * avail;
+				const ImVec2 cell_size(cell_width, cell_width);
+				const ImVec2 cursor = ImGui::GetCursorScreenPos();
+
+				for (detail::GridCoordinate y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
+				{
+					for (detail::GridCoordinate x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
+					{
+						gui::IDScope scope;
+						scope.Push(y);
+						scope.Push(x);
+						if (y == 1 && x == 1)
+						{
+							// TODO v8 draw preview if texture file is provided - else grey rect
+						}
+						else
+							DrawToggleCell(cursor + cell_size * ImVec2(x + 1, y + 1), cursor + cell_size * ImVec2(x + 2, y + 2), _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+					}
+				}
+			}
+			ImGui::EndChild();
 
 			ImGui::TableNextColumn();
-			// TODO v8
+			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+				Draw(_scratch.assignments.map[detail::tile_config_from_grid(_individual_editor.grid)]);
+			ImGui::EndChild();
 
 			ImGui::EndTable();
 		}
 	}
 
-	void TilesetDocument::Draw(Form& form, TilesetAssignmentDesc& desc)
+	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
 	{
-		DRAW_FIELD(texture); // TODO v8 support dropping paths externally or from tree view / content browser
-		DRAW_FIELD(texture_index);
-		//DRAW_FIELD(config); // TODO v8 should be derived from grid
-		DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
-		DRAW_FIELD(transformations); // TODO v8 should be two combos (reflect + rotate)
+		if (available)
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? IM_COL32(0, 127, 255, 255) : IM_COL32(64, 64, 64, 255));
+		else
+		{
+			on = false;
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(32, 32, 32, 255));
+		}
+
+		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32_BLACK, 0.f, 0, 2.f);
+
+		if (available)
+		{
+			ImGui::SetCursorScreenPos(rect_start);
+			if (ImGui::InvisibleButton("##Click", rect_end - rect_start))
+				on = !on;
+
+			if (ImGui::IsItemHovered())
+				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+		}
+	}
+
+	void TilesetDocument::Draw(TilesetAssignmentDesc& desc)
+	{
+		if (auto form = Form())
+		{
+			DRAW_FIELD(texture); // TODO v8 support dropping paths externally or from tree view / content browser
+			DRAW_FIELD(texture_index);
+			//DRAW_FIELD(config); // TODO v8 should be derived from grid
+			DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
+			DRAW_FIELD(transformations); // TODO v8 should be two combos (reflect + rotate)
+		}
 	}
 
 	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)

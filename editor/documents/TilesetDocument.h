@@ -13,6 +13,8 @@ namespace oly::editor
 	struct IndividualEditorState
 	{
 		detail::TileConfigGrid grid;
+
+		IndividualEditorState();
 	};
 
 	class TilesetDocument : public IDocument
@@ -35,7 +37,8 @@ namespace oly::editor
 	private:
 		void DrawGroupEditor();
 		void DrawIndividualEditor();
-		void Draw(Form& form, TilesetAssignmentDesc& desc);
+		void DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
+		void Draw(TilesetAssignmentDesc& desc);
 
 		void Load(TOMLNode node, TilesetDesc& desc);
 		void Load(TOMLNode node, TilesetAssignmentDesc& desc);

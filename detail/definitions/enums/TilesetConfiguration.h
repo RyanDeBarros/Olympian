@@ -38,6 +38,19 @@ namespace oly::detail
 		Right = 2
 	};
 
+	inline GridCoordinate operator++(GridCoordinate& c)
+	{
+		c = static_cast<GridCoordinate>(static_cast<std::underlying_type_t<GridCoordinate>>(c) + 1);
+		return c;
+	}
+
+	inline GridCoordinate operator++(GridCoordinate& c, int)
+	{
+		GridCoordinate old = c;
+		++c;
+		return old;
+	}
+
 	/*
 	 * grid[0][0] grid[0][1] grid[0][2]
 	 * grid[1][0]     --     grid[1][2]
@@ -48,6 +61,7 @@ namespace oly::detail
 	extern TileConfig rotate_tile_config(TileConfig config, int quarter_turns);
 	extern TileConfig reflect_x_tile_config(TileConfig config);
 	extern TileConfig reflect_y_tile_config(TileConfig config);
+	extern bool tile_config_is_available(GridCoordinate x, GridCoordinate y, const TileConfigGrid grid);
 
 	// TODO v8 separate into two separate enums - one for Reflect and one for Rotate, since you can't combine Reflect flags or Rotate flags
 	enum TileTransformation : char

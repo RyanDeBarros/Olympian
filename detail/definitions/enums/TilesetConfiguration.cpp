@@ -89,6 +89,20 @@ namespace oly::detail
 		return tile_config_from_grid(grid);
 	}
 
+	bool tile_config_is_available(GridCoordinate x, GridCoordinate y, const TileConfigGrid grid)
+	{
+		if (x == GridCoordinate::Left && y == GridCoordinate::Top)
+			return grid[GridCoordinate::Top][GridCoordinate::Middle] && grid[GridCoordinate::Middle][GridCoordinate::Left];
+		else if (x == GridCoordinate::Right && y == GridCoordinate::Top)
+			return grid[GridCoordinate::Top][GridCoordinate::Middle] && grid[GridCoordinate::Middle][GridCoordinate::Right];
+		else if (x == GridCoordinate::Left && y == GridCoordinate::Bottom)
+			return grid[GridCoordinate::Bottom][GridCoordinate::Middle] && grid[GridCoordinate::Middle][GridCoordinate::Left];
+		else if (x == GridCoordinate::Right && y == GridCoordinate::Bottom)
+			return grid[GridCoordinate::Bottom][GridCoordinate::Middle] && grid[GridCoordinate::Middle][GridCoordinate::Right];
+		else
+			return true;
+	}
+
 	TileTransformation TILE_TRANSFORMATION_DEFAULT = TileTransformation::None;
 	
 	TileTransformation TILE_TRANSFORMATION_VALUES[TILE_TRANSFORMATION_COUNT] = {
