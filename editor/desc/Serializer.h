@@ -73,6 +73,26 @@ namespace oly::editor
 		}
 	};
 
+	template<>
+	struct Serializer<unsigned char>
+	{
+		bool Load(unsigned char& obj, TOMLNode node) const
+		{
+			if (auto v = node.value<int64_t>())
+			{
+				obj = static_cast<unsigned char>(*v);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		int64_t Dump(const unsigned char obj) const
+		{
+			return static_cast<int64_t>(obj);
+		}
+	};
+
 	template<Enum E>
 	struct Serializer<E>
 	{

@@ -36,26 +36,6 @@ namespace oly::editor
 		}
 	}
 
-	void TilesetDocument::DrawMenuBar()
-	{
-		// TODO v8 refactor to IDocument::DrawMenuBar() default
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
-
-				if (ImGui::MenuItem("Discard Changes"))
-					Load();
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
-	}
-
 	void TilesetDocument::Load()
 	{
 		if (_oly_path.exists())
@@ -112,7 +92,7 @@ namespace oly::editor
 	{
 		DRAW_FIELD(texture); // TODO v8 support dropping paths externally or from tree view / content browser
 		DRAW_FIELD(texture_index);
-		DRAW_FIELD(config); // TODO v8 should be derived from grid
+		//DRAW_FIELD(config); // TODO v8 should be derived from grid
 		DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
 		DRAW_FIELD(transformations); // TODO v8 should be two combos (reflect + rotate)
 	}

@@ -55,25 +55,6 @@ namespace oly::editor
 		}
 	}
 
-	void FontDocument::DrawMenuBar()
-	{
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
-
-				if (ImGui::MenuItem("Discard Changes"))
-					Load();
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
-	}
-
 	void FontDocument::Load()
 	{
 		if (_oly_path.exists())

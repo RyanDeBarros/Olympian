@@ -141,60 +141,6 @@ namespace oly::editor
 	}
 
 	template<>
-	bool DescIO::DrawCombo(const char* label, detail::TileConfiguration& data)
-	{
-		return DrawEnumCombo(label, data, {
-			"Single",
-			"End 1",
-			"End 2",
-			"End 3",
-			"End 4",
-			"Corner 1",
-			"Corner 2",
-			"Corner 3",
-			"Corner 4",
-			"I-Line 1",
-			"I-Line 2",
-			"T-Bone 1",
-			"T-Bone 2",
-			"T-Bone 3",
-			"T-Bone 4",
-			"Middle",
-			"Corner (') 1",
-			"Corner (') 2",
-			"Corner (') 3",
-			"Corner (') 4",
-			"T-Bone (+) 1",
-			"T-Bone (+) 2",
-			"T-Bone (+) 3",
-			"T-Bone (+) 4",
-			"T-Bone (-) 1",
-			"T-Bone (-) 2",
-			"T-Bone (-) 3",
-			"T-Bone (-) 4",
-			"T-Bone (') 1",
-			"T-Bone (') 2",
-			"T-Bone (') 3",
-			"T-Bone (') 4",
-			"Middle Corner 1",
-			"Middle Corner 2",
-			"Middle Corner 3",
-			"Middle Corner 4",
-			"Middle T-Bone 1",
-			"Middle T-Bone 2",
-			"Middle T-Bone 3",
-			"Middle T-Bone 4",
-			"Middle Across 1",
-			"Middle Across 2",
-			"Middle Diagonal 1",
-			"Middle Diagonal 2",
-			"Middle Diagonal 3",
-			"Middle Diagonal 4",
-			"Middle (')"
-		});
-	}
-
-	template<>
 	bool DescIO::DrawCombo(const char* label, detail::TileTransformation& data)
 	{
 		return DrawEnumCombo(label, data, { "None", "Reflect (X)", "Reflect (Y)", "Rotate 90", "Rotate 180", "Rotate 270" });

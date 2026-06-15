@@ -52,25 +52,6 @@ namespace oly::editor
 			_listen_mode = ListenMode::None;
 	}
 
-	void SignalDocument::DrawMenuBar()
-	{
-		if (ImGui::BeginMenuBar())
-		{
-			if (ImGui::BeginMenu("File"))
-			{
-				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
-
-				if (ImGui::MenuItem("Discard Changes"))
-					Load();
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
-	}
-
 	void SignalDocument::Load()
 	{
 		if (_oly_path.exists())
