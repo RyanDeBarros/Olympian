@@ -249,6 +249,8 @@ namespace oly::editor
 		gui::IDScope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
+		// TODO v8 begin path drop target so paths can be dropped into documents
+
 		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
 		{
 			if (ImGui::MenuItem("Open"))

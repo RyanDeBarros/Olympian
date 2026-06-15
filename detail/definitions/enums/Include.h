@@ -11,3 +11,4 @@
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/SVGMipmapGenerationMode.h"
+#include "definitions/enums/TilesetConfiguration.h"

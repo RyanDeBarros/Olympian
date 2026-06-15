@@ -80,29 +80,6 @@ namespace oly::editor
 		return dirty;
 	}
 
-	bool DescIO::Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state)
-	{
-		return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
-			bool dirty = false;
-
-			ImGui::SameLine();
-			dirty |= gui::InputText("##Item", data[row.Index()]);
-
-			if (ImGui::IsItemActivated())
-				row.OnSelect();
-
-			if (row.Index() < def.size())
-				dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
-			else
-			{
-				static const std::string empty = "";
-				dirty |= CheckRevertButton(data[row.Index()], empty);
-			}
-			
-			return dirty;
-		}, ui_state);
-	}
-
 	bool DescIO::Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, const bool* disabled, size_t count)
 	{
 		bool dirty = false;
@@ -171,5 +148,65 @@ namespace oly::editor
 	bool DescIO::DrawCombo(const char* label, detail::SVGMipmapGenerationMode& data)
 	{
 		return DrawEnumCombo(label, data, { "Auto", "Off", "Manual" });
+	}
+
+	template<>
+	bool DescIO::DrawCombo(const char* label, detail::TileConfiguration& data)
+	{
+		return DrawEnumCombo(label, data, {
+			"Single",
+			"End 1",
+			"End 2",
+			"End 3",
+			"End 4",
+			"Corner 1",
+			"Corner 2",
+			"Corner 3",
+			"Corner 4",
+			"I-Line 1",
+			"I-Line 2",
+			"T-Bone 1",
+			"T-Bone 2",
+			"T-Bone 3",
+			"T-Bone 4",
+			"Middle",
+			"Corner (') 1",
+			"Corner (') 2",
+			"Corner (') 3",
+			"Corner (') 4",
+			"T-Bone (+) 1",
+			"T-Bone (+) 2",
+			"T-Bone (+) 3",
+			"T-Bone (+) 4",
+			"T-Bone (-) 1",
+			"T-Bone (-) 2",
+			"T-Bone (-) 3",
+			"T-Bone (-) 4",
+			"T-Bone (') 1",
+			"T-Bone (') 2",
+			"T-Bone (') 3",
+			"T-Bone (') 4",
+			"Middle Corner 1",
+			"Middle Corner 2",
+			"Middle Corner 3",
+			"Middle Corner 4",
+			"Middle T-Bone 1",
+			"Middle T-Bone 2",
+			"Middle T-Bone 3",
+			"Middle T-Bone 4",
+			"Middle Across 1",
+			"Middle Across 2",
+			"Middle Diagonal 1",
+			"Middle Diagonal 2",
+			"Middle Diagonal 3",
+			"Middle Diagonal 4",
+			"Middle (')"
+		});
+	}
+
+	template<>
+	bool DescIO::DrawCombo(const char* label, detail::TileTransformation& data)
+	{
+		return DrawEnumCombo(label, data, { "None", "Reflect (X)", "Reflect (Y)", "Rotate 90", "Rotate 180", "Rotate 270" });
 	}
 }

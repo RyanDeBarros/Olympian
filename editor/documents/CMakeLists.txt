@@ -5,4 +5,5 @@ target_sources(OlympianEditor PRIVATE
 	ProjectDocument.cpp
 	SignalDocument.cpp
 	TextureDocument.cpp
+	TilesetDocument.cpp
 )

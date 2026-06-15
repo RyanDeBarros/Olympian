@@ -4,64 +4,64 @@ Storage = 0
 
 [[Assign]]
 Config = 0
-Texture = "@/textures/grass tileset/S.png"
+TxFile = "@/textures/grass tileset/S.png"
 
 [[Assign]]
 Config = 46
-Texture = "@/textures/grass tileset/M.png"
+TxFile = "@/textures/grass tileset/M.png"
 
 [[Assign]]
 Config = 16
-Texture = "@/textures/grass tileset/BL.png"
+TxFile = "@/textures/grass tileset/BL.png"
 
 [[Assign]]
 Config = 17
-Texture = "@/textures/grass tileset/BR.png"
+TxFile = "@/textures/grass tileset/BR.png"
 
 [[Assign]]
 Config = 18
-Texture = "@/textures/grass tileset/TR.png"
+TxFile = "@/textures/grass tileset/TR.png"
 
 [[Assign]]
 Config = 19
-Texture = "@/textures/grass tileset/TL.png"
+TxFile = "@/textures/grass tileset/TL.png"
 
 [[Assign]]
 Config = 28
-Texture = "@/textures/grass tileset/LE.png"
+TxFile = "@/textures/grass tileset/LE.png"
 
 [[Assign]]
 Config = 29
-Texture = "@/textures/grass tileset/BE.png"
+TxFile = "@/textures/grass tileset/BE.png"
 
 [[Assign]]
 Config = 30
-Texture = "@/textures/grass tileset/RE.png"
+TxFile = "@/textures/grass tileset/RE.png"
 
 [[Assign]]
 Config = 31
-Texture = "@/textures/grass tileset/TE.png"
+TxFile = "@/textures/grass tileset/TE.png"
 
 [[Assign]]
 Config = 1
-Texture = "@/textures/grass tileset/LT.png"
+TxFile = "@/textures/grass tileset/LT.png"
 
 [[Assign]]
 Config = 2
-Texture = "@/textures/grass tileset/BT.png"
+TxFile = "@/textures/grass tileset/BT.png"
 
 [[Assign]]
 Config = 3
-Texture = "@/textures/grass tileset/RT.png"
+TxFile = "@/textures/grass tileset/RT.png"
 
 [[Assign]]
 Config = 4
-Texture = "@/textures/grass tileset/TT.png"
+TxFile = "@/textures/grass tileset/TT.png"
 
 [[Assign]]
 Config = 9
-Texture = "@/textures/grass tileset/I1.png"
+TxFile = "@/textures/grass tileset/I1.png"
 
 [[Assign]]
 Config = 10
-Texture = "@/textures/grass tileset/I2.png"
+TxFile = "@/textures/grass tileset/I2.png"

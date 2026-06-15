@@ -35,12 +35,19 @@ namespace oly::editor
 			scratch = def;
 			if (key != NullKey())
 				Serializer<T>{}.Load(scratch, node[detail::encode_key(key)]);
+			else
+				Serializer<T>{}.Load(scratch, node);
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (key != NullKey())
 				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch));
+		}
+
+		void Dump(toml::array& array) const
+		{
+			array.push_back(Serializer<T>{}.Dump(scratch));
 		}
 	};
 

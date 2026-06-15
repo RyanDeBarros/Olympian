@@ -103,25 +103,25 @@ namespace oly::rendering
 		painted_tile.diagonal[2]   = sprite_map.count(tile + glm::ivec2{ -1, -1 });
 		painted_tile.diagonal[3]   = sprite_map.count(tile + glm::ivec2{  1, -1 });
 			
-		TileSet::Transformation transformation;
+		detail::TileTransformation transformation;
 		TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
 
-		sprite.set_texture(tile_desc.file);
+		sprite.set_texture(tile_desc.file, tile_desc.file_index);
 		sprite.set_tex_coords(tile_desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
-		if (transformation & TileSet::Transformation::ReflectX)
+		if (transformation & detail::TileTransformation::ReflectX)
 			sprite.set_local().scale.x = -glm::abs(sprite.set_local().scale.x);
 		else
 			sprite.set_local().scale.x = glm::abs(sprite.set_local().scale.x);
-		if (transformation & TileSet::Transformation::ReflectY)
+		if (transformation & detail::TileTransformation::ReflectY)
 			sprite.set_local().scale.y = -glm::abs(sprite.set_local().scale.y);
 		else
 			sprite.set_local().scale.y = glm::abs(sprite.set_local().scale.y);
-		if (transformation & TileSet::Transformation::Rotate90)
+		if (transformation & detail::TileTransformation::Rotate90)
 			sprite.set_local().rotation = glm::radians(90.0f);
-		else if (transformation & TileSet::Transformation::Rotate180)
+		else if (transformation & detail::TileTransformation::Rotate180)
 			sprite.set_local().rotation = glm::radians(180.0f);
-		else if (transformation & TileSet::Transformation::Rotate270)
+		else if (transformation & detail::TileTransformation::Rotate270)
 			sprite.set_local().rotation = glm::radians(270.0f);
 		else
 			sprite.set_local().rotation = 0.0f;

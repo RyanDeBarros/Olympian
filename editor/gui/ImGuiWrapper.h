@@ -21,33 +21,6 @@ namespace oly::editor::gui
 		ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr);
 
 	template<typename T>
-	struct ItemComfortableWidth
-	{
-		float Get(T num) const
-		{
-			return ImGui::CalcTextSize(std::to_string(num).c_str()).x;
-		}
-
-		void Set(OptionalPrimitive<T> min, OptionalPrimitive<T> max) const
-		{
-			const float item_width = std::max(ItemComfortableWidth<OptionalPrimitive<T>>{}.Get(min), ItemComfortableWidth<OptionalPrimitive<T>>{}.Get(max));
-			ImGui::SetNextItemWidth(item_width);
-		}
-	};
-
-	template<typename T>
-	struct ItemComfortableWidth<OptionalPrimitive<T>>
-	{
-		float Get(OptionalPrimitive<T> num) const
-		{
-			if (num.has_value)
-				return ImGui::CalcTextSize(std::to_string(num.value).c_str()).x;
-			else
-				return ImGui::CalcTextSize(std::to_string(-FLT_MAX).c_str()).x;
-		}
-	};
-
-	template<typename T>
 	struct InputData;
 
 	template<typename T>
@@ -84,7 +57,6 @@ namespace oly::editor::gui
 	template<typename T, typename U>
 	bool InputClampedData(const char* label, T& data, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 	{
-		ItemComfortableWidth<U>{}.Set(min, max);
 		const auto og = data;
 		if (InputData<T>{}(label, data))
 			return Clamp(data, og, min, max);

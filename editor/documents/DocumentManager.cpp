@@ -12,6 +12,7 @@
 #include "documents/ProjectDocument.h"
 #include "documents/SignalDocument.h"
 #include "documents/TextureDocument.h"
+#include "documents/TilesetDocument.h"
 
 namespace oly::editor
 {
@@ -62,6 +63,13 @@ namespace oly::editor
 			case detail::Key::Meta_Texture:
 				if (meta.get_version() == TextureDocument::GetVersion())
 					Add<TextureDocument>(std::move(oly_file));
+				else
+					return OpenAssetCode::UnsupportedAssetVersion;
+				break;
+
+			case detail::Key::Meta_Tileset:
+				if (meta.get_version() == TilesetDocument::GetVersion())
+					Add<TilesetDocument>(std::move(oly_file));
 				else
 					return OpenAssetCode::UnsupportedAssetVersion;
 				break;

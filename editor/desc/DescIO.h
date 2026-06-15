@@ -101,7 +101,53 @@ namespace oly::editor
 			return dirty;
 		}
 
-		static bool Draw(const char* label, std::vector<std::string>& data, const std::vector<std::string>& def, gui::DynamicListState& ui_state);
+		template<typename T> requires (!std::is_enum_v<T>)
+		static bool Draw(const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+		{
+			return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
+				bool dirty = false;
+
+				ImGui::SameLine();
+				dirty |= gui::InputData<T>{}("##Item", data[row.Index()]);
+
+				if (ImGui::IsItemActivated())
+					row.OnSelect();
+
+				if (row.Index() < def.size())
+					dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
+				else
+				{
+					static const T empty = {};
+					dirty |= CheckRevertButton(data[row.Index()], empty);
+				}
+
+				return dirty;
+			}, ui_state);
+		}
+
+		template<typename E> requires (std::is_enum_v<E>)
+		static bool Draw(const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+		{
+			return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
+				bool dirty = false;
+
+				ImGui::SameLine();
+				dirty |= DrawCombo("##Item", data[row.Index()]);
+
+				if (ImGui::IsItemActivated())
+					row.OnSelect();
+
+				if (row.Index() < def.size())
+					dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
+				else
+				{
+					static const E empty = {};
+					dirty |= CheckRevertButton(data[row.Index()], empty);
+				}
+
+				return dirty;
+			}, ui_state);
+		}
 
 		static bool Draw(const char* label, unsigned int& data, const unsigned int& def, const unsigned int* values, const char** names, const bool* disabled, size_t count);
 

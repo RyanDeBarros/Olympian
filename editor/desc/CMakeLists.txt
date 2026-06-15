@@ -6,4 +6,5 @@ target_sources(OlympianEditor PRIVATE
 	ProjectDesc.cpp
 	SignalDesc.cpp
 	TextureDesc.cpp
+	TilesetDesc.cpp
 )
