@@ -164,6 +164,7 @@ namespace oly::editor
 						_individual_editor.active_texture = {};
 					else
 					{
+						BreakoutError::NotifyScope notify(true);
 						try
 						{
 							_individual_editor.active_texture.LoadGeneric(detail::ResourcePath(desc.texture.scratch).string());
@@ -171,9 +172,6 @@ namespace oly::editor
 						catch (const BreakoutError& e)
 						{
 							_individual_editor.texture_error = true;
-
-							// TODO v8 instead of passing false, remove add_to_log arg and just define a BreakoutError::NotifyScope so Throw() calls will push notifications instead of logging them
-							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, e.what()), false);
 						}
 					}
 				}

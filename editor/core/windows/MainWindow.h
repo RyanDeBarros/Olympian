@@ -55,7 +55,7 @@ namespace oly::editor
 
 		MainMenuBar& GetMainMenuBar();
 
-		void PushNotification(Notification&& notif, bool add_to_log = true);
+		void PushNotification(Notification&& notif);
 
 	private:
 		void DrawNotifications();

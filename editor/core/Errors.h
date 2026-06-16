@@ -10,5 +10,13 @@ namespace oly::editor
 		BreakoutError(const char* message);
 
 		[[noreturn]] static void Throw(const char* message);
+
+		struct NotifyScope
+		{
+			NotifyScope(bool notify);
+			NotifyScope(const NotifyScope&) = delete;
+			NotifyScope(NotifyScope&&) = delete;
+			~NotifyScope();
+		};
 	};
 }

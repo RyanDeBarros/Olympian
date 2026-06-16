@@ -130,10 +130,9 @@ namespace oly::editor
         return *_main_menu_bar;
     }
 
-    void MainWindow::PushNotification(Notification&& notif, bool add_to_log)
+    void MainWindow::PushNotification(Notification&& notif)
     {
-        if (add_to_log)
-            Logger::Instance().Log(notif.level, notif.message.c_str());
+        Logger::Instance().Log(notif.level, notif.message.c_str());
         _notifications.push_back(std::move(notif));
     }
 
