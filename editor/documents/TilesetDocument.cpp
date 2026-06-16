@@ -146,16 +146,8 @@ namespace oly::editor
 								ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(16, 16, 16, 255));
 							else
 							{
-								const auto& tex = _individual_editor.active_texture;
-								const auto& desc = GetAssignment(_individual_editor.grid);
-
-								const float max_dimension = std::max(tex.Width(), tex.Height());
-								const float tex_scale = max_dimension > 0.0001f ? cell_width / max_dimension : 0.f;
-								const ImVec2 tex_size = tex.Size() * tex_scale;
-								const ImVec2 tex_start = rect_start + 0.5f * (cell_size - tex_size);
-
-								ImGui::GetWindowDrawList()->AddImage(tex.ID(), tex_start, tex_start + tex_size,
-									ImVec2(desc.uvs.scratch[0], desc.uvs.scratch[2]), ImVec2(desc.uvs.scratch[1], desc.uvs.scratch[3]));
+								UVRect uvs = GetAssignment(_individual_editor.grid).uvs.scratch;
+								ImGui::GetWindowDrawList()->AddImage(_individual_editor.active_texture.ID(), rect_start, rect_end, ImVec2(uvs.x1, uvs.y1), ImVec2(uvs.x2, uvs.y2));
 							}
 						}
 						else

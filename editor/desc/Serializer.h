@@ -250,10 +250,39 @@ namespace oly::editor
 		{
 			toml::array arr;
 			arr.reserve(Color::N);
-			arr.push_back(obj.r);
-			arr.push_back(obj.g);
-			arr.push_back(obj.b);
-			arr.push_back(obj.a);
+			for (size_t i = 0; i < Color::N; ++i)
+				arr.push_back(obj[i]);
+			return arr;
+		}
+	};
+
+	template<>
+	struct Serializer<UVRect>
+	{
+		bool Load(UVRect& obj, TOMLNode node) const
+		{
+			if (auto array = node.as_array())
+			{
+				bool fully_loaded = true;
+				for (size_t i = 0; i < std::min(array->size(), UVRect::N); ++i)
+				{
+					if (auto v = array->get_as<double>(i))
+						obj[i] = v->get();
+					else
+						fully_loaded = false;
+				}
+				return fully_loaded;
+			}
+			else
+				return false;
+		}
+
+		toml::array Dump(const UVRect obj) const
+		{
+			toml::array arr;
+			arr.reserve(UVRect::N);
+			for (size_t i = 0; i < Color::N; ++i)
+				arr.push_back(obj[i]);
 			return arr;
 		}
 	};

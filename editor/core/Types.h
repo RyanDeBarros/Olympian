@@ -25,4 +25,26 @@ namespace oly::editor
 		float& operator[](size_t i);
 		float operator[](size_t i) const;
 	};
+
+	struct UVRect
+	{
+		static inline const size_t N = 4;
+
+		union
+		{
+			struct { float x1, x2, y1, y2; };
+			float v[4];
+		};
+
+		UVRect();
+		UVRect(float x1, float x2, float y1, float y2);
+
+		bool operator==(const UVRect&) const;
+		bool operator!=(const UVRect&) const;
+
+		float* ValuePtr();
+		const float* ValuePtr() const;
+		float& operator[](size_t i);
+		float operator[](size_t i) const;
+	};
 }

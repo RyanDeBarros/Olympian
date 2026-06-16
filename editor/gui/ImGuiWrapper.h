@@ -145,6 +145,12 @@ namespace oly::editor::gui
 	};
 
 	template<>
+	struct InputData<UVRect>
+	{
+		bool operator()(const char* label, UVRect& data) const;
+	};
+
+	template<>
 	struct InputData<unsigned int>
 	{
 		bool operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);

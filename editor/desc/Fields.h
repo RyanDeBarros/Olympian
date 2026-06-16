@@ -117,6 +117,16 @@ namespace oly::editor
 		}
 	};
 
+	struct UVRectField : public PrimitiveField<UVRect>
+	{
+		using PrimitiveField<UVRect>::PrimitiveField;
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
+		}
+	};
+
 	template<typename T, size_t N>
 	struct ArrayField : public PrimitiveField<std::array<T, N>>
 	{

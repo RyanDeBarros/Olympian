@@ -109,6 +109,44 @@ namespace oly::editor::gui
 		return ImGui::ColorEdit4(label, data.ValuePtr());
 	}
 
+	// TODO v8 use inner tables more often
+	bool InputData<UVRect>::operator()(const char* label, UVRect& data) const
+	{
+		const bool header = label && label[0] != '\0';
+		bool dirty = false;
+		if (ImGui::BeginTable("##UVRect", header ? 5 : 4))
+		{
+			if (header)
+			{
+				ImGui::TableNextColumn();
+				ImGui::Text(label);
+			}
+
+			ImGui::TableNextColumn();
+			ImGui::Text("x1");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			ImGui::Text("x2");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			ImGui::Text("y1");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			ImGui::Text("y2");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::EndTable();
+		}
+		return dirty;
+	}
+
 	bool InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)
 	{
 		return (*this)(data, values, names, nullptr, count);
