@@ -55,7 +55,7 @@ namespace oly::editor
 
 	void ProjectDocument::Load()
 	{
-		if (_oly_path.exists())
+		if (_oly_path.is_file())
 		{
 			_meta = detail::MetaSplitter::decode_meta(_oly_path);
 

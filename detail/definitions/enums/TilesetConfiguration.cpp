@@ -241,7 +241,7 @@ namespace oly::detail
 			return false;
 	}
 
-	static bool simplify_tile_config(TileConfig& config)
+	bool simplify_tile_config(TileConfig& config)
 	{
 		bool simplified = false;
 

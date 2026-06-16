@@ -18,6 +18,7 @@ namespace oly::editor
 		float scale;
 		int frame_index;
 		GLenum min_filter, mag_filter;
+		// TODO v8 mipmaps
 
 		bool operator==(const TextureConstructor&) const = default;
 	};
@@ -342,13 +343,15 @@ namespace oly::editor
 		return ImVec2(Width(), Height());
 	}
 
-	void Texture::LoadGeneric(const std::string_view filepath)
+	void Texture::LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, float scale, bool generate_mipmaps)
 	{
+		// TODO v8 pass generate_mipmaps
+
 		if (filepath.ends_with(".svg"))
-			v = SVGTexture(filepath);
+			v = SVGTexture(filepath, scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR);
 		else if (filepath.ends_with(".gif"))
-			v = GIFTexture(filepath);
+			v = GIFTexture(filepath, min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST);
 		else
-			v = RasterTexture(filepath);
+			v = RasterTexture(filepath, min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST);
 	}
 }

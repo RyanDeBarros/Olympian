@@ -71,11 +71,11 @@ namespace oly::editor
 		void Draw(Form& form, BaseTextureDesc& desc);
 		void Draw(Form& form, SpritesheetDesc& desc);
 
-		void Load(TOMLNode node, TextureVariantDesc& desc);
-		void Load(TOMLNode node, RasterTextureDesc& desc);
-		void Load(TOMLNode node, VectorTextureDesc& desc);
-		void Load(TOMLNode node, BaseTextureDesc& desc);
-		void Load(TOMLNode node, SpritesheetDesc& desc);
+		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
+		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);
+		static void Load(TOMLNode node, VectorTextureDesc& desc, bool gif);
+		static void Load(TOMLNode node, BaseTextureDesc& desc, bool gif);
+		static void Load(TOMLNode node, SpritesheetDesc& desc);
 
 		void Dump(toml::table& table, TextureVariantDesc& desc);
 		void Dump(toml::table& table, RasterTextureDesc& desc);
@@ -86,5 +86,19 @@ namespace oly::editor
 		void OnActiveSlotChanged();
 
 		std::unique_ptr<gui::IListAdapter> ListAdapter();
+
+	public:
+		enum class TextureSettingsLoadResult
+		{
+			Success,
+			NotAFile,
+			NotAResource,
+			MissingImport,
+			NotATexture,
+			Corrupted,
+			BadSlot
+		};
+
+		static TextureSettingsLoadResult LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps);
 	};
 }

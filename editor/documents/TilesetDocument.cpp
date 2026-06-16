@@ -8,6 +8,8 @@
 #include "gui/IDScope.h"
 #include "gui/Subform.h"
 
+#include "documents/TextureDocument.h"
+
 #include "definitions/Keys.h"
 #include "util/Parser.h"
 
@@ -148,30 +150,7 @@ namespace oly::editor
 
 	void TilesetDocument::Draw()
 	{
-		for (auto& [config, active] : _textures)
-		{
-			if (!active.stale)
-				continue;
-
-			active.stale = false;
-			active.error = false;
-			auto& desc = GetAssignment(config);
-			if (desc.texture.scratch.empty())
-				active.texture = {};
-			else
-			{
-				BreakoutError::NotifyScope notify(true);
-				try
-				{
-					active.texture.LoadGeneric(detail::ResourcePath(desc.texture.scratch).string());
-				}
-				catch (const BreakoutError& e)
-				{
-					active.error = true;
-				}
-			}
-		}
-
+		UpdateActiveTextures();
 		gui::IDScope scope(this);
 
 		if (auto section = CollapsingSection("Advanced"))
@@ -203,7 +182,7 @@ namespace oly::editor
 
 	void TilesetDocument::Load()
 	{
-		if (_oly_path.exists())
+		if (_oly_path.is_file())
 		{
 			_meta = detail::MetaSplitter::decode_meta(_oly_path);
 
@@ -262,70 +241,74 @@ namespace oly::editor
 			break;
 		}
 
-		if (editor)
+		if (!editor)
+			return;
+
+		if (ImGui::BeginTable("##Table", 2))
 		{
-			if (ImGui::BeginTable("##Table", 2))
+			ImGui::TableNextColumn();
+			bool new_cell_selected = false;
+			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
-				ImGui::TableNextColumn();
-				bool new_cell_selected = false;
-				if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+				const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
+				const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
+				const float cell_side = std::min(avail_cell_width, avail_cell_height);
+				const ImVec2 cell_size(cell_side, cell_side);
+				const ImVec2 cursor = ImGui::GetCursorScreenPos();
+				const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - cell_side * ImVec2(editor->Cols() + 2.f, editor->Rows() + 2.f));
+
+				for (int y = 0; y < editor->Rows(); ++y)
 				{
-					const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
-					const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
-					const float cell_side = std::min(avail_cell_width, avail_cell_height);
-					const ImVec2 cell_size(cell_side, cell_side);
-					const ImVec2 cursor = ImGui::GetCursorScreenPos();
-					const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - cell_side * ImVec2(editor->Cols() + 2.f, editor->Rows() + 2.f));
-
-					for (int y = 0; y < editor->Rows(); ++y)
+					for (int x = 0; x < editor->Cols(); ++x)
 					{
-						for (int x = 0; x < editor->Cols(); ++x)
+						const detail::TileConfigGrid* grid = editor->At(x, y);
+						if (!grid)
+							continue;
+
+						gui::IDScope scope;
+						scope.Push(y);
+						scope.Push(x);
+						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
+						const ImVec2 rect_end = rect_start + cell_size;
+
+						DrawActiveTexture(rect_start, rect_end, *grid, 64);
+						auto cell = std::make_pair(x, y);
+
+						ImGui::SetCursorScreenPos(rect_start);
+						if (ImGui::InvisibleButton("##ToggleSelected", cell_size))
 						{
-							if (const detail::TileConfigGrid* grid = editor->At(x, y))
-							{
-								gui::IDScope scope;
-								scope.Push(y);
-								scope.Push(x);
-								const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
-								const ImVec2 rect_end = rect_start + cell_size;
-
-								DrawActiveTexture(rect_start, rect_end, *grid, 64);
-								auto cell = std::make_pair(x, y);
-
-								ImGui::SetCursorScreenPos(rect_start);
-								if (ImGui::InvisibleButton("##ToggleSelected", cell_size))
-								{
-									new_cell_selected = true;
-									if (editor->selected_cell == cell)
-										editor->selected_cell = std::nullopt;
-									else
-										editor->selected_cell = cell;
-								}
-
-								if (ImGui::IsItemHovered())
-									ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
-
-								if (editor->selected_cell == cell)
-									ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32(0, 255, 0, 255), 0.f, 0, 4.f);
-							}
+							new_cell_selected = true;
+							if (editor->selected_cell == cell)
+								editor->selected_cell = std::nullopt;
+							else
+								editor->selected_cell = cell;
 						}
+
+						if (ImGui::IsItemHovered())
+						{
+							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+							TextureErrorTooltip(GetActiveTexture(*grid).error);
+						}
+
+						if (editor->selected_cell == cell)
+							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32(0, 255, 0, 255), 0.f, 0, 4.f);
 					}
 				}
-				ImGui::EndChild();
-				if (ImGui::IsItemClicked() && !new_cell_selected)
-					editor->selected_cell = std::nullopt;
-
-				ImGui::TableNextColumn();
-				if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
-				{
-					if (auto cell = editor->selected_cell)
-						if (auto grid = editor->At(cell->first, cell->second))
-							Draw(*grid);
-				}
-				ImGui::EndChild();
-
-				ImGui::EndTable();
 			}
+			ImGui::EndChild();
+			if (ImGui::IsItemClicked() && !new_cell_selected)
+				editor->selected_cell = std::nullopt;
+
+			ImGui::TableNextColumn();
+			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			{
+				if (auto cell = editor->selected_cell)
+					if (auto grid = editor->At(cell->first, cell->second))
+						Draw(*grid);
+			}
+			ImGui::EndChild();
+
+			ImGui::EndTable();
 		}
 	}
 
@@ -353,9 +336,15 @@ namespace oly::editor
 						const ImVec2 rect_end = rect_start + cell_size;
 
 						if (y == 1 && x == 1)
+						{
 							DrawActiveTexture(rect_start, rect_end, _individual_editor.grid, 16);
+							ImGui::Dummy(cell_size);
+						}
 						else
 							DrawToggleCell(rect_start, rect_end, _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+
+						if (ImGui::IsItemHovered())
+							TextureErrorTooltip(GetActiveTexture(_individual_editor.grid).error);
 					}
 				}
 			}
@@ -382,15 +371,17 @@ namespace oly::editor
 
 		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32_BLACK, 0.f, 0, 2.f);
 
+		ImGui::SetCursorScreenPos(rect_start);
 		if (available)
 		{
-			ImGui::SetCursorScreenPos(rect_start);
 			if (ImGui::InvisibleButton("##Click", rect_end - rect_start))
 				on = !on;
 
 			if (ImGui::IsItemHovered())
 				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
 		}
+		else
+			ImGui::Dummy(rect_end - rect_start);
 	}
 
 	void TilesetDocument::Draw(const detail::TileConfigGrid grid)
@@ -434,7 +425,12 @@ namespace oly::editor
 				}
 			}
 
-			DRAW_FIELD(texture_index);
+			if (desc.texture_index.Draw())
+			{
+				MarkDirty();
+				OnActiveTextureChanged(grid);
+			}
+
 			DRAW_FIELD(uvs);
 			DRAW_FIELD(reflection);
 			DRAW_FIELD(rotation);
@@ -486,7 +482,7 @@ namespace oly::editor
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
 	{
-		return GetAssignment(detail::tile_config_from_grid(grid));
+		return GetAssignment(GetResolvedTileConfig(grid));
 	}
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
@@ -499,54 +495,117 @@ namespace oly::editor
 		GetActiveTexture(grid).stale = true;
 	}
 
+	void TilesetDocument::UpdateActiveTextures()
+	{
+		for (auto& [config, active] : _textures)
+		{
+			if (!active.stale)
+				continue;
+
+			active.stale = false;
+			active.error = TextureError::None;
+			auto& desc = GetAssignment(config);
+			if (desc.texture.scratch.empty())
+				active.texture = {};
+			else
+			{
+				BreakoutError::NotifyScope notify(true);
+				try
+				{
+					std::string filepath = detail::ResourcePath(desc.texture.scratch).string();
+					GLenum min_filter, mag_filter;
+					float scale = 1.f;
+					bool generate_mipmaps = false;
+					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.scratch, min_filter, mag_filter, scale, generate_mipmaps);
+					if (result == TextureDocument::TextureSettingsLoadResult::Success)
+						active.texture.LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
+					else // TODO v8 use specific texture error from result
+						active.error = TextureError::Slot;
+				}
+				catch (const BreakoutError& e)
+				{
+					active.error = TextureError::File;
+				}
+			}
+		}
+	}
+
 	void TilesetDocument::DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value)
 	{
 		auto& active = GetActiveTexture(grid);
-		if (active.error)
+		if (active.error == TextureError::File)
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 255));
+		else if (active.error == TextureError::Slot)
+		{
+			DrawActiveTextureDirect(grid, rect_start, rect_end);
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 127)); // TODO v8 use special overlay texture instead of just alpha tint
+		}
 		else if (active.texture.Empty())
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(empty_gray_value, empty_gray_value, empty_gray_value, 255));
 		else
+			DrawActiveTextureDirect(grid, rect_start, rect_end);
+	}
+
+	void TilesetDocument::DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end)
+	{
+		auto& desc = GetAssignment(grid);
+		auto& active = GetActiveTexture(grid);
+		UVRect uv_rect = desc.uvs.scratch;
+		detail::TileReflection reflection = desc.reflection.scratch;
+		detail::TileRotation rotation = desc.rotation.scratch;
+
+		std::array<ImVec2, 4> uvs;
+		uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);
+		uvs[1] = ImVec2(uv_rect.x2, uv_rect.y1);
+		uvs[2] = ImVec2(uv_rect.x2, uv_rect.y2);
+		uvs[3] = ImVec2(uv_rect.x1, uv_rect.y2);
+
+		if (static_cast<bool>(reflection & detail::TileReflection::X))
 		{
-			// TODO v8 use texture slot -> if slot is invalid, also set error to true, or rather to an enum so that on-hover can explain the cause of the error ("file does not exist/not supported" or "invalid texture slot")
-			auto& desc = GetAssignment(grid);
-			UVRect uv_rect = desc.uvs.scratch;
-			detail::TileReflection reflection = desc.reflection.scratch;
-			detail::TileRotation rotation = desc.rotation.scratch;
+			std::swap(uvs[0], uvs[1]);
+			std::swap(uvs[2], uvs[3]);
+		}
 
-			std::array<ImVec2, 4> uvs;
-			uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);
-			uvs[1] = ImVec2(uv_rect.x2, uv_rect.y1);
-			uvs[2] = ImVec2(uv_rect.x2, uv_rect.y2);
-			uvs[3] = ImVec2(uv_rect.x1, uv_rect.y2);
+		if (static_cast<bool>(reflection & detail::TileReflection::Y))
+		{
+			std::swap(uvs[0], uvs[3]);
+			std::swap(uvs[1], uvs[2]);
+		}
 
-			if (static_cast<bool>(reflection & detail::TileReflection::X))
-			{
-				std::swap(uvs[0], uvs[1]);
-				std::swap(uvs[2], uvs[3]);
-			}
+		{
+			std::array<ImVec2, 4> temp;
+			for (int i = 0; i < 4; ++i)
+				temp[i] = uvs[static_cast<size_t>((i + static_cast<int>(rotation)) % 4)];
+			uvs = temp;
+		}
 
-			if (static_cast<bool>(reflection & detail::TileReflection::Y))
-			{
-				std::swap(uvs[0], uvs[3]);
-				std::swap(uvs[1], uvs[2]);
-			}
+		ImVec2 rect_delta = rect_end - rect_start;
+		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.ID(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
+			rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
+	}
 
-			{
-				std::array<ImVec2, 4> temp;
-				for (int i = 0; i < 4; ++i)
-					temp[i] = uvs[static_cast<size_t>((i + static_cast<int>(rotation)) % 4)];
-				uvs = temp;
-			}
-
-			ImVec2 rect_delta = rect_end - rect_start;
-			ImGui::GetWindowDrawList()->AddImageQuad(active.texture.ID(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
-				rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
+	void TilesetDocument::TextureErrorTooltip(TextureError error)
+	{
+		switch (error)
+		{
+		case TextureError::File:
+			ImGui::SetTooltip("Could not find/load file");
+			break;
+		case TextureError::Slot:
+			ImGui::SetTooltip("Invalid texture slot");
+			break;
 		}
 	}
 
 	TilesetDocument::ActiveTexture& TilesetDocument::GetActiveTexture(const detail::TileConfigGrid grid)
 	{
-		return _textures[detail::tile_config_from_grid(grid)];
+		return _textures[GetResolvedTileConfig(grid)];
+	}
+
+	detail::TileConfig TilesetDocument::GetResolvedTileConfig(const detail::TileConfigGrid grid)
+	{
+		auto config = detail::tile_config_from_grid(grid);
+		detail::simplify_tile_config(config);
+		return config;
 	}
 }

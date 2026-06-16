@@ -3,6 +3,7 @@
 #include "external/GL.h"
 
 #include <memory>
+#include <optional>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -80,6 +81,7 @@ namespace oly::editor
 		float Height() const;
 		ImVec2 Size() const;
 
-		void LoadGeneric(const std::string_view filepath);
+		void LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
+			std::optional<GLenum> mag_filter = std::nullopt, float scale = 1.f, bool generate_mipmaps = false);
 	};
 }

@@ -154,5 +154,6 @@ namespace oly::detail
 		TileTransformation& apply(TileRotation rot);
 	};
 
+	extern bool simplify_tile_config(TileConfig& config);
 	extern bool tile_config_fallback(TileConfig& config, TileTransformation& transformation, int fallback_idx);
 }

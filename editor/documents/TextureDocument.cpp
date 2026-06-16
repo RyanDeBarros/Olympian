@@ -51,14 +51,14 @@ namespace oly::editor
 
 	void TextureDocument::Load()
 	{
-		if (_oly_path.exists())
+		if (_oly_path.is_file())
 		{
 			_meta = detail::MetaSplitter::decode_meta(_oly_path);
 
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _disk, _svg, _gif);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load texture - corrupted asset: " + GetSourcePath().string());
@@ -69,7 +69,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _disk, _svg, _gif);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -488,9 +488,12 @@ namespace oly::editor
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc)
+	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif)
 	{
-		desc.variant.Reset();
+		if (svg)
+			desc.variant.variant = VectorDesc<VectorTextureDesc>();
+		else
+			desc.variant.variant = VectorDesc<RasterTextureDesc>();
 
 		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
@@ -498,33 +501,33 @@ namespace oly::editor
 			for (size_t i = 0; i < array->size(); ++i)
 				desc.PushBack();
 
-			desc.VisitIndexed([this, &array](size_t i, auto& d) { Load(TOMLNode(*array->get(i)), d); });
+			desc.VisitIndexed([&array, gif](size_t i, auto& d) { Load(TOMLNode(*array->get(i)), d, gif); });
 		}
 		else
 		{
 			desc.PushBack();
 
-			desc.Visit(0, [this](auto& d) { Load(TOMLNode(), d); });
+			desc.Visit(0, [gif](auto& d) { Load(TOMLNode(), d, gif); });
 		}
 	}
 	
-	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc)
+	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc, bool gif)
 	{
-		Load(node, desc.base);
+		Load(node, desc.base, gif);
 		LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc)
+	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc, bool gif)
 	{
-		Load(node, desc.base);
+		Load(node, desc.base, gif);
 		LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc)
+	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc, bool gif)
 	{
 		LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
-		if (_gif)
+		if (gif)
 			desc.anim.scratch = true;
 		else
 		{
@@ -585,5 +588,52 @@ namespace oly::editor
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
 		return _scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
+	}
+
+	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)
+	{
+		if (!path.is_file())
+			return TextureSettingsLoadResult::NotAFile;
+
+		if (!path.is_resource())
+			return TextureSettingsLoadResult::NotAResource;
+
+		auto oly_path = path.get_import_path();
+		if (!oly_path.is_file())
+			return TextureSettingsLoadResult::MissingImport;
+
+		if (slot < 0)
+			return TextureSettingsLoadResult::BadSlot;
+
+		if (!detail::MetaSplitter::decode_meta(oly_path).has_type(detail::Key::Meta_Texture))
+			return TextureSettingsLoadResult::NotATexture;
+
+		toml::table table;
+		std::string err = oly_path.load_toml(table);
+		if (err.empty())
+		{
+			TOMLNode node = TOMLNode(table);
+			TOMLArray array = node[detail::encode_key(TextureVariantDesc::array_key)].as_array();
+			if (!array || slot >= array->size() || !array->get(slot))
+				return TextureSettingsLoadResult::BadSlot;
+			
+			TextureVariantDesc desc;
+			bool gif = path.extension_matches(".gif");
+			bool svg = path.extension_matches(".svg");
+			Load(node, desc, svg, gif);
+			
+			desc.Visit(slot, [&](const auto& d) {
+				min_filter = d.base.min_filter.Scratch();
+				mag_filter = d.base.mag_filter.Scratch();
+				generate_mipmaps = static_cast<int>(d.generate_mipmaps.scratch) > 0;
+
+				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
+					scale = d.scale.scratch;
+			});
+
+			return TextureSettingsLoadResult::Success;
+		}
+		else
+			return TextureSettingsLoadResult::Corrupted;
 	}
 }

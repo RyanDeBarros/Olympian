@@ -124,10 +124,17 @@ namespace oly::editor
 		IndividualEditorState _individual_editor;
 		GroupEditorsState _group_editors;
 
+		enum class TextureError
+		{
+			None,
+			File,
+			Slot
+		};
+
 		struct ActiveTexture
 		{
 			Texture texture;
-			bool error = false;
+			TextureError error = TextureError::None;
 			bool stale = true;
 		};
 
@@ -158,8 +165,12 @@ namespace oly::editor
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
 		void OnActiveTextureChanged(const detail::TileConfigGrid grid);
+		void UpdateActiveTextures();
 
 		void DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value);
+		void DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end);
+		void TextureErrorTooltip(TextureError error);
 		ActiveTexture& GetActiveTexture(const detail::TileConfigGrid grid);
+		static detail::TileConfig GetResolvedTileConfig(const detail::TileConfigGrid grid);
 	};
 }
