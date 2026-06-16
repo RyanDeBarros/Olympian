@@ -103,22 +103,16 @@ namespace oly::detail
 			return true;
 	}
 
-	TileTransformation TILE_TRANSFORMATION_DEFAULT = TileTransformation::None;
-	
-	TileTransformation TILE_TRANSFORMATION_VALUES[TILE_TRANSFORMATION_COUNT] = {
-		TileTransformation::ReflectX,
-		TileTransformation::ReflectY,
-		TileTransformation::Rotate90,
-		TileTransformation::Rotate180,
-		TileTransformation::Rotate270
+	TileReflection TILE_REFLECTION_BITSET_DEFAULT = TileReflection::None;
+
+	TileReflection TILE_REFLECTION_BITSET_VALUES[TILE_REFLECTION_BITSET_COUNT] = {
+		TileReflection::X,
+		TileReflection::Y
 	};
 
-	const char* TILE_TRANSFORMATION_NAMES[TILE_TRANSFORMATION_COUNT] = {
-		"Reflect (X)",
-		"Reflect (Y)",
-		"Rotate 90",
-		"Rotate 180",
-		"Rotate 270",
+	const char* TILE_REFLECTION_BITSET_NAMES[TILE_REFLECTION_BITSET_COUNT] = {
+		"X",
+		"Y"
 	};
 
 	static TileConfig tile_config_toggle_fillable_corner(TileConfig config, TileConfigIndividual corner)
@@ -180,7 +174,7 @@ namespace oly::detail
 		if (fallback_idx == 0)
 		{
 			config = rotate_tile_config(config, 1);
-			transformation = TileTransformation::Rotate90;
+			transformation.apply(TileRotation::By90);
 			return true;
 		}
 		else
@@ -192,19 +186,19 @@ namespace oly::detail
 		if (fallback_idx == 0)
 		{
 			config = rotate_tile_config(config, 2);
-			transformation = TileTransformation::Rotate180;
+			transformation.apply(TileRotation::By180);
 			return true;
 		}
 		else if (fallback_idx == 1)
 		{
 			config = rotate_tile_config(config, 1);
-			transformation = TileTransformation::Rotate90;
+			transformation.apply(TileRotation::By90);
 			return true;
 		}
 		else if (fallback_idx == 2)
 		{
 			config = rotate_tile_config(config, -1);
-			transformation = TileTransformation::Rotate270;
+			transformation.apply(TileRotation::By270);
 			return true;
 		}
 		else
@@ -373,5 +367,30 @@ namespace oly::detail
 			else
 				return false;
 		}
+	}
+
+	TileTransformation& TileTransformation::apply(TileTransformation trfm)
+	{
+		return apply(trfm.reflection).apply(trfm.rotation);
+	}
+
+	TileTransformation& TileTransformation::apply(TileReflection refl)
+	{
+		reflection ^= refl;
+		return *this;
+	}
+
+	TileTransformation& TileTransformation::apply(TileRotation rot)
+	{
+		if (static_cast<bool>(reflection & TileReflection::X) == static_cast<bool>(reflection & TileReflection::Y))
+		{
+			rotation += rot;
+		}
+		else
+		{
+			rotation -= rot;
+			reflection ^= TileReflection::X;
+		}
+		return *this;
 	}
 }

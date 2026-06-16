@@ -170,7 +170,7 @@ namespace oly::editor::gui
 			bool dirty = false;
 			for (size_t i = 0; i < count; ++i)
 			{
-				bool flag = data & values[i];
+				bool flag = static_cast<bool>(data & values[i]);
 
 				if (auto d = DisabledSection(disabled && disabled[i]))
 					dirty |= InputData<bool>{}(names[i], flag);

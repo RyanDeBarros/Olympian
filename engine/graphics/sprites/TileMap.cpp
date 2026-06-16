@@ -91,6 +91,7 @@ namespace oly::rendering
 		auto it = sprite_map.find(tile);
 		if (it == sprite_map.end())
 			return;
+
 		Sprite& sprite = it->second;
 
 		detail::TileConfigGrid painted_tile{};
@@ -98,30 +99,39 @@ namespace oly::rendering
 			for (int x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
 				painted_tile[y][x] = sprite_map.count(tile + glm::ivec2{ 1 - y, x - 1 });
 
-		detail::TileTransformation transformation = detail::TileTransformation::None;
-		TileSet::TileDesc tile_desc = tileset->get_tile_desc(painted_tile, transformation);
+		auto tile_assignment = tileset->get_tile_assignment(painted_tile);
 
-		sprite.set_texture(tile_desc.file, tile_desc.file_index);
-		sprite.set_tex_coords(tile_desc.uvs);
+		sprite.set_texture(tile_assignment.desc.file, tile_assignment.desc.file_index);
+		sprite.set_tex_coords(tile_assignment.desc.uvs);
 		sprite.set_local().position = glm::vec2(tile);
-		if (transformation & detail::TileTransformation::ReflectX)
-			sprite.set_local().scale.x = -glm::abs(sprite.set_local().scale.x);
-		else
-			sprite.set_local().scale.x = glm::abs(sprite.set_local().scale.x);
-		if (transformation & detail::TileTransformation::ReflectY)
-			sprite.set_local().scale.y = -glm::abs(sprite.set_local().scale.y);
-		else
-			sprite.set_local().scale.y = glm::abs(sprite.set_local().scale.y);
-		if (transformation & detail::TileTransformation::Rotate90)
-			sprite.set_local().rotation = glm::radians(90.0f);
-		else if (transformation & detail::TileTransformation::Rotate180)
-			sprite.set_local().rotation = glm::radians(180.0f);
-		else if (transformation & detail::TileTransformation::Rotate270)
-			sprite.set_local().rotation = glm::radians(270.0f);
-		else
-			sprite.set_local().rotation = 0.0f;
 		
-		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_desc.file);
+		if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::X))
+			sprite.set_local().scale.x = -glm::abs(sprite.get_local().scale.x);
+		else
+			sprite.set_local().scale.x = glm::abs(sprite.get_local().scale.x);
+
+		if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::Y))
+			sprite.set_local().scale.y = -glm::abs(sprite.get_local().scale.y);
+		else
+			sprite.set_local().scale.y = glm::abs(sprite.get_local().scale.y);
+		
+		switch (tile_assignment.transformation.rotation)
+		{
+		case detail::TileRotation::By90:
+			sprite.set_local().rotation = glm::radians(90.0f);
+			break;
+		case detail::TileRotation::By180:
+			sprite.set_local().rotation = glm::radians(180.0f);
+			break;
+		case detail::TileRotation::By270:
+			sprite.set_local().rotation = glm::radians(270.0f);
+			break;
+		default:
+			sprite.set_local().rotation = 0.0f;
+			break;
+		}
+		
+		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_assignment.desc.file);
 	}
 
 	void TileMap::draw() const

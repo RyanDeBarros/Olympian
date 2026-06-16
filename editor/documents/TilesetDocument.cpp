@@ -127,6 +127,7 @@ namespace oly::editor
 				const float cell_width = 0.2f * avail;
 				const ImVec2 cell_size(cell_width, cell_width);
 				const ImVec2 cursor = ImGui::GetCursorScreenPos();
+				const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - ImVec2(avail, avail));
 
 				for (detail::GridCoordinate y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
 				{
@@ -135,7 +136,7 @@ namespace oly::editor
 						gui::IDScope scope;
 						scope.Push(y);
 						scope.Push(x);
-						const ImVec2 rect_start = cursor + cell_size * ImVec2(x + 1, y + 1);
+						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
 						const ImVec2 rect_end = rect_start + cell_size;
 
 						if (y == 1 && x == 1)
@@ -225,7 +226,8 @@ namespace oly::editor
 			DRAW_FIELD(texture_index);
 			//DRAW_FIELD(config); // TODO v8 should be derived from grid
 			DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
-			DRAW_FIELD(transformations); // TODO v8 should be two combos (reflect + rotate)
+			DRAW_FIELD(reflection);
+			DRAW_FIELD(rotation);
 		}
 	}
 

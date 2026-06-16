@@ -12,14 +12,16 @@ namespace oly::editor
 		M(texture) \
 		M(texture_index) \
 		M(uvs) \
-		M(transformations)
+		M(reflection) \
+		M(rotation)
 
 	struct TilesetAssignmentDesc
 	{
 		StringField texture;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
 		UVRectField uvs;
-		BitsetField<detail::TileTransformation, detail::TILE_TRANSFORMATION_COUNT> transformations;
+		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
+		EnumField<detail::TileRotation> rotation;
 
 		TilesetAssignmentDesc();
 	};

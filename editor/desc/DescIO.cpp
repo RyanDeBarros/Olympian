@@ -141,8 +141,8 @@ namespace oly::editor
 	}
 
 	template<>
-	bool DescIO::DrawCombo(const char* label, detail::TileTransformation& data)
+	bool DescIO::DrawCombo(const char* label, detail::TileRotation& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "Reflect (X)", "Reflect (Y)", "Rotate 90", "Rotate 180", "Rotate 270" });
+		return DrawEnumCombo(label, data, { "None", "90 degrees", "180 degrees", "270 degrees" });
 	}
 }

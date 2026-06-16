@@ -15,7 +15,7 @@ namespace oly::rendering
 		struct Tile
 		{
 			size_t tex_index;
-			detail::TileTransformation transformation = detail::TileTransformation::None;
+			detail::TileTransformation transformation;
 		};
 
 	public:
@@ -32,7 +32,7 @@ namespace oly::rendering
 		{
 			TileDesc desc;
 			detail::TileConfig config = 0;
-			detail::TileTransformation transformation = detail::TileTransformation::None;
+			detail::TileTransformation transformation;
 		};
 
 	private:
@@ -46,7 +46,7 @@ namespace oly::rendering
 		void load_assignments(const std::vector<Assignment>& assignments);
 
 	public:
-		TileDesc get_tile_desc(const detail::TileConfigGrid tile, detail::TileTransformation& transformation) const;
+		Assignment get_tile_assignment(const detail::TileConfigGrid tile) const;
 
 	private:
 		std::optional<Tile> get_assignment(detail::TileConfig config, detail::TileTransformation& transformation, std::unordered_set<detail::TileConfig>& fallbacks_seen) const;

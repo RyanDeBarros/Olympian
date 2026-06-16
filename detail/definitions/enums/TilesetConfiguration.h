@@ -63,27 +63,96 @@ namespace oly::detail
 	extern TileConfig reflect_y_tile_config(TileConfig config);
 	extern bool tile_config_is_available(GridCoordinate x, GridCoordinate y, const TileConfigGrid grid);
 
-	// TODO v8 separate into two separate enums - one for Reflect and one for Rotate, since you can't combine Reflect flags or Rotate flags
-	enum TileTransformation : char
+	enum class TileReflection
 	{
 		None = 0,
-		ReflectX = 1 << 0,
-		ReflectY = 1 << 1,
-		Rotate90 = 1 << 2,
-		Rotate180 = 1 << 3,
-		Rotate270 = 1 << 4
+		X = 1 << 0,
+		Y = 1 << 1
 	};
 
-	inline TileTransformation operator&(TileTransformation a, TileTransformation b) { return static_cast<TileTransformation>(static_cast<char>(a) & static_cast<char>(b)); }
-	inline TileTransformation& operator&=(TileTransformation& a, TileTransformation b) { return a = a & b; }
-	inline TileTransformation operator|(TileTransformation a, TileTransformation b) { return static_cast<TileTransformation>(static_cast<char>(a) | static_cast<char>(b)); }
-	inline TileTransformation& operator|=(TileTransformation& a, TileTransformation b) { return a = a | b; }
-	inline TileTransformation operator~(TileTransformation a) { return static_cast<TileTransformation>(~static_cast<char>(a)); }
+	constexpr size_t TILE_REFLECTION_BITSET_COUNT = 2;
+	extern TileReflection TILE_REFLECTION_BITSET_DEFAULT;
+	extern TileReflection TILE_REFLECTION_BITSET_VALUES[TILE_REFLECTION_BITSET_COUNT];
+	extern const char* TILE_REFLECTION_BITSET_NAMES[TILE_REFLECTION_BITSET_COUNT];
 
-	constexpr size_t TILE_TRANSFORMATION_COUNT = 5;
-	extern TileTransformation TILE_TRANSFORMATION_DEFAULT;
-	extern TileTransformation TILE_TRANSFORMATION_VALUES[TILE_TRANSFORMATION_COUNT];
-	extern const char* TILE_TRANSFORMATION_NAMES[TILE_TRANSFORMATION_COUNT];
+	inline TileReflection operator~(TileReflection a)
+	{
+		return static_cast<TileReflection>(~static_cast<int>(a));
+	}
+
+	inline TileReflection operator&(TileReflection a, TileReflection b)
+	{
+		return static_cast<TileReflection>(static_cast<int>(a) & static_cast<int>(b));
+	}
+
+	inline TileReflection& operator&=(TileReflection& a, TileReflection b)
+	{
+		a = a & b;
+		return a;
+	}
+
+	inline TileReflection operator|(TileReflection a, TileReflection b)
+	{
+		return static_cast<TileReflection>(static_cast<int>(a) | static_cast<int>(b));
+	}
+
+	inline TileReflection& operator|=(TileReflection& a, TileReflection b)
+	{
+		a = a | b;
+		return a;
+	}
+
+	inline TileReflection operator^(TileReflection a, TileReflection b)
+	{
+		return static_cast<TileReflection>(static_cast<int>(a) ^ static_cast<int>(b));
+	}
+
+	inline TileReflection& operator^=(TileReflection& a, TileReflection b)
+	{
+		a = a ^ b;
+		return a;
+	}
+
+	enum class TileRotation
+	{
+		None = 0,
+		By90,
+		By180,
+		By270,
+		_c
+	};
+
+	inline TileRotation operator+(TileRotation a, TileRotation b)
+	{
+		return static_cast<TileRotation>((static_cast<int>(a) + static_cast<int>(b)) % static_cast<int>(TileRotation::_c));
+	}
+
+	inline TileRotation& operator+=(TileRotation& a, TileRotation b)
+	{
+		a = a + b;
+		return a;
+	}
+
+	inline TileRotation operator-(TileRotation a, TileRotation b)
+	{
+		return static_cast<TileRotation>((static_cast<int>(a) - static_cast<int>(b) + static_cast<int>(TileRotation::_c)) % static_cast<int>(TileRotation::_c));
+	}
+
+	inline TileRotation& operator-=(TileRotation& a, TileRotation b)
+	{
+		a = a - b;
+		return a;
+	}
+
+	struct TileTransformation
+	{
+		TileReflection reflection = TileReflection::None;
+		TileRotation rotation = TileRotation::None;
+
+		TileTransformation& apply(TileTransformation trfm);
+		TileTransformation& apply(TileReflection refl);
+		TileTransformation& apply(TileRotation rot);
+	};
 
 	extern bool tile_config_fallback(TileConfig& config, TileTransformation& transformation, int fallback_idx);
 }

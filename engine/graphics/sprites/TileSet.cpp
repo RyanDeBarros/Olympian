@@ -21,18 +21,19 @@ namespace oly::rendering
 			Tile tile{ .tex_index = size_t(texture_it - tiles.begin()) };
 			if (texture_it == tiles.end())
 				tiles.push_back(a.desc);
-			tile.transformation |= a.transformation;
+			tile.transformation.apply(a.transformation);
 			this->assignments[a.config] = tile;
 		}
 	}
 
-	TileSet::TileDesc TileSet::get_tile_desc(const detail::TileConfigGrid tile, detail::TileTransformation& transformation) const
+	TileSet::Assignment TileSet::get_tile_assignment(const detail::TileConfigGrid tile) const
 	{
 		std::unordered_set<detail::TileConfig> fallbacks_seen{};
+		detail::TileTransformation transformation;
 		if (auto t = get_assignment(detail::tile_config_from_grid(tile), transformation, fallbacks_seen))
 		{
-			transformation |= t->transformation;
-			return tiles[t->tex_index];
+			transformation.apply(t->transformation);
+			return Assignment{ .desc = tiles[t->tex_index], .config = detail::tile_config_from_grid(tile), .transformation = transformation};
 		}
 		else
 		{
@@ -121,20 +122,8 @@ namespace oly::rendering
 						assignment.desc.uvs.y2 = (*uvs)[3];
 					}
 
-					if (auto transformations = parser.optional<TOMLArray>(detail::Key::TransformationArray)())
-					{
-						size_t tr_idx = 0;
-						for (auto& trfm : *transformations)
-						{
-							assets::Parser tr_parser((TOMLNode)trfm, { "in transformation #", tr_idx, " from tileset assignment #", a_idx });
-
-							if (auto transformation = tr_parser.optional<detail::TileTransformation>(assets::NO_KEY)())
-								assignment.transformation |= *transformation;
-
-							++tr_idx;
-						}
-					}
-
+					parser.optional(detail::Key::Reflection)(assignment.transformation.reflection);
+					parser.optional(detail::Key::Rotation)(assignment.transformation.rotation);
 					assignments.push_back(assignment);
 				}
 				catch (const Error& e)
