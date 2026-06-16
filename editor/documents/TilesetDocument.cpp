@@ -13,13 +13,31 @@
 
 namespace oly::editor
 {
-	IndividualEditorState::IndividualEditorState()
+	GroupEditorState::GroupEditorState() :
+		grid_1x1(std::array<std::array<bool, 1>, 1>{
+			std::array<bool, 1>{ true }
+		}),
+		grid_3x1(std::array<std::array<bool, 3>, 1>{
+			std::array<bool, 3>{ true, true, true }
+		}),
+		grid_1x3(std::array<std::array<bool, 1>, 3>{
+			std::array<bool, 1>{ true },
+			std::array<bool, 1>{ true },
+			std::array<bool, 1>{ true }
+		}),
+		grid_3x3(std::array<std::array<bool, 3>, 3>{
+			std::array<bool, 3>{ true, true, true },
+			std::array<bool, 3>{ true, true, true },
+			std::array<bool, 3>{ true, true, true }
+		}),
+		grid_5x5_standard(std::array<std::array<bool, 5>, 5>{
+			std::array<bool, 5>{ true, true,  true, true,  true },
+			std::array<bool, 5>{ true, false, true, false, true },
+			std::array<bool, 5>{ true, true,  true, true,  true },
+			std::array<bool, 5>{ true, false, true, false, true },
+			std::array<bool, 5>{ true, true,  true, true,  true }
+		})
 	{
-		detail::TileConfigGrid g;
-		for (size_t y = 0; y < 3; ++y)
-			for (size_t x = 0; x < 3; ++x)
-				g[y][x] = false;
-		grid = g;
 	}
 
 	const char* TilesetDocument::GetVersion()
@@ -141,48 +159,22 @@ namespace oly::editor
 						const ImVec2 rect_end = rect_start + cell_size;
 
 						if (y == 1 && x == 1)
-						{
-							if (_individual_editor.texture_error)
-								ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 255));
-							else if (_individual_editor.active_texture.Empty())
-								ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(16, 16, 16, 255));
-							else
-							{
-								UVRect uvs = GetAssignment(_individual_editor.grid).uvs.scratch;
-								ImGui::GetWindowDrawList()->AddImage(_individual_editor.active_texture.ID(), rect_start, rect_end, ImVec2(uvs.x1, uvs.y1), ImVec2(uvs.x2, uvs.y2));
-							}
-						}
+							DrawActiveTexture(rect_start, rect_end, _individual_editor.active);
 						else
-							_individual_editor.stale_texture |= DrawToggleCell(rect_start, rect_end, _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+						{
+							_individual_editor.active.stale |= DrawToggleCell(rect_start, rect_end, _individual_editor.active.grid[y][x],
+								detail::tile_config_is_available(x, y, _individual_editor.active.grid));
+						}
 					}
 				}
 
-				if (_individual_editor.stale_texture)
-				{
-					_individual_editor.stale_texture = false;
-					_individual_editor.texture_error = false;
-					auto& desc = GetAssignment(_individual_editor.grid);
-					if (desc.texture.scratch.empty())
-						_individual_editor.active_texture = {};
-					else
-					{
-						BreakoutError::NotifyScope notify(true);
-						try
-						{
-							_individual_editor.active_texture.LoadGeneric(detail::ResourcePath(desc.texture.scratch).string());
-						}
-						catch (const BreakoutError& e)
-						{
-							_individual_editor.texture_error = true;
-						}
-					}
-				}
+				UpdateActiveTexture(_individual_editor.active);
 			}
 			ImGui::EndChild();
 
 			ImGui::TableNextColumn();
 			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
-				Draw(GetAssignment(_individual_editor.grid));
+				Draw(GetAssignment(_individual_editor.active.grid));
 			ImGui::EndChild();
 
 			ImGui::EndTable();
@@ -315,7 +307,44 @@ namespace oly::editor
 
 	void TilesetDocument::OnActiveTextureChanged()
 	{
-		_individual_editor.stale_texture = true;
+		_individual_editor.active.stale = true;
 		// TODO v8 set for group editors too
+	}
+
+	void TilesetDocument::UpdateActiveTexture(ActiveTexture& active)
+	{
+		if (active.stale)
+		{
+			active.stale = false;
+			active.error = false;
+			auto& desc = GetAssignment(active.grid);
+			if (desc.texture.scratch.empty())
+				active.texture = {};
+			else
+			{
+				BreakoutError::NotifyScope notify(true);
+				try
+				{
+					active.texture.LoadGeneric(detail::ResourcePath(desc.texture.scratch).string());
+				}
+				catch (const BreakoutError& e)
+				{
+					active.error = true;
+				}
+			}
+		}
+	}
+
+	void TilesetDocument::DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, ActiveTexture& active)
+	{
+		if (active.error)
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 255));
+		else if (active.texture.Empty())
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(16, 16, 16, 255));
+		else
+		{
+			UVRect uvs = GetAssignment(active.grid).uvs.scratch;
+			ImGui::GetWindowDrawList()->AddImage(active.texture.ID(), rect_start, rect_end, ImVec2(uvs.x1, uvs.y1), ImVec2(uvs.x2, uvs.y2));
+		}
 	}
 }

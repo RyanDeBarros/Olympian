@@ -2,6 +2,7 @@
 
 #include "external/GL.h"
 
+#include <memory>
 #include <string_view>
 #include <variant>
 #include <vector>
@@ -24,9 +25,11 @@ namespace oly::editor
 		GLuint ID() const;
 	};
 
+	typedef std::shared_ptr<TextureID> TextureIDRef;
+
 	struct RasterTexture
 	{
-		TextureID id;
+		TextureIDRef id;
 		int width = 0, height = 0;
 		
 		RasterTexture(const std::string_view filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
@@ -37,7 +40,7 @@ namespace oly::editor
 
 	struct GIFTexture
 	{
-		std::vector<TextureID> ids;
+		std::vector<TextureIDRef> ids;
 		std::vector<float> delays;
 		int width = 0, height = 0;
 		int index = 0;
@@ -54,7 +57,7 @@ namespace oly::editor
 
 	struct SVGTexture
 	{
-		TextureID id;
+		TextureIDRef id;
 		int width = 0, height = 0;
 		float preview_scale = 1.f;
 
