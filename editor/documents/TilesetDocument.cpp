@@ -83,12 +83,12 @@ namespace oly::editor
 
 	size_t Grid4x4EditorState::Rows() const
 	{
-		return 7;
+		return 5;
 	}
 
 	size_t Grid4x4EditorState::Cols() const
 	{
-		return 7;
+		return 5;
 	}
 
 	Grid5x5EditorState::Grid5x5EditorState() :
@@ -275,7 +275,6 @@ namespace oly::editor
 					const float cell_side = std::min(avail_cell_width, avail_cell_height);
 					const ImVec2 cell_size(cell_side, cell_side);
 					const ImVec2 cursor = ImGui::GetCursorScreenPos();
-					// TODO v8 size or offset is not working for 4x4
 					const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - cell_side * ImVec2(editor->Cols() + 2.f, editor->Rows() + 2.f));
 
 					for (int y = 0; y < editor->Rows(); ++y)
@@ -509,8 +508,40 @@ namespace oly::editor
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(empty_gray_value, empty_gray_value, empty_gray_value, 255));
 		else
 		{
-			UVRect uvs = GetAssignment(grid).uvs.scratch;
-			ImGui::GetWindowDrawList()->AddImage(active.texture.ID(), rect_start, rect_end, ImVec2(uvs.x1, uvs.y1), ImVec2(uvs.x2, uvs.y2));
+			// TODO v8 use texture slot -> if slot is invalid, also set error to true, or rather to an enum so that on-hover can explain the cause of the error ("file does not exist/not supported" or "invalid texture slot")
+			auto& desc = GetAssignment(grid);
+			UVRect uv_rect = desc.uvs.scratch;
+			detail::TileReflection reflection = desc.reflection.scratch;
+			detail::TileRotation rotation = desc.rotation.scratch;
+
+			std::array<ImVec2, 4> uvs;
+			uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);
+			uvs[1] = ImVec2(uv_rect.x2, uv_rect.y1);
+			uvs[2] = ImVec2(uv_rect.x2, uv_rect.y2);
+			uvs[3] = ImVec2(uv_rect.x1, uv_rect.y2);
+
+			if (static_cast<bool>(reflection & detail::TileReflection::X))
+			{
+				std::swap(uvs[0], uvs[1]);
+				std::swap(uvs[2], uvs[3]);
+			}
+
+			if (static_cast<bool>(reflection & detail::TileReflection::Y))
+			{
+				std::swap(uvs[0], uvs[3]);
+				std::swap(uvs[1], uvs[2]);
+			}
+
+			{
+				std::array<ImVec2, 4> temp;
+				for (int i = 0; i < 4; ++i)
+					temp[i] = uvs[static_cast<size_t>((i + static_cast<int>(rotation)) % 4)];
+				uvs = temp;
+			}
+
+			ImVec2 rect_delta = rect_end - rect_start;
+			ImGui::GetWindowDrawList()->AddImageQuad(active.texture.ID(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
+				rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
 		}
 	}
 
