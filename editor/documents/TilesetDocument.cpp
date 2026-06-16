@@ -2,6 +2,7 @@
 
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
+#include "core/editor/UID.h"
 #include "core/Errors.h"
 
 #include "gui/IDScope.h"
@@ -222,10 +223,43 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			DRAW_FIELD(texture); // TODO v8 support dropping paths externally or from tree view / content browser
+			{
+				DescIO::PrepareValue(desc.texture.label);
+				gui::IDScope scope(&desc.texture.scratch);
+				
+				if (gui::InputData<std::string>{}("", desc.texture.scratch))
+					MarkDirty();
+
+				if (ImGui::IsItemDeactivatedAfterEdit())
+					OnActiveTextureChanged();
+
+				if (ImGui::BeginDragDropTarget())
+				{
+					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+					{
+						detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
+						if (path.is_resource())
+						{
+							desc.texture.scratch = path.get_resource_shorthand();
+							MarkDirty();
+							OnActiveTextureChanged();
+						}
+						else
+							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
+					}
+
+					ImGui::EndDragDropTarget();
+				}
+
+				if (DescIO::CheckRevertButton(desc.texture.scratch, desc.texture.def))
+				{
+					MarkDirty();
+					OnActiveTextureChanged();
+				}
+			}
+
 			DRAW_FIELD(texture_index);
-			//DRAW_FIELD(config); // TODO v8 should be derived from grid
-			DRAW_FIELD(uvs); // TODO v8 sublabels for x1/y1/x2/y2
+			DRAW_FIELD(uvs);
 			DRAW_FIELD(reflection);
 			DRAW_FIELD(rotation);
 		}
@@ -277,5 +311,11 @@ namespace oly::editor
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
 	{
 		return _scratch.assignments.map[detail::tile_config_from_grid(grid)];
+	}
+
+	void TilesetDocument::OnActiveTextureChanged()
+	{
+		_individual_editor.stale_texture = true;
+		// TODO v8 set for group editors too
 	}
 }

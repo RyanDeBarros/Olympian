@@ -1,14 +1,17 @@
 #include "TreeViewPanel.h"
 
 #include "core/editor/Editor.h"
-#include "core/Errors.h"
 #include "core/editor/Logger.h"
-#include "core/windows/MainWindow.h"
-#include "core/PathInfo.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
-#include "panels/PanelManager.h"
+#include "core/editor/UID.h"
 
+#include "core/windows/MainWindow.h"
+
+#include "core/Errors.h"
+#include "core/PathInfo.h"
+
+#include "panels/PanelManager.h"
 #include "panels/PreferencesPanel.h"
 
 #include "gui/Toolbar.h"
@@ -249,7 +252,13 @@ namespace oly::editor
 		gui::IDScope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
-		// TODO v8 begin path drop target so paths can be dropped into documents
+		if (ImGui::BeginDragDropSource())
+		{
+			std::string path = node.path.string();
+			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9 make sure to include path drag drop source in content browser panel
+			ImGui::Text("Drag path");
+			ImGui::EndDragDropSource();
+		}
 
 		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
 		{

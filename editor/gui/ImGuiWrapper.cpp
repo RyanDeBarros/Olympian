@@ -109,7 +109,7 @@ namespace oly::editor::gui
 		return ImGui::ColorEdit4(label, data.ValuePtr());
 	}
 
-	// TODO v8 use inner tables more often
+	// TODO v9 use inner tables more often for layout structuring
 	bool InputData<UVRect>::operator()(const char* label, UVRect& data) const
 	{
 		const bool header = label && label[0] != '\0';

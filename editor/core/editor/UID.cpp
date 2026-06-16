@@ -6,8 +6,9 @@ namespace oly::editor
 	{
 		switch (uid)
 		{
-		case UID::DynamicRowReorder:
-			return "DYNAMIC_ROW_REORDER";
+#define SWITCH_CASE(E) case UID::E: return #E;
+			UID_GENERATOR(SWITCH_CASE)
+#undef SWITCH_CASE
 		default:
 			return "";
 		}

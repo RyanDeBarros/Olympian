@@ -51,5 +51,6 @@ namespace oly::editor
 		void Dump(toml::table& table, TilesetAssignmentDesc& desc);
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
+		void OnActiveTextureChanged();
 	};
 }

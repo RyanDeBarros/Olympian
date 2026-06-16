@@ -41,6 +41,14 @@ namespace oly::detail
 		return absolute.generic_string();
 	}
 
+	std::string ResourcePath::get_resource_shorthand() const
+	{
+		if (is_resource())
+			return "@/" + std::filesystem::relative(absolute, resource_root).generic_string();
+		else
+			return absolute.generic_string();
+	}
+
 	std::filesystem::path ResourcePath::get_absolute() const
 	{
 		return absolute;

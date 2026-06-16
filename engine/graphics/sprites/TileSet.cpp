@@ -75,9 +75,8 @@ namespace oly::rendering
 			++fallback_idx;
 		}
 
-		for (auto [c, t] : fallback_queue)
+		for (auto&& [c, t] : fallback_queue)
 		{
-			// TODO v8 transformations don't get transformed properly - rotations/reflections aren't combined because of bit flags
 			if (auto tile = get_assignment(c, t, fallbacks_seen))
 				return *tile;
 		}

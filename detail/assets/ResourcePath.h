@@ -45,6 +45,7 @@ namespace oly::detail
 
 	public:
 		std::string string() const;
+		std::string get_resource_shorthand() const;
 		std::filesystem::path get_absolute() const;
 		bool has_extension() const { return absolute.has_extension(); }
 		std::string extension() const { return absolute.extension().generic_string(); }
