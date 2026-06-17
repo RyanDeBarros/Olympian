@@ -61,6 +61,8 @@ namespace oly::editor
 	{
 	}
 
+	const Rect Rect::ZERO = Rect(0.f, 0.f, 0.f, 0.f);
+
 	bool Rect::operator==(const Rect& o) const
 	{
 		return x1 == o.x1 && x2 == o.x2 && y1 == o.y1 && y2 == o.y2;

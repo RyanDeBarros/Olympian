@@ -5,6 +5,7 @@
 #include "desc/RasterFontDesc.h"
 
 #include "gui/Form.h"
+#include "gui/ListModel.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -15,6 +16,7 @@ namespace oly::editor
 		RasterFontDesc _scratch;
 		RasterFontDesc _disk;
 		detail::MetaMap _meta;
+		gui::ListModel _glyph_model;
 
 	public:
 		using IDocument::IDocument;

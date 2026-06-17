@@ -213,25 +213,18 @@ namespace oly::context
 		const auto space_advance_width = parser.required<float>(detail::Key::SpaceAdvanceWidth)();
 		const auto line_height = parser.required<float>(detail::Key::LineHeight)();
 		const auto font_scale = parser.defaulted(detail::Key::FontScale)(glm::vec2(1.0f));
-		const auto texture_files = parser.defaulted<std::vector<std::string>>(detail::Key::TextureFileArray)();
 
 		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
 		if (auto glyph_array = parser.optional<TOMLArray>(detail::Key::GlyphArray)())
 		{
-			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
+			glyph_array->for_each([&glyphs](auto&& g) {
 				try
 				{
 					assets::Parser parser((TOMLNode)g);
 
 					utf::Codepoint codepoint = parser.required<utf::Codepoint>(detail::Key::Codepoint, make_nonnull_codepoint_validator())();
 
-					std::string texture_file;
-					unsigned int tidx = parser.defaulted(detail::Key::TextureFile, assets::make_single_validator<unsigned int>(
-						[sz = texture_files.size()](unsigned int v) { return v < sz; },
-						[sz = texture_files.size()](unsigned int v) { return DeferredStringList{ "-> (", std::to_string(v), ") out of range (", std::to_string(sz), "), skipping glyph..."}; }
-					))(0u);
-					texture_file = texture_files[tidx];
-
+					std::string texture_file = parser.required<std::string>(detail::Key::TextureFile)();
 					unsigned int texture_index = parser.defaulted(detail::Key::TextureIndex)(0u);
 
 					math::IRect2D location = math::IRect2D::load(parser.field(detail::Key::Location), true);

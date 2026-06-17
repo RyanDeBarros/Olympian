@@ -3,6 +3,8 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
+#include "gui/Subform.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -21,6 +23,7 @@ namespace oly::editor
 		}
 
 		Load();
+		// TODO v8 set glyph model policy to 'RequireUnique'?
 	}
 
 	void RasterFontDocument::Draw()
@@ -60,6 +63,8 @@ namespace oly::editor
 		}
 
 		_scratch = _disk;
+
+		_glyph_model.Init(*_scratch.glyphs.ListAdapter());
 	}
 
 	void RasterFontDocument::Dump()
@@ -73,16 +78,39 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(RasterFontDesc& desc)
 	{
-		DRAW_FIELDS(RASTER_FONT_STANDARD_GENERATOR);
+		if (auto form = Form())
+		{
+			DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-		// TODO v8
+			if (auto subform = Subform(form, "Glyphs"))
+			{
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("Select Glyph");
+
+				ImGui::TableNextColumn();
+				_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
+					if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
+						return desc.glyphs[i].codepoint.scratch;
+					else
+						return "Glyph #" + std::to_string(i);
+				}, "New glyph", "Delete glyph", "Clear glyphs");
+
+				if (!desc.glyphs.Empty())
+					Draw(_scratch.glyphs[_glyph_model.active_index]);
+
+				if (_glyph_model.ConsumeOps(*_scratch.glyphs.ListAdapter()))
+					MarkDirty();
+
+				_glyph_model.active_index.ConsumeModified();
+				// TODO v8 preview of glyph (also in other font-related documents)? -> maybe in future branch
+			}
+		}
 	}
 
 	void RasterFontDocument::Draw(GlyphDesc& desc)
 	{
-		DRAW_FIELDS(GLYPH_STANDARD_GENERATOR);
-
-		// TODO v8
+		DRAW_FIELDS(GLYPH_GENERATOR);
 	}
 
 	void RasterFontDocument::Load(TOMLNode node, RasterFontDesc& desc)

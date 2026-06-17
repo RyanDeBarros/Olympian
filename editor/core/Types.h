@@ -39,6 +39,8 @@ namespace oly::editor
 		Rect();
 		Rect(float x1, float x2, float y1, float y2);
 
+		static const Rect ZERO;
+
 		bool operator==(const Rect&) const;
 		bool operator!=(const Rect&) const;
 

@@ -8,22 +8,19 @@
 
 namespace oly::editor
 {
-#define GLYPH_STANDARD_GENERATOR(M) \
+#define GLYPH_GENERATOR(M) \
 		M(codepoint) \
+		M(texture_file) \
 		M(texture_slot) \
 		M(location) \
 		M(padding) \
 		M(origin_offset_mode) \
 		M(origin_offset)
 
-#define GLYPH_GENERATOR(M) \
-		M(texture_index) \
-		GLYPH_STANDARD_GENERATOR(M)
-
 	struct GlyphDesc
 	{
 		StringField codepoint;
-		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
+		StringField texture_file;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_slot;
 		RectField location;
 		TopSidePaddingField padding;
@@ -33,22 +30,17 @@ namespace oly::editor
 		GlyphDesc();
 	};
 
-#define RASTER_FONT_STANDARD_GENERATOR(M) \
+#define RASTER_FONT_PARTIAL_GENERATOR(M) \
 		M(space_advance_width) \
 		M(line_height) \
 		M(font_scale) \
 		M(storage)
-
-#define RASTER_FONT_PARTIAL_GENERATOR(M) \
-		RASTER_FONT_STANDARD_GENERATOR(M) \
-		M(texture_files)
 
 	struct RasterFontDesc
 	{
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> space_advance_width;
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> line_height;
 		Vec2Field<MakeOpt(0.f), MakeOpt<float>()> font_scale;
-		StringVectorField texture_files;
 		EnumField<detail::StorageMode> storage;
 		VectorDesc<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;

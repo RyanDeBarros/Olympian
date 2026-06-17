@@ -281,7 +281,38 @@ namespace oly::editor
 		{
 			toml::array arr;
 			arr.reserve(Rect::N);
-			for (size_t i = 0; i < Color::N; ++i)
+			for (size_t i = 0; i < Rect::N; ++i)
+				arr.push_back(obj[i]);
+			return arr;
+		}
+	};
+
+	template<>
+	struct Serializer<TopSidePadding>
+	{
+		bool Load(TopSidePadding& obj, TOMLNode node) const
+		{
+			if (auto array = node.as_array())
+			{
+				bool fully_loaded = true;
+				for (size_t i = 0; i < std::min(array->size(), TopSidePadding::N); ++i)
+				{
+					if (auto v = array->get_as<double>(i))
+						obj[i] = v->get();
+					else
+						fully_loaded = false;
+				}
+				return fully_loaded;
+			}
+			else
+				return false;
+		}
+
+		toml::array Dump(const TopSidePadding obj) const
+		{
+			toml::array arr;
+			arr.reserve(TopSidePadding::N);
+			for (size_t i = 0; i < TopSidePadding::N; ++i)
 				arr.push_back(obj[i]);
 			return arr;
 		}

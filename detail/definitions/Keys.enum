@@ -217,7 +217,6 @@ Texture = Texture
 TextureArray = Texture
 TextureCoordinates = TxCoords
 TextureFile = TxFile
-TextureFileArray = TxFiles
 TextureIndex = TxIndex
 TextColor = TextClr
 TextWrap = TextWrap
