@@ -1,6 +1,7 @@
 #include "Types.h"
 
 #include <stdexcept>
+#include <string>
 
 namespace oly::editor
 {
@@ -39,7 +40,7 @@ namespace oly::editor
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(i + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
 	}
 
 	float Color::operator[](size_t i) const
@@ -47,52 +48,98 @@ namespace oly::editor
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(i + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
 	}
 
-	UVRect::UVRect()
+	Rect::Rect()
 		: x1(0.f), x2(1.f), y1(0.f), y2(1.f)
 	{
 	}
 
-	UVRect::UVRect(float x1, float x2, float y1, float y2)
+	Rect::Rect(float x1, float x2, float y1, float y2)
 		: x1(x1), x2(x2), y1(y1), y2(y2)
 	{
 	}
 
-	bool UVRect::operator==(const UVRect& o) const
+	bool Rect::operator==(const Rect& o) const
 	{
 		return x1 == o.x1 && x2 == o.x2 && y1 == o.y1 && y2 == o.y2;
 	}
 
-	bool UVRect::operator!=(const UVRect& o) const
+	bool Rect::operator!=(const Rect& o) const
 	{
 		return x1 != o.x1 || x2 != o.x2 || y1 != o.y1 || y2 != o.y2;
 	}
 
-	float* UVRect::ValuePtr()
+	float* Rect::ValuePtr()
 	{
 		return v;
 	}
 
-	const float* UVRect::ValuePtr() const
+	const float* Rect::ValuePtr() const
 	{
 		return v;
 	}
 
-	float& UVRect::operator[](size_t i)
+	float& Rect::operator[](size_t i)
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(i + " is invalid index for UVRect");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Rect");
 	}
 
-	float UVRect::operator[](size_t i) const
+	float Rect::operator[](size_t i) const
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(i + " is invalid index for UVRect");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Rect");
+	}
+
+	TopSidePadding::TopSidePadding()
+		: left(0.f), right(0.f), top(0.f)
+	{
+	}
+
+	TopSidePadding::TopSidePadding(float left, float right, float top)
+		: left(left), right(right), top(top)
+	{
+	}
+
+	bool TopSidePadding::operator==(const TopSidePadding& o) const
+	{
+		return v[0] == o.v[0] && v[1] == o.v[1] && v[2] == o.v[2];
+	}
+
+	bool TopSidePadding::operator!=(const TopSidePadding& o) const
+	{
+		return v[0] != o.v[0] || v[1] != o.v[1] || v[2] != o.v[2];
+	}
+
+	float* TopSidePadding::ValuePtr()
+	{
+		return v;
+	}
+
+	const float* TopSidePadding::ValuePtr() const
+	{
+		return v;
+	}
+	
+	float& TopSidePadding::operator[](size_t i)
+	{
+		if (i < N)
+			return v[i];
+		else
+			throw std::out_of_range(std::to_string(i) + " is invalid index for TopSidePadding");
+	}
+	
+	float TopSidePadding::operator[](size_t i) const
+	{
+		if (i < N)
+			return v[i];
+		else
+			throw std::out_of_range(std::to_string(i) + " is invalid index for TopSidePadding");
 	}
 }

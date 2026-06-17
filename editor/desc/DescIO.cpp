@@ -111,6 +111,12 @@ namespace oly::editor
 	}
 
 	template<>
+	bool DescIO::DrawCombo(const char* label, detail::PositioningMode& data)
+	{
+		return DrawEnumCombo(label, data, { "Relative", "Absolute" });
+	}
+
+	template<>
 	bool DescIO::DrawCombo(const char* label, detail::SignalBindingType& data)
 	{
 		return DrawEnumCombo(label, data, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });

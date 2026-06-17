@@ -145,9 +145,15 @@ namespace oly::editor::gui
 	};
 
 	template<>
-	struct InputData<UVRect>
+	struct InputData<Rect>
 	{
-		bool operator()(const char* label, UVRect& data) const;
+		bool operator()(const char* label, Rect& data) const;
+	};
+
+	template<>
+	struct InputData<TopSidePadding>
+	{
+		bool operator()(const char* label, TopSidePadding& data) const;
 	};
 
 	template<>

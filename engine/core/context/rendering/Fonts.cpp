@@ -236,7 +236,7 @@ namespace oly::context
 
 					math::IRect2D location = math::IRect2D::load(parser.field(detail::Key::Location), true);
 					math::TopSidePadding padding = math::TopSidePadding::load(parser.field(detail::Key::Padding));
-					math::PositioningMode origin_offset_mode = parser.defaulted(detail::Key::OriginOffsetMode)(math::PositioningMode::Relative);
+					detail::PositioningMode origin_offset_mode = parser.defaulted(detail::Key::OriginOffsetMode)(detail::PositioningMode::Relative);
 					glm::vec2 origin_offset = parser.defaulted<glm::vec2>(detail::Key::OriginOffset)();
 
 					glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));

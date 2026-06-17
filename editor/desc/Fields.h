@@ -117,9 +117,19 @@ namespace oly::editor
 		}
 	};
 
-	struct UVRectField : public PrimitiveField<UVRect>
+	struct RectField : public PrimitiveField<Rect>
 	{
-		using PrimitiveField<UVRect>::PrimitiveField;
+		using PrimitiveField<Rect>::PrimitiveField;
+
+		bool Draw()
+		{
+			return DescIO::Draw(label, scratch, def);
+		}
+	};
+
+	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>
+	{
+		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
 		bool Draw()
 		{

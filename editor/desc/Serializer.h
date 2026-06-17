@@ -257,14 +257,14 @@ namespace oly::editor
 	};
 
 	template<>
-	struct Serializer<UVRect>
+	struct Serializer<Rect>
 	{
-		bool Load(UVRect& obj, TOMLNode node) const
+		bool Load(Rect& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
 				bool fully_loaded = true;
-				for (size_t i = 0; i < std::min(array->size(), UVRect::N); ++i)
+				for (size_t i = 0; i < std::min(array->size(), Rect::N); ++i)
 				{
 					if (auto v = array->get_as<double>(i))
 						obj[i] = v->get();
@@ -277,10 +277,10 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const UVRect obj) const
+		toml::array Dump(const Rect obj) const
 		{
 			toml::array arr;
-			arr.reserve(UVRect::N);
+			arr.reserve(Rect::N);
 			for (size_t i = 0; i < Color::N; ++i)
 				arr.push_back(obj[i]);
 			return arr;

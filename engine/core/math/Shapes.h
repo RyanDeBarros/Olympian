@@ -7,12 +7,6 @@
 
 namespace oly::math
 {
-	enum class PositioningMode
-	{
-		Relative = 0x0,
-		Absolute = 0x1
-	};
-
 	struct Triangle2D
 	{
 		glm::vec2 root;

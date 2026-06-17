@@ -8,6 +8,7 @@
 #include "definitions/enums/InputMod.h"
 #include "definitions/enums/KeyInput.h"
 #include "definitions/enums/MouseButton.h"
+#include "definitions/enums/PositioningMode.h"
 #include "definitions/enums/SignalBindingType.h"
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"

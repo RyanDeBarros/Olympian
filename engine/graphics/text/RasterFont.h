@@ -3,6 +3,8 @@
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/text/Kerning.h"
 
+#include "definitions/enums/PositioningMode.h"
+
 namespace oly::rendering
 {
 	class RasterFontGlyph
@@ -14,7 +16,7 @@ namespace oly::rendering
 
 	public:
 		RasterFontGlyph(const graphics::BindlessTextureRef& texture, math::IRect2D location,
-			math::TopSidePadding padding = {}, math::PositioningMode origin_offset_mode = math::PositioningMode::Relative, glm::vec2 origin_offset = {});
+			math::TopSidePadding padding = {}, detail::PositioningMode origin_offset_mode = detail::PositioningMode::Relative, glm::vec2 origin_offset = {});
 
 		graphics::BindlessTextureRef texture() const
 		{

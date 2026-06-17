@@ -579,7 +579,7 @@ namespace oly::editor
 	{
 		auto& desc = GetAssignment(grid);
 		auto& active = GetActiveTexture(grid);
-		UVRect uv_rect = desc.uvs.scratch;
+		auto uv_rect = desc.uvs.scratch;
 		detail::TileReflection reflection = desc.reflection.scratch;
 		detail::TileRotation rotation = desc.rotation.scratch;
 

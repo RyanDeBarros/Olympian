@@ -109,8 +109,8 @@ namespace oly::editor::gui
 		return ImGui::ColorEdit4(label, data.ValuePtr());
 	}
 
-	// TODO v9 use inner tables more often for layout structuring
-	bool InputData<UVRect>::operator()(const char* label, UVRect& data) const
+	// TODO v9 use inner tables more often for layout structuring: define utility to defer calls to input-data so that the number of columns can be dynamically computed + SameLine() automatically called for multiple elements in a column.
+	bool InputData<Rect>::operator()(const char* label, Rect& data) const
 	{
 		const bool header = label && label[0] != '\0';
 		bool dirty = false;
@@ -141,6 +141,38 @@ namespace oly::editor::gui
 			ImGui::Text("y2");
 			ImGui::SameLine();
 			dirty |= InputClampedData("##y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::EndTable();
+		}
+		return dirty;
+	}
+
+	bool InputData<TopSidePadding>::operator()(const char* label, TopSidePadding& data) const
+	{
+		const bool header = label && label[0] != '\0';
+		bool dirty = false;
+		if (ImGui::BeginTable("##TopSidePadding", header ? 4 : 3))
+		{
+			if (header)
+			{
+				ImGui::TableNextColumn();
+				ImGui::Text(label);
+			}
+
+			ImGui::TableNextColumn();
+			ImGui::Text("Left");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##Left", data.left, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			ImGui::Text("Right");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##Right", data.right, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			ImGui::Text("Top");
+			ImGui::SameLine();
+			dirty |= InputClampedData("##Top", data.top, MakeOpt(0.f), MakeOpt(1.f));
 
 			ImGui::EndTable();
 		}
