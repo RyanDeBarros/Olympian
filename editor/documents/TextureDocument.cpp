@@ -37,6 +37,8 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
+		UpdatePreviewTexture();
+
 		gui::IDScope scope(this);
 		if (ImGui::BeginTable("", 2))
 		{
@@ -87,7 +89,7 @@ namespace oly::editor
 		if (auto svg_desc = _scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
 			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.scratch;
 
-		ReloadPreviewTexture();
+		_stale_preview_texture = true;
 	}
 
 	void TextureDocument::Dump()
@@ -104,9 +106,13 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	// TODO v8 use stale/update pattern instead
-	void TextureDocument::ReloadPreviewTexture()
+	void TextureDocument::UpdatePreviewTexture()
 	{
+		if (!_stale_preview_texture)
+			return;
+
+		_stale_preview_texture = false;
+
 		std::optional<GLenum> min_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
 		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
 		std::optional<bool> generate_mipmaps = _scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
@@ -421,7 +427,7 @@ namespace oly::editor
 				MarkDirty();
 
 			if (_slots.active_index.ConsumeModified())
-				ReloadPreviewTexture();
+				_stale_preview_texture = true;
 		}
 	}
 	
@@ -433,7 +439,7 @@ namespace oly::editor
 			if (desc.generate_mipmaps.Draw())
 			{
 				MarkDirty();
-				ReloadPreviewTexture();
+				_stale_preview_texture = true;
 			}
 
 			DRAW_FIELD(storage);
@@ -448,7 +454,7 @@ namespace oly::editor
 			if (desc.generate_mipmaps.Draw())
 			{
 				MarkDirty();
-				ReloadPreviewTexture();
+				_stale_preview_texture = true;
 			}
 
 			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
@@ -459,22 +465,17 @@ namespace oly::editor
 	{
 		if (auto subform = Subform(form, "Parameters", true))
 		{
-			bool filter_changed = false;
-
 			if (desc.min_filter.Draw())
 			{
 				MarkDirty();
-				filter_changed = true;
+				_stale_preview_texture = true;
 			}
 
 			if (desc.mag_filter.Draw())
 			{
 				MarkDirty();
-				filter_changed = true;
+				_stale_preview_texture = true;
 			}
-
-			if (filter_changed)
-				ReloadPreviewTexture();
 
 			DRAW_FIELD(wrap_s);
 			DRAW_FIELD(wrap_t);
@@ -601,7 +602,7 @@ namespace oly::editor
 
 	void TextureDocument::OnActiveSlotChanged()
 	{
-		ReloadPreviewTexture();
+		_stale_preview_texture = true;
 	}
 
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()

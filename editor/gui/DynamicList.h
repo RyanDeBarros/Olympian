@@ -9,8 +9,6 @@
 
 namespace oly::editor::gui
 {
-	// TODO v8 unify ListModel and DynamicList
-
 	struct RowOperation
 	{
 		enum class Type

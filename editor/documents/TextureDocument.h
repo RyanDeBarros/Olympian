@@ -43,6 +43,7 @@ namespace oly::editor
 		Texture _texture;
 		PreviewNav _preview_nav;
 		bool _preview_spritesheet = true;
+		bool _stale_preview_texture = true;
 		SpritesheetPreviewData _spritesheet_preview_data;
 
 	public:
@@ -58,7 +59,7 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
-		void ReloadPreviewTexture();
+		void UpdatePreviewTexture();
 		void DrawPreview();
 		SpritesheetDesc* SpritesheetPreview();
 		SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
