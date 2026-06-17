@@ -595,9 +595,6 @@ namespace oly::editor
 		if (!path.is_file())
 			return TextureSettingsLoadResult::NotAFile;
 
-		if (!path.is_resource())
-			return TextureSettingsLoadResult::NotAResource;
-
 		auto oly_path = path.get_import_path();
 		if (!oly_path.is_file())
 			return TextureSettingsLoadResult::MissingImport;
@@ -630,6 +627,9 @@ namespace oly::editor
 				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
 					scale = d.scale.scratch;
 			});
+
+			if (!path.is_resource())
+				return TextureSettingsLoadResult::NotAResource;
 
 			return TextureSettingsLoadResult::Success;
 		}

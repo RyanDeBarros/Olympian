@@ -127,8 +127,13 @@ namespace oly::editor
 		enum class TextureError
 		{
 			None,
-			File,
-			Slot
+			NotAFile,
+			NotAResource,
+			MissingImport,
+			NotATexture,
+			CorruptedAsset,
+			BadSlot,
+			CannotLoad,
 		};
 
 		struct ActiveTexture
@@ -167,6 +172,7 @@ namespace oly::editor
 		void OnActiveTextureChanged(const detail::TileConfigGrid grid);
 		void UpdateActiveTextures();
 
+		static bool TextureErrorIsWarning(TilesetDocument::TextureError error);
 		void DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value);
 		void DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end);
 		void TextureErrorTooltip(TextureError error);

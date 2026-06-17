@@ -6,6 +6,7 @@
 #include "core/Errors.h"
 
 #include "gui/IDScope.h"
+#include "gui/Overlays.h"
 #include "gui/Subform.h"
 
 #include "documents/TextureDocument.h"
@@ -519,26 +520,54 @@ namespace oly::editor
 					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.scratch, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
 						active.texture.LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
-					else // TODO v8 use specific texture error from result
-						active.error = TextureError::Slot;
+					else
+					{
+						switch (result)
+						{
+						case TextureDocument::TextureSettingsLoadResult::NotAFile:
+							active.error = TextureError::NotAFile;
+							break;
+						case TextureDocument::TextureSettingsLoadResult::NotAResource:
+							active.error = TextureError::NotAResource;
+							break;
+						case TextureDocument::TextureSettingsLoadResult::MissingImport:
+							active.error = TextureError::MissingImport;
+							break;
+						case TextureDocument::TextureSettingsLoadResult::NotATexture:
+							active.error = TextureError::NotATexture;
+							break;
+						case TextureDocument::TextureSettingsLoadResult::BadSlot:
+							active.error = TextureError::BadSlot;
+							break;
+						case TextureDocument::TextureSettingsLoadResult::Corrupted:
+						default:
+							active.error = TextureError::CorruptedAsset;
+							break;
+						}
+					}
 				}
 				catch (const BreakoutError& e)
 				{
-					active.error = TextureError::File;
+					active.error = TextureError::CannotLoad;
 				}
 			}
 		}
 	}
 
+	bool TilesetDocument::TextureErrorIsWarning(TextureError error)
+	{
+		return error == TextureError::BadSlot || error == TextureError::NotAResource;
+	}
+
 	void TilesetDocument::DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value)
 	{
 		auto& active = GetActiveTexture(grid);
-		if (active.error == TextureError::File)
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 255));
-		else if (active.error == TextureError::Slot)
+		if (active.error != TextureError::None && !TextureErrorIsWarning(active.error))
+			gui::Overlay::QuadError(rect_start, rect_end);
+		else if (active.error != TextureError::None && TextureErrorIsWarning(active.error))
 		{
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(255, 0, 255, 127)); // TODO v8 use special overlay texture instead of just alpha tint
+			gui::Overlay::QuadWarning(rect_start, rect_end);
 		}
 		else if (active.texture.Empty())
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(empty_gray_value, empty_gray_value, empty_gray_value, 255));
@@ -588,11 +617,26 @@ namespace oly::editor
 	{
 		switch (error)
 		{
-		case TextureError::File:
-			ImGui::SetTooltip("Could not find/load file");
+		case TextureError::NotAFile:
+			ImGui::SetTooltip("Cannot find texture file");
 			break;
-		case TextureError::Slot:
-			ImGui::SetTooltip("Invalid texture slot");
+		case TextureError::NotAResource:
+			ImGui::SetTooltip("Texture is not located in resource folder");
+			break;
+		case TextureError::MissingImport:
+			ImGui::SetTooltip("Texture is missing import file");
+			break;
+		case TextureError::NotATexture:
+			ImGui::SetTooltip("File is not imported as a texture");
+			break;
+		case TextureError::CorruptedAsset:
+			ImGui::SetTooltip("Import file is corrupted");
+			break;
+		case TextureError::BadSlot:
+			ImGui::SetTooltip("Bad slot index");
+			break;
+		case TextureError::CannotLoad:
+			ImGui::SetTooltip("Editor cannot load texture");
 			break;
 		}
 	}
