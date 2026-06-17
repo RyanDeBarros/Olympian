@@ -1,12 +1,14 @@
 #include "Editor.h"
 
 #include "core/windows/ProjectSelectWindow.h"
-#include "core/editor/Logger.h"
 #include "core/windows/MainWindow.h"
+
+#include "core/editor/Logger.h"
 #include "core/editor/ShortcutManager.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 
+#include "gui/Texture.h"
 #include "documents/DocumentManager.h"
 #include "panels/AssetEditorPanel.h"
 
@@ -49,6 +51,7 @@ namespace oly::editor
 	void Editor::Tick()
 	{
 		_shortcut_manager->PollShortcuts();
+		Texture::Update();
 
 		switch (_app_state)
 		{

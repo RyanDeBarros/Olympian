@@ -5,6 +5,8 @@
 #include "external/STB.h"
 #include "external/NSVG.h"
 
+#include "util/Hash.h"
+
 #include <filesystem>
 #include <fstream>
 #include <unordered_map>
@@ -44,33 +46,30 @@ namespace oly::editor
 	{
 		size_t operator()(const RasterTextureConstructor& tc) const
 		{
-			// TODO v8 put hash combine in util/Hash.h
-			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
-			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			return h;
+			return detail::Hasher()
+				.with(tc.filepath)
+				.with(tc.min_filter)
+				.with(tc.mag_filter)
+				.with(tc.generate_mipmaps);
 		}
 
 		size_t operator()(const GIFTextureConstructor& tc) const
 		{
-			// TODO v8 put hash combine in util/Hash.h
-			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
-			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			return h;
+			return detail::Hasher()
+				.with(tc.filepath)
+				.with(tc.min_filter)
+				.with(tc.mag_filter)
+				.with(tc.generate_mipmaps);
 		}
 
 		size_t operator()(const SVGTextureConstructor& tc) const
 		{
-			// TODO v8 put hash combine in util/Hash.h
-			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
-			h ^= std::hash<float>{}(tc.scale) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-			return h;
+			return detail::Hasher()
+				.with(tc.filepath)
+				.with(tc.min_filter)
+				.with(tc.mag_filter)
+				.with(tc.scale)
+				.with(tc.generate_mipmaps);
 		}
 	};
 
@@ -122,8 +121,6 @@ namespace oly::editor
 			: GL_RGBA;
 	}
 
-	// TODO v8 Load() maps should store weak_ptrs and return shared_ptrs -> Define Texture::Update() that will prune exhausted weak_ptrs from maps
-
 	RasterTexture::RasterTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps)
 	{
 		int channels;
@@ -146,6 +143,8 @@ namespace oly::editor
 		stbi_image_free(data);
 	}
 
+	static std::unordered_map<RasterTextureConstructor, std::weak_ptr<RasterTexture>, TextureConstructorHash> RASTER_TEXTURES;
+
 	std::shared_ptr<RasterTexture> RasterTexture::Load(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
 	{
 		RasterTextureConstructor ctor{
@@ -155,13 +154,13 @@ namespace oly::editor
 			.generate_mipmaps = generate_mipmaps
 		};
 
-		static std::unordered_map<RasterTextureConstructor, std::shared_ptr<RasterTexture>, TextureConstructorHash> TEXTURES;
+		auto it = RASTER_TEXTURES.find(ctor);
+		if (it != RASTER_TEXTURES.end() && !it->second.expired())
+			return it->second.lock();
 
-		auto it = TEXTURES.find(ctor);
-		if (it != TEXTURES.end())
-			return it->second;
-		else
-			return TEXTURES.emplace(ctor, std::shared_ptr<RasterTexture>(new RasterTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
+		std::shared_ptr<RasterTexture> sp(new RasterTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps));
+		RASTER_TEXTURES[ctor] = sp;
+		return sp;
 	}
 
 	GLuint RasterTexture::ID() const
@@ -227,6 +226,8 @@ namespace oly::editor
 		stbi_image_free(data);
 	}
 
+	static std::unordered_map<GIFTextureConstructor, std::weak_ptr<GIFTexture>, TextureConstructorHash> GIF_TEXTURES;
+
 	std::shared_ptr<GIFTexture> GIFTexture::Load(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
 	{
 		GIFTextureConstructor ctor{
@@ -236,13 +237,13 @@ namespace oly::editor
 			.generate_mipmaps = generate_mipmaps
 		};
 
-		static std::unordered_map<GIFTextureConstructor, std::shared_ptr<GIFTexture>, TextureConstructorHash> TEXTURES;
+		auto it = GIF_TEXTURES.find(ctor);
+		if (it != GIF_TEXTURES.end() && !it->second.expired())
+			return it->second.lock();
 
-		auto it = TEXTURES.find(ctor);
-		if (it != TEXTURES.end())
-			return it->second;
-		else
-			return TEXTURES.emplace(ctor, std::shared_ptr<GIFTexture>(new GIFTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
+		std::shared_ptr<GIFTexture> sp(new GIFTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps));
+		GIF_TEXTURES.emplace(ctor, sp);
+		return sp;
 	}
 
 	void GIFTexture::Update(float delta_seconds)
@@ -317,6 +318,8 @@ namespace oly::editor
 		nsvgDelete(image);
 	}
 
+	static std::unordered_map<SVGTextureConstructor, std::weak_ptr<SVGTexture>, TextureConstructorHash> SVG_TEXTURES;
+
 	std::shared_ptr<SVGTexture> SVGTexture::Load(const std::string_view filepath, float scale, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
 	{
 		SVGTextureConstructor ctor{
@@ -327,13 +330,13 @@ namespace oly::editor
 			.generate_mipmaps = generate_mipmaps
 		};
 
-		static std::unordered_map<SVGTextureConstructor, std::shared_ptr<SVGTexture>, TextureConstructorHash> TEXTURES;
+		auto it = SVG_TEXTURES.find(ctor);
+		if (it != SVG_TEXTURES.end() && !it->second.expired())
+			return it->second.lock();
 
-		auto it = TEXTURES.find(ctor);
-		if (it != TEXTURES.end())
-			return it->second;
-		else
-			return TEXTURES.emplace(ctor, std::shared_ptr<SVGTexture>(new SVGTexture(filepath, ctor.scale, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
+		std::shared_ptr<SVGTexture> sp(new SVGTexture(filepath, ctor.scale, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps));
+		SVG_TEXTURES.emplace(ctor, sp);
+		return sp;
 	}
 
 	GLuint SVGTexture::ID() const
@@ -413,5 +416,22 @@ namespace oly::editor
 		else
 			t.v = RasterTexture::Load(filepath, min_filter, mag_filter, generate_mipmaps);
 		return t;
+	}
+
+	void Texture::Update()
+	{
+		static const auto Prune = [](auto& textures) {
+			for (auto it = textures.begin(); it != textures.end();)
+			{
+				if (it->second.expired())
+					it = textures.erase(it);
+				else
+					++it;
+			}
+		};
+		
+		Prune(RASTER_TEXTURES);
+		Prune(GIF_TEXTURES);
+		Prune(SVG_TEXTURES);
 	}
 }

@@ -98,5 +98,7 @@ namespace oly::editor
 
 		static Texture LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
 			std::optional<GLenum> mag_filter = std::nullopt, float scale = 1.f, bool generate_mipmaps = false);
+
+		static void Update();
 	};
 }
