@@ -26,8 +26,7 @@ namespace oly::editor
 	void RasterFontDocument::Draw()
 	{
 		gui::IDScope scope(this);
-
-		// TODO v8
+		Draw(_scratch);
 	}
 
 	void RasterFontDocument::Load()
@@ -72,13 +71,57 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void RasterFontDocument::Draw(RasterFontDesc& desc)
+	{
+		DRAW_FIELDS(RASTER_FONT_STANDARD_GENERATOR);
+
+		// TODO v8
+	}
+
+	void RasterFontDocument::Draw(GlyphDesc& desc)
+	{
+		DRAW_FIELDS(GLYPH_STANDARD_GENERATOR);
+
+		// TODO v8
+	}
+
 	void RasterFontDocument::Load(TOMLNode node, RasterFontDesc& desc)
 	{
-		// TODO v8
+		LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+
+		desc.glyphs.Clear();
+		if (auto array = node[detail::encode_key(desc.glyphs_key)].as_array())
+		{
+			for (size_t i = 0; i < array->size(); ++i)
+			{
+				desc.glyphs.PushBack();
+				Load(TOMLNode(array->get(i)), desc.glyphs.Back());
+			}
+		}
+	}
+
+	void RasterFontDocument::Load(TOMLNode node, GlyphDesc& desc)
+	{
+		LOAD_FIELDS(GLYPH_GENERATOR);
 	}
 
 	void RasterFontDocument::Dump(toml::table& table, RasterFontDesc& desc)
 	{
-		// TODO v8
+		DUMP_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+
+		toml::array array;
+		array.reserve(desc.glyphs.Size());
+		for (auto& subdesc : desc.glyphs)
+		{
+			toml::table subtable;
+			Dump(subtable, subdesc);
+			array.push_back(std::move(subtable));
+		}
+		table.insert_or_assign(detail::encode_key(desc.glyphs_key), std::move(array));
+	}
+
+	void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)
+	{
+		DUMP_FIELDS(GLYPH_GENERATOR);
 	}
 }

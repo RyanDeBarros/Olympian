@@ -46,6 +46,16 @@ namespace oly::editor
 			return vector.empty();
 		}
 
+		Descriptor& Back()
+		{
+			return vector.back();
+		}
+
+		const Descriptor& Back() const
+		{
+			return vector.back();
+		}
+
 		void Visit(auto&& fn)
 		{
 			for (Descriptor& desc : vector)

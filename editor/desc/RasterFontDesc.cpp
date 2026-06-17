@@ -22,8 +22,8 @@ namespace oly::editor
 		line_height(8.f, detail::Key::LineHeight, "Line height"),
 		font_scale(glm::vec2(1.f), detail::Key::FontScale, "Font scale"),
 		texture_files({}, detail::Key::TextureFileArray, "Texture file array"), // TODO v8 don't expose directly
-		glyphs(),
-		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage")
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage"),
+		glyphs()
 	{
 	}
 }

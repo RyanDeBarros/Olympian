@@ -27,8 +27,13 @@ namespace oly::editor
 		void Dump() override;
 
 	private:
+		void Draw(RasterFontDesc& desc);
+		void Draw(GlyphDesc& desc);
+
 		void Load(TOMLNode node, RasterFontDesc& desc);
+		void Load(TOMLNode node, GlyphDesc& desc);
 
 		void Dump(toml::table& table, RasterFontDesc& desc);
+		void Dump(toml::table& table, GlyphDesc& desc);
 	};
 }
