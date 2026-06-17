@@ -119,7 +119,7 @@ namespace oly::context
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 
-		if (assets::Parser(node).defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (assets::Parser(node).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -174,7 +174,7 @@ namespace oly::context
 			common_buffer = detail::buffer_of(parser.defaulted(detail::Key::CommonBufferPreset)(detail::CommonBufferPreset::Common));
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
 		// TODO v10 add Trace log level for stuff like this, that is lower than Debug
@@ -248,7 +248,7 @@ namespace oly::context
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -317,7 +317,7 @@ namespace oly::context
 				});
 		}
 
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;

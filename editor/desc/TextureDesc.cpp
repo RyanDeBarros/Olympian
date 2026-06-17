@@ -35,14 +35,14 @@ namespace oly::editor
 	RasterTextureDesc::RasterTextureDesc() :
 		base(GL_NEAREST),
 		generate_mipmaps(false, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
-		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage")
 	{
 	}
 
 	VectorTextureDesc::VectorTextureDesc() :
 		base(GL_LINEAR),
 		generate_mipmaps(detail::SVGMipmapGenerationMode::Off, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
-		image_storage(detail::StorageMode::Discard, detail::Key::ImageStorage, "Image Storage"),
+		image_storage(detail::StorageMode::Keep, detail::Key::ImageStorage, "Image Storage"),
 		abstract_storage(detail::StorageMode::Discard, detail::Key::AbstractStorage, "Abstract Storage"),
 		scale(1.f, detail::Key::VectorScale, "Vector Scale")
 	{

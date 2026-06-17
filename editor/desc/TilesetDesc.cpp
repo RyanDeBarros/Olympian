@@ -20,7 +20,7 @@ namespace oly::editor
 	const detail::Key TilesetDesc::assignments_key = detail::Key::AssignmentArray;
 
 	TilesetDesc::TilesetDesc() :
-		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage")
 	{
 	}
 }

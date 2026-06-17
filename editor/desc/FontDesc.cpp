@@ -19,13 +19,13 @@ namespace oly::editor
 	const detail::Key FontFaceDesc::kerning_key = detail::Key::Kerning;
 
 	FontFaceDesc::FontFaceDesc() :
-		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage")
 	{
 	}
 
 	FontAtlasDesc::FontAtlasDesc() :
 		font_size(36.f, detail::Key::FontSize, "Font size"),
-		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage"),
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage"),
 		min_filter(GL_LINEAR, detail::Key::MinFilter, "Min filter", detail::MIN_FILTER_VALUES, detail::MIN_FILTER_NAMES),
 		mag_filter(GL_LINEAR, detail::Key::MagFilter, "Mag filter", detail::MAG_FILTER_VALUES, detail::MAG_FILTER_NAMES),
 		auto_generate_mipmaps(false, detail::Key::GenerateMipmaps, "Auto-generate mipmaps"),

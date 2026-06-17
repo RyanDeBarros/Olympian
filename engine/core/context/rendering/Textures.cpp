@@ -126,14 +126,14 @@ namespace oly::context
 	}
 
 	template<typename Enum>
-	static bool should_store(const assets::Parser& parser, Enum storage_key, tex::ImageStorageOverride storage_override)
+	static bool should_store(const assets::Parser& parser, Enum storage_key, tex::ImageStorageOverride storage_override, detail::StorageMode default_storage)
 	{
 		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return parser.defaulted(storage_key)(detail::StorageMode::Discard) == detail::StorageMode::Keep;
+			return parser.defaulted(storage_key)(default_storage) == detail::StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(const assets::Parser& parser)
@@ -179,7 +179,7 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_buffer = should_store(parser, detail::Key::Storage, params.storage);
+		bool store_buffer = should_store(parser, detail::Key::Storage, params.storage, detail::StorageMode::Keep);
 
 		graphics::BindlessTextureRef texture;
 
@@ -236,8 +236,8 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage);
-		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage);
+		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage, detail::StorageMode::Discard);
+		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage, detail::StorageMode::Keep);
 		float scale = parser.defaulted(detail::Key::VectorScale)(1.f);
 
 		graphics::BindlessTextureRef texture;

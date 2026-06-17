@@ -20,8 +20,6 @@ static void glfw_drop_callback(GLFWwindow* window, int count, const char** paths
     oly::editor::ShortcutManager::Instance().HandlePathDrop(count, paths);
 }
 
-// TODO v8 all storage defaults (texture, font, etc.) should be 'keep', not 'discard', to prevent resource duplication.
-
 int main()
 {
     glfwSetErrorCallback(glfw_error_callback);

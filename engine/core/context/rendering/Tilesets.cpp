@@ -50,7 +50,7 @@ namespace oly::context
 		auto toml = io::load_toml(file);
 		auto tileset = rendering::TileSetRef::load((TOMLNode)toml);
 
-		if (assets::Parser(toml).defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (assets::Parser(toml).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;

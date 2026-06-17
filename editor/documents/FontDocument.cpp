@@ -202,7 +202,6 @@ namespace oly::editor
 			{
 				if (DescIO::DrawRevertButton())
 				{
-					// TODO v8 StructField so that there's one scratch/def
 					k.distance.scratch = k.distance.def;
 					k.pair.scratch = k.pair.def;
 					dirty = true;
