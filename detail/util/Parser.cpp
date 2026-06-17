@@ -26,7 +26,7 @@ namespace oly::detail
         else
         {
             int value;
-            auto result = std::from_chars(str.data() + 2, end, value, 10);
+            auto result = std::from_chars(str.data(), end, value, 10);
 
             if (result.ec == std::errc{} && result.ptr == end)
                 return value;

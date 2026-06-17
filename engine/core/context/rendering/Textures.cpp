@@ -125,8 +125,7 @@ namespace oly::context
 		return assets::Parser((TOMLNode)*texture_array->get(texture_index));
 	}
 
-	template<typename Enum>
-	static bool should_store(const assets::Parser& parser, Enum storage_key, tex::ImageStorageOverride storage_override, detail::StorageMode default_storage)
+	static bool should_store(const assets::Parser& parser, detail::Key storage_key, tex::ImageStorageOverride storage_override, detail::StorageMode default_storage)
 	{
 		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;

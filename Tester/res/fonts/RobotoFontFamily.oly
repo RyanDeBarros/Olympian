@@ -2,10 +2,8 @@
 
 Storage = 1
 
-[[Styles]]
-Style = 0
+[Style.0]
 File = "Roboto-Regular.ttf"
 
-[[Styles]]
-Style = 3
+[Style.3]
 File = "Roboto-BoldItalic.ttf"

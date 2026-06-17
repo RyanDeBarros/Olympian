@@ -3,13 +3,15 @@
 	* Raster Font
 	* Font Family
 
+TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) for each major subfeature
+
 # v9
 * More editor work
+	* Content Browser Panel
+	* Undo, redo, and context menus on fields/forms to copy/paste properties
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
-	* Content Browser Panel
-	* Undo, redo, and context menus on fields/forms to copy/paste properties
 
 # v10
 * Physics updates

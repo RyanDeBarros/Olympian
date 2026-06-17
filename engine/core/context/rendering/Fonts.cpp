@@ -11,6 +11,7 @@
 #include "definitions/Keys.h"
 #include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
+#include "util/Parser.h"
 
 // TODO v10 put actual loading logic in load/overload methods
 
@@ -183,6 +184,7 @@ namespace oly::context
 		return font_atlas;
 	}
 
+	// TODO v9 move load logic to RasterFont::Load()
 	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -256,6 +258,7 @@ namespace oly::context
 		return raster_font;
 	}
 
+	// TODO v9 move load logic to RasterFont::Load()
 	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -279,42 +282,47 @@ namespace oly::context
 		auto toml = io::load_toml(file);
 		assets::Parser parser(toml);
 
-
 		rendering::FontFamilyRef font_family = REF_INIT;
-		if (auto a = parser.optional<TOMLArray>(detail::Key::StyleArray)())
+		if (auto styles = parser.optional<TOMLNode>(detail::Key::Style)())
 		{
-			a->for_each([&file, &styles = font_family->styles](auto&& node) {
-				try
+			if (styles->as_table())
+			{
+				for (auto&& [key, node] : *styles->as_table())
 				{
-					assets::Parser parser((TOMLNode)node);
+					auto style = detail::stoi(key.str());
+					if (!style)
+						continue;
 
-					rendering::FontStyle style = parser.defaulted(detail::Key::Style)(rendering::FontStyle::Regular);
-
-					detail::ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
-					rendering::FontFamily::FontRef font;
-					if (font_file.is_import_path())
+					try
 					{
-						auto meta = detail::MetaSplitter::decode_meta(font_file.get_absolute());
-						if (meta.has_type(detail::Key::Meta_RasterFont))
-							font = context::load_raster_font(font_file);
-						else
-						{
-							std::optional<detail::Key> type = meta.get_type();
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
-							return;
-						}
-					}
-					else
-						font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
+						assets::Parser parser((TOMLNode)node);
 
-					styles.emplace(style, std::move(font));
+						detail::ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
+						rendering::FontFamily::FontRef font;
+						if (font_file.is_import_path())
+						{
+							auto meta = detail::MetaSplitter::decode_meta(font_file.get_absolute());
+							if (meta.has_type(detail::Key::Meta_RasterFont))
+								font = context::load_raster_font(font_file);
+							else
+							{
+								std::optional<detail::Key> type = meta.get_type();
+								_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
+								continue;
+							}
+						}
+						else
+							font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
+
+						font_family->styles.emplace(static_cast<rendering::FontStyle::Mode>(*style), std::move(font));
+					}
+					catch (const Error& e)
+					{
+						if (e.code != ErrorCode::LoadAsset)
+							throw;
+					}
 				}
-				catch (const Error& e)
-				{
-					if (e.code != ErrorCode::LoadAsset)
-						throw;
-				}
-				});
+			}
 		}
 
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
