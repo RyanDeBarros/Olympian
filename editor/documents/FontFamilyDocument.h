@@ -27,8 +27,15 @@ namespace oly::editor
 		void Dump() override;
 
 	private:
+		void Draw(FontFamilyDesc& desc);
+		void Draw(FontStyleDesc& desc);
+
 		void Load(TOMLNode node, FontFamilyDesc& desc);
+		void Load(TOMLNode node, FontStyleDesc& desc);
 
 		void Dump(toml::table& table, FontFamilyDesc& desc);
+		void Dump(toml::table& table, FontStyleDesc& desc);
+
+		FontStyleDesc& GetFontStyleDesc(detail::FontStyleMode style);
 	};
 }

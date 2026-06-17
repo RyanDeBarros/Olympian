@@ -297,24 +297,19 @@ namespace oly::context
 					{
 						assets::Parser parser((TOMLNode)node);
 
-						detail::ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
+						auto filepath = parser.required<std::string>(detail::Key::File)();
+						if (filepath.empty())
+							continue;
+
+						detail::ResourcePath font_file(filepath, file); // TODO v8 support relative paths in other assets too, like tilesets and raster fonts
 						rendering::FontFamily::FontRef font;
-						if (font_file.is_import_path())
-						{
-							auto meta = detail::MetaSplitter::decode_meta(font_file.get_absolute());
-							if (meta.has_type(detail::Key::Meta_RasterFont))
-								font = context::load_raster_font(font_file);
-							else
-							{
-								std::optional<detail::Key> type = meta.get_type();
-								_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
-								continue;
-							}
-						}
+						if (font_file.is_import_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute())
+								.has_type(detail::Key::Meta_RasterFont))
+							font = context::load_raster_font(font_file);
 						else
 							font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
 
-						font_family->styles.emplace(static_cast<rendering::FontStyle::Mode>(*style), std::move(font));
+						font_family->styles.emplace(static_cast<detail::FontStyleMode>(*style), std::move(font));
 					}
 					catch (const Error& e)
 					{
@@ -369,7 +364,7 @@ namespace oly::context
 			if (meta.has_type(detail::Key::Meta_RasterFont))
 				return load_raster_font(file);
 			else if (meta.has_type(detail::Key::Meta_FontFamily))
-				return load_font_selection(file, static_cast<rendering::FontStyle::Mode>(index));
+				return load_font_selection(file, static_cast<detail::FontStyleMode>(index));
 			else
 			{
 				std::optional<detail::Key> type = meta.get_type();

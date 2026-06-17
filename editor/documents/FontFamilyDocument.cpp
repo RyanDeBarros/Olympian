@@ -3,7 +3,10 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
+#include "gui/CollapsingSection.h"
+
 #include "definitions/Keys.h"
+#include "util/Parser.h"
 
 namespace oly::editor
 {
@@ -26,8 +29,7 @@ namespace oly::editor
 	void FontFamilyDocument::Draw()
 	{
 		gui::IDScope scope(this);
-
-		// TODO v8
+		Draw(_scratch);
 	}
 
 	void FontFamilyDocument::Load()
@@ -72,13 +74,72 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void FontFamilyDocument::Draw(FontFamilyDesc& desc)
+	{
+		if (auto section = CollapsingSection("Regular"))
+			Draw(GetFontStyleDesc(detail::FontStyleMode::Regular));
+
+		if (auto section = CollapsingSection("Bold"))
+			Draw(GetFontStyleDesc(detail::FontStyleMode::Bold));
+
+		if (auto section = CollapsingSection("Italic"))
+			Draw(GetFontStyleDesc(detail::FontStyleMode::Italic));
+
+		if (auto section = CollapsingSection("Bold-italic"))
+			Draw(GetFontStyleDesc(detail::FontStyleMode::BoldItalic));
+	}
+	
+	void FontFamilyDocument::Draw(FontStyleDesc& desc)
+	{
+		if (auto form = Form())
+		{
+			DRAW_FIELDS(STYLE_GENERATOR);
+		}
+	}
+
 	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)
 	{
-		// TODO v8
+		desc.styles.Clear();
+
+		if (auto table = node[detail::encode_key(desc.styles_key)].as_table())
+		{
+			for (auto&& [key, subnode] : *table)
+			{
+				auto style = detail::stoi(key.str());
+				if (!style)
+					continue;
+
+				FontStyleDesc subdesc;
+				Load(TOMLNode(subnode), subdesc);
+				desc.styles.map.emplace(static_cast<detail::FontStyleMode>(*style), std::move(subdesc));
+			}
+		}
+	}
+
+	void FontFamilyDocument::Load(TOMLNode node, FontStyleDesc& desc)
+	{
+		LOAD_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Dump(toml::table& table, FontFamilyDesc& desc)
 	{
-		// TODO v8
+		toml::table subtable;
+		for (auto&& [style, subdesc] : desc.styles)
+		{
+			toml::table inner;
+			Dump(inner, subdesc);
+			subtable.insert_or_assign(std::to_string(style), std::move(inner));
+		}
+		table.insert_or_assign(detail::encode_key(desc.styles_key), std::move(subtable));
+	}
+
+	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)
+	{
+		DUMP_FIELDS(STYLE_GENERATOR);
+	}
+
+	FontStyleDesc& FontFamilyDocument::GetFontStyleDesc(detail::FontStyleMode style)
+	{
+		return _scratch.styles[style];
 	}
 }

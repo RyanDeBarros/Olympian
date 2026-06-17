@@ -4,39 +4,42 @@
 #include "graphics/text/RasterFont.h"
 #include "core/types/Variant.h"
 
+#include "definitions/enums/FontStyle.h"
+
 #include <optional>
 
 namespace oly::rendering
 {
-	struct FontStyle
+	class FontStyle
 	{
-		enum Mode : unsigned int
-		{
-			Regular = 0,
-			Bold = 0b1,
-			Italic = 0b10,
-			BoldItalic = 0b11
-		};
-
-	private:
 		unsigned int v = 0;
 
 	public:
-		constexpr FontStyle(Mode v) : v(v & BoldItalic) {}
+		constexpr FontStyle(detail::FontStyleMode v) : v(v & detail::FontStyleMode::BoldItalic) {}
 
 		constexpr bool operator==(FontStyle other) const { return v == other.v; }
 		constexpr operator unsigned int() const { return v; }
 
-		constexpr FontStyle operator~() const { return Mode(~v & BoldItalic); }
-		constexpr FontStyle operator|(FontStyle other) const { return Mode(v | other.v); }
-		constexpr FontStyle operator|(Mode other) const { return Mode(v | other); }
-		constexpr FontStyle operator&(FontStyle other) const { return Mode(v & other.v); }
-		constexpr FontStyle operator&(Mode other) const { return Mode(v & other); }
+		constexpr FontStyle operator~() const { return detail::FontStyleMode(~v & detail::FontStyleMode::BoldItalic); }
+		constexpr FontStyle operator|(FontStyle other) const { return detail::FontStyleMode(v | other.v); }
+		constexpr FontStyle operator|(detail::FontStyleMode other) const { return detail::FontStyleMode(v | other); }
+		constexpr FontStyle operator&(FontStyle other) const { return detail::FontStyleMode(v & other.v); }
+		constexpr FontStyle operator&(detail::FontStyleMode other) const { return detail::FontStyleMode(v & other); }
 		constexpr FontStyle& operator|=(FontStyle other) { return *this = (*this | other); }
-		constexpr FontStyle& operator|=(Mode other) { return *this = (*this | other); }
+		constexpr FontStyle& operator|=(detail::FontStyleMode other) { return *this = (*this | other); }
 		constexpr FontStyle& operator&=(FontStyle other) { return *this = (*this & other); }
-		constexpr FontStyle& operator&=(Mode other) { return *this = (*this & other); }
+		constexpr FontStyle& operator&=(detail::FontStyleMode other) { return *this = (*this & other); }
+
+		static const FontStyle REGULAR;
+		static const FontStyle BOLD;
+		static const FontStyle ITALIC;
+		static const FontStyle BOLD_ITALIC;
 	};
+
+	inline const FontStyle FontStyle::REGULAR = FontStyle(detail::FontStyleMode::Regular);
+	inline const FontStyle FontStyle::BOLD = FontStyle(detail::FontStyleMode::Bold);
+	inline const FontStyle FontStyle::ITALIC = FontStyle(detail::FontStyleMode::Italic);
+	inline const FontStyle FontStyle::BOLD_ITALIC = FontStyle(detail::FontStyleMode::BoldItalic);
 }
 
 template<>
@@ -62,7 +65,7 @@ namespace oly::rendering
 	struct FontSelection
 	{
 		FontFamilyRef family;
-		FontStyle style = FontStyle::Regular;
+		FontStyle style = FontStyle::REGULAR;
 
 		FontFamily::FontRef get() const;
 		void set_font(const FontFamily::FontRef& font);

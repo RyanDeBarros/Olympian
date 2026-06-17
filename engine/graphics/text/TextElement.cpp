@@ -43,7 +43,7 @@ namespace oly::rendering
 	void Font::reset_style()
 	{
 		if (auto font = f.safe_get<FontSelection>())
-			font->style = FontStyle::Regular;
+			font->style = FontStyle::REGULAR;
 	}
 
 	float Font::line_height() const
@@ -175,13 +175,13 @@ namespace oly::rendering
 	static void apply_style_tag(const std::string_view tag, TextElement& e, AttributeOverrides& overrides)
 	{
 		if (tag == "b" || tag == "bold")
-			e.font.apply_style(FontStyle::Bold);
+			e.font.apply_style(FontStyle::BOLD);
 		else if (tag == "!b" || tag == "!bold")
-			e.font.unapply_style(FontStyle::Bold);
+			e.font.unapply_style(FontStyle::BOLD);
 		else if (tag == "i" || tag == "italic")
-			e.font.apply_style(FontStyle::Italic);
+			e.font.apply_style(FontStyle::ITALIC);
 		else if (tag == "!i" || tag == "!italic")
-			e.font.unapply_style(FontStyle::Italic);
+			e.font.unapply_style(FontStyle::ITALIC);
 		else if (tag == "regular")
 			e.font.reset_style();
 		else
@@ -226,13 +226,13 @@ namespace oly::rendering
 				{
 					index.to_lower();
 					if (index == "regular")
-						texture_index = rendering::FontStyle::Regular;
+						texture_index = rendering::FontStyle::REGULAR;
 					else if (index == "italic")
-						texture_index = rendering::FontStyle::Italic;
+						texture_index = rendering::FontStyle::ITALIC;
 					else if (index == "bold")
-						texture_index = rendering::FontStyle::Bold;
+						texture_index = rendering::FontStyle::BOLD;
 					else if (index == "bolditalic")
-						texture_index = rendering::FontStyle::BoldItalic;
+						texture_index = rendering::FontStyle::BOLD_ITALIC;
 					else
 					{
 						_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed: (" << index << ")" << LOG.nl;
