@@ -104,17 +104,24 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
+	// TODO v8 use stale/update pattern instead
 	void TextureDocument::ReloadPreviewTexture()
 	{
 		std::optional<GLenum> min_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
 		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+		std::optional<bool> generate_mipmaps = _scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
+			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.scratch), bool>)
+				return desc.generate_mipmaps.scratch;
+			else
+				return desc.generate_mipmaps.scratch != detail::SVGMipmapGenerationMode::Off;
+		});
 
 		if (_svg)
-			_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR) };
+			_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else if (_gif)
-			_texture = { GIFTexture(GetSourcePath().string().c_str(), min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST) };
+			_texture = { GIFTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else
-			_texture = { RasterTexture(GetSourcePath().string().c_str(), min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST) };
+			_texture = { RasterTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 	}
 
 	void TextureDocument::DrawPreview()
@@ -127,7 +134,7 @@ namespace oly::editor
 			{
 				_preview_nav = {};
 				if (SVGTexture* svg = _texture.GetSVG())
-					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 			}
 			
 			if (GIFTexture* gif = _texture.GetGIF())
@@ -153,7 +160,7 @@ namespace oly::editor
 				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
 				{
 					_preview_nav.svg_scale = scale;
-					_texture = { SVGTexture(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 				}
 			}
 
@@ -423,7 +430,13 @@ namespace oly::editor
 		Draw(form, desc.base);
 		if (auto subform = Subform(form, "Storage", true))
 		{
-			DRAW_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+			if (desc.generate_mipmaps.Draw())
+			{
+				MarkDirty();
+				ReloadPreviewTexture();
+			}
+
+			DRAW_FIELD(storage);
 		}
 	}
 	
@@ -432,7 +445,13 @@ namespace oly::editor
 		Draw(form, desc.base);
 		if (auto subform = Subform(form, "Storage", true))
 		{
-			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+			if (desc.generate_mipmaps.Draw())
+			{
+				MarkDirty();
+				ReloadPreviewTexture();
+			}
+
+			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
 		}
 	}
 	
@@ -622,10 +641,14 @@ namespace oly::editor
 			desc.Visit(slot, [&](const auto& d) {
 				min_filter = d.base.min_filter.Scratch();
 				mag_filter = d.base.mag_filter.Scratch();
-				generate_mipmaps = static_cast<int>(d.generate_mipmaps.scratch) > 0;
 
 				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
+				{
 					scale = d.scale.scratch;
+					generate_mipmaps = d.generate_mipmaps.scratch != detail::SVGMipmapGenerationMode::Off;
+				}
+				else
+					generate_mipmaps = d.generate_mipmaps.scratch;
 			});
 
 			if (!path.is_resource())

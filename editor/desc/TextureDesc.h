@@ -76,11 +76,14 @@ namespace oly::editor
 		RasterTextureDesc();
 	};
 
-#define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
-		M(generate_mipmaps) \
+#define VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M) \
 		M(image_storage) \
 		M(abstract_storage) \
 		M(scale)
+
+#define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
+		M(generate_mipmaps) \
+		VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M)
 
 	struct VectorTextureDesc
 	{

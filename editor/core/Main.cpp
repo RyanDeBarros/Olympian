@@ -36,6 +36,10 @@ int main()
 
     GLFWwindow* window = glfwCreateWindow(1, 1, "Olympian Editor", nullptr, nullptr);
     glfwMakeContextCurrent(window);
+
+    if (glewInit() != GLEW_OK)
+        return 1;
+
     glfwSwapInterval(1);
     glfwSetDropCallback(window, glfw_drop_callback);
 

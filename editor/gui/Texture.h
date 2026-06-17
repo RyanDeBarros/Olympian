@@ -26,14 +26,18 @@ namespace oly::editor
 		GLuint ID() const;
 	};
 
-	typedef std::shared_ptr<TextureID> TextureIDRef;
-
 	struct RasterTexture
 	{
-		TextureIDRef id;
+		TextureID id;
 		int width = 0, height = 0;
 		
-		RasterTexture(const std::string_view filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
+	private:
+		RasterTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps);
+
+	public:
+		static std::shared_ptr<RasterTexture> Load(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
+			std::optional<GLenum> mag_filter = std::nullopt, bool generate_mipmaps = false);
+
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
@@ -41,14 +45,19 @@ namespace oly::editor
 
 	struct GIFTexture
 	{
-		std::vector<TextureIDRef> ids;
+		std::vector<TextureID> ids;
 		std::vector<float> delays;
 		int width = 0, height = 0;
 		int index = 0;
 		float timer = 0.f;
 		float speed = 1.f;
 
-		GIFTexture(const std::string_view filepath, GLenum min_filter = GL_NEAREST, GLenum mag_filter = GL_NEAREST);
+	private:
+		GIFTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps);
+
+	public:
+		static std::shared_ptr<GIFTexture> Load(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
+			std::optional<GLenum> mag_filter = std::nullopt, bool generate_mipmaps = false);
 
 		void Update(float delta_seconds);
 		GLuint ID() const;
@@ -58,11 +67,17 @@ namespace oly::editor
 
 	struct SVGTexture
 	{
-		TextureIDRef id;
+		TextureID id;
 		int width = 0, height = 0;
 		float preview_scale = 1.f;
 
-		SVGTexture(const std::string_view filepath, float scale = 1.f, GLenum min_filter = GL_LINEAR, GLenum mag_filter = GL_LINEAR);
+	private:
+		SVGTexture(const std::string_view filepath, float scale, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps);
+
+	public:
+		static std::shared_ptr<SVGTexture> Load(const std::string_view filepath, float scale = 1.f, std::optional<GLenum> min_filter = std::nullopt,
+			std::optional<GLenum> mag_filter = std::nullopt, bool generate_mipmaps = false);
+
 		GLuint ID() const;
 		float Width() const;
 		float Height() const;
@@ -70,7 +85,7 @@ namespace oly::editor
 
 	struct Texture
 	{
-		using Variant = std::variant<std::monostate, RasterTexture, GIFTexture, SVGTexture>;
+		using Variant = std::variant<std::monostate, std::shared_ptr<RasterTexture>, std::shared_ptr<GIFTexture>, std::shared_ptr<SVGTexture>>;
 		Variant v;
 
 		bool Empty() const;
@@ -81,7 +96,7 @@ namespace oly::editor
 		float Height() const;
 		ImVec2 Size() const;
 
-		void LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
+		static Texture LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter = std::nullopt,
 			std::optional<GLenum> mag_filter = std::nullopt, float scale = 1.f, bool generate_mipmaps = false);
 	};
 }

@@ -519,7 +519,7 @@ namespace oly::editor
 					bool generate_mipmaps = false;
 					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.scratch, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
-						active.texture.LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
+						active.texture = Texture::LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
 					else
 					{
 						switch (result)

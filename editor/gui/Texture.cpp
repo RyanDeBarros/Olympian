@@ -12,56 +12,67 @@
 
 namespace oly::editor
 {
-	struct TextureConstructor
+	struct RasterTextureConstructor
 	{
 		std::filesystem::path filepath;
-		float scale;
-		int frame_index;
 		GLenum min_filter, mag_filter;
-		// TODO v8 mipmaps
+		bool generate_mipmaps;
 
-		bool operator==(const TextureConstructor&) const = default;
+		bool operator==(const RasterTextureConstructor&) const = default;
+	};
+
+	struct GIFTextureConstructor
+	{
+		std::filesystem::path filepath;
+		GLenum min_filter, mag_filter;
+		bool generate_mipmaps;
+
+		bool operator==(const GIFTextureConstructor&) const = default;
+	};
+
+	struct SVGTextureConstructor
+	{
+		std::filesystem::path filepath;
+		GLenum min_filter, mag_filter;
+		float scale;
+		bool generate_mipmaps;
+
+		bool operator==(const SVGTextureConstructor&) const = default;
 	};
 
 	struct TextureConstructorHash
 	{
-		size_t operator()(const TextureConstructor& tc) const
+		size_t operator()(const RasterTextureConstructor& tc) const
+		{
+			// TODO v8 put hash combine in util/Hash.h
+			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
+			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			return h;
+		}
+
+		size_t operator()(const GIFTextureConstructor& tc) const
+		{
+			// TODO v8 put hash combine in util/Hash.h
+			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
+			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			return h;
+		}
+
+		size_t operator()(const SVGTextureConstructor& tc) const
 		{
 			// TODO v8 put hash combine in util/Hash.h
 			size_t h = std::hash<std::string>{}(tc.filepath.generic_string());
 			h ^= std::hash<float>{}(tc.scale) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+			h ^= std::hash<bool>{}(tc.generate_mipmaps) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
 			h ^= std::hash<GLenum>{}(tc.min_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
 			h ^= std::hash<GLenum>{}(tc.mag_filter) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
 			return h;
 		}
 	};
-
-	static TextureIDRef GetTextureIDRef(const std::string_view filepath, float scale, int frame_index, GLenum min_filter, GLenum mag_filter, bool& initialized)
-	{
-		static std::unordered_map<TextureConstructor, TextureIDRef, TextureConstructorHash> TEXTURE_REGISTRY;
-
-		TextureConstructor ctor{
-			.filepath = filepath,
-			.scale = scale,
-			.frame_index = frame_index,
-			.min_filter = min_filter,
-			.mag_filter = mag_filter
-		};
-
-		auto it = TEXTURE_REGISTRY.find(ctor);
-		if (it != TEXTURE_REGISTRY.end())
-		{
-			initialized = true;
-			return it->second;
-		}
-		else
-		{
-			initialized = false;
-			auto ref = std::make_shared<TextureID>();
-			TEXTURE_REGISTRY[ctor] = ref;
-			return ref;
-		}
-	}
 
 	TextureID::TextureID()
 	{
@@ -111,35 +122,51 @@ namespace oly::editor
 			: GL_RGBA;
 	}
 
-	RasterTexture::RasterTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter)
+	// TODO v8 Load() maps should store weak_ptrs and return shared_ptrs -> Define Texture::Update() that will prune exhausted weak_ptrs from maps
+
+	RasterTexture::RasterTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps)
 	{
-		bool initialized;
-		id = GetTextureIDRef(filepath, 0.f, -1, min_filter, mag_filter, initialized);
-		
-		if (!initialized)
+		int channels;
+		unsigned char* data = stbi_load(filepath.data(), &width, &height, &channels, 0);
+		if (!data || width <= 0 || height <= 0 || channels <= 0)
 		{
-			int channels;
-			unsigned char* data = stbi_load(filepath.data(), &width, &height, &channels, 0);
-			if (!data || width <= 0 || height <= 0 || channels <= 0)
-			{
-				stbi_image_free(data);
-				BreakoutError::Throw(("Cannot load raster image from file: " + std::string(filepath)).c_str());
-			}
-
-			glBindTexture(GL_TEXTURE_2D, id->ID());
-			glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
 			stbi_image_free(data);
+			BreakoutError::Throw(("Cannot load raster image from file: " + std::string(filepath)).c_str());
 		}
+
+		glBindTexture(GL_TEXTURE_2D, id.ID());
+		glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data);
+		if (generate_mipmaps)
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		stbi_image_free(data);
+	}
+
+	std::shared_ptr<RasterTexture> RasterTexture::Load(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
+	{
+		RasterTextureConstructor ctor{
+			.filepath = filepath,
+			.min_filter = min_filter ? *min_filter : GL_NEAREST,
+			.mag_filter = mag_filter ? *mag_filter : GL_NEAREST,
+			.generate_mipmaps = generate_mipmaps
+		};
+
+		static std::unordered_map<RasterTextureConstructor, std::shared_ptr<RasterTexture>, TextureConstructorHash> TEXTURES;
+
+		auto it = TEXTURES.find(ctor);
+		if (it != TEXTURES.end())
+			return it->second;
+		else
+			return TEXTURES.emplace(ctor, std::shared_ptr<RasterTexture>(new RasterTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
 	}
 
 	GLuint RasterTexture::ID() const
 	{
-		return id->ID();
+		return id.ID();
 	}
 
 	float RasterTexture::Width() const
@@ -152,7 +179,7 @@ namespace oly::editor
 		return height;
 	}
 
-	GIFTexture::GIFTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter)
+	GIFTexture::GIFTexture(const std::string_view filepath, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps)
 	{
 		std::ifstream file(filepath.data(), std::ios::binary | std::ios::ate);
 		if (!file.is_open() || file.fail())
@@ -183,24 +210,39 @@ namespace oly::editor
 		for (int i = 0; i < frames; ++i)
 			delays[i] = 0.01f * delay_arr[i];
 
-		ids.reserve(frames);
+		ids.resize(frames);
 		for (size_t i = 0; i < frames; ++i)
 		{
-			bool initialized;
-			ids.push_back(GetTextureIDRef(filepath, 0.f, i, min_filter, mag_filter, initialized));
-			if (!initialized)
-			{
-				glBindTexture(GL_TEXTURE_2D, ids[i]->ID());
-				glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data + i * area);
+			glBindTexture(GL_TEXTURE_2D, ids[i].ID());
+			glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data + i * area);
+			if (generate_mipmaps)
+				glGenerateMipmap(GL_TEXTURE_2D);
 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
-				glBindTexture(GL_TEXTURE_2D, 0);
-			}
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+			glBindTexture(GL_TEXTURE_2D, 0);
 		}
 
 		stbi_image_free(delay_arr);
 		stbi_image_free(data);
+	}
+
+	std::shared_ptr<GIFTexture> GIFTexture::Load(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
+	{
+		GIFTextureConstructor ctor{
+			.filepath = filepath,
+			.min_filter = min_filter ? *min_filter : GL_NEAREST,
+			.mag_filter = mag_filter ? *mag_filter : GL_NEAREST,
+			.generate_mipmaps = generate_mipmaps
+		};
+
+		static std::unordered_map<GIFTextureConstructor, std::shared_ptr<GIFTexture>, TextureConstructorHash> TEXTURES;
+
+		auto it = TEXTURES.find(ctor);
+		if (it != TEXTURES.end())
+			return it->second;
+		else
+			return TEXTURES.emplace(ctor, std::shared_ptr<GIFTexture>(new GIFTexture(filepath, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
 	}
 
 	void GIFTexture::Update(float delta_seconds)
@@ -221,7 +263,7 @@ namespace oly::editor
 
 	GLuint GIFTexture::ID() const
 	{
-		return ids[index]->ID();
+		return ids[index].ID();
 	}
 
 	float GIFTexture::Width() const
@@ -234,53 +276,69 @@ namespace oly::editor
 		return height;
 	}
 
-	SVGTexture::SVGTexture(const std::string_view filepath, float scale, GLenum min_filter, GLenum mag_filter)
+	SVGTexture::SVGTexture(const std::string_view filepath, float scale, GLenum min_filter, GLenum mag_filter, bool generate_mipmaps)
 	{
-		bool initialized;
-		id = GetTextureIDRef(filepath, scale, -1, min_filter, mag_filter, initialized);
-		if (!initialized)
+		NSVGimage* image = nsvgParseFromFile(filepath.data(), "px", 96.f);
+		if (!image)
+			BreakoutError::Throw(("Cannot parse svg from file: " + std::string(filepath)).c_str());
+
+		NSVGrasterizer* rasterizer = nsvgCreateRasterizer();
+		if (!rasterizer)
 		{
-			NSVGimage* image = nsvgParseFromFile(filepath.data(), "px", 96.f);
-			if (!image)
-				BreakoutError::Throw(("Cannot parse svg from file: " + std::string(filepath)).c_str());
+			nsvgDelete(image);
+			BreakoutError::Throw("Failed to create svg rasterizer");
+		}
 
-			NSVGrasterizer* rasterizer = nsvgCreateRasterizer();
-			if (!rasterizer)
-			{
-				nsvgDelete(image);
-				BreakoutError::Throw("Failed to create svg rasterizer");
-			}
-
-			width = std::max(static_cast<int>(scale * image->width), 1);
-			height = std::max(static_cast<int>(scale * image->height), 1);
-			const int channels = 4;
-			const int stride = width * channels;
-			unsigned char* data = new (std::nothrow) unsigned char[stride * height];
-			if (!data)
-			{
-				nsvgDeleteRasterizer(rasterizer);
-				nsvgDelete(image);
-				BreakoutError::Throw("Bad alloc");
-			}
-
-			nsvgRasterize(rasterizer, image, 0.0f, 0.0f, scale, data, width, height, stride);
-
-			glBindTexture(GL_TEXTURE_2D, id->ID());
-			glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data);
-
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			delete[] data;
+		width = std::max(static_cast<int>(scale * image->width), 1);
+		height = std::max(static_cast<int>(scale * image->height), 1);
+		const int channels = 4;
+		const int stride = width * channels;
+		unsigned char* data = new (std::nothrow) unsigned char[stride * height];
+		if (!data)
+		{
 			nsvgDeleteRasterizer(rasterizer);
 			nsvgDelete(image);
+			BreakoutError::Throw("Bad alloc");
 		}
+
+		nsvgRasterize(rasterizer, image, 0.0f, 0.0f, scale, data, width, height, stride);
+
+		glBindTexture(GL_TEXTURE_2D, id.ID());
+		glTexImage2D(GL_TEXTURE_2D, 0, InternalFormat(channels), width, height, 0, Format(channels), GL_UNSIGNED_BYTE, data);
+		if (generate_mipmaps)
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, min_filter);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mag_filter);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		delete[] data;
+		nsvgDeleteRasterizer(rasterizer);
+		nsvgDelete(image);
 	}
-	
+
+	std::shared_ptr<SVGTexture> SVGTexture::Load(const std::string_view filepath, float scale, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, bool generate_mipmaps)
+	{
+		SVGTextureConstructor ctor{
+			.filepath = filepath,
+			.min_filter = min_filter ? *min_filter : GL_LINEAR,
+			.mag_filter = mag_filter ? *mag_filter : GL_LINEAR,
+			.scale = scale,
+			.generate_mipmaps = generate_mipmaps
+		};
+
+		static std::unordered_map<SVGTextureConstructor, std::shared_ptr<SVGTexture>, TextureConstructorHash> TEXTURES;
+
+		auto it = TEXTURES.find(ctor);
+		if (it != TEXTURES.end())
+			return it->second;
+		else
+			return TEXTURES.emplace(ctor, std::shared_ptr<SVGTexture>(new SVGTexture(filepath, ctor.scale, ctor.min_filter, ctor.mag_filter, ctor.generate_mipmaps))).first->second;
+	}
+
 	GLuint SVGTexture::ID() const
 	{
-		return id->ID();
+		return id.ID();
 	}
 
 	float SVGTexture::Width() const
@@ -300,12 +358,14 @@ namespace oly::editor
 
 	GIFTexture* Texture::GetGIF()
 	{
-		return std::get_if<GIFTexture>(&v);
+		auto ptr = std::get_if<std::shared_ptr<GIFTexture>>(&v);
+		return ptr ? ptr->get() : nullptr;
 	}
 
 	SVGTexture* Texture::GetSVG()
 	{
-		return std::get_if<SVGTexture>(&v);
+		auto ptr = std::get_if<std::shared_ptr<SVGTexture>>(&v);
+		return ptr ? ptr->get() : nullptr;
 	}
 
 	GLuint Texture::ID() const
@@ -314,7 +374,7 @@ namespace oly::editor
 			if constexpr (std::is_same_v<std::decay_t<decltype(t)>, std::monostate>)
 				return 0;
 			else
-				return t.ID();
+				return t->ID();
 		}, v);
 	}
 
@@ -324,7 +384,7 @@ namespace oly::editor
 			if constexpr (std::is_same_v<std::decay_t<decltype(t)>, std::monostate>)
 				return 0.f;
 			else
-				return t.Width();
+				return t->Width();
 		}, v);
 	}
 
@@ -334,7 +394,7 @@ namespace oly::editor
 			if constexpr (std::is_same_v<std::decay_t<decltype(t)>, std::monostate>)
 				return 0.f;
 			else
-				return t.Height();
+				return t->Height();
 		}, v);
 	}
 
@@ -343,15 +403,15 @@ namespace oly::editor
 		return ImVec2(Width(), Height());
 	}
 
-	void Texture::LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, float scale, bool generate_mipmaps)
+	Texture Texture::LoadGeneric(const std::string_view filepath, std::optional<GLenum> min_filter, std::optional<GLenum> mag_filter, float scale, bool generate_mipmaps)
 	{
-		// TODO v8 pass generate_mipmaps
-
+		Texture t;
 		if (filepath.ends_with(".svg"))
-			v = SVGTexture(filepath, scale, min_filter ? *min_filter : GL_LINEAR, mag_filter ? *mag_filter : GL_LINEAR);
+			t.v = SVGTexture::Load(filepath, scale, min_filter, mag_filter, generate_mipmaps);
 		else if (filepath.ends_with(".gif"))
-			v = GIFTexture(filepath, min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST);
+			t.v = GIFTexture::Load(filepath, min_filter, mag_filter, generate_mipmaps);
 		else
-			v = RasterTexture(filepath, min_filter ? *min_filter : GL_NEAREST, mag_filter ? *mag_filter : GL_NEAREST);
+			t.v = RasterTexture::Load(filepath, min_filter, mag_filter, generate_mipmaps);
+		return t;
 	}
 }
