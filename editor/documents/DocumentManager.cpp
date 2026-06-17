@@ -9,7 +9,9 @@
 #include "definitions/Keys.h"
 
 #include "documents/FontDocument.h"
+#include "documents/FontFamilyDocument.h"
 #include "documents/ProjectDocument.h"
+#include "documents/RasterFontDocument.h"
 #include "documents/SignalDocument.h"
 #include "documents/TextureDocument.h"
 #include "documents/TilesetDocument.h"
@@ -39,40 +41,23 @@ namespace oly::editor
 
 			switch (type)
 			{
-			case detail::Key::Meta_Font:
-				if (meta.get_version() == FontDocument::GetVersion())
-					Add<FontDocument>(std::move(oly_file));
-				else
-					return OpenAssetCode::UnsupportedAssetVersion;
+#define SWITCH_CASE(AssetKey, DocumentClass) \
+			case detail::Key::AssetKey: \
+				if (meta.get_version() == DocumentClass::GetVersion()) \
+					Add<DocumentClass>(std::move(oly_file)); \
+				else \
+					return OpenAssetCode::UnsupportedAssetVersion; \
 				break;
 
-			case detail::Key::Meta_Project:
-				if (meta.get_version() == ProjectDocument::GetVersion())
-					Add<ProjectDocument>(std::move(oly_file));
-				else
-					return OpenAssetCode::UnsupportedAssetVersion;
-				break;
+				SWITCH_CASE(Meta_Font, FontDocument);
+				SWITCH_CASE(Meta_FontFamily, FontFamilyDocument);
+				SWITCH_CASE(Meta_Project, ProjectDocument);
+				SWITCH_CASE(Meta_RasterFont, RasterFontDocument);
+				SWITCH_CASE(Meta_Signal, SignalDocument);
+				SWITCH_CASE(Meta_Texture, TextureDocument);
+				SWITCH_CASE(Meta_Tileset, TilesetDocument);
 
-			case detail::Key::Meta_Signal:
-				if (meta.get_version() == SignalDocument::GetVersion())
-					Add<SignalDocument>(std::move(oly_file));
-				else
-					return OpenAssetCode::UnsupportedAssetVersion;
-				break;
-
-			case detail::Key::Meta_Texture:
-				if (meta.get_version() == TextureDocument::GetVersion())
-					Add<TextureDocument>(std::move(oly_file));
-				else
-					return OpenAssetCode::UnsupportedAssetVersion;
-				break;
-
-			case detail::Key::Meta_Tileset:
-				if (meta.get_version() == TilesetDocument::GetVersion())
-					Add<TilesetDocument>(std::move(oly_file));
-				else
-					return OpenAssetCode::UnsupportedAssetVersion;
-				break;
+#undef SWITCH_CASE
 
 			default:
 				return OpenAssetCode::UnsupportedAssetType;

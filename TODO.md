@@ -2,7 +2,6 @@
 * Editor documents
 	* Raster Font
 	* Font Family
-	* Tileset
 
 # v9
 * More editor work
