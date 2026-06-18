@@ -55,7 +55,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def);
 		}
@@ -69,7 +69,7 @@ namespace oly::editor
 
 		using PrimitiveField<T>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
 		}
@@ -91,7 +91,7 @@ namespace oly::editor
 
 		using PrimitiveField<E>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch, this->def);
 		}
@@ -101,7 +101,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::string>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def);
 		}
@@ -111,7 +111,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<Color>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def);
 		}
@@ -121,7 +121,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<Rect>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def);
 		}
@@ -131,7 +131,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def);
 		}
@@ -145,7 +145,7 @@ namespace oly::editor
 		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
 			: PrimitiveField<std::array<T, N>>(def, key, label), sublabels(sublabels) {}
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
 		}
@@ -159,7 +159,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::array<T, N>>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
 		}
@@ -175,7 +175,7 @@ namespace oly::editor
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(this->label, this->scratch, this->def, ui_state);
 		}
@@ -203,7 +203,7 @@ namespace oly::editor
 			def_index = Index(def);
 		}
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, def_index, names, count);
 		}
@@ -263,7 +263,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return DescIO::Draw(label, scratch, this->def, Min, Max);
 		}
@@ -314,7 +314,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			scratch.has_value = scratch.value != nullopt;
 			return DescIO::Draw(label, scratch, def, Min, Max);
@@ -372,18 +372,18 @@ namespace oly::editor
 		{
 		}
 
-		bool Draw(const bool (&disabled)[Count])
+		DrawResult Draw(const bool (&disabled)[Count])
 		{
 			return Draw(static_cast<const bool*>(disabled));
 		}
 
-		bool Draw()
+		DrawResult Draw()
 		{
 			return Draw(nullptr);
 		}
 
 	private:
-		bool Draw(const bool* disabled)
+		DrawResult Draw(const bool* disabled)
 		{
 			return DescIO::Draw(label, scratch, def, values, names, disabled, Count);
 		}

@@ -31,35 +31,35 @@ namespace oly::editor
 		}
 
 		template<typename T, typename U = T>
-		static bool Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		static DrawResult Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{
-			bool dirty = false;
+			DrawResult result;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
-			dirty |= gui::InputData<T>{}("", data, min, max);
-			dirty |= CheckRevertButton(data, def);
-			return dirty;
+			result |= gui::InputData<T>{}("", data, min, max);
+			result |= CheckRevertButton(data, def);
+			return result;
 		}
 
 		template<typename T>
-		static bool Draw(const char* label, T& data, const T& def)
+		static DrawResult Draw(const char* label, T& data, const T& def)
 		{
-			bool dirty = false;
+			DrawResult result;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
-			dirty |= gui::InputData<T>{}("", data);
-			dirty |= CheckRevertButton(data, def);
-			return dirty;
+			result |= gui::InputData<T>{}("", data);
+			result |= CheckRevertButton(data, def);
+			return result;
 		}
 		
-		static bool Draw(const char* label, int& data, const int& def, const char** names, size_t count);
-		static bool Draw(const char* label, std::string* data, const std::string* def, size_t count);
-		static bool Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
+		static DrawResult Draw(const char* label, int& data, const int& def, const char** names, size_t count);
+		static DrawResult Draw(const char* label, std::string* data, const std::string* def, size_t count);
+		static DrawResult Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
 
 		template<typename T>
-		static bool DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<bool(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static DrawResult DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
-			bool dirty = false;
+			DrawResult result;
 			DescIO::PrepareValue(label);
 			gui::IDScope scope(&data);
 
@@ -67,13 +67,13 @@ namespace oly::editor
 
 			if (data.size() != def.size())
 			{
-				if (DescIO::DrawRevertButton())
+				if (result |= DescIO::DrawRevertButton())
 					ui_state.DeferResize(def.size());
 			}
 
-			ui_state.DrawBody([&dirty, &draw_fn](gui::DynamicRow& row) { dirty |= draw_fn(row); });
+			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) { result |= draw_fn(row); });
 
-			dirty |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+			result |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
@@ -96,93 +96,94 @@ namespace oly::editor
 					data.push_back(T{});
 					break;
 				}
-				});
+			});
 
-			return dirty;
+			return result;
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
-		static bool Draw(const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+		static DrawResult Draw(const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
 			return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
-				bool dirty = false;
+				DrawResult result;
 
 				ImGui::SameLine();
-				dirty |= gui::InputData<T>{}("##Item", data[row.Index()]);
+				result |= gui::InputData<T>{}("##Item", data[row.Index()]);
 
 				if (ImGui::IsItemActivated())
 					row.OnSelect();
 
 				if (row.Index() < def.size())
-					dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
+					result |= CheckRevertButton(data[row.Index()], def[row.Index()]);
 				else
 				{
 					static const T empty = {};
-					dirty |= CheckRevertButton(data[row.Index()], empty);
+					result |= CheckRevertButton(data[row.Index()], empty);
 				}
 
-				return dirty;
+				return result;
 			}, ui_state);
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static bool Draw(const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+		static DrawResult Draw(const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
 			return DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
-				bool dirty = false;
+				DrawResult result;
 
 				ImGui::SameLine();
-				dirty |= DrawCombo("##Item", data[row.Index()]);
+				result |= DrawCombo("##Item", data[row.Index()]);
 
 				if (ImGui::IsItemActivated())
 					row.OnSelect();
 
 				if (row.Index() < def.size())
-					dirty |= CheckRevertButton(data[row.Index()], def[row.Index()]);
+					result |= CheckRevertButton(data[row.Index()], def[row.Index()]);
 				else
 				{
 					static const E empty = {};
-					dirty |= CheckRevertButton(data[row.Index()], empty);
+					result |= CheckRevertButton(data[row.Index()], empty);
 				}
 
-				return dirty;
+				return result;
 			}, ui_state);
 		}
 
 		template<typename E>
-		static bool Draw(const char* label, E& data, const E& def, const E* values, const char** names, const bool* disabled, size_t count)
+		static DrawResult Draw(const char* label, E& data, const E& def, const E* values, const char** names, const bool* disabled, size_t count)
 		{
-			bool dirty = false;
+			DrawResult result;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
-			dirty |= gui::InputData<E>{}(data, values, names, disabled, count);
-			dirty |= CheckRevertButton(data, def);
-			return dirty;
+			result |= gui::InputData<E>{}(data, values, names, disabled, count);
+			result |= CheckRevertButton(data, def);
+			return result;
 		}
 
 		template<Enum E>
 		static bool Draw(const char* label, E& data, const E& def)
 		{
-			bool dirty = false;
+			DrawResult result;
 			PrepareValue(label);
 			gui::IDScope scope(&data);
-			dirty |= DrawCombo("", data);
-			dirty |= CheckRevertButton(data, def);
-			return dirty;
+			result |= DrawCombo("", data);
+			result |= CheckRevertButton(data, def);
+			return result;
 		}
 
 		template<Enum E>
-		static bool DrawCombo(const char* label, E& data);
+		static DrawResult DrawCombo(const char* label, E& data);
 
 	private:
 		template<Enum E, size_t N>
-		static bool DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
+		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
-			bool dirty = false;
+			DrawResult result;
 			int index = static_cast<int>(data);
-			dirty |= ImGui::Combo("", &index, values, N);
+			result |= ImGui::Combo("", &index, values, N);
+			result.Query();
 			data = static_cast<E>(index);
-			return dirty;
+			return result;
 		}
 	};
 }

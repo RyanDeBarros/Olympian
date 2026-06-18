@@ -23,7 +23,6 @@ namespace oly::editor
 		}
 
 		Load();
-		// TODO v8 set glyph model policy to 'RequireUnique'?
 	}
 
 	void RasterFontDocument::Draw()
@@ -107,7 +106,7 @@ namespace oly::editor
 					MarkDirty();
 
 				_glyph_model.active_index.ConsumeModified();
-				// TODO v8 preview of glyph (also in other font-related documents)? -> maybe in future branch
+				// TODO v9 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 			}
 		}
 	}
@@ -124,26 +123,27 @@ namespace oly::editor
 		}
 
 		std::string codepoint = desc.codepoint.scratch;
-		if (desc.codepoint.Draw())
+		// TODO v8 style/var gets passed to reset button as well -> pass DrawSettings to Draw() so push/pop only happens around the InputData widget
+		auto codepoint_result = desc.codepoint.Draw();
+		if (codepoint_result)
 		{
 			_codepoint_counter.increment(desc.codepoint.scratch);
 			_codepoint_counter.decrement(codepoint);
 			MarkDirty();
 		}
 
-		// TODO v8 IsItemHovered() doesn't work if revert button was last drawn. Define a DrawResult struct that holds a 'bool visible', 'bool hovered', etc. that is returned by Draw() functions.
-		if (ImGui::IsItemHovered())
-		{
-			if (empty_codepoint)
-				ImGui::SetItemTooltip("Codepoint is empty");
-			else if (duplicate_codepoint)
-				ImGui::SetItemTooltip("Duplicate codepoint");
-		}
-
 		if (empty_codepoint || duplicate_codepoint)
 		{
 			ImGui::PopStyleVar();
 			ImGui::PopStyleColor();
+		}
+
+		if (codepoint_result.IsHovered())
+		{
+			if (empty_codepoint)
+				ImGui::SetTooltip("Codepoint is empty");
+			else if (duplicate_codepoint)
+				ImGui::SetTooltip("Duplicate codepoint");
 		}
 
 		DRAW_FIELDS(GLYPH_BODY_GENERATOR);
