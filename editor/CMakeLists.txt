@@ -47,9 +47,9 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(glew)
 
 
-# -------------------------
-#          ImGui
-# -------------------------
+# ====================
+#        ImGui
+# ====================
 FetchContent_Declare(
 	imgui
 	GIT_REPOSITORY https://github.com/ocornut/imgui.git
@@ -70,9 +70,10 @@ target_include_directories(imgui PUBLIC
 )
 
 
-# -------------------------
-#     ImGui File Dialog
-# -------------------------
+# ====================
+#  ImGui File Dialog
+# ====================
+
 FetchContent_Declare(
     imgui_file_dialog
     GIT_REPOSITORY https://github.com/aiekick/ImGuiFileDialog
@@ -94,9 +95,9 @@ target_link_libraries(imgui_file_dialog PUBLIC
 )
 
 
-# -------------------------
-#      ImGui backends
-# -------------------------
+# ====================
+#    ImGui backends
+# ====================
 add_library(imgui_backend STATIC
 	${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
 	${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
@@ -176,12 +177,12 @@ FetchContent_MakeAvailable(nanosvg)
 
 add_executable(OlympianEditor)
 
-# Engine compile options (MSVC specific)
+# Editor compile options (MSVC specific)
 if (MSVC)
 	target_compile_options(OlympianEditor PUBLIC /Zc:__cplusplus)
 endif()
 
-# Engine compile definitions
+# Editor compile definitions
 target_compile_definitions(OlympianEditor PUBLIC
 	GLEW_STATIC
 	IMGUI_DEFINE_MATH_OPERATORS
@@ -209,5 +210,11 @@ add_subdirectory(core)
 add_subdirectory(desc)
 add_subdirectory(documents)
 add_subdirectory(external)
-add_subdirectory(graphics)
+add_subdirectory(gui)
 add_subdirectory(panels)
+
+add_custom_command(TARGET OlympianEditor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/res
+    $<TARGET_FILE_DIR:OlympianEditor>/res
+)

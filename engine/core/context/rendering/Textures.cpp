@@ -52,7 +52,7 @@ namespace oly::context
 		}
 	};
 
-	void internal::init_textures(TOMLNode)
+	void internal::init_textures()
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, TexturesOnTerminate>::instance();
 	}
@@ -125,25 +125,28 @@ namespace oly::context
 		return assets::Parser((TOMLNode)*texture_array->get(texture_index));
 	}
 
-	template<typename Enum>
-	static bool should_store(const assets::Parser& parser, Enum storage_key, tex::ImageStorageOverride storage_override)
+	static bool should_store(const assets::Parser& parser, detail::Key storage_key, tex::ImageStorageOverride storage_override, detail::StorageMode default_storage)
 	{
 		if (storage_override == tex::ImageStorageOverride::Discard)
 			return false;
 		else if (storage_override == tex::ImageStorageOverride::Keep)
 			return true;
 		else
-			return parser.defaulted(storage_key)(detail::StorageMode::Discard) == detail::StorageMode::Keep;
+			return parser.defaulted(storage_key)(default_storage) == detail::StorageMode::Keep;
 	}
 
 	static graphics::SpritesheetOptions parse_spritesheet_options(const assets::Parser& parser)
 	{
 		graphics::SpritesheetOptions options;
-		parser.optional(detail::Key::Rows)(options.rows);
-		parser.optional(detail::Key::Columns)(options.cols);
-		parser.optional(detail::Key::CellWidthOverride)(options.cell_width_override);
-		parser.optional(detail::Key::CellHeightOverride)(options.cell_height_override);
-		parser.optional(detail::Key::DelayCS)(options.delay_cs);
+		parser.optional(detail::Key::RowType)(options.row_type);
+		parser.optional(detail::Key::RowValue)(options.row_value);
+		parser.optional(detail::Key::ColType)(options.col_type);
+		parser.optional(detail::Key::ColValue)(options.col_value);
+		parser.optional(detail::Key::RowOffsetIndex)(options.row_offset_index);
+		parser.optional(detail::Key::RowOffsetPixel)(options.row_offset_pixel);
+		parser.optional(detail::Key::ColOffsetIndex)(options.col_offset_index);
+		parser.optional(detail::Key::ColOffsetPixel)(options.col_offset_pixel);
+		parser.optional(detail::Key::Delay)(options.delay);
 		parser.optional(detail::Key::RowMajor)(options.row_major);
 		parser.optional(detail::Key::RowUp)(options.row_up);
 		return options;
@@ -175,7 +178,7 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_buffer = should_store(parser, detail::Key::Storage, params.storage);
+		bool store_buffer = should_store(parser, detail::Key::Storage, params.storage, detail::StorageMode::Keep);
 
 		graphics::BindlessTextureRef texture;
 
@@ -232,8 +235,8 @@ namespace oly::context
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
 
-		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage);
-		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage);
+		bool store_abstract = should_store(parser, detail::Key::AbstractStorage, params.abstract_storage, detail::StorageMode::Discard);
+		bool store_image = should_store(parser, detail::Key::ImageStorage, params.image_storage, detail::StorageMode::Keep);
 		float scale = parser.defaulted(detail::Key::VectorScale)(1.f);
 
 		graphics::BindlessTextureRef texture;

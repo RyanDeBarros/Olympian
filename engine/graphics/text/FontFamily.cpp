@@ -22,10 +22,10 @@ namespace oly::rendering
 	{
 		if (style_exists())
 			return family->get(style);
-		else if (family->supports(style & FontStyle::Bold))
-			return family->get(style & FontStyle::Bold);
-		else if (family->supports(FontStyle::Regular))
-			return family->get(FontStyle::Regular);
+		else if (family->supports(style & FontStyle::BOLD))
+			return family->get(style & FontStyle::BOLD);
+		else if (family->supports(FontStyle::REGULAR))
+			return family->get(FontStyle::REGULAR);
 		else
 			return FontAtlasRef(nullptr);
 	}

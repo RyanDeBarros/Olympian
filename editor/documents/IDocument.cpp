@@ -1,10 +1,31 @@
 #include "IDocument.h"
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	IDocument::IDocument(detail::ResourcePath&& oly_path)
 		: _oly_path(std::move(oly_path))
 	{
+	}
+
+	void IDocument::DrawMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
+					Dump();
+
+				if (ImGui::MenuItem("Discard Changes"))
+					Load();
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenuBar();
+		}
 	}
 
 	const detail::ResourcePath& IDocument::GetOlyPath() const

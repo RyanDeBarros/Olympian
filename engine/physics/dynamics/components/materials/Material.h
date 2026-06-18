@@ -74,7 +74,7 @@ namespace oly::physics
 		float friction_with(Friction other, FrictionType type) const;
 	};
 
-	// TODO v8 density
+	// TODO v10 density
 	struct Material
 	{
 		Restitution restitution;
@@ -82,5 +82,5 @@ namespace oly::physics
 	};
 
 	typedef SmartReference<Material> MaterialRef;
-	// TODO v9 Material assets. + SubMaterial assets. + every other ___Ref asset.
+	// TODO v11 Material assets. + SubMaterial assets. + every other ___Ref asset.
 }

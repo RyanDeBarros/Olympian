@@ -4,11 +4,10 @@ Storage = 1
 SAdvW = 5.0
 LineH = 8.0
 Scale = [32.0, 32.0]
-TxFiles = ["@/fonts/PixelAlphabet.png", "@/fonts/PixelNumbers.png"]
 
 [[Glyphs]]
 Codept = "A"
-TxFile = 0
+TxFile = "@/fonts/PixelAlphabet.png"
 [Glyphs.Location]
 X1 = 0
 X2 = 4
@@ -19,7 +18,7 @@ Uniform = 0.5
 
 [[Glyphs]]
 Codept = "B"
-TxFile = 0
+TxFile = "@/fonts/PixelAlphabet.png"
 [Glyphs.Location]
 X1 = 6
 X2 = 10
@@ -30,7 +29,7 @@ Uniform = 0.5
 
 [[Glyphs]]
 Codept = "C"
-TxFile = 0
+TxFile = "@/fonts/PixelAlphabet.png"
 [Glyphs.Location]
 X1 = 12
 X2 = 16
@@ -41,7 +40,7 @@ Uniform = 0.5
 
 [[Glyphs]]
 Codept = "1"
-TxFile = 1
+TxFile = "@/fonts/PixelNumbers.png"
 [Glyphs.Location]
 X1 = 6
 X2 = 10
@@ -52,7 +51,7 @@ Uniform = 0.5
 
 [[Glyphs]]
 Codept = "2"
-TxFile = 1
+TxFile = "@/fonts/PixelNumbers.png"
 [Glyphs.Location]
 X1 = 12
 X2 = 16
@@ -63,7 +62,7 @@ Uniform = 0.5
 
 [[Glyphs]]
 Codept = "3"
-TxFile = 1
+TxFile = "@/fonts/PixelNumbers.png"
 [Glyphs.Location]
 X1 = 18
 X2 = 22

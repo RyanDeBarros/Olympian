@@ -63,7 +63,7 @@ Trfmer = { Scale = [ 100, 100 ] }
 
 	[[grass_tilemap.Layer]]
 	Z = 0
-	TileSet = "@/assets/grass tileset.toml"
+	TileSet = "@/assets/grass tileset.oly"
 	Tiles = [
 		[ -1, -1 ],
 		[  0, -1 ],

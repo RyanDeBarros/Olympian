@@ -5,7 +5,7 @@
 namespace oly::rendering
 {
 	RasterFontGlyph::RasterFontGlyph(const graphics::BindlessTextureRef& texture, math::IRect2D location,
-		math::TopSidePadding padding, math::PositioningMode origin_offset_mode, glm::vec2 origin_offset)
+		math::TopSidePadding padding, detail::PositioningMode origin_offset_mode, glm::vec2 origin_offset)
 		: _texture(texture)
 	{
 		const glm::vec2 dimensions = context::get_texture_dimensions(_texture);
@@ -17,7 +17,7 @@ namespace oly::rendering
 			.y2 = (location.y2 + 1) / dimensions.y
 		};
 
-		if (origin_offset_mode == math::PositioningMode::Relative)
+		if (origin_offset_mode == detail::PositioningMode::Relative)
 		{
 			origin_offset = {
 				(location.width() + 1.0f) * origin_offset.x,

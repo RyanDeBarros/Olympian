@@ -378,7 +378,7 @@ namespace oly::assets
 			using Accessor<false, Validator>::Accessor;
 
 			template<typename T>
-			T operator()(T&& def = T(), std::source_location location = std::source_location::current()) const
+			T operator()(T def = T(), std::source_location location = std::source_location::current()) const
 			{
 				this->parse_value<false>(def, location);
 				return std::move(def);

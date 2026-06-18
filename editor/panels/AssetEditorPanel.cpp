@@ -1,27 +1,35 @@
 #include "AssetEditorPanel.h"
 
-#include <imgui.h>
+#include "core/windows/MainWindow.h"
+#include "core/editor/Logger.h"
+#include "core/editor/Editor.h"
+#include "core/Errors.h"
+#include "core/editor/ProjectInfo.h"
 
-#include "core/MainWindow.h"
-#include "core/Logger.h"
 #include "panels/PanelManager.h"
-
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
+#include <imgui.h>
+#include <ImGuiFileDialog.h>
+
 namespace oly::editor
 {
+	static const char* OPEN_FILE = "OpenFileDlg";
+
+	static std::string open_file_parent = ".";
+
 	AssetEditorPanel& AssetEditorPanel::Instance()
 	{
-		auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>();
-		if (panel)
+		if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
 			return *panel;
 		else
-		{
-			std::string error = "No instance of AssetEditorPanel";
-			Logger::Instance().Log(LogLevel::Error, error.c_str());
-			throw std::runtime_error(std::move(error));
-		}
+			BreakoutError::Throw("No instance of AssetEditorPanel");
+	}
+
+	void AssetEditorPanel::Init()
+	{
+		open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
 	}
 
 	const char* AssetEditorPanel::GetTitle() const
@@ -31,14 +39,54 @@ namespace oly::editor
 
 	void AssetEditorPanel::Draw()
 	{
-		ImGui::Begin(GetTitle(), nullptr, ImGuiWindowFlags_MenuBar);
+		auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar);
+		if (window.IsVisible())
+		{
+			PollShortcuts();
 
+			DrawTabBar();
+
+			if (_selected_tab)
+				_selected_tab->DrawMenuBar();
+			else
+				DrawDefaultMenuBar();
+
+			ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
+
+			if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+			{
+				if (ImGuiFileDialog::Instance()->IsOk())
+				{
+					std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+					open_file_parent = path.parent_path().string();
+					Editor::Instance().OpenFile(path);
+				}
+
+				ImGuiFileDialog::Instance()->Close();
+			}
+		}
+	}
+
+	void AssetEditorPanel::PollShortcuts()
+	{
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
+			OpenFile();
+
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+			SaveSelectedTab();
+
+		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+			SaveAllTabs();
+	}
+
+	void AssetEditorPanel::DrawTabBar()
+	{
 		ImGuiTabBarFlags tab_bar_flags =
 			ImGuiTabBarFlags_AutoSelectNewTabs |
 			ImGuiTabBarFlags_DrawSelectedOverline |
 			ImGuiTabBarFlags_Reorderable;
 
-		if (ImGui::BeginTabBar("AssetTabs", tab_bar_flags))
+		if (ImGui::BeginTabBar("##AssetTabs", tab_bar_flags))
 		{
 			std::vector<size_t> closed;
 
@@ -68,7 +116,11 @@ namespace oly::editor
 				if (!open)
 				{
 					if (!doc.IsDirty())
+					{
 						closed.push_back(i);
+						if (&doc == _selected_tab)
+							_selected_tab = nullptr;
+					}
 					else if (!_pending_close_set.contains(&doc))
 					{
 						_pending_close_set.insert(&doc);
@@ -88,8 +140,6 @@ namespace oly::editor
 			_focused_tab = nullptr;
 			ImGui::EndTabBar();
 		}
-
-		ImGui::End();
 	}
 
 	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents)
@@ -124,6 +174,8 @@ namespace oly::editor
 			{
 				doc->Dump();
 				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				if (doc == _selected_tab)
+					_selected_tab = nullptr;
 				_pending_close.erase(_pending_close.begin());
 				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
@@ -134,6 +186,8 @@ namespace oly::editor
 			{
 				doc->Load();
 				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+				if (doc == _selected_tab)
+					_selected_tab = nullptr;
 				_pending_close.erase(_pending_close.begin());
 				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
@@ -149,6 +203,30 @@ namespace oly::editor
 
 			ImGui::EndPopup();
 		}
+	}
+
+	void AssetEditorPanel::DrawDefaultMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Open File", "Ctrl+O"))
+					OpenFile();
+
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+	}
+
+	void AssetEditorPanel::OpenFile()
+	{
+		IGFD::FileDialogConfig config;
+		config.path = open_file_parent;
+		config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
+
+		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
 	}
 
 	void AssetEditorPanel::FocusTab(IDocument* doc)

@@ -43,8 +43,8 @@ namespace oly::rendering
 
 			struct QuadInfo
 			{
-				static const GLushort GLYPH_FLAG = 1;
-				static const GLushort CAM_INV_FLAG = 2;
+				static const GLushort GLYPH_FLAG = 1 << 0;
+				static const GLushort CAM_INV_FLAG = 1 << 1;
 
 				GLushort tex_slot = 0;
 				GLushort tex_coord_slot = 0;

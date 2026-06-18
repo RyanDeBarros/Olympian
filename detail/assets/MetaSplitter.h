@@ -17,11 +17,13 @@ namespace oly::detail
 		std::optional<Key> get_type() const;
 		bool has_type(Key type) const;
 		std::string get_version() const;
+		bool is_import() const;
 	};
 
 	struct MetaSplitter
 	{
 		static MetaMap decode_meta(const ResourcePath& file);
+		static MetaMap decode_meta(const char* filepath);
 		static std::string encode_meta(const MetaMap& meta);
 	};
 }

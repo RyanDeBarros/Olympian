@@ -1,0 +1,51 @@
+#meta version=1.0 type=tileset
+
+Storage = 0
+
+[Assign.0b00000000]
+TxFile = "@/textures/grass tileset/S.png"
+
+[Assign.0b11111111]
+TxFile = "@/textures/grass tileset/M.png"
+
+[Assign.0b00001110]
+TxFile = "@/textures/grass tileset/BL.png"
+
+[Assign.0b10000011]
+TxFile = "@/textures/grass tileset/BR.png"
+
+[Assign.0b11100000]
+TxFile = "@/textures/grass tileset/TR.png"
+
+[Assign.0b00111000]
+TxFile = "@/textures/grass tileset/TL.png"
+
+[Assign.0b00111110]
+TxFile = "@/textures/grass tileset/LE.png"
+
+[Assign.0b10001111]
+TxFile = "@/textures/grass tileset/BE.png"
+
+[Assign.0b11100011]
+TxFile = "@/textures/grass tileset/RE.png"
+
+[Assign.0b11111000]
+TxFile = "@/textures/grass tileset/TE.png"
+
+[Assign.0b00001000]
+TxFile = "@/textures/grass tileset/LT.png"
+
+[Assign.0b00000010]
+TxFile = "@/textures/grass tileset/BT.png"
+
+[Assign.0b10000000]
+TxFile = "@/textures/grass tileset/RT.png"
+
+[Assign.0b00100000]
+TxFile = "@/textures/grass tileset/TT.png"
+
+[Assign.0b10001000]
+TxFile = "@/textures/grass tileset/I1.png"
+
+[Assign.0b00100010]
+TxFile = "@/textures/grass tileset/I2.png"

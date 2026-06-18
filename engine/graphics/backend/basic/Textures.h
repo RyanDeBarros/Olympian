@@ -15,6 +15,7 @@
 #include "graphics/backend/basic/Sampler.h"
 
 #include "assets/ResourcePath.h"
+#include "definitions/enums/SpritesheetParamType.h"
 
 namespace oly::graphics
 {
@@ -180,6 +181,7 @@ namespace oly::graphics
 	}
 
 	inline float anim_delay_epsilon = 1.0f;
+
 	struct AnimDimensions
 	{
 		int w = 0, h = 0, cpp = 4;
@@ -189,22 +191,30 @@ namespace oly::graphics
 	private:
 		friend class Anim;
 		int _frames = -1;
-		std::vector<int> delays;
+		std::vector<float> _delays;
 
 	public:
 		bool uniform() const { return _frames >= 0; }
-		GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)delays.size(); }
-		int delay(unsigned int frame = 0) const;
+		GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)_delays.size(); }
+		float delay(unsigned int frame = 0) const;
 
 		glm::vec2 dimensions() const { return { w, h }; }
 	};
 
 	struct SpritesheetOptions
 	{
-		GLuint rows = 1, cols = 1;
-		GLuint cell_width_override = 0, cell_height_override = 0;
-		int delay_cs = 0;
+		detail::SpritesheetParamType row_type = detail::SpritesheetParamType::Index;
+		detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
+
 		bool row_major = true, row_up = true;
+		float delay = 0.1f;
+
+		GLuint row_value = 1;
+		GLuint col_value = 1;
+		GLuint row_offset_index = 0;
+		GLuint col_offset_index = 0;
+		GLuint row_offset_pixel = 0;
+		GLuint col_offset_pixel = 0;
 	};
 
 	class NSVGAbstract;
@@ -326,5 +336,5 @@ namespace oly::graphics
 		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
 	}
 
-	// TODO v9 texture streaming
+	// TODO v13 texture streaming
 }

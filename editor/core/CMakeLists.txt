@@ -1,12 +1,10 @@
 target_sources(OlympianEditor PRIVATE
-	DockTree.cpp
-	Editor.cpp
 	Errors.cpp
-	Logger.cpp
+	InputListener.cpp
 	Main.cpp
-	MainMenuBar.cpp
-	MainWindow.cpp
-	ProjectInfo.cpp
-	ProjectSelectWindow.cpp
-	ShortcutManager.cpp
+	PathInfo.cpp
+	Types.cpp
 )
+
+add_subdirectory(editor)
+add_subdirectory(windows)

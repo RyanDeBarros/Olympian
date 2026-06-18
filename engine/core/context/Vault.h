@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/containers/BlackBox.h"
-#include "external/TOML.h"
 
 namespace oly::context
 {
@@ -17,7 +16,7 @@ namespace oly::context
 			bool operator==(VaultKey other) const { return i == other.i; }
 		};
 
-		extern void init_vault(TOMLNode);
+		extern void init_vault();
 
 		inline VaultKey get_next_vault_key()
 		{

@@ -9,9 +9,11 @@
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
+#include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
+#include "util/Parser.h"
 
-// TODO v8 put actual loading logic in load/overload methods
+// TODO v10 put actual loading logic in load/overload methods
 
 namespace oly::context
 {
@@ -50,7 +52,7 @@ namespace oly::context
 		}
 	};
 
-	void internal::init_fonts(TOMLNode)
+	void internal::init_fonts()
 	{
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, FontsOnTerminate>::instance();
 	}
@@ -104,7 +106,7 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
-		// TODO v8 abstract away the error handling on meta.has_type()
+		// TODO v10 abstract away the error handling on meta.has_type()
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
@@ -118,7 +120,7 @@ namespace oly::context
 
 		rendering::FontFaceRef font_face(file, parse_kerning(node));
 
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (assets::Parser(node).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
@@ -165,46 +167,24 @@ namespace oly::context
 		parser.required(detail::Key::MagFilter)(options.mag_filter);
 		parser.optional(detail::Key::GenerateMipmaps)(options.auto_generate_mipmaps);
 
-		utf::String common_buffer = rendering::glyphs::COMMON;
-		if (parser.defaulted(detail::Key::UseCommonBufferPreset)(true))
-		{
-			if (auto common_buffer_preset = parser.optional<rendering::glyphs::CommonBufferPreset>(detail::Key::CommonBufferPreset)())
-			{
-				switch (*common_buffer_preset)
-				{
-				case rendering::glyphs::CommonBufferPreset::Common:
-					break; // already initialized to common
-				case rendering::glyphs::CommonBufferPreset::AlphaNumeric:
-					common_buffer = rendering::glyphs::ALPHA_NUMERIC;
-					break;
-				case rendering::glyphs::CommonBufferPreset::Numeric:
-					common_buffer = rendering::glyphs::NUMERIC;
-					break;
-				case rendering::glyphs::CommonBufferPreset::Alphabet:
-					common_buffer = rendering::glyphs::ALPHABET;
-					break;
-				case rendering::glyphs::CommonBufferPreset::AlphabetLowercase:
-					common_buffer = rendering::glyphs::ALPHABET_LOWERCASE;
-					break;
-				case rendering::glyphs::CommonBufferPreset::AlphabetUppercase:
-					common_buffer = rendering::glyphs::ALPHABET_UPPERCASE;
-					break;
-				}
-			}
-		}
-		else if (auto _common_buffer = parser.optional<std::string>(detail::Key::CommonBuffer)())
+		utf::String common_buffer;
+		auto _common_buffer = parser.optional<std::string>(detail::Key::CommonBuffer)();
+		if (parser.defaulted(detail::Key::UseCommonBufferPreset)(false) && _common_buffer)
 			common_buffer = *_common_buffer;
+		else
+			common_buffer = detail::buffer_of(parser.defaulted(detail::Key::CommonBufferPreset)(detail::CommonBufferPreset::Common));
 
 		rendering::FontAtlasRef font_atlas(context::load_font_face(file), options, common_buffer);
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
-		// TODO v8 add Trace log level for stuff like this, that is lower than Debug
+		// TODO v10 add Trace log level for stuff like this, that is lower than Debug
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
 
 		return font_atlas;
 	}
 
+	// TODO v9 move load logic to RasterFont::Load()
 	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -233,30 +213,23 @@ namespace oly::context
 		const auto space_advance_width = parser.required<float>(detail::Key::SpaceAdvanceWidth)();
 		const auto line_height = parser.required<float>(detail::Key::LineHeight)();
 		const auto font_scale = parser.defaulted(detail::Key::FontScale)(glm::vec2(1.0f));
-		const auto texture_files = parser.defaulted<std::vector<std::string>>(detail::Key::TextureFileArray)();
 
 		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
 		if (auto glyph_array = parser.optional<TOMLArray>(detail::Key::GlyphArray)())
 		{
-			glyph_array->for_each([&glyphs, &texture_files](auto&& g) {
+			glyph_array->for_each([&glyphs](auto&& g) {
 				try
 				{
 					assets::Parser parser((TOMLNode)g);
 
 					utf::Codepoint codepoint = parser.required<utf::Codepoint>(detail::Key::Codepoint, make_nonnull_codepoint_validator())();
 
-					std::string texture_file;
-					unsigned int tidx = parser.defaulted(detail::Key::TextureFile, assets::make_single_validator<unsigned int>(
-						[sz = texture_files.size()](unsigned int v) { return v < sz; },
-						[sz = texture_files.size()](unsigned int v) { return DeferredStringList{ "-> (", std::to_string(v), ") out of range (", std::to_string(sz), "), skipping glyph..."}; }
-					))(0u);
-					texture_file = texture_files[tidx];
-
+					std::string texture_file = parser.required<std::string>(detail::Key::TextureFile)();
 					unsigned int texture_index = parser.defaulted(detail::Key::TextureIndex)(0u);
 
 					math::IRect2D location = math::IRect2D::load(parser.field(detail::Key::Location), true);
 					math::TopSidePadding padding = math::TopSidePadding::load(parser.field(detail::Key::Padding));
-					math::PositioningMode origin_offset_mode = parser.defaulted(detail::Key::OriginOffsetMode)(math::PositioningMode::Relative);
+					detail::PositioningMode origin_offset_mode = parser.defaulted(detail::Key::OriginOffsetMode)(detail::PositioningMode::Relative);
 					glm::vec2 origin_offset = parser.defaulted<glm::vec2>(detail::Key::OriginOffset)();
 
 					glyphs.emplace(codepoint, rendering::RasterFontGlyph(context::load_texture(texture_file, texture_index), location, padding, origin_offset_mode, origin_offset));
@@ -270,7 +243,7 @@ namespace oly::context
 		}
 
 		rendering::RasterFontRef raster_font(std::move(glyphs), space_advance_width, line_height, font_scale, parse_kerning(toml));
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
@@ -278,6 +251,7 @@ namespace oly::context
 		return raster_font;
 	}
 
+	// TODO v9 move load logic to RasterFont::Load()
 	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -301,45 +275,45 @@ namespace oly::context
 		auto toml = io::load_toml(file);
 		assets::Parser parser(toml);
 
-
 		rendering::FontFamilyRef font_family = REF_INIT;
-		if (auto a = parser.optional<TOMLArray>(detail::Key::StyleArray)())
+		if (auto styles = parser.optional<TOMLNode>(detail::Key::Style)())
 		{
-			a->for_each([&file, &styles = font_family->styles](auto&& node) {
-				try
+			if (styles->as_table())
+			{
+				for (auto&& [key, node] : *styles->as_table())
 				{
-					assets::Parser parser((TOMLNode)node);
+					auto style = stoi(key.str());
+					if (!style)
+						continue;
 
-					rendering::FontStyle style = parser.defaulted(detail::Key::Style)(rendering::FontStyle::Regular);
-
-					detail::ResourcePath font_file(parser.required<std::string>(detail::Key::File)(), file);
-					rendering::FontFamily::FontRef font;
-					if (font_file.is_import_path())
+					try
 					{
-						auto meta = detail::MetaSplitter::decode_meta(font_file.get_absolute());
-						if (meta.has_type(detail::Key::Meta_RasterFont))
+						assets::Parser parser((TOMLNode)node);
+
+						auto filepath = parser.required<std::string>(detail::Key::File)();
+						if (filepath.empty())
+							continue;
+
+						detail::ResourcePath font_file(filepath, file); // TODO v9 support relative paths in other assets too, like tilesets and raster fonts
+						rendering::FontFamily::FontRef font;
+						if (font_file.is_import_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute())
+								.has_type(detail::Key::Meta_RasterFont))
 							font = context::load_raster_font(font_file);
 						else
-						{
-							std::optional<detail::Key> type = meta.get_type();
-							_OLY_ENGINE_LOG_WARNING("CONTEXT") << font_file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
-							return;
-						}
-					}
-					else
-						font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
+							font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
 
-					styles.emplace(style, std::move(font));
+						font_family->styles.emplace(static_cast<detail::FontStyleMode>(*style), std::move(font));
+					}
+					catch (const Error& e)
+					{
+						if (e.code != ErrorCode::LoadAsset)
+							throw;
+					}
 				}
-				catch (const Error& e)
-				{
-					if (e.code != ErrorCode::LoadAsset)
-						throw;
-				}
-				});
+			}
 		}
 
-		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Discard) == detail::StorageMode::Keep)
+		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;
@@ -383,7 +357,7 @@ namespace oly::context
 			if (meta.has_type(detail::Key::Meta_RasterFont))
 				return load_raster_font(file);
 			else if (meta.has_type(detail::Key::Meta_FontFamily))
-				return load_font_selection(file, static_cast<rendering::FontStyle::Mode>(index));
+				return load_font_selection(file, static_cast<detail::FontStyleMode>(index));
 			else
 			{
 				std::optional<detail::Key> type = meta.get_type();

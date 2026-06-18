@@ -6,6 +6,9 @@
 #include "core/platform/EventHandler.h"
 #include "core/containers/FixedVector.h"
 
+#include "definitions/enums/AxisConversions.h"
+#include "definitions/enums/GamepadAxis2D.h"
+
 #include <vector>
 #include <array>
 #include <optional>
@@ -25,16 +28,7 @@ namespace oly
 		{
 			std::array<bool, 3> invert = { false, false, false };
 			glm::vec3 multiplier = glm::vec3(1.0f);
-			enum class Swizzle
-			{
-				None,
-				YX,
-				XZY,
-				YXZ,
-				YZX,
-				ZXY,
-				ZYX
-			} swizzle = Swizzle::None;
+			detail::Swizzle swizzle = detail::Swizzle::None;
 
 			bool modify(bool value) const;
 			float modify(float value) const;
@@ -46,13 +40,7 @@ namespace oly
 
 		struct Axis0DModifier : public ModifierBase
 		{
-			enum class Conversion
-			{
-				None,
-				To1D,
-				To2D,
-				To3D
-			} conversion = Conversion::None;
+			detail::Axis0dConversion conversion = detail::Axis0dConversion::None;
 
 			Signal signal(Phase phase, bool value, Signal::Source source) const;
 
@@ -61,13 +49,7 @@ namespace oly
 
 		struct Axis1DModifier : public ModifierBase
 		{
-			enum class Conversion
-			{
-				None,
-				To0D,
-				To2D,
-				To3D
-			} conversion = Conversion::None;
+			detail::Axis1dConversion conversion = detail::Axis1dConversion::None;
 
 			Signal signal(Phase phase, float value, Signal::Source source) const;
 
@@ -76,19 +58,7 @@ namespace oly
 
 		struct Axis2DModifier : public ModifierBase
 		{
-			enum class Conversion
-			{
-				None,
-				To0D_X,
-				To0D_Y,
-				To0D_XY,
-				To1D_X,
-				To1D_Y,
-				To1D_XY,
-				To3D_0,
-				To3D_1
-			} conversion = Conversion::None;
-
+			detail::Axis2dConversion conversion = detail::Axis2dConversion::None;
 			Signal signal(Phase phase, glm::vec2 value, Signal::Source source) const;
 
 			bool operator==(const Axis2DModifier&) const = default;
@@ -173,11 +143,11 @@ namespace oly
 
 		struct GamepadAxis2DBinding
 		{
-			GamepadAxis2D axis;
+			detail::GamepadAxis2D axis;
 			float deadzone = 0.0f;
 			Axis2DModifier modifier;
 
-			std::optional<Signal> signal(Phase phase, GamepadAxis2D axis, glm::vec2 value, int controller) const
+			std::optional<Signal> signal(Phase phase, detail::GamepadAxis2D axis, glm::vec2 value, int controller) const
 			{
 				if (axis != this->axis || glm::dot(value, value) < deadzone * deadzone)
 					return std::nullopt;
@@ -258,7 +228,7 @@ namespace oly
 				{
 					std::array<ButtonPoll, input::GamepadButton::LAST + 1> button_polls;
 					std::array<Axis1DPoll, input::GamepadAxis1D::LAST + 1> axis_1d_polls;
-					std::array<Axis2DPoll, input::GamepadAxis2D::LAST + 1> axis_2d_polls;
+					std::array<Axis2DPoll, static_cast<size_t>(detail::GamepadAxis2D::_LAST) + 1> axis_2d_polls;
 				};
 
 				FixedVector<GamepadPoll> gamepad_polls;

@@ -18,7 +18,7 @@ namespace oly::context
 		}
 	};
 
-	void internal::init_sprites(TOMLNode node)
+	void internal::init_sprites()
 	{
 		internal::sprite_batch = std::make_unique<rendering::SpriteBatch>();
 		SingletonTickService<TickPhase::None, void, TerminatePhase::Graphics, SpriteBatchOnTerminate>::instance();

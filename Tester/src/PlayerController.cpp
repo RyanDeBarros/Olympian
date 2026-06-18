@@ -1,5 +1,20 @@
 #include "PlayerController.h"
 
+PlayerController::PlayerController()
+{
+	load_signals("@/signals/Camera.oly");
+	load_signals("@/signals/Click.oly");
+	load_signals("@/signals/Drag.oly");
+	load_signals("@/signals/Jump.oly");
+	load_signals("@/signals/Move.oly");
+
+	bind("jump", &PlayerController::jump);
+	bind("click", &PlayerController::click);
+	bind("drag", &PlayerController::drag);
+	bind("zoom camera", &PlayerController::zoom_camera);
+	bind("move", &PlayerController::move);
+}
+
 bool PlayerController::jump(oly::input::Signal signal)
 {
 	if (signal.phase == oly::input::Phase::Started)

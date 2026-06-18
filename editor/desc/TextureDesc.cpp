@@ -3,162 +3,75 @@
 #include "desc/DescIO.h"
 
 #include "definitions/Keys.h"
+#include "definitions/enums/Filters.h"
 
 namespace oly::editor
 {
 	SpritesheetDesc::SpritesheetDesc() :
-		rows(1, detail::Key::Rows, "Rows"),
-		cols(1, detail::Key::Columns, "Columns"),
-		cell_width_override(0, detail::Key::CellWidthOverride, "Cell Width Override"),
-		cell_height_override(0, detail::Key::CellHeightOverride, "Cell Height Override"),
-		delay_cs(0, detail::Key::DelayCS, "Delay (CS)"),
+		col_type(detail::SpritesheetParamType::Index, detail::Key::ColType, "Column Type"),
+		col_value(1, detail::Key::ColValue, ""),
+		row_type(detail::SpritesheetParamType::Index, detail::Key::RowType, "Row Type"),
+		row_value(1, detail::Key::RowValue, ""),
+		col_offset_index(0, detail::Key::ColOffsetIndex, "Column offset (index)"),
+		col_offset_pixel(0, detail::Key::ColOffsetPixel, "Column offset (pixels)"),
+		row_offset_index(0, detail::Key::RowOffsetIndex, "Row offset (index)"),
+		row_offset_pixel(0, detail::Key::RowOffsetPixel, "Row offset (pixels)"),
+		delay(0.1f, detail::Key::Delay, "Delay (seconds)"),
 		row_major(true, detail::Key::RowMajor, "Row Major"),
 		row_up(true, detail::Key::RowUp, "Row Up")
 	{
 	}
 
-	void SpritesheetDesc::Reset(SpritesheetDesc& source)
-	{
-		RESET_FIELDS(SPRITESHEET_GENERATOR);
-	}
-
-	void SpritesheetDesc::Isolate()
-	{
-		ISOLATE_FIELDS(SPRITESHEET_GENERATOR);
-	}
-
-	static const GLenum MIN_FILTER_VALUES[] = {
-		GL_NEAREST,
-		GL_LINEAR,
-		GL_NEAREST_MIPMAP_NEAREST,
-		GL_LINEAR_MIPMAP_NEAREST,
-		GL_NEAREST_MIPMAP_LINEAR,
-		GL_LINEAR_MIPMAP_LINEAR
-	};
-
-	static const char* MIN_FILTER_NAMES[] = {
-		"Nearest",
-		"Linear",
-		"Nearest (Nearest Mipmap)",
-		"Linear (Nearest Mipmap)",
-		"Nearest (Linear Mipmap)",
-		"Linear (Linear Mipmap)"
-	};
-
-	static const GLenum MAG_FILTER_VALUES[] = {
-		GL_NEAREST,
-		GL_LINEAR,
-	};
-
-	static const char* MAG_FILTER_NAMES[] = {
-		"Nearest",
-		"Linear",
-	};
-
-	static const GLenum WRAP_VALUES[] = {
-		GL_CLAMP_TO_EDGE,
-		GL_CLAMP_TO_BORDER,
-		GL_MIRRORED_REPEAT,
-		GL_REPEAT,
-		GL_MIRROR_CLAMP_TO_EDGE
-	};
-
-	static const char* WRAP_NAMES[] = {
-		"Clamp To Edge",
-		"Clamp To Border",
-		"Repeat (Mirrored)",
-		"Repeat",
-		"Clamp To Edge (Mirrored)"
-	};
-
-	BaseTextureDesc::BaseTextureDesc() :
-		min_filter(GL_NEAREST, detail::Key::MinFilter, "Min Filter", MIN_FILTER_VALUES, MIN_FILTER_NAMES),
-		mag_filter(GL_NEAREST, detail::Key::MagFilter, "Mag Filter", MAG_FILTER_VALUES, MAG_FILTER_NAMES),
-		wrap_s(GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", WRAP_VALUES, WRAP_NAMES),
-		wrap_t(GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", WRAP_VALUES, WRAP_NAMES),
+	BaseTextureDesc::BaseTextureDesc(GLenum default_filter) :
+		min_filter(default_filter, detail::Key::MinFilter, "Min Filter", detail::MIN_FILTER_VALUES, detail::MIN_FILTER_NAMES),
+		mag_filter(default_filter, detail::Key::MagFilter, "Mag Filter", detail::MAG_FILTER_VALUES, detail::MAG_FILTER_NAMES),
+		wrap_s(GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", detail::WRAP_VALUES, detail::WRAP_NAMES),
+		wrap_t(GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", detail::WRAP_VALUES, detail::WRAP_NAMES),
 		anim(false, detail::Key::Animated, "Animated"),
 		spritesheet()
 	{
 	}
 
-	void BaseTextureDesc::Reset(BaseTextureDesc& source)
-	{
-		RESET_FIELDS(BASE_TEXTURE_GENERATOR);
-	}
-
-	void BaseTextureDesc::Isolate()
-	{
-		ISOLATE_FIELDS(BASE_TEXTURE_GENERATOR);
-	}
-
 	RasterTextureDesc::RasterTextureDesc() :
-		base(),
+		base(GL_NEAREST),
 		generate_mipmaps(false, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
-		storage(detail::StorageMode::Discard, detail::Key::Storage, "Storage")
+		storage(detail::StorageMode::Keep, detail::Key::Storage, "Storage")
 	{
-	}
-
-	void RasterTextureDesc::Reset(RasterTextureDesc& source)
-	{
-		RESET_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
-	}
-
-	void RasterTextureDesc::Isolate()
-	{
-		ISOLATE_FIELDS(RASTER_TEXTURE_FULL_GENERATOR);
 	}
 
 	VectorTextureDesc::VectorTextureDesc() :
-		base(),
+		base(GL_LINEAR),
 		generate_mipmaps(detail::SVGMipmapGenerationMode::Off, detail::Key::GenerateMipmaps, "Generate Mipmaps"),
-		image_storage(detail::StorageMode::Discard, detail::Key::ImageStorage, "Image Storage"),
+		image_storage(detail::StorageMode::Keep, detail::Key::ImageStorage, "Image Storage"),
 		abstract_storage(detail::StorageMode::Discard, detail::Key::AbstractStorage, "Abstract Storage"),
 		scale(1.f, detail::Key::VectorScale, "Vector Scale")
 	{
 	}
 
-	void VectorTextureDesc::Reset(VectorTextureDesc& source)
+	const detail::Key TextureVariantDesc::array_key = detail::Key::TextureArray;
+
+	size_t TextureVariantDesc::Size() const
 	{
-		RESET_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
+		return variant.Visit([](const auto& desc) { return desc.Size(); });
 	}
 
-	void VectorTextureDesc::Isolate()
+	bool TextureVariantDesc::Empty() const
 	{
-		ISOLATE_FIELDS(VECTOR_TEXTURE_FULL_GENERATOR);
+		return Size() == 0;
 	}
 
-	void TextureDescVariant::Reset(TextureDescVariant& source)
+	void TextureVariantDesc::PushBack()
 	{
-		Isolate();
-		std::visit([this](auto& s) {
-			using T = std::decay_t<decltype(s)>;
-			variant = T();
-			std::get<T>(variant).Reset(s);
-		}, source.variant);
-	}
-
-	void TextureDescVariant::Isolate()
-	{
-		std::visit([](auto& desc) { desc.Isolate(); }, variant);
-	}
-
-	size_t TextureDescVariant::Count() const
-	{
-		return std::visit([](const auto& desc) { return desc.array.size(); }, variant);
-	}
-
-	bool TextureDescVariant::Empty() const
-	{
-		return Count() == 0;
-	}
-
-	void TextureDescVariant::PushBack()
-	{
-		std::visit([](auto& desc) { desc.PushBack(); }, variant);
+		variant.Visit([](auto& desc) { desc.PushBack(); });
 	}
 	
-	void TextureDescVariant::Remove(size_t i)
+	void TextureVariantDesc::Remove(size_t i)
 	{
-		std::visit([i](auto& desc) { desc.Remove(i); }, variant);
+		variant.Visit([i](auto& desc) { desc.Remove(i); });
+	}
+
+	void TextureVariantDesc::Clear()
+	{
+		variant.Visit([](auto& desc) { desc.Clear(); });
 	}
 }

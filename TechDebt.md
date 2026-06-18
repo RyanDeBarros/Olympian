@@ -6,3 +6,4 @@
 * Create MKdocs for all public classes/functions
 * Create asset loaders for all assets
 * Create editor tabs for all assets
+* Add more logging in engine and in editor

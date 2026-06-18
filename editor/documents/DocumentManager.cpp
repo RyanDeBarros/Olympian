@@ -2,14 +2,19 @@
 
 #include "documents/IDocument.h"
 
-#include "core/MainWindow.h"
+#include "core/windows/MainWindow.h"
 #include "panels/AssetEditorPanel.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
 
 #include "documents/FontDocument.h"
+#include "documents/FontFamilyDocument.h"
+#include "documents/ProjectDocument.h"
+#include "documents/RasterFontDocument.h"
+#include "documents/SignalDocument.h"
 #include "documents/TextureDocument.h"
+#include "documents/TilesetDocument.h"
 
 namespace oly::editor
 {
@@ -26,9 +31,6 @@ namespace oly::editor
 
 	OpenAssetCode DocumentManager::OpenAsset(const detail::ResourcePath& path)
 	{
-		if (!path.is_resource())
-			return OpenAssetCode::NotResource;
-
 		detail::ResourcePath oly_file = path.get_import_path();
 		if (oly_file.exists())
 		{
@@ -39,19 +41,27 @@ namespace oly::editor
 
 			switch (type)
 			{
-			case detail::Key::Meta_Font:
-				if (meta.get_version() == FontDocument::GetVersion())
-					Add<FontDocument>(std::move(oly_file));
+#define SWITCH_CASE(AssetKey, DocumentClass) \
+			case detail::Key::AssetKey: \
+				if (meta.get_version() == DocumentClass::GetVersion()) \
+					Add<DocumentClass>(std::move(oly_file)); \
+				else \
+					return OpenAssetCode::UnsupportedAssetVersion; \
 				break;
-			case detail::Key::Meta_Texture:
-				if (meta.get_version() == TextureDocument::GetVersion())
-					Add<TextureDocument>(std::move(oly_file));
-				break;
+
+				SWITCH_CASE(Meta_Font, FontDocument);
+				SWITCH_CASE(Meta_FontFamily, FontFamilyDocument);
+				SWITCH_CASE(Meta_Project, ProjectDocument);
+				SWITCH_CASE(Meta_RasterFont, RasterFontDocument);
+				SWITCH_CASE(Meta_Signal, SignalDocument);
+				SWITCH_CASE(Meta_Texture, TextureDocument);
+				SWITCH_CASE(Meta_Tileset, TilesetDocument);
+
+#undef SWITCH_CASE
+
 			default:
 				return OpenAssetCode::UnsupportedAssetType;
 			}
-
-			return OpenAssetCode::UnsupportedAssetVersion;
 		}
 		else if (path.exists() && path.is_file())
 		{

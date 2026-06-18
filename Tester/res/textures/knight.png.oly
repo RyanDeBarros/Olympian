@@ -8,11 +8,11 @@ MagFilt = 0x2600
 WrapS = 0x812F
 WrapT = 0x812F
 Animated = 1
-Rows = 2
-Cols = 3
-CWOver = 0
-CHOver = 0
-DelayCS = 10
+ColType = 0
+ColValue = 3
+RowType = 0
+RowValue = 2
+Delay = 0.1
 RowMajor = 1
 RowUp = 1
 

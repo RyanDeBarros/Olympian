@@ -1,6 +1,6 @@
-#include "core/Editor.h"
-#include "core/Logger.h"
-#include "core/ShortcutManager.h"
+#include "core/editor/Editor.h"
+#include "core/editor/Logger.h"
+#include "core/editor/ShortcutManager.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -34,6 +34,10 @@ int main()
 
     GLFWwindow* window = glfwCreateWindow(1, 1, "Olympian Editor", nullptr, nullptr);
     glfwMakeContextCurrent(window);
+
+    if (glewInit() != GLEW_OK)
+        return 1;
+
     glfwSwapInterval(1);
     glfwSetDropCallback(window, glfw_drop_callback);
 
@@ -50,12 +54,13 @@ int main()
     ImGui::StyleColorsDark();
     ImGui::GetStyle().ScaleAllSizes(monitor_scale);
 
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
     ImGuiIO& io = ImGui::GetIO();
     io.FontGlobalScale = monitor_scale;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
     oly::editor::Editor::Instance().Init(window);
 
@@ -75,6 +80,8 @@ int main()
 
         glfwSwapBuffers(window);
     }
+
+    oly::editor::Editor::Instance().Terminate();
 
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

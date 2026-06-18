@@ -10,6 +10,7 @@
 
 namespace oly
 {
+	// TODO v9 don't use so much
 	struct StringParam
 	{
 	private:

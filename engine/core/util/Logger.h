@@ -19,7 +19,7 @@ namespace oly
 		struct LogAccess;
 	}
 
-	// TODO v8 string formatting and buffer elements for logger
+	// TODO v9 string formatting and buffer elements for logger
 
 	struct LoggerOptions
 	{

@@ -1,13 +1,26 @@
 #pragma once
 
 #include "documents/IDocument.h"
+#include "gui/Form.h"
+
+#include "desc/FontDesc.h"
+
+#include "assets/MetaSplitter.h"
 
 namespace oly::editor
 {
 	class FontDocument : public IDocument
 	{
+		FullFontDesc _scratch;
+		FullFontDesc _disk;
+		detail::MetaMap _meta;
+		gui::ListModel _atlas_slots;
+		std::string _display_text;
+		ImFont* _preview_font = nullptr;
+		
 	public:
 		using IDocument::IDocument;
+		~FontDocument();
 
 		static const char* GetVersion();
 
@@ -17,5 +30,25 @@ namespace oly::editor
 		void Dump() override;
 
 		detail::ResourcePath GetSourcePath() const;
+
+	private:
+		void ReloadFont();
+		void DestroyFont();
+
+		void DrawFontFace();
+		void DrawFontAtlases();
+		void DrawAtlasPreview();
+		void Draw(Form& form, FontFaceDesc& desc);
+		void Draw(Form& form, FontAtlasDesc& desc);
+
+		void Load(TOMLNode node, FullFontDesc& desc);
+		void Load(TOMLNode node, FontFaceDesc& desc);
+		void Load(TOMLNode node, KerningDesc& desc);
+		void Load(TOMLNode node, FontAtlasDesc& desc);
+
+		void Dump(toml::table& table, FullFontDesc& desc);
+		void Dump(toml::table& table, FontFaceDesc& desc);
+		void Dump(toml::table& table, KerningDesc& desc);
+		void Dump(toml::table& table, FontAtlasDesc& desc);
 	};
 }

@@ -111,7 +111,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 		glEnable(GL_BLEND);
 
-		// TODO v8 anti-aliasing settings
+		// TODO v10 anti-aliasing settings
 	}
 
 	void render() const override
@@ -175,16 +175,11 @@ int main()
 	oly::context::set_render_pipeline(&pipeline);
 
 	PlayerController pc;
-	pc.bind("jump", &PlayerController::jump);
-	pc.bind("click", &PlayerController::click);
-	pc.bind("drag", &PlayerController::drag);
-	pc.bind("zoom camera", &PlayerController::zoom_camera);
-	pc.bind_mapping("move", &PlayerController::move);
+
+	pc.test_text = pipeline.jumble.test_text.ref;
 
 	KeyHandler key_handler;
 	key_handler.attach(&oly::context_window().handlers.key);
-
-	pc.test_text = pipeline.jumble.test_text.ref;
 
 	oly::col2d::ConvexHull hull_pts;
 	const int _npts = 5;

@@ -5,7 +5,7 @@
 namespace oly::detail
 {
 	static const char* OLY_EXT = ".oly";
-	std::filesystem::path ResourcePath::resource_root;
+	std::filesystem::path ResourcePath::resource_root; // TODO v9 resource_root should just be the local res/ folder -> copy it to build folder in cmake. likewise, copy shader folder in engine build. no need for macros
 
 	ResourcePath::ResourcePath()
 	{
@@ -39,6 +39,14 @@ namespace oly::detail
 	std::string ResourcePath::string() const
 	{
 		return absolute.generic_string();
+	}
+
+	std::string ResourcePath::get_resource_shorthand() const
+	{
+		if (is_resource())
+			return "@/" + std::filesystem::relative(absolute, resource_root).generic_string();
+		else
+			return absolute.generic_string();
 	}
 
 	std::filesystem::path ResourcePath::get_absolute() const

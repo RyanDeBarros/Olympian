@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+// TODO v9 simplify log macros -> separate prefix and always pass timestamp
+
 namespace oly
 {
 	void Logger::start_log(const LoggerOptions& options)
@@ -13,7 +15,7 @@ namespace oly
 		target.logfile = options.use_logfile;
 		target.console = options.use_console;
 
-		// TODO v8 use options max files/bytes to remove old logs here
+		// TODO v9 use options max files/bytes to remove old logs here
 
 		if (target.logfile)
 		{

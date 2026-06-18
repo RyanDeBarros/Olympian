@@ -29,9 +29,19 @@ namespace oly::detail
         return it != map.end() ? it->second : "";
     }
 
-	MetaMap MetaSplitter::decode_meta(const ResourcePath& filepath)
+    bool MetaMap::is_import() const
+    {
+        return map.count(Key::Meta_Import);
+    }
+
+    MetaMap MetaSplitter::decode_meta(const ResourcePath& file)
+    {
+        return decode_meta(file.string().c_str());
+    }
+
+	MetaMap MetaSplitter::decode_meta(const char* filepath)
 	{
-        std::ifstream file = filepath.get_ifstream();
+        std::ifstream file(filepath);
         if (!file.is_open())
             return {};
 

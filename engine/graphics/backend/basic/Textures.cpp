@@ -208,32 +208,32 @@ namespace oly::graphics
 
 	void AnimDimensions::set_delays(int* new_delays, unsigned int num_frames)
 	{
-		delays.clear();
+		_delays.clear();
 		_frames = -1;
 		if (num_frames == 0)
 			return;
-		delays.resize(num_frames);
+		_delays.resize(num_frames);
 		bool single = true;
-		int delay = new_delays[0];
-		delays[0] = delay;
+		float delay = new_delays[0] * 0.01f;
+		_delays[0] = delay;
 		for (unsigned int i = 1; i < num_frames; ++i)
 		{
-			delays[i] = new_delays[i];
-			if (std::abs(delays[i] - delay) > anim_delay_epsilon)
+			_delays[i] = new_delays[i] * 0.01f;
+			if (std::abs(_delays[i] - delay) > anim_delay_epsilon)
 				single = false;
 		}
 		if (single)
 		{
-			delays.resize(1);
+			_delays.resize(1);
 			_frames = num_frames;
 		}
 	}
 
-	int AnimDimensions::delay(unsigned int frame) const
+	float AnimDimensions::delay(unsigned int frame) const
 	{
 		if (frame >= frames())
 			throw Error(ErrorCode::IndexOutOfRange);
-		return uniform() ? delays[0] : delays[frame];
+		return uniform() ? _delays[0] : _delays[frame];
 	}
 
 	Anim::Anim(const detail::ResourcePath& file, SpritesheetOptions options)
@@ -258,45 +258,66 @@ namespace oly::graphics
 	
 	void Anim::parse_sprite_sheet(const Image& image, SpritesheetOptions options)
 	{
-		_dim->delays = { options.delay_cs };
+		_dim->_delays = { options.delay };
 		auto idim = image.dim();
 		_dim->cpp = idim.cpp;
 
-		if (options.cols > (GLuint)idim.w)
-			options.cols = (GLuint)idim.w;
-		else if (options.cols == 0)
-			options.cols = 1;
 
-		if (options.cell_width_override == 0)
-			options.cell_width_override = (int)(idim.w / options.cols);
-		else if (options.cell_width_override * options.cols > (GLuint)idim.w)
-			options.cols = (int)(idim.w / options.cell_width_override);
+		// Columns
 
-		if (options.rows > (GLuint)idim.h)
-			options.rows = (GLuint)idim.h;
-		else if (options.rows == 0)
-			options.rows = 1;
-		
-		if (options.cell_height_override == 0)
-			options.cell_height_override = (int)(idim.h / options.rows);
-		else if (options.cell_height_override * options.rows > (GLuint)idim.h)
-			options.rows = (int)(idim.h / options.cell_height_override);
+		GLuint xpx_offset = idim.w > 1 ? glm::min(options.col_offset_pixel, static_cast<GLuint>(idim.w)) : 0;
+		GLuint working_width = static_cast<GLuint>(idim.w) - xpx_offset;
 
-		_dim->w = options.cell_width_override;
-		_dim->h = options.cell_height_override;
-		_dim->_frames = options.rows * options.cols;
+		GLuint cols = options.col_type == detail::SpritesheetParamType::Index ? glm::clamp(options.col_value, 1u, working_width) : 1u;
+		GLuint cell_width = options.col_type == detail::SpritesheetParamType::Pixel ? options.col_value : 0u;
 
-		GLuint minor_stride = options.cell_width_override * idim.cpp;
-		GLuint major_stride = minor_stride * options.cols;
+		if (options.col_type == detail::SpritesheetParamType::Index || options.col_value == 0)
+			cell_width = static_cast<int>(working_width / cols);
+		else if (cell_width * cols > working_width)
+			cols = static_cast<int>(working_width / cell_width);
+
+		GLuint col_offset = glm::min(options.col_offset_index, cols);
+		cols -= col_offset;
+
+
+		// Rows
+
+		GLuint ypx_offset = idim.h > 1 ? glm::min(options.row_offset_pixel, static_cast<GLuint>(idim.h)) : 0;
+		GLuint working_height = static_cast<GLuint>(idim.h) - ypx_offset;
+
+		GLuint rows = options.row_type == detail::SpritesheetParamType::Index ? glm::clamp(options.row_value, 1u, working_height) : 1u;
+		GLuint cell_height = options.row_type == detail::SpritesheetParamType::Pixel ? options.row_value : 0u;
+
+		if (options.row_type == detail::SpritesheetParamType::Index || options.row_value == 0)
+			cell_height = static_cast<int>(working_height / rows);
+		else if (cell_height * rows > working_height)
+			rows = static_cast<int>(working_height / cell_height);
+
+		GLuint row_offset = glm::min(options.row_offset_index, rows);
+		rows -= row_offset;
+
+
+		// Construction
+
+		_dim->w = cell_width;
+		_dim->h = cell_height;
+		_dim->_frames = rows * cols;
+
+		GLuint minor_stride = _dim->w * idim.cpp;
+		GLuint major_stride = minor_stride * cols;
 		GLuint image_major_stride = idim.w * idim.cpp;
-		GLuint minor_height = options.cell_height_override;
-		GLuint major_height = minor_height * options.rows;
+		GLuint minor_height = _dim->h;
+		GLuint major_height = minor_height * rows;
 		GLuint minor_area = minor_stride * minor_height;
 
 		_buf = new unsigned char[major_stride * major_height];
-		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride](GLuint i, GLuint j, GLuint k) {
+		const auto cpy = [this, minor_height, minor_stride, ibuf = image.buf(), minor_area, image_major_stride,
+							xpx_offset, ypx_offset, col_offset, row_offset](GLuint i, GLuint j, GLuint k) {
+			GLuint src_x = xpx_offset + (j + col_offset) * _dim->w;
+			GLuint src_y = ypx_offset + (i + row_offset) * _dim->h;
+
 			for (GLuint r = 0; r < minor_height; ++r)
-				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + j * minor_stride + (i * minor_height + r) * image_major_stride, minor_stride);
+				memcpy(_buf + k * minor_area + r * minor_stride, ibuf + src_x * _dim->cpp + (src_y + r) * image_major_stride, minor_stride);
 		};
 
 		GLuint k = 0;
@@ -304,14 +325,14 @@ namespace oly::graphics
 		{
 			if (options.row_up)
 			{
-				for (GLuint i = 0; i < options.rows; ++i)
-					for (GLuint j = 0; j < options.cols; ++j)
+				for (GLuint i = 0; i < rows; ++i)
+					for (GLuint j = 0; j < cols; ++j)
 						cpy(i, j, k++);
 			}
 			else
 			{
-				for (int i = options.rows - 1; i >= 0; --i)
-					for (GLuint j = 0; j < options.cols; ++j)
+				for (int i = rows - 1; i >= 0; --i)
+					for (GLuint j = 0; j < cols; ++j)
 						cpy((GLuint)i, j, k++);
 			}
 		}
@@ -319,14 +340,14 @@ namespace oly::graphics
 		{
 			if (options.row_up)
 			{
-				for (GLuint j = 0; j < options.cols; ++j)
-					for (GLuint i = 0; i < options.rows; ++i)
+				for (GLuint j = 0; j < cols; ++j)
+					for (GLuint i = 0; i < rows; ++i)
 						cpy(i, j, k++);
 			}
 			else
 			{
-				for (GLuint j = 0; j < options.cols; ++j)
-					for (int i = options.rows - 1; i >= 0; --i)
+				for (GLuint j = 0; j < cols; ++j)
+					for (int i = rows - 1; i >= 0; --i)
 						cpy((GLuint)i, j, k++);
 			}
 		}
@@ -376,7 +397,7 @@ namespace oly::graphics
 	AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed, GLuint starting_frame)
 	{
 		OLY_ASSERT(dim.uniform());
-		return { starting_frame, dim.frames(), 0.0f, 0.01f * dim.delay() / speed };
+		return { starting_frame, dim.frames(), 0.0f, dim.delay() / speed };
 	}
 
 	AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed, GLuint starting_frame)

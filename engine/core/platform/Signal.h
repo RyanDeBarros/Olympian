@@ -15,16 +15,24 @@ namespace oly::input
 		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
 
 	public:
-		SignalID get(const StringParam& name)
+		SignalID insert(const StringParam& name)
+		{
+			SignalID id = next++;
+			table[name.transfer()] = id;
+			return id;
+		}
+
+		SignalID get(const StringParam& name) const
 		{
 			auto it = table.find(name);
 			if (it != table.end())
 				return it->second;
-			return table.emplace(name.transfer(), next++).first->second;
+			else
+				return 0;
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalMappingTable;
+	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalRoutingTable;
 
 	enum class Phase
 	{

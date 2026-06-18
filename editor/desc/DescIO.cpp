@@ -1,5 +1,12 @@
 #include "DescIO.h"
 
+#include "core/editor/ResourceLoader.h"
+#include "gui/DisabledSection.h"
+#include "gui/DynamicList.h"
+#include "gui/ImGuiWrapper.h"
+#include "gui/Subform.h"
+#include "gui/Toolbar.h"
+
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
 
@@ -7,149 +14,142 @@
 
 namespace oly::editor
 {
-	static void PrepareValue(const char* label, const void* data)
+	void DescIO::PrepareValue(const char* label)
 	{
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
 		ImGui::Text(label);
 		ImGui::TableNextColumn();
-		ImGui::PushID(data);
 	}
 
-	static bool DrawRevertButtonImpl(const void* data)
+	bool DescIO::DrawRevertButton()
 	{
 		bool dirty = false;
 		ImGui::SameLine();
-		ImGui::PushID(data);
-		if (ImGui::ArrowButton("", ImGuiDir_Left))
+		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
 			dirty = true;
-		ImGui::PopID();
 		return dirty;
 	}
 
-	template<typename T>
-	static bool FinishValue(bool dirty, T& desc, const T* disk)
+	DrawResult DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
 	{
-		if (disk && desc != *disk && DrawRevertButtonImpl(disk))
+		DrawResult result;
+		PrepareValue(label);
+		gui::IDScope scope(&data);
+		result |= gui::InputData<int>{}("", data, names, count);
+		result |= CheckRevertButton(data, def);
+		return result;
+	}
+
+	DrawResult DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
+	{
+		std::unique_ptr<Form> temp_form;
+		Form* form = Form::ActiveForm();
+		if (!form)
 		{
-			desc = *disk;
-			dirty = true;
+			temp_form = std::make_unique<Form>();
+			form = temp_form.get();
 		}
-		ImGui::PopID();
-		return dirty;
-	}
 
-	bool DescIO::BeginForm(void* id)
-	{
-		ImGui::PushID(id);
-		if (ImGui::BeginTable("", 2, ImGuiTableFlags_SizingFixedFit))
+		if (auto subform = Subform(*form, label))
 		{
-			ImGui::TableSetupColumn("");
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
-			return true;
+			DrawResult result;
+			for (size_t i = 0; i < count; ++i)
+				result |= Draw(std::to_string(i).c_str(), data[i], def[i]);
+			return result;
 		}
 		else
-		{
-			ImGui::PopID();
 			return false;
-		}
 	}
 
-	void DescIO::EndForm()
+	DrawResult DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
-		ImGui::EndTable();
-		ImGui::PopID();
-	}
+		DrawResult result;
+		PrepareValue(label);
+		gui::IDScope scope(&data);
 
-	bool DescIO::Draw(const char* label, bool& data, const bool* disk)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		if (ImGui::Checkbox("", &data))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
-	}
-
-	bool DescIO::Draw(const char* label, int& data, const int* disk, std::optional<int> min, std::optional<int> max)
-	{
-		bool dirty = false;
-		const int og = data;
-		PrepareValue(label, &data);
-		if (ImGui::InputInt("", &data))
+		for (size_t i = 0; i < count; ++i)
 		{
-			if (max)
-				data = std::min(data, *max);
-			if (min)
-				data = std::max(data, *min);
-			dirty = data != og;
-		}
-		return FinishValue(dirty, data, disk);
-	}
+			result |= gui::InputData<bool>{}(sublabels[i], data[i]);
+			result.Query();
+			result |= CheckRevertButton(data[i], def[i]);
 
-	bool DescIO::Draw(const char* label, float& data, const float* disk, std::optional<float> min, std::optional<float> max)
-	{
-		bool dirty = false;
-		const float og = data;
-		PrepareValue(label, &data);
-		if (ImGui::InputFloat("", &data))
-		{
-			if (max)
-				data = std::min(data, *max);
-			if (min)
-				data = std::max(data, *min);
-			dirty = data != og;
+			if (i + 1 < count)
+				ImGui::SameLine();
 		}
-		return FinishValue(dirty, data, disk);
-	}
 
-	bool DescIO::Draw(const char* label, int& data, const int* disk, const char** names, size_t count)
-	{
-		bool dirty = false;
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &data, names, count))
-			dirty = true;
-		return FinishValue(dirty, data, disk);
+		return result;
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::StorageMode& data, const detail::StorageMode* disk)
+	DrawResult DescIO::DrawCombo(const char* label, detail::Axis0dConversion& data)
 	{
-		bool dirty = false;
-		static const char* values[] = {
-			"Discard",
-			"Keep"
-		};
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
-			dirty = true;
-		data = static_cast<detail::StorageMode>(index);
-		return FinishValue(dirty, data, disk);
+		return DrawEnumCombo(label, data, { "None", "To 1D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	bool DescIO::Draw(const char* label, detail::SVGMipmapGenerationMode& data, const detail::SVGMipmapGenerationMode* disk)
+	DrawResult DescIO::DrawCombo(const char* label, detail::Axis1dConversion& data)
 	{
-		bool dirty = false;
-		static const char* values[] = {
-			"Auto",
-			"Off",
-			"Manual"
-		};
-		int index = static_cast<int>(data);
-		PrepareValue(label, &data);
-		if (ImGui::Combo("", &index, values, IM_ARRAYSIZE(values)))
-			dirty = true;
-		data = static_cast<detail::SVGMipmapGenerationMode>(index);
-		return FinishValue(dirty, data, disk);
+		return DrawEnumCombo(label, data, { "None", "To 0D", "To 2D", "To 3D" });
 	}
 
-	const char* DescIO::StringVectorComboGetter(void* data, int idx)
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::Axis2dConversion& data)
 	{
-		auto& items = *static_cast<std::vector<std::string>*>(data);
-		if (idx < 0 || idx >= items.size())
-			return nullptr;
-		else
-			return items[idx].c_str();
+		return DrawEnumCombo(label, data, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::CommonBufferPreset& data)
+	{
+		return DrawEnumCombo(label, data, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::GamepadAxis2D& data)
+	{
+		return DrawEnumCombo(label, data, { "Left XY", "Right XY" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::PositioningMode& data)
+	{
+		return DrawEnumCombo(label, data, { "Relative", "Absolute" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::SignalBindingType& data)
+	{
+		return DrawEnumCombo(label, data, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::SpritesheetParamType& data)
+	{
+		return DrawEnumCombo(label, data, { "Index", "Pixel" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::StorageMode& data)
+	{
+		return DrawEnumCombo(label, data, { "Discard", "Keep" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::Swizzle& data)
+	{
+		return DrawEnumCombo(label, data, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::SVGMipmapGenerationMode& data)
+	{
+		return DrawEnumCombo(label, data, { "Auto", "Off", "Manual" });
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, detail::TileRotation& data)
+	{
+		return DrawEnumCombo(label, data, { "None", "90 degrees", "180 degrees", "270 degrees" });
 	}
 }

@@ -1,6 +1,5 @@
 #meta version=1.0 type=signal
 
-Mapping = []
 [[SigArr]]
 ID = "drag"
 Binding = 5
