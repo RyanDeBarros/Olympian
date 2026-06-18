@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/Macros.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -17,15 +19,9 @@ namespace oly::editor
 			RightDoubleClicked = 1 << 5
 		};
 
-		Flags flags = Flags::None;
+		OLY_DETAIL_DECLARE_NESTED_BITMASK(Flags);
 
-		friend Flags operator|(Flags lhs, Flags rhs);
-		friend Flags operator&(Flags lhs, Flags rhs);
-		friend Flags operator^(Flags lhs, Flags rhs);
-		friend Flags operator~(Flags value);
-		friend Flags& operator|=(Flags& lhs, Flags rhs);
-		friend Flags& operator&=(Flags& lhs, Flags rhs);
-		friend Flags& operator^=(Flags& lhs, Flags rhs);
+		Flags flags = Flags::None;
 
 		DrawResult(bool dirty = false)
 		{
@@ -100,42 +96,5 @@ namespace oly::editor
 		}
 	};
 
-	// TODO v8 macro for bitmask enums
-	inline DrawResult::Flags operator|(DrawResult::Flags lhs, DrawResult::Flags rhs)
-	{
-		return static_cast<DrawResult::Flags>(static_cast<int>(lhs) | static_cast<int>(rhs));
-	}
-
-	inline DrawResult::Flags operator&(DrawResult::Flags lhs, DrawResult::Flags rhs)
-	{
-		return static_cast<DrawResult::Flags>(static_cast<int>(lhs) & static_cast<int>(rhs));
-	}
-
-	inline DrawResult::Flags operator^(DrawResult::Flags lhs, DrawResult::Flags rhs)
-	{
-		return static_cast<DrawResult::Flags>(static_cast<int>(lhs) ^ static_cast<int>(rhs));
-	}
-
-	inline DrawResult::Flags operator~(DrawResult::Flags value)
-	{
-		return static_cast<DrawResult::Flags>(~static_cast<int>(value));
-	}
-
-	inline DrawResult::Flags& operator|=(DrawResult::Flags& lhs, DrawResult::Flags rhs)
-	{
-		lhs = lhs | rhs;
-		return lhs;
-	}
-
-	inline DrawResult::Flags& operator&=(DrawResult::Flags& lhs, DrawResult::Flags rhs)
-	{
-		lhs = lhs & rhs;
-		return lhs;
-	}
-
-	inline DrawResult::Flags& operator^=(DrawResult::Flags& lhs, DrawResult::Flags rhs)
-	{
-		lhs = lhs ^ rhs;
-		return lhs;
-	}
+	OLY_DETAIL_IMPLEMENT_BITMASK(DrawResult::Flags);
 }
