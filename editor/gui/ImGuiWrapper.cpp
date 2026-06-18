@@ -1,5 +1,7 @@
 #include "ImGuiWrapper.h"
 
+#include "gui/GUIState.h"
+
 namespace oly::editor::gui
 {
 	static const char* StringVectorComboGetter(void* data, int idx)
@@ -13,6 +15,7 @@ namespace oly::editor::gui
 
 	DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items)
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		return ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()));
 	}
 
@@ -21,6 +24,7 @@ namespace oly::editor::gui
 		std::string buf;
 		buf.resize(max_size);
 		string.copy(buf.data(), buf.size());
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputText(label, buf.data(), buf.size(), flags, callback, user_data);
 		string = std::move(buf);
 		size_t n = string.find('\0');
@@ -31,12 +35,14 @@ namespace oly::editor::gui
 
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::Checkbox(label, &data);
 		return result.Query();
 	}
 
 	DrawResult InputData<int>::operator()(const char* label, int& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputInt(label, &data);
 		return result.Query();
 	}
@@ -48,12 +54,14 @@ namespace oly::editor::gui
 
 	DrawResult InputData<int>::operator()(const char* label, int& data, const char** names, size_t count)
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::Combo(label, &data, names, count);
 		return result.Query();
 	}
 
 	DrawResult InputData<float>::operator()(const char* label, float& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputFloat(label, &data);
 		return result.Query();
 	}
@@ -65,6 +73,7 @@ namespace oly::editor::gui
 
 	DrawResult InputData<double>::operator()(const char* label, double& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputDouble(label, &data);
 		return result.Query();
 	}
@@ -76,6 +85,7 @@ namespace oly::editor::gui
 
 	DrawResult InputData<glm::vec2>::operator()(const char* label, glm::vec2& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputFloat2(label, glm::value_ptr(data));
 		return result.Query();
 	}
@@ -87,6 +97,7 @@ namespace oly::editor::gui
 
 	DrawResult InputData<glm::vec3>::operator()(const char* label, glm::vec3& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputFloat3(label, glm::value_ptr(data));
 		return result.Query();
 	}
@@ -98,6 +109,7 @@ namespace oly::editor::gui
 
 	DrawResult InputData<glm::vec4>::operator()(const char* label, glm::vec4& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::InputFloat4(label, glm::value_ptr(data));
 		return result.Query();
 	}
@@ -114,6 +126,7 @@ namespace oly::editor::gui
 
 	DrawResult InputData<Color>::operator()(const char* label, Color& data) const
 	{
+		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::ColorEdit4(label, data.ValuePtr());
 		return result.Query();
 	}

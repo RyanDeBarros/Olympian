@@ -70,7 +70,7 @@ namespace oly::editor
 
 		for (size_t i = 0; i < count; ++i)
 		{
-			result |= ImGui::Checkbox(sublabels[i], data + i);
+			result |= gui::InputData<bool>{}(sublabels[i], data[i]);
 			result.Query();
 			result |= CheckRevertButton(data[i], def[i]);
 

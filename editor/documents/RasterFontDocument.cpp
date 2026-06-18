@@ -4,6 +4,7 @@
 #include "core/editor/Logger.h"
 
 #include "gui/Subform.h"
+#include "gui/GUIState.h"
 
 #include "definitions/Keys.h"
 
@@ -113,17 +114,17 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(GlyphDesc& desc)
 	{
+		GUIState::InputDataStyleStack style_stack;
 		const bool empty_codepoint = desc.codepoint.scratch.empty();
 		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.scratch) > 1;
 
 		if (empty_codepoint || duplicate_codepoint)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(255, 0, 0, 255));
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.f);
+			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = IM_COL32(255, 0, 0, 255) });
+			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
 		}
 
 		std::string codepoint = desc.codepoint.scratch;
-		// TODO v8 style/var gets passed to reset button as well -> pass DrawSettings to Draw() so push/pop only happens around the InputData widget
 		auto codepoint_result = desc.codepoint.Draw();
 		if (codepoint_result)
 		{
@@ -132,11 +133,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		if (empty_codepoint || duplicate_codepoint)
-		{
-			ImGui::PopStyleVar();
-			ImGui::PopStyleColor();
-		}
+		style_stack.PopStyles();
 
 		if (codepoint_result.IsHovered())
 		{
