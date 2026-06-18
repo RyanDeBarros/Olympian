@@ -255,7 +255,7 @@ namespace oly::editor
 		if (ImGui::BeginDragDropSource())
 		{
 			std::string path = node.path.string();
-			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9 make sure to include path drag drop source in content browser panel
+			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9.2 make sure to include path drag drop source in content browser panel
 			ImGui::Text("Drag path");
 			ImGui::EndDragDropSource();
 		}
@@ -267,7 +267,7 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Show in Content Browser"))
 			{
-				// TODO v9
+				// TODO v9.2
 			}
 
 			if (ImGui::MenuItem("Reveal in Explorer"))

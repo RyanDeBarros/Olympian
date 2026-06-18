@@ -143,7 +143,7 @@ namespace oly
 			}
 			else
 			{
-				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl; // TODO v9 don't pass LOG.nl -> log access should do a new line at the beginning, and every frame should flush log -> print any pending newlines.
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl; // TODO v10 don't pass LOG.nl -> log access should do a new line at the beginning, and every frame should flush log -> print any pending newlines.
 			}
 		}
 	}

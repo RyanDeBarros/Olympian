@@ -1,9 +1,15 @@
-TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) for each major subfeature
+# v9.1
+* More editor work
+	* Undo, redo, and context menus on fields/forms to copy/paste properties
+	* More layout/gui abstraction
 
-# v9
+# v9.2
+
 * More editor work
 	* Content Browser Panel
-	* Undo, redo, and context menus on fields/forms to copy/paste properties
+				
+# v9.3
+* More editor work
 	* Project manager
 		* Generate new project files
 		* Recent project manifest

@@ -17,7 +17,7 @@ namespace oly::editor
 		RasterFontDesc _disk;
 		detail::MetaMap _meta;
 		gui::ListModel _glyph_model;
-		Counter<std::string> _codepoint_counter; // TODO v9 use Counters elsewhere
+		Counter<std::string> _codepoint_counter; // TODO v9.1 use Counters elsewhere
 
 	public:
 		using IDocument::IDocument;

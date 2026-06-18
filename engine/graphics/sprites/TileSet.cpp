@@ -42,7 +42,7 @@ namespace oly::rendering
 			ss << "[" << tile[1][0] << ", ---, " << tile[1][2] << "]";
 			ss << "[" << tile[2][0] << ", " << tile[2][1] << ", " << tile[2][2] << "]";
 
-			// TODO v9 logger api is too restrictive - allow for passing to LOG directly. Just revamp the whole system
+			// TODO v10 logger api is too restrictive - allow for passing to LOG directly. Just revamp the whole system
 			_OLY_ENGINE_LOG_ERROR("Tileset") << "Tileset cannot resolve tile configuration [" << ss.str() << "]" << LOG.endl;
 			throw Error(ErrorCode::IncompleteTileset);
 		}

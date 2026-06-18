@@ -131,7 +131,7 @@ namespace oly::editor::gui
 		return result.Query();
 	}
 
-	// TODO v9 use inner tables more often for layout structuring: define utility to defer calls to input-data so that the number of columns can be dynamically computed + SameLine() automatically called for multiple elements in a column.
+	// TODO v9.1 use inner tables more often for layout structuring: define utility to defer calls to input-data so that the number of columns can be dynamically computed + SameLine() automatically called for multiple elements in a column.
 	DrawResult InputData<Rect>::operator()(const char* label, Rect& data) const
 	{
 		const bool header = label && label[0] != '\0';

@@ -107,7 +107,7 @@ namespace oly::editor
 					MarkDirty();
 
 				_glyph_model.active_index.ConsumeModified();
-				// TODO v9 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
+				// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 			}
 		}
 	}
