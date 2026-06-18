@@ -1,8 +1,3 @@
-# v8
-* Editor documents
-	* Raster Font
-	* Font Family
-
 TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) for each major subfeature
 
 # v9
