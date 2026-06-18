@@ -2,7 +2,7 @@
 
 #include <utility>
 
-namespace oly::detail
+namespace oly
 {
 	struct Hasher
 	{

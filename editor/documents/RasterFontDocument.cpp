@@ -63,8 +63,12 @@ namespace oly::editor
 		}
 
 		_scratch = _disk;
+		
+		_codepoint_counter.clear();
+		for (auto& desc : _scratch.glyphs)
+			_codepoint_counter.increment(desc.codepoint.scratch);
 
-		_glyph_model.Init(*_scratch.glyphs.ListAdapter());
+		_glyph_model.Init(*ListAdapter());
 	}
 
 	void RasterFontDocument::Dump()
@@ -99,7 +103,7 @@ namespace oly::editor
 				if (!desc.glyphs.Empty())
 					Draw(_scratch.glyphs[_glyph_model.active_index]);
 
-				if (_glyph_model.ConsumeOps(*_scratch.glyphs.ListAdapter()))
+				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
 
 				_glyph_model.active_index.ConsumeModified();
@@ -110,7 +114,39 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(GlyphDesc& desc)
 	{
-		DRAW_FIELDS(GLYPH_GENERATOR);
+		const bool empty_codepoint = desc.codepoint.scratch.empty();
+		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.scratch) > 1;
+
+		if (empty_codepoint || duplicate_codepoint)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Border, IM_COL32(255, 0, 0, 255));
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.f);
+		}
+
+		std::string codepoint = desc.codepoint.scratch;
+		if (desc.codepoint.Draw())
+		{
+			_codepoint_counter.increment(desc.codepoint.scratch);
+			_codepoint_counter.decrement(codepoint);
+			MarkDirty();
+		}
+
+		// TODO v8 IsItemHovered() doesn't work if revert button was last drawn. Define a DrawResult struct that holds a 'bool visible', 'bool hovered', etc. that is returned by Draw() functions.
+		if (ImGui::IsItemHovered())
+		{
+			if (empty_codepoint)
+				ImGui::SetItemTooltip("Codepoint is empty");
+			else if (duplicate_codepoint)
+				ImGui::SetItemTooltip("Duplicate codepoint");
+		}
+
+		if (empty_codepoint || duplicate_codepoint)
+		{
+			ImGui::PopStyleVar();
+			ImGui::PopStyleColor();
+		}
+
+		DRAW_FIELDS(GLYPH_BODY_GENERATOR);
 	}
 
 	void RasterFontDocument::Load(TOMLNode node, RasterFontDesc& desc)
@@ -151,5 +187,11 @@ namespace oly::editor
 	void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)
 	{
 		DUMP_FIELDS(GLYPH_GENERATOR);
+	}
+
+	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
+	{
+		return std::make_unique<gui::ListCallbackAdapter>(_scratch.glyphs.ListAdapter(),
+			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _scratch.glyphs[i].codepoint.scratch; }));
 	}
 }

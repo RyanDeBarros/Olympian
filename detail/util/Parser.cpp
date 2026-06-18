@@ -2,7 +2,7 @@
 
 #include <charconv>
 
-namespace oly::detail
+namespace oly
 {
 	std::optional<int> stoi(const std::string_view str)
 	{

@@ -100,7 +100,7 @@ namespace oly::rendering
 				try
 				{
 					const size_t a_idx = _a_idx++;
-					auto config = detail::stoi(key.str());
+					auto config = stoi(key.str());
 					if (!config)
 						continue;
 

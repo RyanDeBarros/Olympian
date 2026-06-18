@@ -46,7 +46,7 @@ namespace oly::editor
 	{
 		size_t operator()(const RasterTextureConstructor& tc) const
 		{
-			return detail::Hasher()
+			return Hasher()
 				.with(tc.filepath)
 				.with(tc.min_filter)
 				.with(tc.mag_filter)
@@ -55,7 +55,7 @@ namespace oly::editor
 
 		size_t operator()(const GIFTextureConstructor& tc) const
 		{
-			return detail::Hasher()
+			return Hasher()
 				.with(tc.filepath)
 				.with(tc.min_filter)
 				.with(tc.mag_filter)
@@ -64,7 +64,7 @@ namespace oly::editor
 
 		size_t operator()(const SVGTextureConstructor& tc) const
 		{
-			return detail::Hasher()
+			return Hasher()
 				.with(tc.filepath)
 				.with(tc.min_filter)
 				.with(tc.mag_filter)

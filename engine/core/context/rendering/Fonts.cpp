@@ -282,7 +282,7 @@ namespace oly::context
 			{
 				for (auto&& [key, node] : *styles->as_table())
 				{
-					auto style = detail::stoi(key.str());
+					auto style = stoi(key.str());
 					if (!style)
 						continue;
 

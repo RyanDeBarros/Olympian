@@ -26,9 +26,9 @@ namespace oly::editor::gui
 		return ListOp{ .type = ListOpType::Clear };
 	}
 	
-	ListOp ListOp::MakeResizeOp(size_t new_size)
+	ListOp ListOp::MakeResizeOp(size_t old_size, size_t new_size)
 	{
-		return ListOp{ .type = ListOpType::Resize, .index1 = new_size };
+		return ListOp{ .type = ListOpType::Resize, .index1 = old_size, .index2 = new_size };
 	}
 	
 	ListOp ListOp::MakeMoveOp(size_t src, size_t dst)
@@ -51,9 +51,14 @@ namespace oly::editor::gui
 		return index2;
 	}
 
-	size_t ListOp::GetSize() const
+	size_t ListOp::GetOldSize() const
 	{
 		return index1;
+	}
+
+	size_t ListOp::GetNewSize() const
+	{
+		return index2;
 	}
 
 	void ListOp::Validate(bool valid)
@@ -87,7 +92,7 @@ namespace oly::editor::gui
 			break;
 
 		case ListOpType::Resize:
-			if (idx >= GetSize())
+			if (idx >= GetNewSize())
 				return false;
 
 			break;
@@ -160,7 +165,7 @@ namespace oly::editor::gui
 	
 	void ListModel::DeferResize(size_t new_size)
 	{
-		_pending_ops.push_back(ListOp::MakeResizeOp(new_size));
+		_pending_ops.push_back(ListOp::MakeResizeOp(_size, new_size));
 	}
 
 	void ListModel::DeferClear()
@@ -210,8 +215,8 @@ namespace oly::editor::gui
 			break;
 
 		case ListOpType::Resize:
-			_size = op.GetSize();
-			adapter.Resize(_size);
+			_size = op.GetNewSize();
+			adapter.Resize(op.GetOldSize(), _size);
 			break;
 
 		case ListOpType::Clear:

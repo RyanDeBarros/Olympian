@@ -105,7 +105,7 @@ namespace oly::editor
 		{
 			for (auto&& [key, subnode] : *table)
 			{
-				auto style = detail::stoi(key.str());
+				auto style = stoi(key.str());
 				if (!style)
 					continue;
 

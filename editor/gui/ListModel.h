@@ -2,6 +2,8 @@
 
 #include "core/Modifiable.h"
 
+#include "util/Counter.h"
+
 #include <array>
 #include <functional>
 #include <memory>
@@ -53,14 +55,15 @@ namespace oly::editor::gui
 
 		static ListOp MakeCreateOp();
 		static ListOp MakeDeleteOp(size_t index);
-		static ListOp MakeResizeOp(size_t new_size);
+		static ListOp MakeResizeOp(size_t old_size, size_t new_size);
 		static ListOp MakeClearOp();
 		static ListOp MakeMoveOp(size_t src, size_t dst);
 
 		size_t GetIndex() const;
 		size_t GetSrcIndex() const;
 		size_t GetDstIndex() const;
-		size_t GetSize() const;
+		size_t GetOldSize() const;
+		size_t GetNewSize() const;
 
 		void Validate(bool valid);
 		bool UpdateIndex(ListPolicy policy, size_t& idx) const;
@@ -75,7 +78,7 @@ namespace oly::editor::gui
 		virtual size_t Size() const = 0;
 		virtual void PushBack() = 0;
 		virtual void Erase(size_t index) = 0;
-		virtual void Resize(size_t new_size) = 0;
+		virtual void Resize(size_t old_size, size_t new_size) = 0;
 		virtual void Clear() = 0;
 		virtual void Move(size_t src, size_t dst) = 0;
 	};
@@ -184,7 +187,7 @@ namespace oly::editor::gui
 			v.erase(v.begin() + i);
 		}
 
-		void Resize(size_t new_size) override
+		void Resize(size_t old_size, size_t new_size) override
 		{
 			v.resize(new_size);
 		}
@@ -201,4 +204,76 @@ namespace oly::editor::gui
 			v.insert(v.begin() + dst, std::move(item));
 		}
 	};
+
+	struct ListCallbackAdapter : public IListAdapter
+	{
+		std::unique_ptr<IListAdapter> primary;
+		std::function<void(ListOp)> callback;
+
+		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(ListOp)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
+
+		size_t Size() const override
+		{
+			return primary->Size();
+		}
+
+		void PushBack() override
+		{
+			callback(ListOp::MakeCreateOp());
+			primary->PushBack();
+		}
+
+		void Erase(size_t i) override
+		{
+			callback(ListOp::MakeDeleteOp(i));
+			primary->Erase(i);
+		}
+
+		void Resize(size_t old_size, size_t new_size) override
+		{
+			callback(ListOp::MakeResizeOp(old_size, new_size));
+			primary->Resize(old_size, new_size);
+		}
+
+		void Clear() override
+		{
+			callback(ListOp::MakeClearOp());
+			primary->Clear();
+		}
+
+		void Move(size_t src, size_t dst) override
+		{
+			callback(ListOp::MakeMoveOp(src, dst));
+			primary->Move(src, dst);
+		}
+	};
+
+	template<typename T, typename Getter, typename Hash = std::hash<T>, typename Equals = std::equal_to<T>>
+	std::function<void(ListOp)> MakeCounterCallback(Counter<T, Hash, Equals>& counter, Getter getter)
+	{
+		return [&counter, getter = std::move(getter)](ListOp op) {
+			switch (op.type)
+			{
+			case ListOpType::Create:
+				counter.increment(T{});
+				break;
+
+			case ListOpType::Delete:
+				counter.decrement(getter(op.GetIndex()));
+				break;
+
+			case ListOpType::Resize:
+				for (size_t i = op.GetNewSize(); i < op.GetOldSize(); ++i)
+					counter.decrement(getter(i));
+
+				if (op.GetOldSize() < op.GetNewSize())
+					counter.increment(T{}, op.GetNewSize() - op.GetOldSize());
+				break;
+
+			case ListOpType::Clear:
+				counter.clear();
+				break;
+			}
+		};
+	}
 }

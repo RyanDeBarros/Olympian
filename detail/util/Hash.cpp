@@ -1,6 +1,6 @@
 #include "Hash.h"
 
-namespace oly::detail
+namespace oly
 {
 	void Hasher::hash_combine(size_t& hash, size_t with)
 	{

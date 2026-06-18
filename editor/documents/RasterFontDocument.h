@@ -17,6 +17,7 @@ namespace oly::editor
 		RasterFontDesc _disk;
 		detail::MetaMap _meta;
 		gui::ListModel _glyph_model;
+		Counter<std::string> _codepoint_counter; // TODO v8 use Counters elsewhere
 
 	public:
 		using IDocument::IDocument;
@@ -37,5 +38,7 @@ namespace oly::editor
 
 		void Dump(toml::table& table, RasterFontDesc& desc);
 		void Dump(toml::table& table, GlyphDesc& desc);
+
+		std::unique_ptr<gui::ListCallbackAdapter> ListAdapter();
 	};
 }

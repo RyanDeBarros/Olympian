@@ -3,7 +3,7 @@
 #include <optional>
 #include <string_view>
 
-namespace oly::detail
+namespace oly
 {
 	extern std::optional<int> stoi(const std::string_view str);
 }

@@ -8,14 +8,17 @@
 
 namespace oly::editor
 {
-#define GLYPH_GENERATOR(M) \
-		M(codepoint) \
+#define GLYPH_BODY_GENERATOR(M) \
 		M(texture_file) \
 		M(texture_slot) \
 		M(location) \
 		M(padding) \
 		M(origin_offset_mode) \
 		M(origin_offset)
+
+#define GLYPH_GENERATOR(M) \
+		M(codepoint) \
+		GLYPH_BODY_GENERATOR(M)
 
 	struct GlyphDesc
 	{

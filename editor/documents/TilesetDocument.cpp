@@ -447,7 +447,7 @@ namespace oly::editor
 		{
 			for (auto&& [key, node] : *table)
 			{
-				if (auto config = detail::stoi(key.str()))
+				if (auto config = stoi(key.str()))
 				{
 					TilesetAssignmentDesc subdesc;
 					Load(TOMLNode(node), subdesc);
