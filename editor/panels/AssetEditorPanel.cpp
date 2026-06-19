@@ -3,12 +3,17 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 #include "core/editor/Editor.h"
-#include "core/Errors.h"
 #include "core/editor/ProjectInfo.h"
+#include "core/PathInfo.h"
+#include "core/Errors.h"
 
 #include "panels/PanelManager.h"
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
+
+#include "gui/IDScope.h"
+
+#include "assets/MetaSplitter.h"
 
 #include <imgui.h>
 #include <ImGuiFileDialog.h>
@@ -86,6 +91,7 @@ namespace oly::editor
 			ImGuiTabBarFlags_DrawSelectedOverline |
 			ImGuiTabBarFlags_Reorderable;
 
+		gui::IDScope scope(this);
 		if (ImGui::BeginTabBar("##AssetTabs", tab_bar_flags))
 		{
 			std::vector<size_t> closed;
@@ -95,6 +101,7 @@ namespace oly::editor
 
 			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			{
+				scope.Push(i);
 				IDocument& doc = DocumentManager::Instance().GetDocument(i);
 				seen_documents.insert(&doc);
 				bool open = true;
@@ -108,12 +115,27 @@ namespace oly::editor
 
 				if (ImGui::BeginTabItem((doc.TabName() + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
 				{
+					if (ImGui::BeginPopupContextItem("ContextMenu"))
+					{
+						detail::ResourcePath path = doc.GetOlyPath();
+						if (detail::MetaSplitter::decode_meta(path).is_import())
+							path = path.get_source_path();
+
+						if (ImGui::MenuItem("Show in Content Browser"))
+						{
+							// TODO v9.2
+						}
+
+						if (ImGui::MenuItem("Reveal in explorer"))
+							PathInfo::RevealInExplorer(path.get_absolute());
+
+						ImGui::EndPopup();
+					}
+
 					doc.Draw();
 					_selected_tab = &doc;
 					ImGui::EndTabItem();
 				}
-
-				// TODO v9.1 context menu -> include 'reveal in explorer'
 
 				if (!open)
 				{
