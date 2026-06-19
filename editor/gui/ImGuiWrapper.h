@@ -17,6 +17,8 @@
 
 namespace oly::editor::gui
 {
+	extern void VerticalSeparator();
+
 	extern DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items);
 
 	extern DrawResult InputText(const char* label, std::string& string, size_t max_size = 256,

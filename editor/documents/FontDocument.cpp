@@ -184,9 +184,6 @@ namespace oly::editor
 			auto& k = desc.kerning[row.Index()];
 			bool dirty = false;
 			
-			ImGui::SameLine();
-			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
-
 			for (size_t i = 0; i < 2; ++i)
 			{
 				ImGui::SameLine();
@@ -194,9 +191,10 @@ namespace oly::editor
 			}
 
 			ImGui::SameLine();
-			ImGui::Text(k.distance.label);
-			ImGui::SameLine();
-			dirty |= gui::InputData<int>{}("##Distance", k.distance.scratch);
+			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
+
+			gui::VerticalSeparator();
+			dirty |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);
 
 			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
 			{

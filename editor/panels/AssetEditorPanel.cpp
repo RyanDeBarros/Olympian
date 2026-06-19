@@ -113,6 +113,8 @@ namespace oly::editor
 					ImGui::EndTabItem();
 				}
 
+				// TODO v9.1 context menu -> include 'reveal in explorer'
+
 				if (!open)
 				{
 					if (!doc.IsDirty())

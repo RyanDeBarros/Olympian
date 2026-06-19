@@ -26,7 +26,7 @@ namespace oly::editor
         std::filesystem::path abs = std::filesystem::absolute(path);
         std::wstring wpath = abs.wstring();
 
-        ITEMIDLIST* pidl = ILCreateFromPathW(wpath.c_str());
+        PIDLIST_ABSOLUTE pidl = ILCreateFromPathW(wpath.c_str());
         if (pidl)
         {
             SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);

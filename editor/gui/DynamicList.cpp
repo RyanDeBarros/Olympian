@@ -194,7 +194,7 @@ namespace oly::editor::gui
 		}
 	}
 
-	void DynamicListState::DrawBody(std::function<void(DynamicRow& row)> row_draw)
+	void DynamicListState::DrawBody(std::function<void(DynamicRow&)> row_draw)
 	{
 		if (ImGui::BeginChild("List"))
 		{

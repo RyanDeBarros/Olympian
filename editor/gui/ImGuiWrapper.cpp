@@ -2,8 +2,17 @@
 
 #include "gui/GUIState.h"
 
+#include <imgui_internal.h>
+
 namespace oly::editor::gui
 {
+	void VerticalSeparator()
+	{
+		ImGui::SameLine();
+		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
+		ImGui::SameLine();
+	}
+
 	static const char* StringVectorComboGetter(void* data, int idx)
 	{
 		const std::vector<std::string>& items = *static_cast<const std::vector<std::string>*>(data);
@@ -16,6 +25,13 @@ namespace oly::editor::gui
 	DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items)
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
+
+		float width = 0.0f;
+		for (int i = 0; i < items.size(); i++)
+			width = std::max(width, ImGui::CalcTextSize(items[i].c_str()).x);
+		width += 2 * ImGui::GetFrameHeight(); // roughly covers dropdown arrow + padding
+		ImGui::SetNextItemWidth(width);
+
 		return ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()));
 	}
 
@@ -146,27 +162,19 @@ namespace oly::editor::gui
 			}
 
 			ImGui::TableNextColumn();
-			ImGui::Text("x1");
-			ImGui::SameLine();
-			result |= InputClampedData("##x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::TableNextColumn();
-			ImGui::Text("x2");
-			ImGui::SameLine();
-			result |= InputClampedData("##x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::TableNextColumn();
-			ImGui::Text("y1");
-			ImGui::SameLine();
-			result |= InputClampedData("##y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::TableNextColumn();
-			ImGui::Text("y2");
-			ImGui::SameLine();
-			result |= InputClampedData("##y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::EndTable();
@@ -188,21 +196,15 @@ namespace oly::editor::gui
 			}
 
 			ImGui::TableNextColumn();
-			ImGui::Text("Left");
-			ImGui::SameLine();
-			result |= InputClampedData("##Left", data.left, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("Left", data.left, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::TableNextColumn();
-			ImGui::Text("Right");
-			ImGui::SameLine();
-			result |= InputClampedData("##Right", data.right, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("Right", data.right, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::TableNextColumn();
-			ImGui::Text("Top");
-			ImGui::SameLine();
-			result |= InputClampedData("##Top", data.top, MakeOpt(0.f), MakeOpt(1.f));
+			result |= InputClampedData("Top", data.top, MakeOpt(0.f), MakeOpt(1.f));
 			result.Query();
 
 			ImGui::EndTable();
