@@ -16,7 +16,8 @@ namespace oly::editor
 			LeftClicked = 1 << 2,
 			RightClicked = 1 << 3,
 			LeftDoubleClicked = 1 << 4,
-			RightDoubleClicked = 1 << 5
+			RightDoubleClicked = 1 << 5,
+			Focused = 1 << 6
 		};
 
 		OLY_DETAIL_DECLARE_NESTED_BITMASK(Flags);
@@ -44,6 +45,9 @@ namespace oly::editor
 
 			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right))
 				flags |= Flags::RightDoubleClicked;
+
+			if (ImGui::IsItemFocused())
+				flags |= Flags::Focused;
 
 			return *this;
 		}
@@ -93,6 +97,16 @@ namespace oly::editor
 		bool IsRightDoubleClicked() const
 		{
 			return flags & Flags::RightDoubleClicked;
+		}
+
+		bool IsClicked() const
+		{
+			return IsLeftClicked() || IsRightClicked() || IsLeftDoubleClicked() || IsRightDoubleClicked();
+		}
+
+		bool IsFocused() const
+		{
+			return flags & Flags::Focused;
 		}
 	};
 

@@ -5,8 +5,11 @@
 
 #include "gui/IDScope.h"
 #include "gui/Subform.h"
+#include "gui/Outline.h"
 
 #include "definitions/Keys.h"
+#include "util/Counter.h"
+#include "util/Hash.h"
 
 namespace oly::editor
 {
@@ -180,21 +183,32 @@ namespace oly::editor
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
-		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc](gui::DynamicRow& row) {
+		Counter<std::array<std::string, 2>, ArrayHash<std::string>> counter; // TODO v9.1 custom equality struct to resolve codepoint strings
+		for (const auto& k : desc.kerning.vector)
+			counter.increment(k.pair.scratch);
+
+		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
 			auto& k = desc.kerning[row.Index()];
-			bool dirty = false;
-			
-			for (size_t i = 0; i < 2; ++i)
-			{
-				ImGui::SameLine();
-				dirty |= gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
-			}
+			DrawResult result;
 
 			ImGui::SameLine();
+			bool dup_warning = counter.count(k.pair.scratch) > 1;
+			std::optional<gui::Outline> dup_outline = dup_warning ? std::make_optional<gui::Outline>(IM_COL32(255, 0, 0, 255)) : std::nullopt;
+			for (size_t i = 0; i < 2; ++i)
+			{
+				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]); // TODO v9.1 add outlines for strings that are not valid codepoints
+				result |= codepoint_result;
+				if (dup_warning && codepoint_result.IsHovered())
+					ImGui::SetTooltip("Duplicate codepoint pair");
+
+				ImGui::SameLine();
+			}
+
+			dup_outline.reset();
 			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
 
 			gui::VerticalSeparator();
-			dirty |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);
+			result |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);
 
 			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
 			{
@@ -202,11 +216,11 @@ namespace oly::editor
 				{
 					k.distance.scratch = k.distance.def;
 					k.pair.scratch = k.pair.def;
-					dirty = true;
+					result.SetDirty(true);
 				}
 			}
-			
-			return dirty;
+
+			return result.IsDirty();
 		}, desc.kerning_ui_state);
 	}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <utility>
+#include <array>
 
 namespace oly
 {
@@ -19,6 +19,19 @@ namespace oly
 
 		operator size_t () const
 		{
+			return h;
+		}
+	};
+
+	template<typename T>
+	struct ArrayHash
+	{
+		template<size_t N>
+		size_t operator()(const std::array<T, N>& a) const
+		{
+			Hasher h;
+			for (size_t i = 0; i < N; ++i)
+				h.with(a[i]);
 			return h;
 		}
 	};

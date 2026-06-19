@@ -71,7 +71,12 @@ namespace oly::editor
 					ui_state.DeferResize(def.size());
 			}
 
-			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) { result |= draw_fn(row); });
+			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+				auto row_result = draw_fn(row);
+				result |= row_result;
+				if (row_result.IsClicked() || row_result.IsFocused())
+					row.OnSelect();
+			});
 
 			result |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
 				switch (op.type)
