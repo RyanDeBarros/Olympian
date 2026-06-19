@@ -113,6 +113,7 @@ HorizontalAlignment = HAlign
 
 ImageStorage = ImgStore
 Info = Info
+InjectedSourceFile = _InjSrcF
 InnerOperation = InnerOp
 Invert = Invert
 ID = ID

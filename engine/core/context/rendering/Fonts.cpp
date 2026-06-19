@@ -294,7 +294,7 @@ namespace oly::context
 						if (filepath.empty())
 							continue;
 
-						detail::ResourcePath font_file(filepath, file); // TODO v9.1 support relative paths in other assets too, like tilesets and raster fonts
+						detail::ResourcePath font_file(filepath, file);
 						rendering::FontFamily::FontRef font;
 						if (font_file.is_import_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute())
 								.has_type(detail::Key::Meta_RasterFont))

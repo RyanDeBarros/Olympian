@@ -89,6 +89,7 @@ namespace oly::rendering
 		this->assignments.clear();
 
 		assets::Parser parser(node);
+		auto source_file = parser.optional<std::string>(detail::Key::InjectedSourceFile)();
 		auto toml_assignments = parser.optional<TOMLNode>(detail::Key::AssignmentArray)();
 		if (toml_assignments && toml_assignments->as_table())
 		{
@@ -111,7 +112,7 @@ namespace oly::rendering
 					rendering::TileSet::Assignment assignment;
 					assignment.config = static_cast<detail::TileConfig>(*config);
 
-					assignment.desc.file = detail::ResourcePath(texture);
+					assignment.desc.file = source_file ? detail::ResourcePath(texture, *source_file) : detail::ResourcePath(texture);
 					parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);
 					if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
 					{
