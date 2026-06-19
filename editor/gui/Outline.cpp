@@ -15,14 +15,14 @@ namespace oly::editor::gui
 
 	Outline::~Outline()
 	{
-		Draw();
+		Consume();
 	}
 
 	Outline& Outline::operator=(Outline&& o) noexcept
 	{
 		if (this != &o)
 		{
-			Draw();
+			Consume();
 			_start_pos = o._start_pos;
 			_color = o._color;
 			_border = o._border;
@@ -42,11 +42,19 @@ namespace oly::editor::gui
 	{
 		if (_active)
 		{
-			//ImGui::SameLine();
-			//ImVec2 end_pos = ImGui::GetCursorScreenPos() + ImVec2(0, ImGui::GetFrameHeight());
-			//ImGui::NewLine();
-			ImVec2 end_pos(ImGui::GetItemRectMax().x/* + ImGui::GetStyle().ItemSpacing.x*/, ImGui::GetItemRectMin().y + ImGui::GetFrameHeight());
+			ImVec2 end_pos(ImGui::GetItemRectMax().x, ImGui::GetItemRectMin().y + ImGui::GetFrameHeight());
 			ImGui::GetWindowDrawList()->AddRect(_start_pos, end_pos, _color, 0.f, 0, _border);
 		}
+	}
+
+	void Outline::Consume()
+	{
+		Draw();
+		Cancel();
+	}
+
+	void Outline::Cancel()
+	{
+		_active = false;
 	}
 }

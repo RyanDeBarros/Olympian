@@ -20,5 +20,7 @@ namespace oly::editor::gui
 
 		operator bool() const;
 		void Draw() const;
+		void Consume();
+		void Cancel();
 	};
 }

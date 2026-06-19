@@ -7,6 +7,7 @@
 #include "core/cmath/ColoredGeometry.h"
 
 #include "definitions/Keys.h"
+#include "util/Parser.h"
 
 namespace oly::assets
 {
@@ -276,23 +277,13 @@ namespace oly::assets::internal
 		if (!try_parse(node, str))
 			return false;
 
-		StringParam s(std::move(str));
-		if (s.size() >= 3)
+		if (auto val = stocdpt(str))
 		{
-			StringParam prefix = s.substr(0, 2);
-			if (prefix == "U+" || prefix == "0x" || prefix == "0X" || prefix == "\\u" || prefix == "\\U" || prefix == "0h")
-				v = utf::Codepoint(s.substr(2).to_int(16));
-			else if (s.substr(0, 3) == "&#x" && s.ends_with(';'))
-				v = utf::Codepoint(s.substr(3, s.size() - 3 - 1).to_int(16));
-			else
-				v = utf::Codepoint(0);
+			v = utf::Codepoint(*val);
+			return true;
 		}
-		else if (s.empty() || s.size() == 2)
-			v = utf::Codepoint(0);
 		else
-			v = utf::Codepoint(s.front());
-
-		return true;
+			return false;
 	}
 
 	template<>

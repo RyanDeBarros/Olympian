@@ -10,6 +10,7 @@
 #include "definitions/Keys.h"
 #include "util/Counter.h"
 #include "util/Hash.h"
+#include "util/Parser.h"
 
 namespace oly::editor
 {
@@ -183,7 +184,26 @@ namespace oly::editor
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
-		Counter<std::array<std::string, 2>, ArrayHash<std::string>> counter; // TODO v9.1 custom equality struct to resolve codepoint strings
+		struct CodepointHash
+		{
+			size_t operator()(const std::string& str) const
+			{
+				if (auto v = stocdpt(str))
+					return std::hash<int>{}(*v);
+				else
+					return 0;
+			}
+		};
+
+		struct CodepointPairEquality
+		{
+			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
+			{
+				return stocdpt(lhs[0]) == stocdpt(rhs[0]) && stocdpt(lhs[1]) == stocdpt(rhs[1]);
+			}
+		};
+
+		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
 		for (const auto& k : desc.kerning.vector)
 			counter.increment(k.pair.scratch);
 
@@ -193,18 +213,41 @@ namespace oly::editor
 
 			ImGui::SameLine();
 			bool dup_warning = counter.count(k.pair.scratch) > 1;
-			std::optional<gui::Outline> dup_outline = dup_warning ? std::make_optional<gui::Outline>(IM_COL32(255, 0, 0, 255)) : std::nullopt;
+			gui::Outline dup_outline(IM_COL32(255, 0, 0, 255));
 			for (size_t i = 0; i < 2; ++i)
 			{
-				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]); // TODO v9.1 add outlines for strings that are not valid codepoints
+				bool bad_codepoint = !stocdpt(k.pair.scratch[i]).has_value();
+				gui::Outline bad_outline(IM_COL32(255, 0, 0, 255));
+				if (bad_codepoint)
+				{
+					dup_warning = false;
+					dup_outline.Cancel();
+				}
+
+				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
 				result |= codepoint_result;
+
 				if (dup_warning && codepoint_result.IsHovered())
 					ImGui::SetTooltip("Duplicate codepoint pair");
+
+				if (bad_codepoint)
+				{
+					if (codepoint_result.IsHovered())
+						ImGui::SetTooltip("Bad codepoint format");
+
+					bad_outline.Consume();
+				}
+				else
+					bad_outline.Cancel();
 
 				ImGui::SameLine();
 			}
 
-			dup_outline.reset();
+			if (dup_warning)
+				dup_outline.Consume();
+			else
+				dup_outline.Cancel();
+
 			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
 
 			gui::VerticalSeparator();
