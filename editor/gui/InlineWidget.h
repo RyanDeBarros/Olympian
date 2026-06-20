@@ -1,20 +1,17 @@
 #pragma once
 
+#include "gui/WidgetComponent.h"
+
 #include <vector>
-#include <functional>
 
 namespace oly::editor::gui
 {
-	struct InlineWidgetSettings
-	{
-	};
-
 	class InlineWidget
 	{
-		std::vector<std::function<void()>> _components;
+		std::vector<WidgetComponent> _components;
 
 	public:
-		void Draw(InlineWidgetSettings settings = {});
-		void AddComponent(std::function<void()> draw_fn);
+		DrawResult Draw();
+		void AddComponent(WidgetComponent component);
 	};
 }

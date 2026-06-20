@@ -6,24 +6,22 @@
 
 namespace oly::editor::gui
 {
-	// TODO v9.1 wrap all 
-
-	void InlineWidget::Draw(InlineWidgetSettings settings)
+	DrawResult InlineWidget::Draw()
 	{
+		DrawResult result;
 		gui::IDScope scope(this);
 
-		ImVec2 size(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing());
-
-		if (ImGui::BeginChild("##InlineWidget", size))
+		if (ImGui::BeginChild("##InlineWidget", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeightWithSpacing())))
 		{
-			if (ImGui::BeginTable("##Table", static_cast<int>(_components.size())))
+			int columns = static_cast<int>(_components.size());
+			if (ImGui::BeginTable("##Table", columns, ImGuiTableFlags_SizingFixedSame | ImGuiTableFlags_NoHostExtendX))
 			{
 				ImGui::TableNextRow();
 
-				for (const auto& draw_fn : _components)
+				for (const auto& component : _components)
 				{
 					ImGui::TableNextColumn();
-					draw_fn();
+					result |= component.draw();
 				}
 
 				ImGui::EndTable();
@@ -31,10 +29,11 @@ namespace oly::editor::gui
 		}
 
 		ImGui::EndChild();
+		return result;
 	}
 
-	void InlineWidget::AddComponent(std::function<void()> draw_fn)
+	void InlineWidget::AddComponent(WidgetComponent component)
 	{
-		_components.push_back(std::move(draw_fn));
+		_components.push_back(std::move(component));
 	}
 }

@@ -136,11 +136,7 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			if (auto form = Form())
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("Select Route");
-
-				ImGui::TableNextColumn();
+				DescIO::PrepareValue("Select Route");
 				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
 
 				if (!_scratch.font_atlases.Empty())

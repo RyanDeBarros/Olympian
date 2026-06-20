@@ -411,11 +411,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("Select Slot");
-
-			ImGui::TableNextColumn();
+			DescIO::PrepareValue("Select Slot");
 			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
 
 			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(form, d); });

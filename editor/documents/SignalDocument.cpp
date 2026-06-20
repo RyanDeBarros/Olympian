@@ -101,11 +101,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("Select Signal");
-
-			ImGui::TableNextColumn();
+			DescIO::PrepareValue("Select Signal");
 			_signal_slots.DrawComboHeader(
 				[this](size_t i) {
 					if (i < _scratch.signals.Size())
@@ -131,11 +127,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("Select Route");
-
-			ImGui::TableNextColumn();
+			DescIO::PrepareValue("Select Route");
 			_route_slots.DrawComboHeader(
 				[this](size_t i) {
 					if (i < _scratch.routes.Size())

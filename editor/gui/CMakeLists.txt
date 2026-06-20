@@ -5,6 +5,7 @@ target_sources(OlympianEditor PRIVATE
 	InlineWidget.cpp
 	ListModel.cpp
 	StyleStack.cpp
+	WidgetComponentCommon.cpp
 )
 
 add_subdirectory(graphics)

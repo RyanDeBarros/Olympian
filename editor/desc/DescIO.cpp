@@ -17,15 +17,18 @@ namespace oly::editor
 	void DescIO::PrepareValue(const char* label)
 	{
 		ImGui::TableNextRow();
-		ImGui::TableNextColumn();
-		ImGui::Text(label);
-		ImGui::TableNextColumn();
+		ImGui::TableSetColumnIndex(0);
+
+		// TODO v9.1 draw value cell first, so height can be determined and the key cell aligned to middle vertically
+		ImGui::TextUnformatted(label);
+
+		ImGui::TableSetColumnIndex(1);
 	}
 
 	bool DescIO::DrawRevertButton()
 	{
 		bool dirty = false;
-		ImGui::SameLine();
+		ImGui::TableSetColumnIndex(2);
 		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
 			dirty = true;
 		return dirty;

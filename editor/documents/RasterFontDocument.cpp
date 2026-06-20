@@ -89,11 +89,7 @@ namespace oly::editor
 
 			if (auto subform = Subform(form, "Glyphs"))
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("Select Glyph");
-
-				ImGui::TableNextColumn();
+				DescIO::PrepareValue("Select Glyph");
 				_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
 					if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
 						return desc.glyphs[i].codepoint.scratch;

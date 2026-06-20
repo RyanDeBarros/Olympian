@@ -2,6 +2,7 @@
 
 #include "gui/GUIState.h"
 #include "gui/InlineWidget.h"
+#include "gui/WidgetComponentCommon.h"
 
 #include <imgui_internal.h>
 
@@ -182,22 +183,21 @@ namespace oly::editor::gui
 
 	DrawResult InputData<TopSidePadding>::operator()(const char* label, TopSidePadding& data) const
 	{
-		gui::InlineWidget widget;
+		// TODO v9.1 DescIO should just create an InlineWidget in the second column of form. In fact, Form should be more of a global state machine than object-based. Then, you can dynamically add components to it and just have DescIO call Draw() on it when the field is done.
+		InlineWidget widget;
 
 		if (label && label[0] != '\0')
 		{
-			widget.AddComponent([label]() { ImGui::Text(label); }); // TODO v9.1 either pass functions or pass subclasses of InlineWidgetComponent for standard components
-			widget.AddComponent([]() { gui::VerticalSeparator(); });
+			widget.AddComponent(TextComponent(label));
+			widget.AddComponent(VerticalSeparatorComponent());
 		}
 
-		DrawResult result;
-		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Left", data.left); });
-		widget.AddComponent([]() { gui::VerticalSeparator(); });
-		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Right", data.right); });
-		widget.AddComponent([]() { gui::VerticalSeparator(); });
-		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Top", data.top); });
-		widget.Draw();
-		return result;
+		widget.AddComponent(InputDataComponent("Left", data.left));
+		widget.AddComponent(VerticalSeparatorComponent());
+		widget.AddComponent(InputDataComponent("Right", data.right));
+		widget.AddComponent(VerticalSeparatorComponent());
+		widget.AddComponent(InputDataComponent("Top", data.top));
+		return widget.Draw();
 	}
 
 	DrawResult InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)
