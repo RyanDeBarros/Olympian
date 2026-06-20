@@ -1,6 +1,7 @@
 #include "ImGuiWrapper.h"
 
 #include "gui/GUIState.h"
+#include "gui/InlineWidget.h"
 
 #include <imgui_internal.h>
 
@@ -158,24 +159,21 @@ namespace oly::editor::gui
 			{
 				ImGui::TableNextColumn();
 				ImGui::Text(label);
-				result.Query();
 			}
 
-			ImGui::TableNextColumn();
-			result |= InputClampedData("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
+			// TODO v9.1 UVRect should clamp, Rect should not
 
 			ImGui::TableNextColumn();
-			result |= InputClampedData("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
+			result |= InputData<float>{}("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
 
 			ImGui::TableNextColumn();
-			result |= InputClampedData("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
+			result |= InputData<float>{}("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
 
 			ImGui::TableNextColumn();
-			result |= InputClampedData("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
+			result |= InputData<float>{}("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
+
+			ImGui::TableNextColumn();
+			result |= InputData<float>{}("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 			ImGui::EndTable();
 		}
@@ -184,31 +182,21 @@ namespace oly::editor::gui
 
 	DrawResult InputData<TopSidePadding>::operator()(const char* label, TopSidePadding& data) const
 	{
-		const bool header = label && label[0] != '\0';
-		DrawResult result;
-		if (ImGui::BeginTable("##TopSidePadding", header ? 4 : 3))
+		gui::InlineWidget widget;
+
+		if (label && label[0] != '\0')
 		{
-			if (header)
-			{
-				ImGui::TableNextColumn();
-				ImGui::Text(label);
-				result.Query();
-			}
-
-			ImGui::TableNextColumn();
-			result |= InputClampedData("Left", data.left, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
-
-			ImGui::TableNextColumn();
-			result |= InputClampedData("Right", data.right, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
-
-			ImGui::TableNextColumn();
-			result |= InputClampedData("Top", data.top, MakeOpt(0.f), MakeOpt(1.f));
-			result.Query();
-
-			ImGui::EndTable();
+			widget.AddComponent([label]() { ImGui::Text(label); }); // TODO v9.1 either pass functions or pass subclasses of InlineWidgetComponent for standard components
+			widget.AddComponent([]() { gui::VerticalSeparator(); });
 		}
+
+		DrawResult result;
+		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Left", data.left); });
+		widget.AddComponent([]() { gui::VerticalSeparator(); });
+		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Right", data.right); });
+		widget.AddComponent([]() { gui::VerticalSeparator(); });
+		widget.AddComponent([&result, &data]() { result |= InputData<float>{}("Top", data.top); });
+		widget.Draw();
 		return result;
 	}
 
