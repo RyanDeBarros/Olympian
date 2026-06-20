@@ -5,50 +5,50 @@
 
 namespace oly::editor
 {
-	Color::Color()
+	Color4::Color4()
 		: r(0.f), g(0.f), b(0.f), a(1.f)
 	{
 	}
 
-	Color::Color(float r, float g, float b, float a)
+	Color4::Color4(float r, float g, float b, float a)
 		: r(r), g(g), b(b), a(a)
 	{
 	}
 
-	bool Color::operator==(const Color& o) const
+	bool Color4::operator==(const Color4& o) const
 	{
 		return r == o.r && g == o.g && b == o.b && a == o.a;
 	}
 
-	bool Color::operator!=(const Color& o) const
+	bool Color4::operator!=(const Color4& o) const
 	{
 		return r != o.r || g != o.g || b != o.b || a != o.a;
 	}
 
-	float* Color::ValuePtr()
+	float* Color4::ValuePtr()
 	{
 		return v;
 	}
 
-	const float* Color::ValuePtr() const
+	const float* Color4::ValuePtr() const
 	{
 		return v;
 	}
 
-	float& Color::operator[](size_t i)
+	float& Color4::operator[](size_t i)
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
 	}
 
-	float Color::operator[](size_t i) const
+	float Color4::operator[](size_t i) const
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
 	}
 
 	Rect::Rect()

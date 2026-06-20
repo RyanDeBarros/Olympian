@@ -107,9 +107,9 @@ namespace oly::editor
 		}
 	};
 
-	struct ColorField : public PrimitiveField<Color>
+	struct Color4Field : public PrimitiveField<Color4>
 	{
-		using PrimitiveField<Color>::PrimitiveField;
+		using PrimitiveField<Color4>::PrimitiveField;
 
 		DrawResult Draw()
 		{

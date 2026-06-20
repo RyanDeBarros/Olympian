@@ -140,7 +140,7 @@ namespace oly::editor::gui
 		return InputText(label, data);
 	}
 
-	DrawResult InputData<Color>::operator()(const char* label, Color& data) const
+	DrawResult InputData<Color4>::operator()(const char* label, Color4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = ImGui::ColorEdit4(label, data.ValuePtr());

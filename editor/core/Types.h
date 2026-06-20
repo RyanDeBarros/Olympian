@@ -4,7 +4,7 @@
 
 namespace oly::editor
 {
-	struct Color
+	struct Color4
 	{
 		static inline const size_t N = 4;
 
@@ -14,11 +14,11 @@ namespace oly::editor
 			float v[N];
 		};
 
-		Color();
-		Color(float r, float g, float b, float a);
+		Color4();
+		Color4(float r, float g, float b, float a);
 
-		bool operator==(const Color&) const;
-		bool operator!=(const Color&) const;
+		bool operator==(const Color4&) const;
+		bool operator!=(const Color4&) const;
 
 		float* ValuePtr();
 		const float* ValuePtr() const;

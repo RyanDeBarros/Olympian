@@ -2,6 +2,7 @@
 
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
+#include "core/Colors.h"
 
 #include "gui/Subform.h"
 #include "gui/GUIState.h"
@@ -120,7 +121,7 @@ namespace oly::editor
 
 		if (empty_codepoint || duplicate_codepoint)
 		{
-			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = IM_COL32(255, 0, 0, 255) });
+			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = Color::Error });
 			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
 		}
 

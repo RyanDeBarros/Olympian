@@ -3,6 +3,7 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 #include "core/editor/UID.h"
+#include "core/Colors.h"
 #include "core/Errors.h"
 
 #include "gui/IDScope.h"
@@ -286,12 +287,12 @@ namespace oly::editor
 
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
 							TextureErrorTooltip(GetActiveTexture(*grid).error);
 						}
 
 						if (editor->selected_cell == cell)
-							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32(0, 255, 0, 255), 0.f, 0, 4.f);
+							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Green, 0.f, 0, 4.f);
 					}
 				}
 			}
@@ -362,14 +363,14 @@ namespace oly::editor
 	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
 	{
 		if (available)
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? IM_COL32(0, 127, 255, 255) : IM_COL32(64, 64, 64, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? Color::Azure : Color::Grey(64));
 		else
 		{
 			on = false;
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(32, 32, 32, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(32));
 		}
 
-		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32_BLACK, 0.f, 0, 2.f);
+		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Black, 0.f, 0, 2.f);
 
 		ImGui::SetCursorScreenPos(rect_start);
 		if (available)
@@ -378,7 +379,7 @@ namespace oly::editor
 				on = !on;
 
 			if (ImGui::IsItemHovered())
-				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
 		}
 		else
 			ImGui::Dummy(rect_end - rect_start);
@@ -569,7 +570,7 @@ namespace oly::editor
 			gui::Overlay::QuadWarning(rect_start, rect_end);
 		}
 		else if (active.texture.Empty())
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(empty_gray_value, empty_gray_value, empty_gray_value, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(empty_gray_value));
 		else
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
 	}

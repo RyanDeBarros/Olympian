@@ -197,7 +197,7 @@ namespace oly::editor
 			if (id_result.IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.Draw();
+			dup_outline.Draw(Color::Error);
 		}
 
 		DRAW_FIELD(binding);
@@ -239,7 +239,7 @@ namespace oly::editor
 			if (id_result.IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.Draw();
+			dup_outline.Draw(Color::Error);
 		}
 
 		// TODO v9.1 clicking in text fields is not selecting row. Clicking route combo resets row selection to last and flickers multi-select on all other rows.
@@ -256,13 +256,13 @@ namespace oly::editor
 
 			if (!signal_id_counter.contains(element))
 			{
-				outline.Draw(IM_COL32(255, 255, 0, 255)); // TODO v9.1 database for color constants
+				outline.Draw(Color::Warning);
 				if (item_result.IsHovered())
 					ImGui::SetTooltip("Signal id is not present in asset");
 			}
 			else if (local_id_counter.count(element) > 1)
 			{
-				outline.Draw(IM_COL32(255, 255, 0, 255));
+				outline.Draw(Color::Warning);
 				if (item_result.IsHovered())
 					ImGui::SetTooltip("Duplicate signal id listing in route");
 			}

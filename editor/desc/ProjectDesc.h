@@ -42,7 +42,7 @@ namespace oly::editor
 
 	struct WindowHintsDesc
 	{
-		ColorField context_clear_color;
+		Color4Field context_clear_color;
 		IntField<MakeOpt(0), MakeOpt<int>()> context_swap_interval;
 		BoolField window_resizable;
 		BoolField window_visible;

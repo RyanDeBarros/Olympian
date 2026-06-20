@@ -1,14 +1,14 @@
 #include "Overlays.h"
 
+#include "core/Colors.h"
+
 #include <utility>
 
 namespace oly::editor::gui
 {
-	static const auto MAGENTA = IM_COL32(255, 0, 255, 255);
-
 	void Overlay::QuadError(ImVec2 rect_start, ImVec2 rect_end)
 	{
-		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, MAGENTA);
+		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::MissingResource);
 	}
 
 	void Overlay::QuadWarning(ImVec2 rect_start, ImVec2 rect_end)
@@ -34,8 +34,8 @@ namespace oly::editor::gui
 			y_gap_width = (size.y - (BAR_COUNT * border_width)) / (BAR_COUNT - 1);
 
 		// Vertical bars
-		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_start + ImVec2(border_width, size.y), MAGENTA);
-		ImGui::GetWindowDrawList()->AddRectFilled(rect_end - ImVec2(border_width, size.y), rect_end, MAGENTA);
+		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_start + ImVec2(border_width, size.y), Color::MissingResource);
+		ImGui::GetWindowDrawList()->AddRectFilled(rect_end - ImVec2(border_width, size.y), rect_end, Color::MissingResource);
 		for (int i = 1; i < BAR_COUNT - 1; ++i)
 		{
 			ImVec2 bar_start = rect_start + ImVec2(i * (border_width + x_gap_width), 0);
@@ -44,13 +44,13 @@ namespace oly::editor::gui
 			const ImVec2 p3 = bar_start + ImVec2(border_width, 0.f);
 			const ImVec2 p4 = bar_start + ImVec2(0.6f * border_width, size.y);
 
-			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p2, p3, MAGENTA);
-			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p3, p4, MAGENTA);
+			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p2, p3, Color::MissingResource);
+			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p3, p4, Color::MissingResource);
 		}
 
 		// Horizontal bars
-		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_start + ImVec2(size.x, border_width), MAGENTA);
-		ImGui::GetWindowDrawList()->AddRectFilled(rect_end - ImVec2(size.x, border_width), rect_end, MAGENTA);
+		ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_start + ImVec2(size.x, border_width), Color::MissingResource);
+		ImGui::GetWindowDrawList()->AddRectFilled(rect_end - ImVec2(size.x, border_width), rect_end, Color::MissingResource);
 		for (int i = 1; i < BAR_COUNT - 1; ++i)
 		{
 			ImVec2 bar_start = rect_start + ImVec2(0, i * (border_width + y_gap_width));
@@ -59,8 +59,8 @@ namespace oly::editor::gui
 			const ImVec2 p3 = bar_start + ImVec2(size.x, border_width);
 			const ImVec2 p4 = bar_start + ImVec2(0.f, 0.6f * border_width);
 
-			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p2, p3, MAGENTA);
-			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p3, p4, MAGENTA);
+			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p2, p3, Color::MissingResource);
+			ImGui::GetWindowDrawList()->AddTriangleFilled(p1, p3, p4, Color::MissingResource);
 		}
 	}
 }

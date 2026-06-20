@@ -232,14 +232,14 @@ namespace oly::editor
 					if (codepoint_result.IsHovered())
 						ImGui::SetTooltip("Bad codepoint format");
 
-					bad_outline.Draw();
+					bad_outline.Draw(Color::Error);
 				}
 
 				ImGui::SameLine();
 			}
 
 			if (dup_warning)
-				dup_outline.Draw();
+				dup_outline.Draw(Color::Error);
 
 			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
 

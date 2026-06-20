@@ -226,14 +226,14 @@ namespace oly::editor
 	};
 
 	template<>
-	struct Serializer<Color>
+	struct Serializer<Color4>
 	{
-		bool Load(Color& obj, TOMLNode node) const
+		bool Load(Color4& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
 				bool fully_loaded = true;
-				for (size_t i = 0; i < std::min(array->size(), Color::N); ++i)
+				for (size_t i = 0; i < std::min(array->size(), Color4::N); ++i)
 				{
 					if (auto v = array->get_as<double>(i))
 						obj[i] = v->get();
@@ -246,11 +246,11 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const Color obj) const
+		toml::array Dump(const Color4 obj) const
 		{
 			toml::array arr;
-			arr.reserve(Color::N);
-			for (size_t i = 0; i < Color::N; ++i)
+			arr.reserve(Color4::N);
+			for (size_t i = 0; i < Color4::N; ++i)
 				arr.push_back(obj[i]);
 			return arr;
 		}

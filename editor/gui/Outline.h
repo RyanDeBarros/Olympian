@@ -1,6 +1,6 @@
 #pragma once
 
-#include <imgui.h>
+#include "core/Colors.h"
 
 namespace oly::editor::gui
 {
@@ -11,6 +11,6 @@ namespace oly::editor::gui
 	public:
 		Outline();
 
-		void Draw(ImU32 color = IM_COL32(255, 0, 0, 255), float border = 1.f) const;
+		void Draw(ImU32 color, float border = 1.f) const;
 	};
 }

@@ -141,9 +141,9 @@ namespace oly::editor::gui
 	};
 
 	template<>
-	struct InputData<Color>
+	struct InputData<Color4>
 	{
-		DrawResult operator()(const char* label, Color& data) const;
+		DrawResult operator()(const char* label, Color4& data) const;
 	};
 
 	template<>

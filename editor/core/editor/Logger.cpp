@@ -1,6 +1,7 @@
 #include "Logger.h"
 
 #include "core/editor/Editor.h"
+#include "core/Colors.h"
 
 #include <iostream>
 
@@ -11,13 +12,13 @@ namespace oly::editor
         switch (level)
         {
         case LogLevel::Success:
-            return IM_COL32(0, 255, 0, 255);
+            return Color::Success;
         case LogLevel::Warning:
-            return IM_COL32(255, 255, 0, 255);
+            return Color::Warning;
         case LogLevel::Error:
-            return IM_COL32(255, 0, 0, 255);
+            return Color::Error;
         default:
-            return IM_COL32(255, 255, 255, 255);
+            return Color::White;
         }
     }
 
