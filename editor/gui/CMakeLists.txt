@@ -4,6 +4,7 @@ target_sources(OlympianEditor PRIVATE
 	ImGuiWrapper.cpp
 	InlineWidget.cpp
 	ListModel.cpp
+	PropertyGrid.cpp
 	StyleStack.cpp
 	WidgetComponentCommon.cpp
 )

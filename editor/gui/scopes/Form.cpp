@@ -40,11 +40,13 @@ namespace oly::editor
 		ACTIVE_FORM = this;
 
 		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
+
+		// TODO v9.1 these settings should be set up by PropertyGrid
 		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight());
 			_draw_content = true;
 		}
 		else

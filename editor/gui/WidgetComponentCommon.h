@@ -2,18 +2,19 @@
 
 #include "WidgetComponent.h"
 
-#include "ImGuiWrapper.h"
+#include "gui/ImGuiWrapper.h"
+#include "gui/scopes/IDScope.h"
 
 namespace oly::editor::gui
 {
 	extern WidgetComponent VerticalSeparatorComponent();
 	extern WidgetComponent TextComponent(const char* label);
 
-	template<typename T>
-	extern WidgetComponent InputDataComponent(const char* label, T& data)
+	template<typename T, typename... Args>
+	extern WidgetComponent InputDataComponent(const char* label, T& data, Args&&... args)
 	{
 		WidgetComponent c;
-		c.draw = [label, &data]() { return InputData<float>{}(label, data); };
+		c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable { IDScope scope(&data); return InputData<T>{}(label, data, std::forward<Args>(args)...); };
 		return c;
 	}
 }

@@ -192,11 +192,11 @@ namespace oly::editor::gui
 			widget.AddComponent(VerticalSeparatorComponent());
 		}
 
-		widget.AddComponent(InputDataComponent("Left", data.left));
+		widget.AddComponent(InputDataComponent<float>("Left", data.left));
 		widget.AddComponent(VerticalSeparatorComponent());
-		widget.AddComponent(InputDataComponent("Right", data.right));
+		widget.AddComponent(InputDataComponent<float>("Right", data.right));
 		widget.AddComponent(VerticalSeparatorComponent());
-		widget.AddComponent(InputDataComponent("Top", data.top));
+		widget.AddComponent(InputDataComponent<float>("Top", data.top));
 		return widget.Draw();
 	}
 

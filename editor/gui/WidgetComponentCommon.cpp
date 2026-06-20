@@ -12,7 +12,7 @@ namespace oly::editor::gui
 	WidgetComponent TextComponent(const char* label)
 	{
 		WidgetComponent c;
-		c.draw = [label]() { ImGui::Text(label); return false; };
+		c.draw = [label]() { ImGui::TextUnformatted(label); return false; };
 		return c;
 	}
 }

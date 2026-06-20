@@ -4,76 +4,78 @@
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Toolbar.h"
-#include "gui/DynamicList.h"
-#include "gui/ImGuiWrapper.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
 
 #include <imgui.h>
 
+#include <span>
+
 namespace oly::editor
 {
-	void DescIO::PrepareValue(const char* label)
+	void DescIO::KeyLabel(const char* label)
 	{
-		ImGui::TableNextRow();
-		ImGui::TableSetColumnIndex(0);
-
-		// TODO v9.1 draw value cell first, so height can be determined and the key cell aligned to middle vertically
-		ImGui::TextUnformatted(label);
-
-		ImGui::TableSetColumnIndex(1);
+		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Key);
+		gui::PropertyGrid::AddComponent(gui::TextComponent(label));
 	}
 
-	bool DescIO::DrawRevertButton()
+	void DescIO::ResetButton(bool visible)
 	{
-		bool dirty = false;
-		ImGui::TableSetColumnIndex(2);
-		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
-			dirty = true;
-		return dirty;
+		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Reset);
+		if (visible)
+			gui::PropertyGrid::AddComponent({ []() -> DrawResult { return Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"); } });
 	}
 
-	DrawResult DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
+	void DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
 	{
-		DrawResult result;
-		PrepareValue(label);
-		gui::IDScope scope(&data);
-		result |= gui::InputData<int>{}("", data, names, count);
-		result |= CheckRevertButton(data, def);
-		return result;
+		RowInputData(label, data, def, names, count);
 	}
 
-	DrawResult DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
+	void DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
 	{
 		if (auto subform = Subform(label))
 		{
-			DrawResult result;
 			for (size_t i = 0; i < count; ++i)
-				result |= Draw(std::to_string(i).c_str(), data[i], def[i]);
-			return result;
+				Draw(std::to_string(i).c_str(), data[i], def[i]);
 		}
-		else
-			return false;
 	}
 
-	DrawResult DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
+	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
-		DrawResult result;
-		PrepareValue(label);
-		gui::IDScope scope(&data);
+		gui::IDScope scope(data);
+		KeyLabel(label);
 
 		for (size_t i = 0; i < count; ++i)
 		{
-			result |= gui::InputData<bool>{}(sublabels[i], data[i]);
-			result.Query();
-			result |= CheckRevertButton(data[i], def[i]);
-
-			if (i + 1 < count)
-				ImGui::SameLine();
+			if (data[i] != def[i])
+			{
+				ResetButton(true);
+				break;
+			}
 		}
 
-		return result;
+		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+		gui::PropertyGrid::AddComponent({ [data, sublabels, count]() -> DrawResult {
+			DrawResult result;
+			for (size_t i = 0; i < count; ++i)
+			{
+				result |= gui::InputData<bool>{}(sublabels[i], data[i]);
+				result.Query();
+
+				if (i + 1 < count)
+					ImGui::SameLine();
+			}
+			return result;
+		} });
+		
+		gui::PropertyGrid::SubmitRow();
+
+		if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Reset))
+		{
+			for (size_t i = 0; i < count; ++i)
+				data[i] = def[i];
+		}
 	}
 
 	template<>

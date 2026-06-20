@@ -30,8 +30,13 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw()
 	{
+		gui::PropertyGrid::Clear();
+
 		gui::IDScope scope(this);
 		Draw(_scratch);
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	void RasterFontDocument::Load()
@@ -90,13 +95,16 @@ namespace oly::editor
 
 			if (auto subform = Subform("Glyphs"))
 			{
-				DescIO::PrepareValue("Select Glyph");
+				gui::IDScope scope("##Glyph");
+				DescIO::KeyLabel("Select Glyph");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 				_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
 					if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
 						return desc.glyphs[i].codepoint.scratch;
 					else
 						return "Glyph #" + std::to_string(i);
 				}, "New glyph", "Delete glyph", "Clear glyphs");
+				gui::PropertyGrid::SubmitRow();
 
 				if (!desc.glyphs.Empty())
 					Draw(_scratch.glyphs[_glyph_model.active_index]);
@@ -122,18 +130,17 @@ namespace oly::editor
 			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
 		}
 
-		std::string codepoint = desc.codepoint.scratch;
-		auto codepoint_result = desc.codepoint.Draw();
-		if (codepoint_result)
+		std::string previous_codepoint = desc.codepoint.scratch;
+		desc.codepoint.Draw();
+		if (gui::PropertyGrid::DirtyValue())
 		{
 			_codepoint_counter.increment(desc.codepoint.scratch);
-			_codepoint_counter.decrement(codepoint);
-			MarkDirty();
+			_codepoint_counter.decrement(previous_codepoint);
 		}
 
 		style_stack.PopStyles();
 
-		if (codepoint_result.IsHovered())
+		if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");

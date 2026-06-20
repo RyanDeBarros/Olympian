@@ -11,7 +11,7 @@
 
 namespace oly::editor
 {
-#define DRAW_FIELD(field) if (desc.field.Draw()) MarkDirty();
+#define DRAW_FIELD(field) desc.field.Draw();
 #define DRAW_FIELDS(generator) generator(DRAW_FIELD);
 #define LOAD_FIELD(field) desc.field.Load(node);
 #define LOAD_FIELDS(generator) generator(LOAD_FIELD)
@@ -55,9 +55,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -69,9 +69,9 @@ namespace oly::editor
 
 		using PrimitiveField<T>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
+			DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
 		}
 	};
 
@@ -91,9 +91,9 @@ namespace oly::editor
 
 		using PrimitiveField<E>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->def);
+			DescIO::Draw(this->label, this->scratch, this->def);
 		}
 	};
 
@@ -101,9 +101,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::string>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -111,9 +111,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<Color4>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -121,9 +121,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<Rect>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -131,9 +131,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def);
+			DescIO::Draw(label, scratch, def);
 		}
 	};
 
@@ -145,9 +145,9 @@ namespace oly::editor
 		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
 			: PrimitiveField<std::array<T, N>>(def, key, label), sublabels(sublabels) {}
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
+			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
 		}
 	};
 
@@ -159,9 +159,9 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::array<T, N>>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
+			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
 		}
 	};
 
@@ -175,9 +175,9 @@ namespace oly::editor
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(this->label, this->scratch, this->def, ui_state);
+			DescIO::Draw(this->label, this->scratch, this->def, ui_state);
 		}
 	};
 
@@ -203,9 +203,9 @@ namespace oly::editor
 			def_index = Index(def);
 		}
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, def_index, names, count);
+			DescIO::Draw(label, scratch, def_index, names, count);
 		}
 
 		void Load(TOMLNode node)
@@ -263,9 +263,9 @@ namespace oly::editor
 		{
 		}
 
-		DrawResult Draw()
+		void Draw()
 		{
-			return DescIO::Draw(label, scratch, this->def, Min, Max);
+			DescIO::Draw(label, scratch, this->def, Min, Max);
 		}
 
 		void Load(TOMLNode node)
@@ -314,10 +314,10 @@ namespace oly::editor
 		{
 		}
 
-		DrawResult Draw()
+		void Draw()
 		{
 			scratch.has_value = scratch.value != nullopt;
-			return DescIO::Draw(label, scratch, def, Min, Max);
+			DescIO::Draw(label, scratch, def, Min, Max);
 		}
 
 		void Load(TOMLNode node)
@@ -372,20 +372,20 @@ namespace oly::editor
 		{
 		}
 
-		DrawResult Draw(const bool (&disabled)[Count])
+		void Draw(const bool (&disabled)[Count])
 		{
 			return Draw(static_cast<const bool*>(disabled));
 		}
 
-		DrawResult Draw()
+		void Draw()
 		{
 			return Draw(nullptr);
 		}
 
 	private:
-		DrawResult Draw(const bool* disabled)
+		void Draw(const bool* disabled)
 		{
-			return DescIO::Draw(label, scratch, def, values, names, disabled, Count);
+			DescIO::Draw(label, scratch, def, values, names, disabled, Count);
 		}
 
 	public:

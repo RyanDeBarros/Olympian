@@ -150,18 +150,19 @@ namespace oly::editor
 		Load();
 	}
 
+	// TODO v9.1 remove DRAW_FIELD() calls entirely. Rename DRAW_FIELD to _DRAW_FIELD, LOAD_FIELD to _LOAD_FIELD, and DUMP_FIELD to _DUMP_FIELD.
+
 	void TilesetDocument::Draw()
 	{
+		gui::PropertyGrid::Clear();
+
 		UpdateActiveTextures();
 		gui::IDScope scope(this);
 
 		if (auto section = CollapsingSection("Advanced"))
 		{
 			if (auto form = Form())
-			{
-				if (_scratch.storage.Draw())
-					MarkDirty();
-			}
+				_scratch.storage.Draw();
 		}
 
 		if (ImGui::BeginTabBar("##Editors"))
@@ -180,6 +181,9 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	void TilesetDocument::Load()
@@ -391,12 +395,16 @@ namespace oly::editor
 		{
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
-			{
-				DescIO::PrepareValue(desc.texture.label);
+			gui::IDScope scope(&desc.texture);
+			DescIO::KeyLabel(desc.texture.label);
+			DescIO::ResetButton(desc.texture.scratch, desc.texture.def);
+
+			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+			gui::PropertyGrid::AddComponent({ [this, &desc, grid]() -> DrawResult {
 				gui::IDScope scope(&desc.texture.scratch);
-				
-				if (gui::InputData<std::string>{}("", desc.texture.scratch))
-					MarkDirty();
+				DrawResult result;
+
+				result |= gui::InputData<std::string>{}("", desc.texture.scratch);
 
 				if (ImGui::IsItemDeactivatedAfterEdit())
 					OnActiveTextureChanged(grid);
@@ -409,7 +417,7 @@ namespace oly::editor
 						if (path.is_resource())
 						{
 							desc.texture.scratch = path.get_resource_shorthand();
-							MarkDirty();
+							result = true;
 							OnActiveTextureChanged(grid);
 						}
 						else
@@ -419,18 +427,17 @@ namespace oly::editor
 					ImGui::EndDragDropTarget();
 				}
 
-				if (DescIO::CheckRevertButton(desc.texture.scratch, desc.texture.def))
-				{
-					MarkDirty();
-					OnActiveTextureChanged(grid);
-				}
-			}
+				result.Query();
+				return result;
+			} });
 
-			if (desc.texture_index.Draw())
-			{
-				MarkDirty();
+			gui::PropertyGrid::SubmitRow();
+			if (DescIO::CheckReset(desc.texture.scratch, desc.texture.def))
 				OnActiveTextureChanged(grid);
-			}
+
+			DRAW_FIELD(texture_index);
+			if (gui::PropertyGrid::DirtyValue())
+				OnActiveTextureChanged(grid);
 
 			DRAW_FIELD(uvs);
 			DRAW_FIELD(reflection);

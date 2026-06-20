@@ -35,6 +35,8 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw()
 	{
+		gui::PropertyGrid::Clear();
+
 		ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
 		if (IsDirty())
 			flags |= ImGuiWindowFlags_UnsavedDocument;
@@ -69,6 +71,9 @@ namespace oly::editor
 
 			Draw(_scratch);
 		}
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	std::filesystem::path PreferencesPanel::GetPath() const

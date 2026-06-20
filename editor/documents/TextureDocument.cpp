@@ -39,6 +39,9 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
+		// TODO v9.1 RAII protected in IDocument that will call Clear() and end with if (DirtyGrid()) MarkDirty()
+		gui::PropertyGrid::Clear();
+
 		UpdatePreviewTexture();
 
 		gui::IDScope scope(this);
@@ -51,6 +54,9 @@ namespace oly::editor
 			DrawPreview();
 			ImGui::EndTable();
 		}
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	void TextureDocument::Load()
@@ -412,8 +418,11 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			DescIO::PrepareValue("Select Slot");
+			gui::IDScope scope("##Slot");
+			DescIO::KeyLabel("Select Slot");
+			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
+			gui::PropertyGrid::SubmitRow();
 
 			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(d); });
 
@@ -430,11 +439,9 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			if (desc.generate_mipmaps.Draw())
-			{
-				MarkDirty();
+			DRAW_FIELD(generate_mipmaps);
+			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
-			}
 
 			DRAW_FIELD(storage);
 		}
@@ -445,11 +452,9 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			if (desc.generate_mipmaps.Draw())
-			{
-				MarkDirty();
+			DRAW_FIELD(generate_mipmaps);
+			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
-			}
 
 			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
 		}
@@ -459,17 +464,13 @@ namespace oly::editor
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
-			if (desc.min_filter.Draw())
-			{
-				MarkDirty();
+			DRAW_FIELD(min_filter);
+			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
-			}
 
-			if (desc.mag_filter.Draw())
-			{
-				MarkDirty();
+			DRAW_FIELD(mag_filter);
+			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
-			}
 
 			DRAW_FIELD(wrap_s);
 			DRAW_FIELD(wrap_t);
@@ -491,13 +492,11 @@ namespace oly::editor
 	{
 		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		if (DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max))
-			MarkDirty();
+		DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
 
 		DRAW_FIELD(row_type);
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		if (DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max))
-			MarkDirty();
+		DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}

@@ -6,6 +6,8 @@ namespace oly::editor
 {
 	enum class IconResource : int;
 
+	// TODO v9.1 these should return DrawResults already queried
+
 	struct Toolbar
 	{
 		static void DrawIconImage(ImVec2 pos, IconResource icon, float tint_alpha = 1.f);

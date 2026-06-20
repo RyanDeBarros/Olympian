@@ -30,6 +30,8 @@ namespace oly::editor
 
 	void SignalDocument::Draw()
 	{
+		gui::PropertyGrid::Clear();
+
 		_stop_listening = true;
 		gui::IDScope scope(this);
 
@@ -52,6 +54,9 @@ namespace oly::editor
 
 		if (_stop_listening)
 			_listen_mode = ListenMode::None;
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	void SignalDocument::Load()
@@ -102,17 +107,19 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			DescIO::PrepareValue("Select Signal");
-			_signal_slots.DrawComboHeader(
-				[this](size_t i) {
-					if (i < _scratch.signals.Size())
-					{
-						std::string id = _scratch.signals[i].id.scratch;
-						if (!id.empty())
-							return id;
-					}
-					return "<Signal #" + std::to_string(i) + ">";
-				}, "New signal", "Delete signal", "Clear signals");
+			gui::IDScope scope("##Signal");
+			DescIO::KeyLabel("Select Signal");
+			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+			_signal_slots.DrawComboHeader([this](size_t i) {
+				if (i < _scratch.signals.Size())
+				{
+					std::string id = _scratch.signals[i].id.scratch;
+					if (!id.empty())
+						return id;
+				}
+				return "<Signal #" + std::to_string(i) + ">";
+			}, "New signal", "Delete signal", "Clear signals");
+			gui::PropertyGrid::SubmitRow();
 
 			if (!_scratch.signals.Empty())
 				Draw(_scratch.signals[_signal_slots.active_index]);
@@ -128,17 +135,19 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			DescIO::PrepareValue("Select Route");
-			_route_slots.DrawComboHeader(
-				[this](size_t i) {
-					if (i < _scratch.routes.Size())
-					{
-						std::string id = _scratch.routes[i].id.scratch;
-						if (!id.empty())
-							return id;
-					}
-					return "<Route #" + std::to_string(i) + ">";
-				}, "New route", "Delete route", "Clear routes");
+			gui::IDScope scope("##Route");
+			DescIO::KeyLabel("Select Route");
+			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+			_route_slots.DrawComboHeader([this](size_t i) {
+				if (i < _scratch.routes.Size())
+				{
+					std::string id = _scratch.routes[i].id.scratch;
+					if (!id.empty())
+						return id;
+				}
+				return "<Route #" + std::to_string(i) + ">";
+			}, "New route", "Delete route", "Clear routes");
+			gui::PropertyGrid::SubmitRow();
 
 			if (!_scratch.routes.Empty())
 				Draw(_scratch.routes[_route_slots.active_index]);
@@ -181,13 +190,10 @@ namespace oly::editor
 	{
 		gui::Outline dup_outline;
 		
-		auto id_result = desc.id.Draw();
-		if (id_result)
-			MarkDirty();
-
+		DRAW_FIELD(id);
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
-			if (id_result.IsHovered())
+			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -223,19 +229,16 @@ namespace oly::editor
 
 		gui::Outline dup_outline;
 
-		auto id_result = desc.id.Draw();
-		if (id_result)
-			MarkDirty();
-
+		DRAW_FIELD(id);
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
-			if (id_result.IsHovered())
+			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
 		}
 
-		auto signals_result = DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
+		DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
 			std::string& element = desc.signals.scratch[row.Index()];
 
 			DrawResult result;
@@ -261,58 +264,58 @@ namespace oly::editor
 			if (ImGui::IsItemActivated())
 				row.OnSelect();
 
-			if (row.Index() < desc.signals.def.size())
-				result |= DescIO::CheckRevertButton(element, desc.signals.def[row.Index()]);
-			else
-			{
-				static const std::string empty = {};
-				result |= DescIO::CheckRevertButton(element, empty);
-			}
+			// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
+			//if (row.Index() < desc.signals.def.size())
+			//	result |= DescIO::CheckRevertButton(element, desc.signals.def[row.Index()]);
+			//else
+			//{
+			//	static const std::string empty = {};
+			//	result |= DescIO::CheckRevertButton(element, empty);
+			//}
 
 			return result;
 		}, desc.signals.ui_state);
-
-		if (signals_result)
-			MarkDirty();
 	}
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.key.label);
-			gui::IDScope scope(&desc.key);
+		// TODO v9.1 just set column to value and draw the input listener, then call DRAW_FIELD(key)
+		gui::IDScope scope(&desc.key);
+		DescIO::KeyLabel(desc.key.label);
+		DescIO::ResetButton(desc.key.scratch, desc.key.def_index);
 
+		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+		gui::PropertyGrid::AddComponent({ [this, &desc]() -> DrawResult {
 			_stop_listening = false;
-			if (auto key = InputListener::DrawKeyListener(_listen_mode))
+			if (auto key = InputListener::DrawKeyListener(_listen_mode)) // TODO v9.1 DrawKeyListener should return draw result
 			{
 				if (*key != desc.key.Scratch())
 				{
 					desc.key.SetScratch(*key);
-					MarkDirty();
+					return true;
 				}
 			}
 
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count))
-				MarkDirty();
+			return false;
+		} });
+		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows
+		gui::PropertyGrid::AddComponent({ [&desc]() -> DrawResult {
+			return gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count);
+		} });
 
-			if (DescIO::CheckRevertButton(desc.key.scratch, desc.key.def_index))
-				MarkDirty();
-		}
+		gui::PropertyGrid::SubmitRow();
+		DescIO::CheckReset(desc.key.scratch, desc.key.def_index);
+
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
 			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
-
-		if (desc.required_mods.Draw(disabled_required_mods))
-			MarkDirty();
+		desc.required_mods.Draw(disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
-
-		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
-			MarkDirty();
+		desc.forbidden_mods.Draw(disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
@@ -320,69 +323,67 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.button.label);
-			gui::IDScope scope(&desc.button);
+		// TODO v9.1
+		//{
+		//	DescIO::PrepareValue(desc.button.label);
+		//	gui::IDScope scope(&desc.button);
 
-			_stop_listening = false;
-			if (auto mb = InputListener::DrawMouseButtonListener(_listen_mode))
-			{
-				if (*mb != desc.button.Scratch())
-				{
-					desc.button.SetScratch(*mb);
-					MarkDirty();
-				}
-			}
+		//	_stop_listening = false;
+		//	if (auto mb = InputListener::DrawMouseButtonListener(_listen_mode))
+		//	{
+		//		if (*mb != desc.button.Scratch())
+		//		{
+		//			desc.button.SetScratch(*mb);
+		//			MarkDirty();
+		//		}
+		//	}
 
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-				MarkDirty();
+		//	ImGui::SameLine();
+		//	if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
+		//		MarkDirty();
 
-			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-				MarkDirty();
-		}
+		//	if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
+		//		MarkDirty();
+		//}
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
 			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
-
-		if (desc.required_mods.Draw(disabled_required_mods))
-			MarkDirty();
+		desc.required_mods.Draw(disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+		desc.forbidden_mods.Draw(disabled_forbidden_mods);
 
-		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
-			MarkDirty();
-		
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.button.label);
-			gui::IDScope scope(&desc.button);
+		// TODO v9.1
+		//{
+		//	DescIO::PrepareValue(desc.button.label);
+		//	gui::IDScope scope(&desc.button);
 
-			_stop_listening = false;
-			if (auto button = InputListener::DrawGamepadButtonListener(_listen_mode))
-			{
-				if (*button != desc.button.Scratch())
-				{
-					desc.button.SetScratch(*button);
-					MarkDirty();
-				}
-			}
+		//	_stop_listening = false;
+		//	if (auto button = InputListener::DrawGamepadButtonListener(_listen_mode))
+		//	{
+		//		if (*button != desc.button.Scratch())
+		//		{
+		//			desc.button.SetScratch(*button);
+		//			MarkDirty();
+		//		}
+		//	}
 
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-				MarkDirty();
+		//	ImGui::SameLine();
+		//	if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
+		//		MarkDirty();
 
-			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-				MarkDirty();
-		}
+		//	if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
+		//		MarkDirty();
+		//}
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
@@ -390,27 +391,28 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.axis.label);
-			gui::IDScope scope(&desc.axis);
+		// TODO v9.1
+		//{
+		//	DescIO::PrepareValue(desc.axis.label);
+		//	gui::IDScope scope(&desc.axis);
 
-			_stop_listening = false;
-			if (auto axis = InputListener::DrawGamepadAxis1DListener(_listen_mode))
-			{
-				if (*axis != desc.axis.Scratch())
-				{
-					desc.axis.SetScratch(*axis);
-					MarkDirty();
-				}
-			}
+		//	_stop_listening = false;
+		//	if (auto axis = InputListener::DrawGamepadAxis1DListener(_listen_mode))
+		//	{
+		//		if (*axis != desc.axis.Scratch())
+		//		{
+		//			desc.axis.SetScratch(*axis);
+		//			MarkDirty();
+		//		}
+		//	}
 
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.axis.scratch, desc.axis.names, desc.axis.count))
-				MarkDirty();
+		//	ImGui::SameLine();
+		//	if (gui::InputData<int>{}("", desc.axis.scratch, desc.axis.names, desc.axis.count))
+		//		MarkDirty();
 
-			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def_index))
-				MarkDirty();
-		}
+		//	if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def_index))
+		//		MarkDirty();
+		//}
 
 		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))
@@ -419,28 +421,29 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.axis.label);
-			gui::IDScope scope(&desc.axis);
+		// TODO v9.1
+		//{
+		//	DescIO::PrepareValue(desc.axis.label);
+		//	gui::IDScope scope(&desc.axis);
 
-			_stop_listening = false;
-			if (auto axis = InputListener::DrawGamepadAxis2DListener(_listen_mode))
-			{
-				if (*axis != desc.axis.scratch)
-				{
-					desc.axis.scratch = *axis;
-					MarkDirty();
-				}
-			}
+		//	_stop_listening = false;
+		//	if (auto axis = InputListener::DrawGamepadAxis2DListener(_listen_mode))
+		//	{
+		//		if (*axis != desc.axis.scratch)
+		//		{
+		//			desc.axis.scratch = *axis;
+		//			MarkDirty();
+		//		}
+		//	}
 
-			ImGui::SameLine();
+		//	ImGui::SameLine();
 
-			if (DescIO::DrawCombo("", desc.axis.scratch))
-				MarkDirty();
+		//	if (DescIO::DrawCombo("", desc.axis.scratch))
+		//		MarkDirty();
 
-			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def))
-				MarkDirty();
-		}
+		//	if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def))
+		//		MarkDirty();
+		//}
 
 		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))

@@ -40,6 +40,8 @@ namespace oly::editor
 
 	void FontDocument::Draw()
 	{
+		gui::PropertyGrid::Clear();
+
 		gui::IDScope scope(this);
 
 		if (ImGui::BeginTabBar(""))
@@ -58,6 +60,9 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
+
+		if (gui::PropertyGrid::DirtyGrid())
+			MarkDirty();
 	}
 
 	void FontDocument::Load()
@@ -137,8 +142,11 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			if (auto form = Form())
 			{
-				DescIO::PrepareValue("Select Route");
+				gui::IDScope scope("##Atlas");
+				DescIO::KeyLabel("Select Atlas");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+				gui::PropertyGrid::SubmitRow();
 
 				if (!_scratch.font_atlases.Empty())
 					Draw(_scratch.font_atlases[_atlas_slots.active_index]);
@@ -245,12 +253,13 @@ namespace oly::editor
 
 			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
 			{
-				if (DescIO::DrawRevertButton())
-				{
-					k.distance.scratch = k.distance.def;
-					k.pair.scratch = k.pair.def;
-					result.SetDirty(true);
-				}
+				// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
+				//if (DescIO::DrawRevertButton())
+				//{
+				//	k.distance.scratch = k.distance.def;
+				//	k.pair.scratch = k.pair.def;
+				//	result.SetDirty(true);
+				//}
 			}
 
 			return result.IsDirty();
@@ -259,33 +268,33 @@ namespace oly::editor
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
-		if (desc.font_size.Draw())
-		{
-			MarkDirty();
+		desc.font_size.Draw();
+		if (gui::PropertyGrid::DirtyValue())
 			DestroyFont();
-		}
 
 		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
 		if (auto subform = Subform("Common buffer"))
 		{
-			DRAW_FIELD(use_common_buffer_preset);
+			desc.use_common_buffer_preset.Draw();
 
 			bool preset = desc.use_common_buffer_preset.scratch;
 			
 			if (auto disabled = DisabledSection(!preset))
 			{
-				DRAW_FIELD(common_buffer_preset);
+				desc.common_buffer_preset.Draw();
 
-				DescIO::PrepareValue("Preview");
+				gui::IDScope scope(&desc.common_buffer_preset);
+				scope.Push("##Preview");
+				DescIO::KeyLabel("Preview");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 				std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
 				ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+				gui::PropertyGrid::SubmitRow();
 			}
 
 			if (auto disabled = DisabledSection(preset))
-			{
-				DRAW_FIELD(common_buffer);
-			}
+				desc.common_buffer.Draw();
 		}
 	}
 
