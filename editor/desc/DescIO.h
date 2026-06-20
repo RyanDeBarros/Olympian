@@ -74,7 +74,7 @@ namespace oly::editor
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
 				auto row_result = draw_fn(row);
 				result |= row_result;
-				if (row_result.IsClicked() || row_result.IsFocused())
+				if (row_result.IsLeftClicked() || row_result.IsFocused())
 					row.OnSelect();
 			});
 

@@ -242,8 +242,6 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		// TODO v9.1 clicking in text fields is not selecting row. Clicking route combo resets row selection to last and flickers multi-select on all other rows.
-
 		auto signals_result = DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
 			std::string& element = desc.signals.scratch[row.Index()];
 
