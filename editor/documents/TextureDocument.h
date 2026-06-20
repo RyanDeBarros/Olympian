@@ -1,10 +1,10 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/scopes/Form.h"
-#include "gui/graphics/Texture.h"
 
 #include "desc/TextureDesc.h"
+
+#include "gui/graphics/Texture.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -67,10 +67,10 @@ namespace oly::editor
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
 		void Draw(TextureVariantDesc& desc);
-		void Draw(Form& form, RasterTextureDesc& desc);
-		void Draw(Form& form, VectorTextureDesc& desc);
-		void Draw(Form& form, BaseTextureDesc& desc);
-		void Draw(Form& form, SpritesheetDesc& desc);
+		void Draw(RasterTextureDesc& desc);
+		void Draw(VectorTextureDesc& desc);
+		void Draw(BaseTextureDesc& desc);
+		void Draw(SpritesheetDesc& desc);
 
 		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
 		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);

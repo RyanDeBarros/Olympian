@@ -4,6 +4,7 @@
 #include "core/editor/Logger.h"
 
 #include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
 
@@ -126,7 +127,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
-			Draw(form, _scratch.font_face);
+			Draw(_scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -140,7 +141,7 @@ namespace oly::editor
 				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
 
 				if (!_scratch.font_atlases.Empty())
-					Draw(form, _scratch.font_atlases[_atlas_slots.active_index]);
+					Draw(_scratch.font_atlases[_atlas_slots.active_index]);
 
 				if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
 					MarkDirty();
@@ -176,7 +177,7 @@ namespace oly::editor
 		ImGui::EndChild();
 	}
 
-	void FontDocument::Draw(Form& form, FontFaceDesc& desc)
+	void FontDocument::Draw(FontFaceDesc& desc)
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
@@ -255,8 +256,8 @@ namespace oly::editor
 			return result.IsDirty();
 		}, desc.kerning_ui_state);
 	}
-
-	void FontDocument::Draw(Form& form, FontAtlasDesc& desc)
+	
+	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
 		if (desc.font_size.Draw())
 		{
@@ -266,7 +267,7 @@ namespace oly::editor
 
 		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
-		if (auto subform = Subform(form, "Common buffer"))
+		if (auto subform = Subform("Common buffer"))
 		{
 			DRAW_FIELD(use_common_buffer_preset);
 

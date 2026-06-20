@@ -1,7 +1,6 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/scopes/Form.h"
 
 #include "desc/ProjectDesc.h"
 
@@ -31,15 +30,15 @@ namespace oly::editor
 
 	private:
 		void Draw(ProjectDesc& desc);
-		void Draw(Form& form, ContextDesc& desc);
-		void Draw(Form& form, PlatformDesc& desc);
-		void Draw(Form& form, WindowDesc& desc);
-		void Draw(Form& form, ViewportDesc& desc);
-		void Draw(Form& form, WindowHintsDesc& desc);
-		void Draw(Form& form, CollisionDesc& desc);
-		void Draw(Form& form, LoggerDesc& desc);
-		void Draw(Form& form, LoggerEnableDesc& desc);
-		void Draw(Form& form, FrameRateDesc& desc);
+		void Draw(ContextDesc& desc);
+		void Draw(PlatformDesc& desc);
+		void Draw(WindowDesc& desc);
+		void Draw(ViewportDesc& desc);
+		void Draw(WindowHintsDesc& desc);
+		void Draw(CollisionDesc& desc);
+		void Draw(LoggerDesc& desc);
+		void Draw(LoggerEnableDesc& desc);
+		void Draw(FrameRateDesc& desc);
 
 		void Load(TOMLNode node, ProjectDesc& desc);
 		void Load(TOMLNode node, ContextDesc& desc);

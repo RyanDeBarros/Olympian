@@ -9,14 +9,13 @@ namespace oly::editor
 {
 	class Subform
 	{
-		Form::PauseImpl _pause;
+		FormPause _pause;
 		std::optional<CollapsingSection> _section;
 		std::optional<Form> _subform;
 
 	public:
-		Subform(Form& form, const char* label, bool start_open = false);
+		Subform(const char* label, bool start_open = false);
 
 		operator bool() const;
-		Form& GetForm();
 	};
 }

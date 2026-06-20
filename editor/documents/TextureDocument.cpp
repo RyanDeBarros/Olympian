@@ -7,6 +7,7 @@
 
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Toolbar.h"
 #include "gui/ImGuiWrapper.h"
@@ -414,7 +415,7 @@ namespace oly::editor
 			DescIO::PrepareValue("Select Slot");
 			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
 
-			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(form, d); });
+			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(d); });
 
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
@@ -424,10 +425,10 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(Form& form, RasterTextureDesc& desc)
+	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
-		Draw(form, desc.base);
-		if (auto subform = Subform(form, "Storage", true))
+		Draw(desc.base);
+		if (auto subform = Subform("Storage", true))
 		{
 			if (desc.generate_mipmaps.Draw())
 			{
@@ -439,10 +440,10 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(Form& form, VectorTextureDesc& desc)
+	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
-		Draw(form, desc.base);
-		if (auto subform = Subform(form, "Storage", true))
+		Draw(desc.base);
+		if (auto subform = Subform("Storage", true))
 		{
 			if (desc.generate_mipmaps.Draw())
 			{
@@ -454,9 +455,9 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(Form& form, BaseTextureDesc& desc)
+	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
-		if (auto subform = Subform(form, "Parameters", true))
+		if (auto subform = Subform("Parameters", true))
 		{
 			if (desc.min_filter.Draw())
 			{
@@ -474,7 +475,7 @@ namespace oly::editor
 			DRAW_FIELD(wrap_t);
 		}
 
-		if (auto subform = Subform(form, "Animation", true))
+		if (auto subform = Subform("Animation", true))
 		{
 			if (auto disabled = DisabledSection(_gif))
 			{
@@ -482,11 +483,11 @@ namespace oly::editor
 			}
 
 			if (desc.anim.scratch && !_gif)
-				Draw(form, desc.spritesheet);
+				Draw(desc.spritesheet);
 		}
 	}
 
-	void TextureDocument::Draw(Form& form, SpritesheetDesc& desc)
+	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
 		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";

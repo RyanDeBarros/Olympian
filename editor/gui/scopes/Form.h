@@ -26,24 +26,21 @@ namespace oly::editor
 		operator bool() const;
 
 	private:
+		friend class FormPause;
 		void BeginTable();
 		void EndTable();
+	};
+
+	class FormPause
+	{
+		Form* _form = nullptr;
 
 	public:
-		friend class PauseImpl;
-		class PauseImpl
-		{
-			Form& _form;
+		FormPause();
+		FormPause(const FormPause&) = delete;
+		FormPause(FormPause&&) = delete;
+		~FormPause();
 
-		public:
-			PauseImpl(Form& form);
-			PauseImpl(const PauseImpl&) = delete;
-			PauseImpl(PauseImpl&&) = delete;
-			~PauseImpl();
-
-			operator bool() const;
-		};
-
-		PauseImpl Pause();
+		operator bool() const;
 	};
 }

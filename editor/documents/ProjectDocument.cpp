@@ -5,6 +5,7 @@
 #include "core/windows/MainWindow.h"
 
 #include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
@@ -102,71 +103,71 @@ namespace oly::editor
 	void ProjectDocument::Draw(ProjectDesc& desc)
 	{
 		if (auto form = Form())
-			Draw(form, desc.context);
+			Draw(desc.context);
 	}
 	
-	void ProjectDocument::Draw(Form& form, ContextDesc& desc)
+	void ProjectDocument::Draw(ContextDesc& desc)
 	{
-		if (auto subform = Subform(form, "Platform"))
-			Draw(subform.GetForm(), desc.platform);
+		if (auto subform = Subform("Platform"))
+			Draw(desc.platform);
 
-		if (auto subform = Subform(form, "Collision"))
-			Draw(subform.GetForm(), desc.collision);
+		if (auto subform = Subform("Collision"))
+			Draw(desc.collision);
 
-		if (auto subform = Subform(form, "Logger"))
-			Draw(subform.GetForm(), desc.logger);
+		if (auto subform = Subform("Logger"))
+			Draw(desc.logger);
 
-		if (auto subform = Subform(form, "Frame Rate"))
-			Draw(subform.GetForm(), desc.frame_rate);
+		if (auto subform = Subform("Frame Rate"))
+			Draw(desc.frame_rate);
 	}
 
-	void ProjectDocument::Draw(Form& form, PlatformDesc& desc)
+	void ProjectDocument::Draw(PlatformDesc& desc)
 	{
-		if (auto subform = Subform(form, "Window"))
-			Draw(subform.GetForm(), desc.window);
+		if (auto subform = Subform("Window"))
+			Draw(desc.window);
 		
 		DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 	}
 	
-	void ProjectDocument::Draw(Form& form, WindowDesc& desc)
+	void ProjectDocument::Draw(WindowDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
-		if (auto subform = Subform(form, "Viewport"))
-			Draw(subform.GetForm(), desc.viewport);
+		if (auto subform = Subform("Viewport"))
+			Draw(desc.viewport);
 
-		if (auto subform = Subform(form, "Window hints"))
-			Draw(subform.GetForm(), desc.window_hints);
+		if (auto subform = Subform("Window hints"))
+			Draw(desc.window_hints);
 	}
 
-	void ProjectDocument::Draw(Form& form, ViewportDesc& desc)
+	void ProjectDocument::Draw(ViewportDesc& desc)
 	{
 		DRAW_FIELDS(VIEWPORT_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, WindowHintsDesc& desc)
+	void ProjectDocument::Draw(WindowHintsDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, CollisionDesc& desc)
+	void ProjectDocument::Draw(CollisionDesc& desc)
 	{
 		DRAW_FIELDS(COLLISION_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, LoggerDesc& desc)
+	void ProjectDocument::Draw(LoggerDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Enable Streams"))
-			Draw(subform.GetForm(), desc.enable);
+		if (auto subform = Subform("Enable Streams"))
+			Draw(desc.enable);
 	}
 	
-	void ProjectDocument::Draw(Form& form, LoggerEnableDesc& desc)
+	void ProjectDocument::Draw(LoggerEnableDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, FrameRateDesc& desc)
+	void ProjectDocument::Draw(FrameRateDesc& desc)
 	{
 		DRAW_FIELDS(FRAME_RATE_GENERATOR);
 	}

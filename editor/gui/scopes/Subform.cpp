@@ -2,8 +2,8 @@
 
 namespace oly::editor
 {
-	Subform::Subform(Form& form, const char* label, bool start_open)
-		: _pause(form.Pause()),
+	Subform::Subform(const char* label, bool start_open)
+		: _pause(),
 		_section(_pause ? std::make_optional<CollapsingSection>(label, start_open) : std::nullopt),
 		_subform(_pause ? std::make_optional<Form>() : std::nullopt)
 	{
@@ -12,10 +12,5 @@ namespace oly::editor
 	Subform::operator bool() const
 	{
 		return _pause && _section.has_value() && _section.value() && _subform.has_value() && _subform.value();
-	}
-
-	Form& Subform::GetForm()
-	{
-		return _subform.value();
 	}
 }

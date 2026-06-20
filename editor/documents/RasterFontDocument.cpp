@@ -4,6 +4,7 @@
 #include "core/editor/Logger.h"
 #include "core/Colors.h"
 
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/GUIState.h"
 
@@ -87,7 +88,7 @@ namespace oly::editor
 		{
 			DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-			if (auto subform = Subform(form, "Glyphs"))
+			if (auto subform = Subform("Glyphs"))
 			{
 				DescIO::PrepareValue("Select Glyph");
 				_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {

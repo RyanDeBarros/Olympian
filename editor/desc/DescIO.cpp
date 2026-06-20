@@ -46,15 +46,7 @@ namespace oly::editor
 
 	DrawResult DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
 	{
-		std::unique_ptr<Form> temp_form;
-		Form* form = Form::ActiveForm();
-		if (!form)
-		{
-			temp_form = std::make_unique<Form>();
-			form = temp_form.get();
-		}
-
-		if (auto subform = Subform(*form, label))
+		if (auto subform = Subform(label))
 		{
 			DrawResult result;
 			for (size_t i = 0; i < count; ++i)

@@ -5,7 +5,6 @@
 #include "desc/SignalDesc.h"
 
 #include "core/InputListener.h"
-#include "gui/scopes/Form.h"
 
 #include "assets/MetaSplitter.h"
 #include "util/Counter.h"
@@ -40,19 +39,19 @@ namespace oly::editor
 		Counter<std::string> GetRouteIDCounter() const;
 		Counter<std::string> GetIDCounter() const;
 
-		void Draw(Form& form, SignalDesc& desc);
-		void Draw(Form& form, RouteDesc& desc);
-		void Draw(Form& form, KeyDesc& desc);
-		void Draw(Form& form, MouseButtonDesc& desc);
-		void Draw(Form& form, GamepadButtonDesc& desc);
-		void Draw(Form& form, GamepadAxis1DDesc& desc);
-		void Draw(Form& form, GamepadAxis2DDesc& desc);
-		void Draw(Form& form, CursorPosDesc& desc);
-		void Draw(Form& form, ScrollDesc& desc);
-		void Draw(Form& form, Modifier0dDesc& desc);
-		void Draw(Form& form, Modifier1dDesc& desc);
-		void Draw(Form& form, Modifier2dDesc& desc);
-		void Draw(Form& form, ModifierBaseDesc& desc);
+		void Draw(SignalDesc& desc);
+		void Draw(RouteDesc& desc);
+		void Draw(KeyDesc& desc);
+		void Draw(MouseButtonDesc& desc);
+		void Draw(GamepadButtonDesc& desc);
+		void Draw(GamepadAxis1DDesc& desc);
+		void Draw(GamepadAxis2DDesc& desc);
+		void Draw(CursorPosDesc& desc);
+		void Draw(ScrollDesc& desc);
+		void Draw(Modifier0dDesc& desc);
+		void Draw(Modifier1dDesc& desc);
+		void Draw(Modifier2dDesc& desc);
+		void Draw(ModifierBaseDesc& desc);
 
 		void Load(TOMLNode node, SignalFullDesc& desc);
 		void Load(TOMLNode node, SignalDesc& desc);

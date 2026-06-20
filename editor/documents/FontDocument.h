@@ -1,7 +1,6 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/scopes/Form.h"
 
 #include "desc/FontDesc.h"
 
@@ -38,8 +37,9 @@ namespace oly::editor
 		void DrawFontFace();
 		void DrawFontAtlases();
 		void DrawAtlasPreview();
-		void Draw(Form& form, FontFaceDesc& desc);
-		void Draw(Form& form, FontAtlasDesc& desc);
+		
+		void Draw(FontFaceDesc& desc);
+		void Draw(FontAtlasDesc& desc);
 
 		void Load(TOMLNode node, FullFontDesc& desc);
 		void Load(TOMLNode node, FontFaceDesc& desc);

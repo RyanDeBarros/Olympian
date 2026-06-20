@@ -6,6 +6,7 @@
 #include "core/editor/ProjectInfo.h"
 #include "panels/PanelManager.h"
 
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
@@ -132,25 +133,23 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			if (auto pause = form.Pause())
+			if (auto pause = FormPause())
 				ImGui::SeparatorText("Editor Preferences");
 
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
-			Draw(form, desc.tree_view);
+			Draw(desc.tree_view);
 		}
 	}
 
-	void PreferencesPanel::Draw(Form& form, TreeViewSettingsDesc& desc)
+	void PreferencesPanel::Draw(TreeViewSettingsDesc& desc)
 	{
-		if (auto subform = Subform(form, "Advanced##TreeView"))
-		{
-			Draw(subform.GetForm(), desc.advanced);
-		}
+		if (auto subform = Subform("Advanced##TreeView"))
+			Draw(desc.advanced);
 	}
 
-	void PreferencesPanel::Draw(Form& form, TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesPanel::Draw(TreeViewAdvancedSettingsDesc& desc)
 	{
 		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}

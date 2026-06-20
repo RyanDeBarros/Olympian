@@ -62,24 +62,21 @@ namespace oly::editor
 		ACTIVE_FORM = nullptr;
 	}
 
-	Form::PauseImpl::PauseImpl(Form& form)
-		: _form(form)
+	FormPause::FormPause()
+		: _form(ACTIVE_FORM)
 	{
-		_form.EndTable();
+		if (_form)
+			_form->EndTable();
 	}
 
-	Form::PauseImpl::~PauseImpl()
+	FormPause::~FormPause()
 	{
-		_form.BeginTable();
+		if (_form)
+			_form->BeginTable();
 	}
 
-	Form::PauseImpl::operator bool() const
+	FormPause::operator bool() const
 	{
-		return true;
-	}
-
-	Form::PauseImpl Form::Pause()
-	{
-		return PauseImpl(*this);
+		return _form;
 	}
 }

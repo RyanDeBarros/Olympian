@@ -4,7 +4,6 @@
 
 #include "desc/RasterFontDesc.h"
 
-#include "gui/scopes/Form.h"
 #include "gui/ListModel.h"
 
 #include "assets/MetaSplitter.h"

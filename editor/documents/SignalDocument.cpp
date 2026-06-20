@@ -4,6 +4,7 @@
 #include "core/editor/Logger.h"
 
 #include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
 
@@ -114,7 +115,7 @@ namespace oly::editor
 				}, "New signal", "Delete signal", "Clear signals");
 
 			if (!_scratch.signals.Empty())
-				Draw(form, _scratch.signals[_signal_slots.active_index]);
+				Draw(_scratch.signals[_signal_slots.active_index]);
 
 			if (_signal_slots.ConsumeOps(*_scratch.signals.ListAdapter()))
 				MarkDirty();
@@ -140,7 +141,7 @@ namespace oly::editor
 				}, "New route", "Delete route", "Clear routes");
 
 			if (!_scratch.routes.Empty())
-				Draw(form, _scratch.routes[_route_slots.active_index]);
+				Draw(_scratch.routes[_route_slots.active_index]);
 
 			if (_route_slots.ConsumeOps(*_scratch.routes.ListAdapter()))
 				MarkDirty();
@@ -176,7 +177,7 @@ namespace oly::editor
 		return id_counter;
 	}
 
-	void SignalDocument::Draw(Form& form, SignalDesc& desc)
+	void SignalDocument::Draw(SignalDesc& desc)
 	{
 		gui::Outline dup_outline;
 		
@@ -209,10 +210,10 @@ namespace oly::editor
 #undef SWITCH_CASE
 		}
 
-		desc.variant.Visit([this, &form](auto& desc) { Draw(form, desc); });
+		desc.variant.Visit([this](auto& desc) { Draw(desc); });
 	}
 	
-	void SignalDocument::Draw(Form& form, RouteDesc& desc)
+	void SignalDocument::Draw(RouteDesc& desc)
 	{
 		auto signal_id_counter = GetSignalIDCounter();
 		auto id_counter = GetIDCounter();
@@ -275,7 +276,7 @@ namespace oly::editor
 			MarkDirty();
 	}
 
-	void SignalDocument::Draw(Form& form, KeyDesc& desc)
+	void SignalDocument::Draw(KeyDesc& desc)
 	{
 		{
 			DescIO::PrepareValue(desc.key.label);
@@ -313,11 +314,11 @@ namespace oly::editor
 		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
 			MarkDirty();
 
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, MouseButtonDesc& desc)
+	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
 		{
 			DescIO::PrepareValue(desc.button.label);
@@ -355,11 +356,11 @@ namespace oly::editor
 		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
 			MarkDirty();
 		
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadButtonDesc& desc)
+	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
 		{
 			DescIO::PrepareValue(desc.button.label);
@@ -383,11 +384,11 @@ namespace oly::editor
 				MarkDirty();
 		}
 
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis1DDesc& desc)
+	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
 		{
 			DescIO::PrepareValue(desc.axis.label);
@@ -412,11 +413,11 @@ namespace oly::editor
 		}
 
 		DRAW_FIELD(deadzone);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis2DDesc& desc)
+	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
 		{
 			DescIO::PrepareValue(desc.axis.label);
@@ -442,43 +443,43 @@ namespace oly::editor
 		}
 
 		DRAW_FIELD(deadzone);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, CursorPosDesc& desc)
+	void SignalDocument::Draw(CursorPosDesc& desc)
 	{
 		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, ScrollDesc& desc)
+	void SignalDocument::Draw(ScrollDesc& desc)
 	{
 		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(desc.modifier);
 	}
 
-	void SignalDocument::Draw(Form& form, Modifier0dDesc& desc)
+	void SignalDocument::Draw(Modifier0dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, Modifier1dDesc& desc)
+	void SignalDocument::Draw(Modifier1dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, Modifier2dDesc& desc)
+	void SignalDocument::Draw(Modifier2dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, ModifierBaseDesc& desc)
+	void SignalDocument::Draw(ModifierBaseDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
