@@ -9,18 +9,10 @@ namespace oly::editor::gui
 		ImVec2 _start_pos;
 		ImU32 _color;
 		float _border;
-		bool _active = false;
 
 	public:
-		Outline(ImU32 color, float border = 1.f);
-		Outline(const Outline&) = delete;
-		Outline(Outline&&) noexcept;
-		~Outline();
-		Outline& operator=(Outline&&) noexcept;
+		Outline(ImU32 color = IM_COL32(255, 0, 0, 255), float border = 1.f);
 
-		operator bool() const;
 		void Draw() const;
-		void Consume();
-		void Cancel();
 	};
 }

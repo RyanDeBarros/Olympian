@@ -5,6 +5,7 @@
 
 #include "gui/IDScope.h"
 #include "gui/Subform.h"
+#include "gui/Outline.h"
 
 #include "definitions/Keys.h"
 
@@ -156,9 +157,36 @@ namespace oly::editor
 		}
 	}
 
+	Counter<std::string> SignalDocument::GetIDCounter() const
+	{
+		Counter<std::string> id_counter;
+
+		for (const auto& subdesc : _scratch.signals)
+			id_counter.increment(subdesc.id.scratch);
+
+		for (const auto& subdesc : _scratch.routes)
+			id_counter.increment(subdesc.id.scratch);
+
+		return id_counter;
+	}
+
 	void SignalDocument::Draw(Form& form, SignalDesc& desc)
 	{
-		DRAW_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+		gui::Outline dup_outline;
+		
+		auto id_result = desc.id.Draw();
+		if (id_result)
+			MarkDirty();
+
+		if (GetIDCounter().count(desc.id.scratch) > 1)
+		{
+			if (id_result.IsHovered())
+				ImGui::SetTooltip("Duplicate signal/route id");
+
+			dup_outline.Draw();
+		}
+
+		DRAW_FIELD(binding);
 
 		switch (desc.binding.scratch)
 		{
@@ -180,7 +208,26 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(Form& form, RouteDesc& desc)
 	{
-		DRAW_FIELDS(ROUTE_GENERATOR);
+		auto id_counter = GetIDCounter();
+
+		gui::Outline dup_outline;
+
+		auto id_result = desc.id.Draw();
+		if (id_result)
+			MarkDirty();
+
+		if (id_counter.count(desc.id.scratch) > 1)
+		{
+			if (id_result.IsHovered())
+				ImGui::SetTooltip("Duplicate signal/route id");
+
+			dup_outline.Draw();
+		}
+
+		// TODO v9.1 validate signal ids are present
+		// TODO v9.1 warn duplicate signal ids within a route
+
+		DRAW_FIELD(signals);
 	}
 
 	void SignalDocument::Draw(Form& form, KeyDesc& desc)

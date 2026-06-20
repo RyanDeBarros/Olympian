@@ -213,16 +213,13 @@ namespace oly::editor
 
 			ImGui::SameLine();
 			bool dup_warning = counter.count(k.pair.scratch) > 1;
-			gui::Outline dup_outline(IM_COL32(255, 0, 0, 255));
+			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
 				bool bad_codepoint = !stocdpt(k.pair.scratch[i]).has_value();
-				gui::Outline bad_outline(IM_COL32(255, 0, 0, 255));
+				gui::Outline bad_outline;
 				if (bad_codepoint)
-				{
 					dup_warning = false;
-					dup_outline.Cancel();
-				}
 
 				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
 				result |= codepoint_result;
@@ -235,18 +232,14 @@ namespace oly::editor
 					if (codepoint_result.IsHovered())
 						ImGui::SetTooltip("Bad codepoint format");
 
-					bad_outline.Consume();
+					bad_outline.Draw();
 				}
-				else
-					bad_outline.Cancel();
 
 				ImGui::SameLine();
 			}
 
 			if (dup_warning)
-				dup_outline.Consume();
-			else
-				dup_outline.Cancel();
+				dup_outline.Draw();
 
 			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
 

@@ -17,7 +17,7 @@ namespace oly::editor
 		RasterFontDesc _disk;
 		detail::MetaMap _meta;
 		gui::ListModel _glyph_model;
-		Counter<std::string> _codepoint_counter; // TODO v9.1 use Counter in Signal signal/route lists
+		Counter<std::string> _codepoint_counter;
 
 	public:
 		using IDocument::IDocument;

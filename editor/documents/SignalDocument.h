@@ -8,6 +8,7 @@
 #include "gui/Form.h"
 
 #include "assets/MetaSplitter.h"
+#include "util/Counter.h"
 
 namespace oly::editor
 {
@@ -35,6 +36,7 @@ namespace oly::editor
 	private:
 		void DrawSignals();
 		void DrawRoutes();
+		Counter<std::string> GetIDCounter() const;
 
 		void Draw(Form& form, SignalDesc& desc);
 		void Draw(Form& form, RouteDesc& desc);

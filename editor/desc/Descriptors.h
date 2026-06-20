@@ -78,9 +78,19 @@ namespace oly::editor
 			return vector[i];
 		}
 
+		auto begin() const
+		{
+			return vector.begin();
+		}
+
 		auto begin()
 		{
 			return vector.begin();
+		}
+
+		auto end() const
+		{
+			return vector.end();
 		}
 
 		auto end()
