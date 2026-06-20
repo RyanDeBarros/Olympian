@@ -48,6 +48,11 @@ namespace oly
 			return it != _map.end() ? it->second : 0;
 		}
 
+		bool contains(const T& obj) const
+		{
+			return count(obj) > 0;
+		}
+
 		void clear()
 		{
 			_map.clear();
@@ -57,6 +62,18 @@ namespace oly
 		{
 			for (const T& el : vec)
 				increment(el);
+		}
+
+		void accumulate(const Counter<T, Hash, Equals>& other)
+		{
+			for (auto it = other._map.begin(); it != other._map.end(); ++it)
+				increment(it->first, it->second);
+		}
+
+		void accumulate(Counter<T, Hash, Equals>&& other)
+		{
+			for (auto it = std::make_move_iterator(other._map.begin()); it != std::make_move_iterator(other._map.end()); ++it)
+				increment(std::move(it->first), it->second);
 		}
 	};
 }

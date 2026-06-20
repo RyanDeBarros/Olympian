@@ -157,16 +157,30 @@ namespace oly::editor
 		}
 	}
 
-	Counter<std::string> SignalDocument::GetIDCounter() const
+	Counter<std::string> SignalDocument::GetSignalIDCounter() const
 	{
 		Counter<std::string> id_counter;
 
 		for (const auto& subdesc : _scratch.signals)
 			id_counter.increment(subdesc.id.scratch);
 
+		return id_counter;
+	}
+	
+	Counter<std::string> SignalDocument::GetRouteIDCounter() const
+	{
+		Counter<std::string> id_counter;
+
 		for (const auto& subdesc : _scratch.routes)
 			id_counter.increment(subdesc.id.scratch);
 
+		return id_counter;
+	}
+
+	Counter<std::string> SignalDocument::GetIDCounter() const
+	{
+		Counter<std::string> id_counter = GetSignalIDCounter();
+		id_counter.accumulate(GetRouteIDCounter());
 		return id_counter;
 	}
 
@@ -208,7 +222,11 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(Form& form, RouteDesc& desc)
 	{
+		auto signal_id_counter = GetSignalIDCounter();
 		auto id_counter = GetIDCounter();
+
+		Counter<std::string> local_id_counter;
+		local_id_counter.accumulate(desc.signals.scratch);
 
 		gui::Outline dup_outline;
 
@@ -224,10 +242,47 @@ namespace oly::editor
 			dup_outline.Draw();
 		}
 
-		// TODO v9.1 validate signal ids are present
-		// TODO v9.1 warn duplicate signal ids within a route
+		// TODO v9.1 clicking in text fields is not selecting row. Clicking route combo resets row selection to last and flickers multi-select on all other rows.
 
-		DRAW_FIELD(signals);
+		auto signals_result = DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
+			std::string& element = desc.signals.scratch[row.Index()];
+
+			DrawResult result;
+
+			ImGui::SameLine();
+			gui::Outline outline;
+			auto item_result = gui::InputData<std::string>{}("##Item", element);
+			result |= item_result;
+
+			if (!signal_id_counter.contains(element))
+			{
+				outline.Draw(IM_COL32(255, 255, 0, 255)); // TODO v9.1 database for color constants
+				if (item_result.IsHovered())
+					ImGui::SetTooltip("Signal id is not present in asset");
+			}
+			else if (local_id_counter.count(element) > 1)
+			{
+				outline.Draw(IM_COL32(255, 255, 0, 255));
+				if (item_result.IsHovered())
+					ImGui::SetTooltip("Duplicate signal id listing in route");
+			}
+
+			if (ImGui::IsItemActivated())
+				row.OnSelect();
+
+			if (row.Index() < desc.signals.def.size())
+				result |= DescIO::CheckRevertButton(element, desc.signals.def[row.Index()]);
+			else
+			{
+				static const std::string empty = {};
+				result |= DescIO::CheckRevertButton(element, empty);
+			}
+
+			return result;
+		}, desc.signals.ui_state);
+
+		if (signals_result)
+			MarkDirty();
 	}
 
 	void SignalDocument::Draw(Form& form, KeyDesc& desc)

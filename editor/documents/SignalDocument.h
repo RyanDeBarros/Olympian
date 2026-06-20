@@ -36,6 +36,8 @@ namespace oly::editor
 	private:
 		void DrawSignals();
 		void DrawRoutes();
+		Counter<std::string> GetSignalIDCounter() const;
+		Counter<std::string> GetRouteIDCounter() const;
 		Counter<std::string> GetIDCounter() const;
 
 		void Draw(Form& form, SignalDesc& desc);
