@@ -6,7 +6,7 @@
 #include "core/editor/ProjectInfo.h"
 #include "panels/PanelManager.h"
 
-#include "gui/Subform.h"
+#include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
 

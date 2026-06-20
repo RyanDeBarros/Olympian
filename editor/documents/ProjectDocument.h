@@ -1,7 +1,7 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/Form.h"
+#include "gui/scopes/Form.h"
 
 #include "desc/ProjectDesc.h"
 

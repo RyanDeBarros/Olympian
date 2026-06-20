@@ -4,7 +4,7 @@
 #include "core/editor/Logger.h"
 #include "core/Colors.h"
 
-#include "gui/Subform.h"
+#include "gui/scopes/Subform.h"
 #include "gui/GUIState.h"
 
 #include "definitions/Keys.h"

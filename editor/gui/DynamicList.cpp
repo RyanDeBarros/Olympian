@@ -3,9 +3,9 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
 
-#include "gui/DisabledSection.h"
-#include "gui/IDScope.h"
-#include "gui/Toolbar.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/graphics/Toolbar.h"
 
 namespace oly::editor::gui
 {

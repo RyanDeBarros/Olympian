@@ -8,7 +8,7 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/Texture.h"
+#include "gui/graphics/Texture.h"
 #include "documents/DocumentManager.h"
 #include "panels/AssetEditorPanel.h"
 

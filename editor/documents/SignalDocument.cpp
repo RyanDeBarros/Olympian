@@ -3,9 +3,9 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
-#include "gui/Outline.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
 

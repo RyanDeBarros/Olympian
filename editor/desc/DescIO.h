@@ -3,8 +3,8 @@
 #include "desc/OptionalPrimitive.h"
 
 #include "gui/DynamicList.h"
-#include "gui/IDScope.h"
 #include "gui/ImGuiWrapper.h"
+#include "gui/scopes/IDScope.h"
 
 #include "external/GL.h"
 #include "external/GLM.h"

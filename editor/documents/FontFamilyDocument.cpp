@@ -3,7 +3,7 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/CollapsingSection.h"
+#include "gui/scopes/CollapsingSection.h"
 
 #include "definitions/Keys.h"
 #include "util/Parser.h"

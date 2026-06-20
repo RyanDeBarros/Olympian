@@ -5,10 +5,10 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/Colors.h"
 
-#include "gui/DisabledSection.h"
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
-#include "gui/Toolbar.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Toolbar.h"
 #include "gui/ImGuiWrapper.h"
 
 #include "definitions/Keys.h"

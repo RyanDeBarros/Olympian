@@ -4,8 +4,8 @@
 #include "core/Types.h"
 #include "desc/OptionalPrimitive.h"
 
-#include "gui/DisabledSection.h"
-#include "gui/IDScope.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/IDScope.h"
 #include "gui/DrawResult.h"
 
 #include "external/GLM.h"

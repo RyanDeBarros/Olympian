@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gui/Form.h"
-#include "gui/CollapsingSection.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/CollapsingSection.h"
 
 #include <optional>
 

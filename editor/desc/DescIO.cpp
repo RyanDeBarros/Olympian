@@ -1,11 +1,11 @@
 #include "DescIO.h"
 
 #include "core/editor/ResourceLoader.h"
-#include "gui/DisabledSection.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Toolbar.h"
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
-#include "gui/Subform.h"
-#include "gui/Toolbar.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"

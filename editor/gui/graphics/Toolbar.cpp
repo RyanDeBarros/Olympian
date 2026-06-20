@@ -2,8 +2,8 @@
 
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/IDScope.h"
-#include "gui/Texture.h"
+#include "gui/graphics/Texture.h"
+#include "gui/scopes/IDScope.h"
 
 #include <string>
 

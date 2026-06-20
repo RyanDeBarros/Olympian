@@ -6,9 +6,9 @@
 #include "core/Colors.h"
 #include "core/Errors.h"
 
-#include "gui/IDScope.h"
-#include "gui/Overlays.h"
-#include "gui/Subform.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Overlays.h"
 
 #include "documents/TextureDocument.h"
 

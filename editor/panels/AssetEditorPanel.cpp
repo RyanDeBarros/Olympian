@@ -11,7 +11,7 @@
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
-#include "gui/IDScope.h"
+#include "gui/scopes/IDScope.h"
 
 #include "assets/MetaSplitter.h"
 

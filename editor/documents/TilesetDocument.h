@@ -4,8 +4,8 @@
 
 #include "desc/TilesetDesc.h"
 
-#include "gui/Form.h"
-#include "gui/Texture.h"
+#include "gui/scopes/Form.h"
+#include "gui/graphics/Texture.h"
 
 #include "assets/MetaSplitter.h"
 

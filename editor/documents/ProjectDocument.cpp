@@ -4,8 +4,8 @@
 #include "core/editor/Logger.h"
 #include "core/windows/MainWindow.h"
 
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
 

@@ -3,7 +3,7 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/ImGuiWrapper.h"
-#include "gui/Toolbar.h"
+#include "gui/graphics/Toolbar.h"
 
 #include <imgui.h>
 

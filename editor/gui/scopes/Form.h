@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/IDScope.h"
+#include "gui/scopes/IDScope.h"
 
 #include <imgui.h>
 

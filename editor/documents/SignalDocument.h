@@ -5,7 +5,7 @@
 #include "desc/SignalDesc.h"
 
 #include "core/InputListener.h"
-#include "gui/Form.h"
+#include "gui/scopes/Form.h"
 
 #include "assets/MetaSplitter.h"
 #include "util/Counter.h"

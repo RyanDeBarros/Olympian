@@ -4,7 +4,7 @@
 
 #include "desc/FontFamilyDesc.h"
 
-#include "gui/Form.h"
+#include "gui/scopes/Form.h"
 
 #include "assets/MetaSplitter.h"
 
