@@ -393,45 +393,47 @@ namespace oly::editor
 		{
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
-			gui::IDScope scope(&desc.texture);
-			DescIO::KeyLabel(desc.texture.label);
-			DescIO::ResetButton(desc.texture.scratch, desc.texture.def);
+			if (auto scope = gui::IDScope(&desc.texture))
+			{
+				DescIO::KeyLabel(desc.texture.label);
+				DescIO::ResetButton(desc.texture.scratch, desc.texture.def);
 
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			gui::PropertyGrid::AddComponent({ [this, &desc, grid]() -> DrawResult {
-				gui::IDScope scope(&desc.texture.scratch);
-				DrawResult result;
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+				gui::PropertyGrid::AddComponent({ [this, &desc, grid]() -> DrawResult {
+					gui::IDScope scope(&desc.texture.scratch);
+					DrawResult result;
 
-				result |= gui::InputData<std::string>{}("", desc.texture.scratch);
+					result |= gui::InputData<std::string>{}("", desc.texture.scratch);
 
-				if (ImGui::IsItemDeactivatedAfterEdit())
-					OnActiveTextureChanged(grid);
+					if (ImGui::IsItemDeactivatedAfterEdit())
+						OnActiveTextureChanged(grid);
 
-				if (ImGui::BeginDragDropTarget())
-				{
-					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+					if (ImGui::BeginDragDropTarget())
 					{
-						detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
-						if (path.is_resource())
+						if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
 						{
-							desc.texture.scratch = path.get_resource_shorthand();
-							result = true;
-							OnActiveTextureChanged(grid);
+							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
+							if (path.is_resource())
+							{
+								desc.texture.scratch = path.get_resource_shorthand();
+								result = true;
+								OnActiveTextureChanged(grid);
+							}
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
 						}
-						else
-							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
+
+						ImGui::EndDragDropTarget();
 					}
 
-					ImGui::EndDragDropTarget();
-				}
+					result.Query();
+					return result;
+				} });
 
-				result.Query();
-				return result;
-			} });
-
-			gui::PropertyGrid::SubmitRow();
-			if (DescIO::CheckReset(desc.texture.scratch, desc.texture.def))
-				OnActiveTextureChanged(grid);
+				gui::PropertyGrid::SubmitRow();
+				if (DescIO::CheckReset(desc.texture.scratch, desc.texture.def))
+					OnActiveTextureChanged(grid);
+			}
 
 			desc.texture_index.Draw();
 			if (gui::PropertyGrid::DirtyValue())

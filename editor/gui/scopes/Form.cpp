@@ -1,5 +1,7 @@
 #include "Form.h"
 
+#include "gui/PropertyGrid.h"
+
 namespace oly::editor
 {
 	static Form* ACTIVE_FORM = nullptr;
@@ -38,29 +40,19 @@ namespace oly::editor
 	void Form::BeginTable()
 	{
 		ACTIVE_FORM = this;
-
 		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
-
-		// TODO v9.1 these settings should be set up by PropertyGrid
-		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
-		{
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight());
-			_draw_content = true;
-		}
-		else
-			_draw_content = false;
+		_draw_content = gui::PropertyGrid::BeginTable();
 	}
 
 	void Form::EndTable()
 	{
 		if (_draw_content)
+		{
 			ImGui::EndTable();
+			_draw_content = false;
+		}
 
-		_draw_content = false;
 		_scope.PopAll();
-
 		ACTIVE_FORM = nullptr;
 	}
 

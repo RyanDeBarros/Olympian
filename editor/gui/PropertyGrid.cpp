@@ -14,6 +14,8 @@ namespace oly::editor::gui
 		COLUMN = column;
 	}
 
+	// TODO v9.1 if table is expanded dynamically with Subform, key column width doesn't adapt - check animated subform for texture document
+
 	// TODO v9.1 draw value cell first, so height can be determined and the key cell aligned to middle vertically?
 	
 	void PropertyGrid::SubmitRow()
@@ -68,5 +70,18 @@ namespace oly::editor::gui
 	bool PropertyGrid::DirtyGrid()
 	{
 		return DIRTY_GRID;
+	}
+
+	bool PropertyGrid::BeginTable()
+	{
+		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
+		{
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight());
+			return true;
+		}
+		else
+			return false;
 	}
 }

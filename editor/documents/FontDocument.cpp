@@ -142,11 +142,13 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			if (auto form = Form())
 			{
-				gui::IDScope scope("##Atlas");
-				DescIO::KeyLabel("Select Atlas");
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
-				gui::PropertyGrid::SubmitRow();
+				if (auto scope = gui::IDScope("##Atlas"))
+				{
+					DescIO::KeyLabel("Select Atlas");
+					gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+					_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+					gui::PropertyGrid::SubmitRow();
+				}
 
 				if (!_scratch.font_atlases.Empty())
 					Draw(_scratch.font_atlases[_atlas_slots.active_index]);
@@ -284,13 +286,15 @@ namespace oly::editor
 			{
 				desc.common_buffer_preset.Draw();
 
-				gui::IDScope scope(&desc.common_buffer_preset);
-				scope.Push("##Preview");
-				DescIO::KeyLabel("Preview");
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
-				ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-				gui::PropertyGrid::SubmitRow();
+				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
+				{
+					scope.Push("##Preview");
+					DescIO::KeyLabel("Preview");
+					gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+					std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
+					ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+					gui::PropertyGrid::SubmitRow();
+				}
 			}
 
 			if (auto disabled = DisabledSection(preset))

@@ -107,19 +107,21 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			gui::IDScope scope("##Signal");
-			DescIO::KeyLabel("Select Signal");
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			_signal_slots.DrawComboHeader([this](size_t i) {
-				if (i < _scratch.signals.Size())
-				{
-					std::string id = _scratch.signals[i].id.scratch;
-					if (!id.empty())
-						return id;
-				}
-				return "<Signal #" + std::to_string(i) + ">";
-			}, "New signal", "Delete signal", "Clear signals");
-			gui::PropertyGrid::SubmitRow();
+			if (auto scope = gui::IDScope("##Signal"))
+			{
+				DescIO::KeyLabel("Select Signal");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+				_signal_slots.DrawComboHeader([this](size_t i) {
+					if (i < _scratch.signals.Size())
+					{
+						std::string id = _scratch.signals[i].id.scratch;
+						if (!id.empty())
+							return id;
+					}
+					return "<Signal #" + std::to_string(i) + ">";
+				}, "New signal", "Delete signal", "Clear signals");
+				gui::PropertyGrid::SubmitRow();
+			}
 
 			if (!_scratch.signals.Empty())
 				Draw(_scratch.signals[_signal_slots.active_index]);
@@ -135,19 +137,21 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			gui::IDScope scope("##Route");
-			DescIO::KeyLabel("Select Route");
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			_route_slots.DrawComboHeader([this](size_t i) {
-				if (i < _scratch.routes.Size())
-				{
-					std::string id = _scratch.routes[i].id.scratch;
-					if (!id.empty())
-						return id;
-				}
-				return "<Route #" + std::to_string(i) + ">";
-			}, "New route", "Delete route", "Clear routes");
-			gui::PropertyGrid::SubmitRow();
+			if (auto scope = gui::IDScope("##Route"))
+			{
+				DescIO::KeyLabel("Select Route");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+				_route_slots.DrawComboHeader([this](size_t i) {
+					if (i < _scratch.routes.Size())
+					{
+						std::string id = _scratch.routes[i].id.scratch;
+						if (!id.empty())
+							return id;
+					}
+					return "<Route #" + std::to_string(i) + ">";
+				}, "New route", "Delete route", "Clear routes");
+				gui::PropertyGrid::SubmitRow();
+			}
 
 			if (!_scratch.routes.Empty())
 				Draw(_scratch.routes[_route_slots.active_index]);
@@ -279,11 +283,6 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		// TODO v9.1 just set column to value and draw the input listener, then call DRAW_FIELD(key)
-		gui::IDScope scope(&desc.key);
-		DescIO::KeyLabel(desc.key.label);
-		DescIO::ResetButton(desc.key.scratch, desc.key.def_index);
-
 		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 		gui::PropertyGrid::AddComponent({ [this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -299,13 +298,7 @@ namespace oly::editor
 			return false;
 		} });
 		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
-		gui::PropertyGrid::AddComponent({ [&desc]() -> DrawResult {
-			return gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count);
-		} });
-
-		gui::PropertyGrid::SubmitRow();
-		DescIO::CheckReset(desc.key.scratch, desc.key.def_index);
-
+		desc.key.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)

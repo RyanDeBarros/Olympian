@@ -418,11 +418,13 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			gui::IDScope scope("##Slot");
-			DescIO::KeyLabel("Select Slot");
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
-			gui::PropertyGrid::SubmitRow();
+			if (auto scope = gui::IDScope("##Slot"))
+			{
+				DescIO::KeyLabel("Select Slot");
+				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
+				_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
+				gui::PropertyGrid::SubmitRow();
+			}
 
 			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(d); });
 

@@ -25,5 +25,7 @@ namespace oly::editor::gui
 
 		static void Clear();
 		static bool DirtyGrid();
+
+		static bool BeginTable();
 	};
 }
