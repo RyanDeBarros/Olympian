@@ -283,16 +283,19 @@ namespace oly::editor
 		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
 		gui::PropertyGrid::AddComponent({ [this, &desc]() -> DrawResult {
 			_stop_listening = false;
-			if (auto key = InputListener::DrawKeyListener(_listen_mode)) // TODO v9.1 DrawKeyListener should return draw result
+			std::optional<detail::KeyInput> key;
+			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
+			if (key)
 			{
 				if (*key != desc.key.Scratch())
 				{
 					desc.key.SetScratch(*key);
 					return true;
 				}
+				else
+					result.SetDirty(false);
 			}
-
-			return false;
+			return result;
 		} });
 		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
 		desc.key.Draw();

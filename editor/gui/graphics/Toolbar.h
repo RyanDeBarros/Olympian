@@ -1,19 +1,17 @@
 #pragma once
 
-#include <imgui.h>
+#include "gui/DrawResult.h"
 
 namespace oly::editor
 {
 	enum class IconResource : int;
 
-	// TODO v9.1 these should return DrawResults already queried
-
 	struct Toolbar
 	{
 		static void DrawIconImage(ImVec2 pos, IconResource icon, float tint_alpha = 1.f);
-		static bool DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip);
-		static bool DrawIconToggleButton(IconResource icon, bool& selected, const char* tooltip);
-		static bool DrawIconButton(IconResource icon, const char* tooltip, const char* str_id = "");
-		static bool DrawHandle(const char* str_id = "");
+		static DrawResult DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip);
+		static DrawResult DrawIconToggleButton(IconResource icon, bool& selected, const char* tooltip);
+		static DrawResult DrawIconButton(IconResource icon, const char* tooltip, const char* str_id = "");
+		static DrawResult DrawHandle(const char* str_id = "");
 	};
 }

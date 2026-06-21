@@ -439,108 +439,146 @@ namespace oly::editor
 		return std::nullopt;
 	}
 
-	static bool DrawActiveListenButton()
+	static DrawResult DrawActiveListenButton()
 	{
-		return ImGui::Button("Listening...");
+		return DrawResult(ImGui::Button("Listening...")).Query();
 	}
 
-	static bool DrawInactiveListenButton()
+	static DrawResult DrawInactiveListenButton()
 	{
-		bool pressed = ImGui::Button("...");
-		if (ImGui::IsItemHovered())
+		DrawResult result = DrawResult(ImGui::Button("...")).Query();
+		if (result.IsHovered())
 			ImGui::SetTooltip("Listen for input");
 
-		return pressed;
+		return result;
 	}
 
-	std::optional<detail::KeyInput> InputListener::DrawKeyListener(ListenMode& mode)
+	DrawResult InputListener::DrawKeyListener(ListenMode& mode, std::optional<detail::KeyInput>& input)
 	{
+		input.reset();
 		if (mode == ListenMode::Key)
 		{
-			if (DrawActiveListenButton())
+			auto result = DrawActiveListenButton();
+			if (result.IsClicked())
 				mode = ListenMode::None;
-			else if (auto key = InputListener::ListenForKey())
+			else if (auto key = ListenForKey())
 			{
 				mode = ListenMode::None;
-				return key;
+				input = key;
 			}
-		}
-		else if (DrawInactiveListenButton())
-			mode = ListenMode::Key;
 
-		return std::nullopt;
+			return result;
+		}
+		else
+		{
+			auto result = DrawInactiveListenButton();
+			if (result.IsClicked())
+				mode = ListenMode::Key;
+
+			return result;
+		}
 	}
 
-	std::optional<detail::MouseButton> InputListener::DrawMouseButtonListener(ListenMode& mode)
+	DrawResult InputListener::DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input)
 	{
-
+		input.reset();
 		if (mode == ListenMode::MouseButton)
 		{
-			DrawActiveListenButton();
-
-			if (auto mb = InputListener::ListenForMouseButton())
+			auto result = DrawActiveListenButton();
+			
+			if (auto mb = ListenForMouseButton())
 			{
 				mode = ListenMode::None;
-				return mb;
+				input = mb;
 			}
-		}
-		else if (DrawInactiveListenButton())
-			mode = ListenMode::MouseButton;
 
-		return std::nullopt;
+			return result;
+		}
+		else
+		{
+			auto result = DrawInactiveListenButton();
+			if (result.IsClicked())
+				mode = ListenMode::MouseButton;
+
+			return result;
+		}
 	}
 	
-	std::optional<GLenum> InputListener::DrawGamepadButtonListener(ListenMode& mode)
+	DrawResult InputListener::DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input)
 	{
+		input.reset();
 		if (mode == ListenMode::GamepadButton)
 		{
-			if (DrawActiveListenButton())
+			auto result = DrawActiveListenButton();
+			if (result.IsClicked())
 				mode = ListenMode::None;
-			else if (auto button = InputListener::ListenForGamepadButton())
+			else if (auto button = ListenForGamepadButton())
 			{
 				mode = ListenMode::None;
-				return button;
+				input = button;
 			}
-		}
-		else if (DrawInactiveListenButton())
-			mode = ListenMode::GamepadButton;
 
-		return std::nullopt;
+			return result;
+		}
+		else
+		{
+			auto result = DrawInactiveListenButton();
+			if (result.IsClicked())
+				mode = ListenMode::GamepadButton;
+
+			return result;
+		}
 	}
 	
-	std::optional<GLenum> InputListener::DrawGamepadAxis1DListener(ListenMode& mode)
+	DrawResult InputListener::DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input)
 	{
+		input.reset();
 		if (mode == ListenMode::GamepadAxis1D)
 		{
-			if (DrawActiveListenButton())
+			auto result = DrawActiveListenButton();
+			if (result.IsClicked())
 				mode = ListenMode::None;
-			else if (auto axis = InputListener::ListenForGamepadAxis1D())
+			else if (auto axis = ListenForGamepadAxis1D())
 			{
 				mode = ListenMode::None;
-				return axis;
+				input = axis;
 			}
-		}
-		else if (DrawInactiveListenButton())
-			mode = ListenMode::GamepadAxis1D;
 
-		return std::nullopt;
+			return result;
+		}
+		else
+		{
+			auto result = DrawInactiveListenButton();
+			if (result.IsClicked())
+				mode = ListenMode::GamepadAxis1D;
+
+			return result;
+		}
 	}
 	
-	std::optional<detail::GamepadAxis2D> InputListener::DrawGamepadAxis2DListener(ListenMode& mode)
+	DrawResult InputListener::DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input)
 	{
+		input.reset();
 		if (mode == ListenMode::GamepadAxis2D)
 		{
-			if (DrawActiveListenButton())
+			auto result = DrawActiveListenButton();
+			if (result.IsClicked())
 				mode = ListenMode::None;
-			else if (auto axis = InputListener::ListenForGamepadAxis2D())
+			else if (auto axis = ListenForGamepadAxis2D())
 			{
 				mode = ListenMode::None;
-				return axis;
+				input = axis;
 			}
-		}
-		else if (DrawInactiveListenButton())
-			mode = ListenMode::GamepadAxis2D;
 
-		return std::nullopt;
+			return result;
+		}
+		else
+		{
+			auto result = DrawInactiveListenButton();
+			if (result.IsClicked())
+				mode = ListenMode::GamepadAxis2D;
+
+			return result;
+		}
 	}
 }

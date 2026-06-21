@@ -85,6 +85,11 @@ namespace oly::editor
 			return flags & Flags::RightClicked;
 		}
 
+		bool IsClicked() const
+		{
+			return IsLeftClicked() || IsRightClicked();
+		}
+
 		bool IsFocused() const
 		{
 			return flags & Flags::Focused;
