@@ -107,16 +107,17 @@ namespace oly::editor
 			if (auto scope = gui::IDScope("##Signal"))
 			{
 				DescIO::KeyLabel("Select Signal");
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				_signal_slots.DrawComboHeader([this](size_t i) {
-					if (i < _scratch.signals.Size())
-					{
-						std::string id = _scratch.signals[i].id.scratch;
-						if (!id.empty())
-							return id;
-					}
-					return "<Signal #" + std::to_string(i) + ">";
-				}, "New signal", "Delete signal", "Clear signals");
+				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+					return _signal_slots.DrawComboHeader([this](size_t i) {
+						if (i < _scratch.signals.Size())
+						{
+							std::string id = _scratch.signals[i].id.scratch;
+							if (!id.empty())
+								return id;
+						}
+						return "<Signal #" + std::to_string(i) + ">";
+					}, "New signal", "Delete signal", "Clear signals");
+				} });
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -137,16 +138,17 @@ namespace oly::editor
 			if (auto scope = gui::IDScope("##Route"))
 			{
 				DescIO::KeyLabel("Select Route");
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				_route_slots.DrawComboHeader([this](size_t i) {
-					if (i < _scratch.routes.Size())
-					{
-						std::string id = _scratch.routes[i].id.scratch;
-						if (!id.empty())
-							return id;
-					}
-					return "<Route #" + std::to_string(i) + ">";
-				}, "New route", "Delete route", "Clear routes");
+				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+					return _route_slots.DrawComboHeader([this](size_t i) {
+						if (i < _scratch.routes.Size())
+						{
+							std::string id = _scratch.routes[i].id.scratch;
+							if (!id.empty())
+								return id;
+						}
+						return "<Route #" + std::to_string(i) + ">";
+					}, "New route", "Delete route", "Clear routes");
+				} });
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -194,7 +196,7 @@ namespace oly::editor
 		desc.id.Draw();
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
-			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
+			if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -233,7 +235,7 @@ namespace oly::editor
 		desc.id.Draw();
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
-			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
+			if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -280,8 +282,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-		gui::PropertyGrid::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
 			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
@@ -297,7 +298,7 @@ namespace oly::editor
 			}
 			return result;
 		} });
-		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
+		gui::PropertyGrid::Value::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
 		desc.key.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};

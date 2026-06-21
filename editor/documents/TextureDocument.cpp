@@ -417,8 +417,9 @@ namespace oly::editor
 			if (auto scope = gui::IDScope("##Slot"))
 			{
 				DescIO::KeyLabel("Select Slot");
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				_slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
+				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+					return _slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
+				} });
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -438,7 +439,7 @@ namespace oly::editor
 		if (auto subform = Subform("Storage", true))
 		{
 			desc.generate_mipmaps.Draw();
-			if (gui::PropertyGrid::DirtyValue())
+			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
 			desc.storage.Draw();
@@ -451,7 +452,7 @@ namespace oly::editor
 		if (auto subform = Subform("Storage", true))
 		{
 			desc.generate_mipmaps.Draw();
-			if (gui::PropertyGrid::DirtyValue())
+			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
 			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
@@ -463,11 +464,11 @@ namespace oly::editor
 		if (auto subform = Subform("Parameters", true))
 		{
 			desc.min_filter.Draw();
-			if (gui::PropertyGrid::DirtyValue())
+			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
 			desc.mag_filter.Draw();
-			if (gui::PropertyGrid::DirtyValue())
+			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
 			desc.wrap_s.Draw();

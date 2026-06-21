@@ -16,15 +16,13 @@ namespace oly::editor
 {
 	void DescIO::KeyLabel(const char* label)
 	{
-		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Key);
-		gui::PropertyGrid::AddComponent(gui::TextComponent(label));
+		gui::PropertyGrid::Key::AddComponent(gui::TextComponent(label));
 	}
 
 	void DescIO::ResetButton(bool visible)
 	{
-		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Reset);
 		if (visible)
-			gui::PropertyGrid::AddComponent({ []() -> DrawResult { return Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"); } });
+			gui::PropertyGrid::Reset::AddComponent({ []() -> DrawResult { return Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"); } });
 	}
 
 	void DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
@@ -55,8 +53,7 @@ namespace oly::editor
 			}
 		}
 
-		gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-		gui::PropertyGrid::AddComponent({ [data, sublabels, count]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent({ [data, sublabels, count]() -> DrawResult {
 			DrawResult result;
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -71,7 +68,7 @@ namespace oly::editor
 		
 		gui::PropertyGrid::SubmitRow();
 
-		if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Reset))
+		if (gui::PropertyGrid::Reset::GetDrawResult())
 		{
 			for (size_t i = 0; i < count; ++i)
 				data[i] = def[i];

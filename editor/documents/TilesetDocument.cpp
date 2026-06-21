@@ -395,8 +395,7 @@ namespace oly::editor
 				DescIO::KeyLabel(desc.texture.label);
 				DescIO::ResetButton(desc.texture.scratch, desc.texture.def);
 
-				gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-				gui::PropertyGrid::AddComponent({ [this, &desc, grid]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent({ [this, &desc, grid]() -> DrawResult {
 					gui::IDScope scope(&desc.texture.scratch);
 					DrawResult result;
 
@@ -433,7 +432,7 @@ namespace oly::editor
 			}
 
 			desc.texture_index.Draw();
-			if (gui::PropertyGrid::DirtyValue())
+			if (gui::PropertyGrid::DirtyRow())
 				OnActiveTextureChanged(grid);
 
 			desc.uvs.Draw();

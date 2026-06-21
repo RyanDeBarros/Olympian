@@ -2,6 +2,8 @@
 
 #include "core/Modifiable.h"
 
+#include "gui/DrawResult.h"
+
 #include "util/Counter.h"
 
 #include <array>
@@ -116,8 +118,8 @@ namespace oly::editor::gui
 	public:
 		void Invoke(const ListOp& op, IListAdapter& adapter);
 
-		void DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
-		void DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+		DrawResult DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+		DrawResult DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
 	};
 
 	template<size_t N>

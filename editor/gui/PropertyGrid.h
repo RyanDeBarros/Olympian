@@ -6,22 +6,33 @@ namespace oly::editor::gui
 {
 	struct PropertyGrid
 	{
-		enum Column
+		struct Key
 		{
-			Key,
-			Value,
-			Reset,
-			_C
+			static DrawResult GetDrawResult();
+
+			// TODO v9.1 just SetText() - no components needed
+			static void AddComponent(WidgetComponent component);
+			static void SameLine();
 		};
 
-		static void SetColumn(Column column);
+		struct Value
+		{
+			static DrawResult GetDrawResult();
+
+			static void AddComponent(WidgetComponent component);
+			static void SameLine();
+		};
+
+		struct Reset
+		{
+			static DrawResult GetDrawResult();
+
+			static void AddComponent(WidgetComponent component);
+			static void SameLine();
+		};
+
 		static void SubmitRow();
-		static DrawResult GetDrawResult(Column column);
-
-		static void AddComponent(WidgetComponent component);
-		static void SameLine();
-
-		static bool DirtyValue();
+		static bool DirtyRow();
 
 		static void Clear();
 		static bool DirtyGrid();

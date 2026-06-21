@@ -5,8 +5,6 @@
 #include "gui/ImGuiWrapper.h"
 #include "gui/graphics/Toolbar.h"
 
-#include <imgui.h>
-
 #include <string>
 
 namespace oly::editor::gui
@@ -249,32 +247,43 @@ namespace oly::editor::gui
 		Apply(op, adapter);
 	}
 
-	void ListModel::DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
+	DrawResult ListModel::DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
 	{
-		DrawComboHeader([slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); }, create_tooltip, delete_tooltip, clear_tooltip);
+		return DrawComboHeader([slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); }, create_tooltip, delete_tooltip, clear_tooltip);
 	}
 
-	void ListModel::DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
+	DrawResult ListModel::DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
 	{
+		DrawResult result;
+		DrawResult subresult;
+
 		std::vector<std::string> slot_names;
 		slot_names.reserve(_size);
 		for (int i = 0; i < _size; ++i)
 			slot_names.push_back(combo_getter(i));
 
 		int slot = active_index;
-		gui::Combo("##SelectSlot", slot, slot_names);
+		result |= gui::Combo("##SelectSlot", slot, slot_names);
 		active_index = slot;
 
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Plus, create_tooltip, "##+"))
+		subresult = Toolbar::DrawIconButton(IconResource::Plus, create_tooltip, "##+");
+		result |= subresult;
+		if (subresult)
 			DeferCreate();
 
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Minus, delete_tooltip, "##-"))
+		subresult = Toolbar::DrawIconButton(IconResource::Minus, delete_tooltip, "##-");
+		result |= subresult;
+		if (subresult)
 			DeferDelete();
 
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Close, clear_tooltip, "##x"))
+		subresult = Toolbar::DrawIconButton(IconResource::Close, clear_tooltip, "##x");
+		result |= subresult;
+		if (subresult)
 			DeferClear();
+
+		return result;
 	}
 }

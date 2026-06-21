@@ -34,7 +34,7 @@ namespace oly::editor::gui
 		width += 2 * ImGui::GetFrameHeight(); // roughly covers dropdown arrow + padding
 		ImGui::SetNextItemWidth(width);
 
-		return ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()));
+		return DrawResult(ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()))).Query();
 	}
 
 	DrawResult InputText(const char* label, std::string& string, size_t max_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
@@ -54,15 +54,13 @@ namespace oly::editor::gui
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::Checkbox(label, &data);
-		return result.Query();
+		return DrawResult(ImGui::Checkbox(label, &data)).Query();
 	}
 
 	DrawResult InputData<int>::operator()(const char* label, int& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputInt(label, &data);
-		return result.Query();
+		return DrawResult(ImGui::InputInt(label, &data)).Query();
 	}
 
 	DrawResult InputData<int>::operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const
@@ -73,15 +71,13 @@ namespace oly::editor::gui
 	DrawResult InputData<int>::operator()(const char* label, int& data, const char** names, size_t count)
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::Combo(label, &data, names, count);
-		return result.Query();
+		return DrawResult(ImGui::Combo(label, &data, names, count)).Query();
 	}
 
 	DrawResult InputData<float>::operator()(const char* label, float& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputFloat(label, &data);
-		return result.Query();
+		return DrawResult(ImGui::InputFloat(label, &data)).Query();
 	}
 
 	DrawResult InputData<float>::operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -92,8 +88,7 @@ namespace oly::editor::gui
 	DrawResult InputData<double>::operator()(const char* label, double& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputDouble(label, &data);
-		return result.Query();
+		return DrawResult(ImGui::InputDouble(label, &data)).Query();
 	}
 
 	DrawResult InputData<double>::operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const
@@ -104,8 +99,7 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec2>::operator()(const char* label, glm::vec2& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputFloat2(label, glm::value_ptr(data));
-		return result.Query();
+		return DrawResult(ImGui::InputFloat2(label, glm::value_ptr(data))).Query();
 	}
 
 	DrawResult InputData<glm::vec2>::operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -116,8 +110,7 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec3>::operator()(const char* label, glm::vec3& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputFloat3(label, glm::value_ptr(data));
-		return result.Query();
+		return DrawResult(ImGui::InputFloat3(label, glm::value_ptr(data))).Query();
 	}
 
 	DrawResult InputData<glm::vec3>::operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -128,8 +121,7 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec4>::operator()(const char* label, glm::vec4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputFloat4(label, glm::value_ptr(data));
-		return result.Query();
+		return DrawResult(ImGui::InputFloat4(label, glm::value_ptr(data))).Query();
 	}
 
 	DrawResult InputData<glm::vec4>::operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -145,8 +137,7 @@ namespace oly::editor::gui
 	DrawResult InputData<Color4>::operator()(const char* label, Color4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::ColorEdit4(label, data.ValuePtr());
-		return result.Query();
+		return DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
 	}
 
 	// TODO v9.1 InlineWidget: use child with inner tables more often for layout structuring: define utility to defer calls to input-data so that the number of columns can be dynamically computed + SameLine() automatically called for multiple elements in a column.

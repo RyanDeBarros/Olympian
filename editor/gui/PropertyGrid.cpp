@@ -4,66 +4,105 @@
 
 namespace oly::editor::gui
 {
-	static PropertyGrid::Column COLUMN = PropertyGrid::Column::Key;
-	static std::array<std::vector<WidgetComponent>, PropertyGrid::Column::_C> COMPONENTS;
-	static std::array<DrawResult, PropertyGrid::Column::_C> DRAW_RESULTS;
+	static std::vector<WidgetComponent> KEY_COMPONENTS;
+	static DrawResult KEY_DRAW_RESULT;
+
+	static std::vector<WidgetComponent> VALUE_COMPONENTS;
+	static DrawResult VALUE_DRAW_RESULT;
+	
+	static std::vector<WidgetComponent> RESET_COMPONENTS;
+	static DrawResult RESET_DRAW_RESULT;
+
 	static bool DIRTY_GRID = false;
 
-	void PropertyGrid::SetColumn(Column column)
+	DrawResult PropertyGrid::Key::GetDrawResult()
 	{
-		COLUMN = column;
+		return KEY_DRAW_RESULT;
+	}
+
+	void PropertyGrid::Key::AddComponent(WidgetComponent component)
+	{
+		KEY_COMPONENTS.push_back(std::move(component));
+	}
+
+	void PropertyGrid::Key::SameLine()
+	{
+		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
+	}
+
+	DrawResult PropertyGrid::Value::GetDrawResult()
+	{
+		return VALUE_DRAW_RESULT;
+	}
+
+	void PropertyGrid::Value::AddComponent(WidgetComponent component)
+	{
+		VALUE_COMPONENTS.push_back(std::move(component));
+	}
+
+	void PropertyGrid::Value::SameLine()
+	{
+		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
+	}
+
+	DrawResult PropertyGrid::Reset::GetDrawResult()
+	{
+		return RESET_DRAW_RESULT;
+	}
+
+	void PropertyGrid::Reset::AddComponent(WidgetComponent component)
+	{
+		RESET_COMPONENTS.push_back(std::move(component));
+	}
+
+	void PropertyGrid::Reset::SameLine()
+	{
+		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
+	}
+
+	static void SubmitCell(int i, std::vector<WidgetComponent>& components, DrawResult& draw_result)
+	{
+		ImGui::TableSetColumnIndex(i);
+
+		DrawResult result;
+		for (const WidgetComponent& component : components)
+			result |= component.draw();
+
+		components.clear();
+		draw_result = result;
 	}
 
 	// TODO v9.1 if table is expanded dynamically with Subform, key column width doesn't adapt - check animated subform for texture document
 
 	// TODO v9.1 draw value cell first, so height can be determined and the key cell aligned to middle vertically?
-	
+
 	void PropertyGrid::SubmitRow()
 	{
 		ImGui::TableNextRow();
 
-		for (int i = 0; i < Column::_C; ++i)
-		{
-			ImGui::TableSetColumnIndex(i);
+		SubmitCell(0, KEY_COMPONENTS, KEY_DRAW_RESULT);
+		SubmitCell(1, VALUE_COMPONENTS, VALUE_DRAW_RESULT);
+		SubmitCell(2, RESET_COMPONENTS, RESET_DRAW_RESULT);
 
-			DrawResult result;
-			for (const WidgetComponent& component : COMPONENTS[i])
-				result |= component.draw();
-
-			COMPONENTS[i].clear();
-			DRAW_RESULTS[i] = result;
-		}
-
-		DIRTY_GRID |= DirtyValue();
+		DIRTY_GRID |= DirtyRow();
 	}
 
-	DrawResult PropertyGrid::GetDrawResult(Column column)
+	bool PropertyGrid::DirtyRow()
 	{
-		return DRAW_RESULTS[column];
-	}
-
-	void PropertyGrid::AddComponent(WidgetComponent component)
-	{
-		COMPONENTS[COLUMN].push_back(std::move(component));
-	}
-
-	void PropertyGrid::SameLine()
-	{
-		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
-	}
-
-	bool PropertyGrid::DirtyValue()
-	{
-		return GetDrawResult(Column::Value) || GetDrawResult(Column::Reset);
+		return Value::GetDrawResult().IsDirty() || Reset::GetDrawResult().IsDirty();
 	}
 
 	void PropertyGrid::Clear()
 	{
-		for (int i = 0; i < Column::_C; ++i)
-		{
-			COMPONENTS[i].clear();
-			DRAW_RESULTS[i] = {};
-		}
+		KEY_COMPONENTS.clear();
+		KEY_DRAW_RESULT = {};
+
+		VALUE_COMPONENTS.clear();
+		VALUE_DRAW_RESULT = {};
+
+		RESET_COMPONENTS.clear();
+		RESET_DRAW_RESULT = {};
+
 		DIRTY_GRID = false;
 	}
 

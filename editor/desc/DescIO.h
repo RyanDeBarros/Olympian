@@ -22,8 +22,7 @@ namespace oly::editor
 		template<typename T, typename... Args>
 		static void ValueInputData(const char* label, T& data, Args&&... args)
 		{
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			gui::PropertyGrid::AddComponent(gui::InputDataComponent(label, data, std::forward<Args>(args)...));
+			gui::PropertyGrid::Value::AddComponent(gui::InputDataComponent(label, data, std::forward<Args>(args)...));
 		}
 
 		static void ResetButton(bool visible);
@@ -37,7 +36,7 @@ namespace oly::editor
 		template<typename T>
 		static bool CheckReset(T& desc, const T& def)
 		{
-			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Reset))
+			if (gui::PropertyGrid::Reset::GetDrawResult())
 			{
 				desc = def;
 				return true;
@@ -124,11 +123,10 @@ namespace oly::editor
 			KeyLabel(label);
 			ResetButton(data.size() != def.size());
 
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			gui::PropertyGrid::AddComponent({ [&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }});
+			gui::PropertyGrid::Value::AddComponent({ [&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }});
 
 			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Reset))
+			if (gui::PropertyGrid::Reset::GetDrawResult())
 				ui_state.DeferResize(def.size());
 		}
 
@@ -187,8 +185,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			KeyLabel(label);
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			gui::PropertyGrid::AddComponent({ [&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); } });
+			gui::PropertyGrid::Value::AddComponent({ [&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); } });
 			ResetButton(data, def);
 			gui::PropertyGrid::SubmitRow();
 			CheckReset(data, def);
@@ -199,8 +196,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			KeyLabel(label);
-			gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-			gui::PropertyGrid::AddComponent({ [&data]() -> DrawResult { return DrawCombo("", data); } });
+			gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return DrawCombo("", data); } });
 			ResetButton(data, def);
 			gui::PropertyGrid::SubmitRow();
 			CheckReset(data, def);

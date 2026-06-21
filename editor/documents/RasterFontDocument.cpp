@@ -95,13 +95,14 @@ namespace oly::editor
 				if (auto scope = gui::IDScope("##Glyph"))
 				{
 					DescIO::KeyLabel("Select Glyph");
-					gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-					_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
-						if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
-							return desc.glyphs[i].codepoint.scratch;
-						else
-							return "Glyph #" + std::to_string(i);
-					}, "New glyph", "Delete glyph", "Clear glyphs");
+					gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+						return _glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
+							if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
+								return desc.glyphs[i].codepoint.scratch;
+							else
+								return "Glyph #" + std::to_string(i);
+						}, "New glyph", "Delete glyph", "Clear glyphs");
+					} });
 					gui::PropertyGrid::SubmitRow();
 				}
 
@@ -131,7 +132,7 @@ namespace oly::editor
 
 		std::string previous_codepoint = desc.codepoint.scratch;
 		desc.codepoint.Draw();
-		if (gui::PropertyGrid::DirtyValue())
+		if (gui::PropertyGrid::DirtyRow())
 		{
 			_codepoint_counter.increment(desc.codepoint.scratch);
 			_codepoint_counter.decrement(previous_codepoint);
@@ -139,7 +140,7 @@ namespace oly::editor
 
 		style_stack.PopStyles();
 
-		if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
+		if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");

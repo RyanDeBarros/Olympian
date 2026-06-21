@@ -459,7 +459,7 @@ namespace oly::editor
 		if (mode == ListenMode::Key)
 		{
 			auto result = DrawActiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::None;
 			else if (auto key = ListenForKey())
 			{
@@ -472,7 +472,7 @@ namespace oly::editor
 		else
 		{
 			auto result = DrawInactiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::Key;
 
 			return result;
@@ -497,7 +497,7 @@ namespace oly::editor
 		else
 		{
 			auto result = DrawInactiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::MouseButton;
 
 			return result;
@@ -510,7 +510,7 @@ namespace oly::editor
 		if (mode == ListenMode::GamepadButton)
 		{
 			auto result = DrawActiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::None;
 			else if (auto button = ListenForGamepadButton())
 			{
@@ -523,7 +523,7 @@ namespace oly::editor
 		else
 		{
 			auto result = DrawInactiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::GamepadButton;
 
 			return result;
@@ -536,7 +536,7 @@ namespace oly::editor
 		if (mode == ListenMode::GamepadAxis1D)
 		{
 			auto result = DrawActiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::None;
 			else if (auto axis = ListenForGamepadAxis1D())
 			{
@@ -549,7 +549,7 @@ namespace oly::editor
 		else
 		{
 			auto result = DrawInactiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::GamepadAxis1D;
 
 			return result;
@@ -562,7 +562,7 @@ namespace oly::editor
 		if (mode == ListenMode::GamepadAxis2D)
 		{
 			auto result = DrawActiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::None;
 			else if (auto axis = ListenForGamepadAxis2D())
 			{
@@ -575,7 +575,7 @@ namespace oly::editor
 		else
 		{
 			auto result = DrawInactiveListenButton();
-			if (result.IsClicked())
+			if (result)
 				mode = ListenMode::GamepadAxis2D;
 
 			return result;

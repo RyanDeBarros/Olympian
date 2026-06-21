@@ -142,8 +142,9 @@ namespace oly::editor
 				if (auto scope = gui::IDScope("##Atlas"))
 				{
 					DescIO::KeyLabel("Select Atlas");
-					gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-					_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+					gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+						return _atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
+					} });
 					gui::PropertyGrid::SubmitRow();
 				}
 
@@ -268,7 +269,7 @@ namespace oly::editor
 	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
 		desc.font_size.Draw();
-		if (gui::PropertyGrid::DirtyValue())
+		if (gui::PropertyGrid::DirtyRow())
 			DestroyFont();
 
 		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
@@ -287,9 +288,11 @@ namespace oly::editor
 				{
 					scope.Push("##Preview");
 					DescIO::KeyLabel("Preview");
-					gui::PropertyGrid::SetColumn(gui::PropertyGrid::Value);
-					std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
-					ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+					gui::PropertyGrid::Value::AddComponent({ [&desc]() -> DrawResult {
+						std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
+						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+						return false;
+					} });
 					gui::PropertyGrid::SubmitRow();
 				}
 			}
