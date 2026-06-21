@@ -1,9 +1,7 @@
 #include "DescIO.h"
 
-#include "core/editor/ResourceLoader.h"
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/Subform.h"
-#include "gui/graphics/Toolbar.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
@@ -14,17 +12,6 @@
 
 namespace oly::editor
 {
-	void DescIO::KeyLabel(const char* label)
-	{
-		gui::PropertyGrid::Key::AddComponent(gui::TextComponent(label));
-	}
-
-	void DescIO::ResetButton(bool visible)
-	{
-		if (visible)
-			gui::PropertyGrid::Reset::AddComponent({ []() -> DrawResult { return Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"); } });
-	}
-
 	void DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
 	{
 		RowInputData(label, data, def, names, count);
@@ -42,13 +29,13 @@ namespace oly::editor
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
 		gui::IDScope scope(data);
-		KeyLabel(label);
+		gui::PropertyGrid::Key::SetLabel(label);
 
 		for (size_t i = 0; i < count; ++i)
 		{
 			if (data[i] != def[i])
 			{
-				ResetButton(true);
+				gui::PropertyGrid::Reset::Button();
 				break;
 			}
 		}
@@ -68,7 +55,7 @@ namespace oly::editor
 		
 		gui::PropertyGrid::SubmitRow();
 
-		if (gui::PropertyGrid::Reset::GetDrawResult())
+		if (gui::PropertyGrid::Reset::AnyActivated())
 		{
 			for (size_t i = 0; i < count; ++i)
 				data[i] = def[i];

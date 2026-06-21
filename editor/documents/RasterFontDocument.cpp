@@ -94,7 +94,7 @@ namespace oly::editor
 			{
 				if (auto scope = gui::IDScope("##Glyph"))
 				{
-					DescIO::KeyLabel("Select Glyph");
+					gui::PropertyGrid::Key::SetLabel("Select Glyph");
 					gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
 						return _glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
 							if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())

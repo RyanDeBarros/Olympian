@@ -17,32 +17,10 @@ namespace oly::editor
 {
 	struct DescIO
 	{
-		static void KeyLabel(const char* label);
-
 		template<typename T, typename... Args>
 		static void ValueInputData(const char* label, T& data, Args&&... args)
 		{
 			gui::PropertyGrid::Value::AddComponent(gui::InputDataComponent(label, data, std::forward<Args>(args)...));
-		}
-
-		static void ResetButton(bool visible);
-
-		template<typename T>
-		static void ResetButton(T& desc, const T& def)
-		{
-			ResetButton(desc != def);
-		}
-
-		template<typename T>
-		static bool CheckReset(T& desc, const T& def)
-		{
-			if (gui::PropertyGrid::Reset::GetDrawResult())
-			{
-				desc = def;
-				return true;
-			}
-			else
-				return false;
 		}
 
 	private:
@@ -50,11 +28,13 @@ namespace oly::editor
 		static void RowInputData(const char* label, T& data, const T& def, Args&&... args)
 		{
 			gui::IDScope scope(&data);
-			KeyLabel(label);
+			gui::PropertyGrid::Key::SetLabel(label);
 			ValueInputData<T>("", data, std::forward<Args>(args)...);
-			ResetButton(data, def);
+			if (data != def)
+				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
-			CheckReset(data, def);
+			if (gui::PropertyGrid::Reset::AnyActivated())
+				data = def;
 		}
 
 	public:
@@ -120,13 +100,14 @@ namespace oly::editor
 		static void DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
-			KeyLabel(label);
-			ResetButton(data.size() != def.size());
+			gui::PropertyGrid::Key::SetLabel(label);
+			if (data.size() != def.size())
+				gui::PropertyGrid::Reset::Button(0);
 
 			gui::PropertyGrid::Value::AddComponent({ [&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }});
 
 			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::GetDrawResult())
+			if (gui::PropertyGrid::Reset::Activated(0))
 				ui_state.DeferResize(def.size());
 		}
 
@@ -184,22 +165,26 @@ namespace oly::editor
 		static void Draw(const char* label, E& data, const E& def, const E* values, const char** names, const bool* disabled, size_t count)
 		{
 			gui::IDScope scope(&data);
-			KeyLabel(label);
+			gui::PropertyGrid::Key::SetLabel(label);
 			gui::PropertyGrid::Value::AddComponent({ [&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); } });
-			ResetButton(data, def);
+			if (data != def)
+				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
-			CheckReset(data, def);
+			if (gui::PropertyGrid::Reset::AnyActivated())
+				data = def;
 		}
 
 		template<Enum E>
 		static void Draw(const char* label, E& data, const E& def)
 		{
 			gui::IDScope scope(&data);
-			KeyLabel(label);
+			gui::PropertyGrid::Key::SetLabel(label);
 			gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return DrawCombo("", data); } });
-			ResetButton(data, def);
+			if (data != def)
+				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
-			CheckReset(data, def);
+			if (gui::PropertyGrid::Reset::AnyActivated())
+				data = def;
 		}
 
 		template<Enum E>

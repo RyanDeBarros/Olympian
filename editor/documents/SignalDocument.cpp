@@ -106,7 +106,7 @@ namespace oly::editor
 		{
 			if (auto scope = gui::IDScope("##Signal"))
 			{
-				DescIO::KeyLabel("Select Signal");
+				gui::PropertyGrid::Key::SetLabel("Select Signal");
 				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
 					return _signal_slots.DrawComboHeader([this](size_t i) {
 						if (i < _scratch.signals.Size())
@@ -137,7 +137,7 @@ namespace oly::editor
 		{
 			if (auto scope = gui::IDScope("##Route"))
 			{
-				DescIO::KeyLabel("Select Route");
+				gui::PropertyGrid::Key::SetLabel("Select Route");
 				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
 					return _route_slots.DrawComboHeader([this](size_t i) {
 						if (i < _scratch.routes.Size())

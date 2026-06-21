@@ -141,7 +141,7 @@ namespace oly::editor
 			{
 				if (auto scope = gui::IDScope("##Atlas"))
 				{
-					DescIO::KeyLabel("Select Atlas");
+					gui::PropertyGrid::Key::SetLabel("Select Atlas");
 					gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
 						return _atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
 					} });
@@ -287,7 +287,7 @@ namespace oly::editor
 				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
 				{
 					scope.Push("##Preview");
-					DescIO::KeyLabel("Preview");
+					gui::PropertyGrid::Key::SetLabel("Preview");
 					gui::PropertyGrid::Value::AddComponent({ [&desc]() -> DrawResult {
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);

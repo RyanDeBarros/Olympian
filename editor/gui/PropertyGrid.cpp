@@ -1,33 +1,28 @@
 #include "PropertyGrid.h"
 
+#include "core/editor/ResourceLoader.h"
+
+#include "gui/graphics/Toolbar.h"
+#include "gui/scopes/IDScope.h"
+
 #include <array>
+#include <unordered_set>
 
 namespace oly::editor::gui
 {
-	static std::vector<WidgetComponent> KEY_COMPONENTS;
-	static DrawResult KEY_DRAW_RESULT;
+	static std::string KEY_LABEL;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
 	static DrawResult VALUE_DRAW_RESULT;
 	
-	static std::vector<WidgetComponent> RESET_COMPONENTS;
-	static DrawResult RESET_DRAW_RESULT;
+	static std::unordered_set<size_t> SUBROWS_TO_RESET;
+	static std::unordered_set<size_t> ACTIVATED_RESET_SUBROWS;
 
 	static bool DIRTY_GRID = false;
 
-	DrawResult PropertyGrid::Key::GetDrawResult()
+	void PropertyGrid::Key::SetLabel(const std::string_view label)
 	{
-		return KEY_DRAW_RESULT;
-	}
-
-	void PropertyGrid::Key::AddComponent(WidgetComponent component)
-	{
-		KEY_COMPONENTS.push_back(std::move(component));
-	}
-
-	void PropertyGrid::Key::SameLine()
-	{
-		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
+		KEY_LABEL = label;
 	}
 
 	DrawResult PropertyGrid::Value::GetDrawResult()
@@ -45,63 +40,88 @@ namespace oly::editor::gui
 		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
 	}
 
-	DrawResult PropertyGrid::Reset::GetDrawResult()
+	void PropertyGrid::Reset::Button(size_t subrow)
 	{
-		return RESET_DRAW_RESULT;
+		SUBROWS_TO_RESET.insert(subrow);
 	}
 
-	void PropertyGrid::Reset::AddComponent(WidgetComponent component)
+	bool PropertyGrid::Reset::Activated(size_t subrow)
 	{
-		RESET_COMPONENTS.push_back(std::move(component));
+		return ACTIVATED_RESET_SUBROWS.contains(subrow);
 	}
 
-	void PropertyGrid::Reset::SameLine()
+	bool PropertyGrid::Reset::AnyActivated()
 	{
-		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
-	}
-
-	static void SubmitCell(int i, std::vector<WidgetComponent>& components, DrawResult& draw_result)
-	{
-		ImGui::TableSetColumnIndex(i);
-
-		DrawResult result;
-		for (const WidgetComponent& component : components)
-			result |= component.draw();
-
-		components.clear();
-		draw_result = result;
+		return !ACTIVATED_RESET_SUBROWS.empty();
 	}
 
 	// TODO v9.1 if table is expanded dynamically with Subform, key column width doesn't adapt - check animated subform for texture document
 
-	// TODO v9.1 draw value cell first, so height can be determined and the key cell aligned to middle vertically?
+	static void DrawKeyCell()
+	{
+		ImGui::TableSetColumnIndex(0);
+		// TODO v9.1 align to middle vertically
+		ImGui::TextUnformatted(KEY_LABEL.c_str());
+		KEY_LABEL.clear();
+	}
+
+	static void DrawValueCell()
+	{
+		ImGui::TableSetColumnIndex(1);
+
+		VALUE_DRAW_RESULT = {};
+		for (const WidgetComponent& component : VALUE_COMPONENTS)
+			VALUE_DRAW_RESULT |= component.draw();
+
+		VALUE_COMPONENTS.clear();
+	}
+
+	static void DrawResetCell()
+	{
+		ImGui::TableSetColumnIndex(2);
+
+		ACTIVATED_RESET_SUBROWS.clear();
+		size_t subrow = 0;
+		while (!SUBROWS_TO_RESET.empty())
+		{
+			auto it = SUBROWS_TO_RESET.find(subrow);
+			if (it != SUBROWS_TO_RESET.end())
+			{
+				SUBROWS_TO_RESET.erase(it);
+
+				IDScope scope;
+				scope.Push(subrow);
+				if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
+					ACTIVATED_RESET_SUBROWS.insert(subrow);
+			}
+			else
+				ImGui::NewLine();
+		}
+	}
 
 	void PropertyGrid::SubmitRow()
 	{
 		ImGui::TableNextRow();
-
-		SubmitCell(0, KEY_COMPONENTS, KEY_DRAW_RESULT);
-		SubmitCell(1, VALUE_COMPONENTS, VALUE_DRAW_RESULT);
-		SubmitCell(2, RESET_COMPONENTS, RESET_DRAW_RESULT);
-
+		DrawResetCell();
+		DrawValueCell();
+		DrawKeyCell();
 		DIRTY_GRID |= DirtyRow();
 	}
 
 	bool PropertyGrid::DirtyRow()
 	{
-		return Value::GetDrawResult().IsDirty() || Reset::GetDrawResult().IsDirty();
+		return Value::GetDrawResult().IsDirty() || Reset::AnyActivated();
 	}
 
 	void PropertyGrid::Clear()
 	{
-		KEY_COMPONENTS.clear();
-		KEY_DRAW_RESULT = {};
+		KEY_LABEL.clear();
 
 		VALUE_COMPONENTS.clear();
 		VALUE_DRAW_RESULT = {};
 
-		RESET_COMPONENTS.clear();
-		RESET_DRAW_RESULT = {};
+		SUBROWS_TO_RESET.clear();
+		ACTIVATED_RESET_SUBROWS.clear();
 
 		DIRTY_GRID = false;
 	}

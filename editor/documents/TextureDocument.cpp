@@ -416,7 +416,7 @@ namespace oly::editor
 		{
 			if (auto scope = gui::IDScope("##Slot"))
 			{
-				DescIO::KeyLabel("Select Slot");
+				gui::PropertyGrid::Key::SetLabel("Select Slot");
 				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
 					return _slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
 				} });

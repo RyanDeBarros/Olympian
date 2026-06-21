@@ -2,17 +2,15 @@
 
 #include "gui/WidgetComponent.h"
 
+#include <string_view>
+
 namespace oly::editor::gui
 {
 	struct PropertyGrid
 	{
 		struct Key
 		{
-			static DrawResult GetDrawResult();
-
-			// TODO v9.1 just SetText() - no components needed
-			static void AddComponent(WidgetComponent component);
-			static void SameLine();
+			static void SetLabel(const std::string_view label);
 		};
 
 		struct Value
@@ -25,10 +23,9 @@ namespace oly::editor::gui
 
 		struct Reset
 		{
-			static DrawResult GetDrawResult();
-
-			static void AddComponent(WidgetComponent component);
-			static void SameLine();
+			static void Button(size_t subrow = 0);
+			static bool Activated(size_t subrow);
+			static bool AnyActivated();
 		};
 
 		static void SubmitRow();
