@@ -288,6 +288,37 @@ namespace oly::editor
 	};
 
 	template<>
+	struct Serializer<UVRect>
+	{
+		bool Load(UVRect& obj, TOMLNode node) const
+		{
+			if (auto array = node.as_array())
+			{
+				bool fully_loaded = true;
+				for (size_t i = 0; i < std::min(array->size(), UVRect::N); ++i)
+				{
+					if (auto v = array->get_as<double>(i))
+						obj[i] = v->get();
+					else
+						fully_loaded = false;
+				}
+				return fully_loaded;
+			}
+			else
+				return false;
+		}
+
+		toml::array Dump(const UVRect obj) const
+		{
+			toml::array arr;
+			arr.reserve(UVRect::N);
+			for (size_t i = 0; i < UVRect::N; ++i)
+				arr.push_back(obj[i]);
+			return arr;
+		}
+	};
+
+	template<>
 	struct Serializer<TopSidePadding>
 	{
 		bool Load(TopSidePadding& obj, TOMLNode node) const

@@ -8,7 +8,7 @@ namespace oly::editor
 		codepoint("", detail::Key::Codepoint, "Codepoint"),
 		texture_file("", detail::Key::TextureFile, "Texture file"),
 		texture_slot(0, detail::Key::TextureIndex, "Texture slot"),
-		location(Rect::ZERO, detail::Key::Location, "Location"),
+		location({}, detail::Key::Location, "Location"),
 		padding({}, detail::Key::Padding, "Padding"),
 		origin_offset_mode(detail::PositioningMode::Relative, detail::Key::OriginOffsetMode, "Origin offset mode"),
 		origin_offset({}, detail::Key::OriginOffset, "Origin offset value")

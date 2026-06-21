@@ -19,7 +19,7 @@ namespace oly::editor
 	{
 		StringField texture;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
-		RectField uvs;
+		UVRectField uvs;
 		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
 		EnumField<detail::TileRotation> rotation;
 

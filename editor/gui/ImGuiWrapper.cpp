@@ -162,8 +162,35 @@ namespace oly::editor::gui
 				ImGui::Text(label);
 			}
 
-			// TODO v9.1 UVRect should clamp, Rect should not
+			ImGui::TableNextColumn();
+			result |= InputData<float>{}("x1", data.x1);
 
+			ImGui::TableNextColumn();
+			result |= InputData<float>{}("x2", data.x2);
+
+			ImGui::TableNextColumn();
+			result |= InputData<float>{}("y1", data.y1);
+
+			ImGui::TableNextColumn();
+			result |= InputData<float>{}("y2", data.y2);
+
+			ImGui::EndTable();
+		}
+		return result;
+	}
+
+	DrawResult InputData<UVRect>::operator()(const char* label, UVRect& data) const
+	{
+		const bool header = label && label[0] != '\0';
+		DrawResult result;
+		if (ImGui::BeginTable("##UVRect", header ? 5 : 4))
+		{
+			if (header)
+			{
+				ImGui::TableNextColumn();
+				ImGui::Text(label);
+			}
+			
 			ImGui::TableNextColumn();
 			result |= InputData<float>{}("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
 
