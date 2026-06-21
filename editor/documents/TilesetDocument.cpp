@@ -150,8 +150,6 @@ namespace oly::editor
 		Load();
 	}
 
-	// TODO v9.1 remove DRAW_FIELD() calls entirely. Rename DRAW_FIELD to _DRAW_FIELD, LOAD_FIELD to _LOAD_FIELD, and DUMP_FIELD to _DUMP_FIELD.
-
 	void TilesetDocument::Draw()
 	{
 		gui::PropertyGrid::Clear();
@@ -435,13 +433,13 @@ namespace oly::editor
 			if (DescIO::CheckReset(desc.texture.scratch, desc.texture.def))
 				OnActiveTextureChanged(grid);
 
-			DRAW_FIELD(texture_index);
+			desc.texture_index.Draw();
 			if (gui::PropertyGrid::DirtyValue())
 				OnActiveTextureChanged(grid);
 
-			DRAW_FIELD(uvs);
-			DRAW_FIELD(reflection);
-			DRAW_FIELD(rotation);
+			desc.uvs.Draw();
+			desc.reflection.Draw();
+			desc.rotation.Draw();
 		}
 	}
 

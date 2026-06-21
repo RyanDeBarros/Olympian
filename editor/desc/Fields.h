@@ -11,12 +11,12 @@
 
 namespace oly::editor
 {
-#define DRAW_FIELD(field) desc.field.Draw();
-#define DRAW_FIELDS(generator) generator(DRAW_FIELD);
-#define LOAD_FIELD(field) desc.field.Load(node);
-#define LOAD_FIELDS(generator) generator(LOAD_FIELD)
-#define DUMP_FIELD(field) desc.field.Dump(table);
-#define DUMP_FIELDS(generator) generator(DUMP_FIELD)
+#define _DRAW_FIELD(field) desc.field.Draw();
+#define DRAW_FIELDS(generator) generator(_DRAW_FIELD);
+#define _LOAD_FIELD(field) desc.field.Load(node);
+#define LOAD_FIELDS(generator) generator(_LOAD_FIELD)
+#define _DUMP_FIELD(field) desc.field.Dump(table);
+#define DUMP_FIELDS(generator) generator(_DUMP_FIELD)
 
 	extern detail::Key NullKey();
 

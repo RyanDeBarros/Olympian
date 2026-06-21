@@ -439,11 +439,11 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			DRAW_FIELD(generate_mipmaps);
+			desc.generate_mipmaps.Draw();
 			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(storage);
+			desc.storage.Draw();
 		}
 	}
 	
@@ -452,7 +452,7 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			DRAW_FIELD(generate_mipmaps);
+			desc.generate_mipmaps.Draw();
 			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
 
@@ -464,23 +464,23 @@ namespace oly::editor
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
-			DRAW_FIELD(min_filter);
+			desc.min_filter.Draw();
 			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(mag_filter);
+			desc.mag_filter.Draw();
 			if (gui::PropertyGrid::DirtyValue())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(wrap_s);
-			DRAW_FIELD(wrap_t);
+			desc.wrap_s.Draw();
+			desc.wrap_t.Draw();
 		}
 
 		if (auto subform = Subform("Animation", true))
 		{
 			if (auto disabled = DisabledSection(_gif))
 			{
-				DRAW_FIELD(anim);
+				desc.anim.Draw();
 			}
 
 			if (desc.anim.scratch && !_gif)
@@ -490,11 +490,11 @@ namespace oly::editor
 
 	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
-		DRAW_FIELD(col_type);
+		desc.col_type.Draw();
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
 		DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
 
-		DRAW_FIELD(row_type);
+		desc.row_type.Draw();
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
 		DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
 
@@ -544,7 +544,7 @@ namespace oly::editor
 			desc.anim.scratch = true;
 		else
 		{
-			LOAD_FIELD(anim);
+			desc.anim.Load(node);
 			Load(node, desc.spritesheet);
 		}
 	}
@@ -583,7 +583,7 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
 	{
 		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
-		DUMP_FIELD(anim);
+		desc.anim.Dump(table);
 		if (desc.anim.scratch && !_gif)
 			Dump(table, desc.spritesheet);
 	}

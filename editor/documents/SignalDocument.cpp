@@ -190,7 +190,7 @@ namespace oly::editor
 	{
 		gui::Outline dup_outline;
 		
-		DRAW_FIELD(id);
+		desc.id.Draw();
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
@@ -199,7 +199,7 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		DRAW_FIELD(binding);
+		desc.binding.Draw();
 
 		switch (desc.binding.scratch)
 		{
@@ -229,7 +229,7 @@ namespace oly::editor
 
 		gui::Outline dup_outline;
 
-		DRAW_FIELD(id);
+		desc.id.Draw();
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetDrawResult(gui::PropertyGrid::Value).IsHovered())
@@ -298,7 +298,7 @@ namespace oly::editor
 
 			return false;
 		} });
-		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows
+		gui::PropertyGrid::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
 		gui::PropertyGrid::AddComponent({ [&desc]() -> DrawResult {
 			return gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count);
 		} });
@@ -414,7 +414,7 @@ namespace oly::editor
 		//		MarkDirty();
 		//}
 
-		DRAW_FIELD(deadzone);
+		desc.deadzone.Draw();
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
@@ -445,7 +445,7 @@ namespace oly::editor
 		//		MarkDirty();
 		//}
 
-		DRAW_FIELD(deadzone);
+		desc.deadzone.Draw();
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
