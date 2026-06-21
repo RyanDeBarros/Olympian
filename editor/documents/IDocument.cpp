@@ -1,6 +1,6 @@
 #include "IDocument.h"
 
-#include <imgui.h>
+#include "gui/PropertyGrid.h"
 
 namespace oly::editor
 {
@@ -51,5 +51,22 @@ namespace oly::editor
 	bool IDocument::IsDirty() const
 	{
 		return _dirty;
+	}
+
+	IDocument::GridChecker::GridChecker(IDocument& doc)
+		: _doc(doc)
+	{
+		gui::PropertyGrid::Clear();
+	}
+
+	IDocument::GridChecker::~GridChecker()
+	{
+		if (gui::PropertyGrid::DirtyGrid())
+			_doc.MarkDirty();
+	}
+
+	IDocument::GridChecker IDocument::Grid()
+	{
+		return GridChecker(*this);
 	}
 }

@@ -39,8 +39,7 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		// TODO v9.1 RAII protected in IDocument that will call Clear() and end with if (DirtyGrid()) MarkDirty()
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		UpdatePreviewTexture();
 
@@ -54,9 +53,6 @@ namespace oly::editor
 			DrawPreview();
 			ImGui::EndTable();
 		}
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void TextureDocument::Load()

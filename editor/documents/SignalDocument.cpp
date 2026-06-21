@@ -30,7 +30,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		_stop_listening = true;
 		gui::IDScope scope(this);
@@ -54,9 +54,6 @@ namespace oly::editor
 
 		if (_stop_listening)
 			_listen_mode = ListenMode::None;
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void SignalDocument::Load()

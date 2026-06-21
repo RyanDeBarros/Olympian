@@ -40,7 +40,7 @@ namespace oly::editor
 
 	void FontDocument::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		gui::IDScope scope(this);
 
@@ -60,9 +60,6 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void FontDocument::Load()

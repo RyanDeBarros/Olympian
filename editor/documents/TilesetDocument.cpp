@@ -152,7 +152,7 @@ namespace oly::editor
 
 	void TilesetDocument::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		UpdateActiveTextures();
 		gui::IDScope scope(this);
@@ -179,9 +179,6 @@ namespace oly::editor
 
 			ImGui::EndTabBar();
 		}
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void TilesetDocument::Load()

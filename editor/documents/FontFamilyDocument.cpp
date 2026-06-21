@@ -28,13 +28,10 @@ namespace oly::editor
 
 	void FontFamilyDocument::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		gui::IDScope scope(this);
 		Draw(_scratch);
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void FontFamilyDocument::Load()

@@ -29,13 +29,10 @@ namespace oly::editor
 
 	void ProjectDocument::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		auto grid = Grid();
 
 		gui::IDScope scope(this);
 		Draw(_scratch);
-
-		if (gui::PropertyGrid::DirtyGrid())
-			MarkDirty();
 	}
 
 	void ProjectDocument::DrawMenuBar()

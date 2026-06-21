@@ -30,5 +30,20 @@ namespace oly::editor
 		void MarkDirty();
 		void MarkClean();
 		bool IsDirty() const;
+
+	private:
+		class GridChecker
+		{
+			IDocument& _doc;
+
+		public:
+			GridChecker(IDocument& doc);
+			GridChecker(const GridChecker&) = delete;
+			GridChecker(GridChecker&&) = delete;
+			~GridChecker();
+		};
+
+	protected:
+		GridChecker Grid();
 	};
 }
