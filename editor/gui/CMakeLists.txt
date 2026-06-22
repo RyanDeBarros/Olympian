@@ -5,6 +5,8 @@ target_sources(OlympianEditor PRIVATE
 	ListModel.cpp
 	PropertyClipboard.cpp
 	PropertyGrid.cpp
+	PropertyPayloads.cpp
+	PropertyViews.cpp
 	StyleStack.cpp
 	WidgetComponentCommon.cpp
 )

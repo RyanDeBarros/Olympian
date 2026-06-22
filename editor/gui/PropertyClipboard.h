@@ -4,21 +4,30 @@
 
 namespace oly::editor
 {
-	enum class UID : int;
+	typedef unsigned int PropUID;
+
+	namespace prop
+	{
+		extern PropUID _prop_uid_counter;
+
+#define OLY_DECL_PROP_UID (_prop_uid_counter++)
+
+		extern const PropUID NULL_UID;
+	}
 
 	struct RawPropertyPayload
 	{
 		std::vector<std::byte> data;
-		UID type;
+		PropUID type;
 
 		RawPropertyPayload();
 
 		bool Empty() const;
 
-		static RawPropertyPayload Make(const void* stack_payload, size_t size, UID type);
+		static RawPropertyPayload Make(const void* stack_payload, size_t size, PropUID type);
 
 		template<typename T>
-		static RawPropertyPayload Make(const T& stack_payload, UID type)
+		static RawPropertyPayload Make(const T& stack_payload, PropUID type)
 		{
 			return Make(&stack_payload, sizeof(T), type);
 		}
@@ -33,13 +42,15 @@ namespace oly::editor
 	};
 
 	// TODO v9.1 primitive IPropertyView subclasses: IntPayload, FloatPayload (can parse IntPayload or FloatPayload, etc.), etc.
-	// TODO v9.1 some kind of aggregate payload system for descriptors/subforms -> store std::vector<std::unique_ptr<IPropertyView>> and dump std::vector<RawPropertyPayload>
+	// TODO v9.1 some kind of aggregate payload system for descriptors/subforms -> dump std::vector<RawPropertyPayload>
 
 	struct PropertyClipboard
 	{
 		static void Clear();
-		static void Store(const IPropertyView& prop);  // TODO v9.1 call from copy context menu
-		static bool CanPaste(const IPropertyView& prop);  // TODO v9.1 enable/disable 'paste' option in context menu
-		static bool TryPaste(IPropertyView& prop);  // TODO v9.1 call from paste context menu -> if return true, mark dirty
+		static void Store(const IPropertyView& prop);
+		static bool CanPaste(const IPropertyView& prop);
+		static bool TryPaste(IPropertyView& prop);
+
+		static bool ContextMenuItems(IPropertyView& prop);
 	};
 }
