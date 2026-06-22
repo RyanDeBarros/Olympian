@@ -29,48 +29,64 @@ namespace oly::editor
 		return payload;
 	}
 
-	bool RawPropertyPayload::Empty() const
-	{
-		return type == prop::NULL_UID || data.empty();
-	}
-
-	static RawPropertyPayload CLIPBOARD;
+	static std::vector<RawPropertyPayload> CLIPBOARD;
 
 	void PropertyClipboard::Clear()
 	{
-		CLIPBOARD = {};
+		CLIPBOARD.clear();
 	}
 
-	void PropertyClipboard::Store(const IPropertyView& prop)
+	void PropertyClipboard::Store(const std::span<IPropertyView*> props)
 	{
-		CLIPBOARD = prop.Dump();
+		CLIPBOARD.clear();
+		CLIPBOARD.reserve(props.size());
+		for (const auto& prop : props)
+			CLIPBOARD.push_back(prop->Dump());
 	}
 
-	bool PropertyClipboard::CanPaste(const IPropertyView& prop)
+	bool PropertyClipboard::CanPaste(const std::span<IPropertyView*> props)
 	{
-		if (!CLIPBOARD.Empty())
-			return prop.CanParse(CLIPBOARD);
+		if (!CLIPBOARD.empty())
+		{
+			if (props.size() == CLIPBOARD.size())
+			{
+				for (size_t i = 0; i < CLIPBOARD.size(); ++i)
+				{
+					if (!props[i]->CanParse(CLIPBOARD[i]))
+						return false;
+				}
+
+				return true;
+			}
+			else
+				return false;
+		}
 		else
 			return false;
 	}
 
-	bool PropertyClipboard::TryPaste(const IPropertyView& prop)
+	bool PropertyClipboard::TryPaste(const std::span<IPropertyView*> props)
 	{
-		if (!CLIPBOARD.Empty())
-			return prop.TryParse(CLIPBOARD);
+		if (CanPaste(props))
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < CLIPBOARD.size(); ++i)
+				dirty |= props[i]->TryParse(CLIPBOARD[i]);
+			return dirty;
+		}
 		else
 			return false;
 	}
 
-	bool PropertyClipboard::ContextMenuItems(const IPropertyView& prop)
+	bool PropertyClipboard::ContextMenuItems(const std::span<IPropertyView*> props)
 	{
 		if (ImGui::MenuItem("Copy"))
-			Store(prop);
+			Store(props);
 
-		if (auto disabled = DisabledSection(!CanPaste(prop)))
+		if (auto disabled = DisabledSection(!CanPaste(props)))
 		{
 			if (ImGui::MenuItem("Paste"))
-				return TryPaste(prop);
+				return TryPaste(props);
 		}
 
 		return false; // TODO v9.1 don't use bool to indicate document should MarkDirty(), use some wrapper to make it explicitly referring to a 'changed' event

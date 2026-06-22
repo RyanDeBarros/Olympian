@@ -4,6 +4,7 @@
 
 #include "gui/graphics/Toolbar.h"
 #include "gui/scopes/IDScope.h"
+#include "gui/PropertyGroup.h"
 
 #include <array>
 #include <unordered_set>
@@ -25,7 +26,7 @@ namespace oly::editor::gui
 		KEY_LABEL = label;
 	}
 
-	// TODO v9.1 option to setup context menu for key cell right-click event
+	// TODO v9.1 Currently, PropertyGroup::Submit() is called in key cell draw and PropertyGroup::Clear() is called at end of SubmitRow(). Only clear on Form end, but still call Submit() for a row's properties. Instead of continuous vector of all properties, will need to divide PROPERTIES into data structure where each row has a list of properties, and each form has a list of properties + sublists. Can nest forms indefinitely.
 
 	DrawResult PropertyGrid::Value::GetDrawResult()
 	{
@@ -57,6 +58,7 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(0);
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
+		PropertyGroup::Submit();
 	}
 
 	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
@@ -118,6 +120,7 @@ namespace oly::editor::gui
 		DrawValueCell();
 		DrawKeyCell();
 		DIRTY_GRID |= DirtyRow();
+		PropertyGroup::Clear();
 	}
 
 	bool PropertyGrid::DirtyRow()
@@ -136,6 +139,8 @@ namespace oly::editor::gui
 		ACTIVATED_RESET_SUBROWS.clear();
 
 		DIRTY_GRID = false;
+
+		PropertyGroup::Clear();
 	}
 
 	bool PropertyGrid::DirtyGrid()

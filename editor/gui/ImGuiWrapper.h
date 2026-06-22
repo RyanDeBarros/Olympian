@@ -146,13 +146,6 @@ namespace oly::editor::gui
 		DrawResult operator()(const char* label, Color4& data) const;
 	};
 
-	template<>
-	struct InputData<unsigned int>
-	{
-		DrawResult operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);
-		DrawResult operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count);
-	};
-
 	template<Enum E>
 	struct InputData<E>
 	{

@@ -28,6 +28,11 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
+		Draw(label, data, def, sublabels, nullptr, count);
+	}
+
+	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count)
+	{
 		gui::IDScope scope(data);
 		gui::PropertyGrid::Key::SetLabel(label);
 
@@ -40,19 +45,22 @@ namespace oly::editor
 			}
 		}
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([data, sublabels, count]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([data, sublabels, disabled, count]() -> DrawResult {
 			DrawResult result;
 			for (size_t i = 0; i < count; ++i)
 			{
-				result |= gui::InputData<bool>{}(sublabels[i], data[i]);
-				result.Query();
+				if (auto d = DisabledSection(disabled && disabled[i]))
+				{
+					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
+					result.Query();
+				}
 
 				if (i + 1 < count)
 					ImGui::SameLine();
 			}
 			return result;
-		}));
-		
+			}));
+
 		gui::PropertyGrid::SubmitRow();
 
 		if (gui::PropertyGrid::Reset::AnyActivated())

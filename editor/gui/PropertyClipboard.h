@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <vector>
 
 namespace oly::editor
@@ -22,8 +23,6 @@ namespace oly::editor
 
 		RawPropertyPayload();
 
-		bool Empty() const;
-
 		static RawPropertyPayload Make(const void* data, size_t size, PropUID type);
 
 		template<typename T>
@@ -41,16 +40,13 @@ namespace oly::editor
 		virtual bool TryParse(const RawPropertyPayload&) const = 0;
 	};
 
-	// TODO v9.1 primitive IPropertyView subclasses: IntPayload, FloatPayload (can parse IntPayload or FloatPayload, etc.), etc.
-	// TODO v9.1 some kind of aggregate payload system for descriptors/subforms -> dump std::vector<RawPropertyPayload>
-
 	struct PropertyClipboard
 	{
 		static void Clear();
-		static void Store(const IPropertyView& prop);
-		static bool CanPaste(const IPropertyView& prop);
-		static bool TryPaste(const IPropertyView& prop);
+		static void Store(const std::span<IPropertyView*> props);
+		static bool CanPaste(const std::span<IPropertyView*> props);
+		static bool TryPaste(const std::span<IPropertyView*> props);
 
-		static bool ContextMenuItems(const IPropertyView& prop);
+		static bool ContextMenuItems(const std::span<IPropertyView*> props);
 	};
 }

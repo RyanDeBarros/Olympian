@@ -53,6 +53,7 @@ namespace oly::editor
 		static void Draw(const char* label, int& data, const int& def, const char** names, size_t count);
 		static void Draw(const char* label, std::string* data, const std::string* def, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
+		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count);
 
 		static void Draw(const char* label, Rect& data, const Rect& def);
 		static void Draw(const char* label, UVRect& data, const UVRect& def);
@@ -186,19 +187,6 @@ namespace oly::editor
 			}, ui_state);
 
 			CheckDynamicListRevertButtons(data, def);
-		}
-
-		template<typename E>
-		static void Draw(const char* label, E& data, const E& def, const E* values, const char** names, const bool* disabled, size_t count)
-		{
-			gui::IDScope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); }));
-			if (data != def)
-				gui::PropertyGrid::Reset::Button();
-			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::AnyActivated())
-				data = def;
 		}
 
 		template<Enum E>

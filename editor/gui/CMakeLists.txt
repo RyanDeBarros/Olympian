@@ -5,6 +5,7 @@ target_sources(OlympianEditor PRIVATE
 	ListModel.cpp
 	PropertyClipboard.cpp
 	PropertyGrid.cpp
+	PropertyGroup.cpp
 	PropertyPayloads.cpp
 	PropertyViews.cpp
 	StyleStack.cpp
@@ -13,3 +14,4 @@ target_sources(OlympianEditor PRIVATE
 
 add_subdirectory(graphics)
 add_subdirectory(scopes)
+# TODO v9.1 properties/

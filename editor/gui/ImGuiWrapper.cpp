@@ -2,6 +2,7 @@
 
 #include "gui/GUIState.h"
 #include "gui/WidgetComponentCommon.h"
+#include "gui/PropertyGroup.h"
 #include "gui/PropertyViews.h"
 
 #include <imgui_internal.h>
@@ -55,15 +56,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::Checkbox(label, &data)).Query();
-
-		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
-		if (ImGui::BeginPopupContextItem("##"))
-		{
-			if (PropertyClipboard::ContextMenuItems(prop::PrimitivePropertyView<bool>(data)))
-				result.SetDirty(true);
-			ImGui::EndPopup();
-		}
-
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<bool>>(data)));
 		return result;
 	}
 
@@ -71,15 +64,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputInt(label, &data)).Query();
-
-		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
-		if (ImGui::BeginPopupContextItem("##"))
-		{
-			if (PropertyClipboard::ContextMenuItems(prop::PrimitivePropertyView<int>(data)))
-				result.SetDirty(true);
-			ImGui::EndPopup();
-		}
-
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<int>>(data)));
 		return result;
 	}
 
@@ -92,15 +77,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::Combo(label, &data, names, count)).Query();
-
-		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
-		if (ImGui::BeginPopupContextItem("##"))
-		{
-			if (PropertyClipboard::ContextMenuItems(prop::ComboPropertyView(data, names, count)))
-				result.SetDirty(true);
-			ImGui::EndPopup();
-		}
-
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(data, names, count)));
 		return result;
 	}
 
@@ -168,31 +145,5 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		return DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
-	}
-
-	DrawResult InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)
-	{
-		return (*this)(data, values, names, nullptr, count);
-	}
-
-	DrawResult InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count)
-	{
-		DrawResult result;
-		for (size_t i = 0; i < count; ++i)
-		{
-			bool flag = data & values[i];
-
-			if (auto d = DisabledSection(disabled && disabled[i]))
-				result |= InputData<bool>{}(names[i], flag);
-
-			if (flag)
-				data |= values[i];
-			else
-				data &= ~values[i];
-
-			if (i + 1 < count)
-				ImGui::SameLine();
-		}
-		return result;
 	}
 }

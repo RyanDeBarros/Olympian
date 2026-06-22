@@ -368,6 +368,8 @@ namespace oly::editor
 	template<typename E, size_t Count>
 	struct BitsetField
 	{
+		bool def_flags[Count];
+		bool scratch_flags[Count];
 		E def;
 		E scratch;
 		detail::Key key;
@@ -380,6 +382,7 @@ namespace oly::editor
 		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count])
 			: def(def), scratch(def), key(key), label(label), values(values), names(names)
 		{
+			SetFlags();
 		}
 
 		void Draw(const bool (&disabled)[Count])
@@ -395,7 +398,29 @@ namespace oly::editor
 	private:
 		void Draw(const bool* disabled)
 		{
-			DescIO::Draw(label, scratch, def, values, names, disabled, Count);
+			SetFlags();
+			DescIO::Draw(label, scratch_flags, def_flags, names, disabled, Count);
+			SetEnum();
+		}
+
+		void SetFlags()
+		{
+			for (size_t i = 0; i < Count; ++i)
+			{
+				scratch_flags[i] = static_cast<bool>(scratch & values[i]);
+				def_flags[i] = static_cast<bool>(def & values[i]);
+			}
+		}
+
+		void SetEnum()
+		{
+			for (size_t i = 0; i < Count; ++i)
+			{
+				if (scratch_flags[i])
+					scratch |= values[i];
+				else
+					scratch &= ~values[i];
+			}
 		}
 
 	public:
