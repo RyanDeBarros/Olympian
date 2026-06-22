@@ -253,7 +253,7 @@ namespace oly::editor
 			if (dup_warning)
 				dup_outline.Draw(Color::Error);
 
-			ImGui::Text(k.pair.label); // TODO v9.1 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
+			ImGui::Text(k.pair.label);
 
 			gui::VerticalSeparator();
 			result |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);

@@ -147,24 +147,6 @@ namespace oly::editor::gui
 	};
 
 	template<>
-	struct InputData<Rect>
-	{
-		DrawResult operator()(const char* label, Rect& data) const;
-	};
-
-	template<>
-	struct InputData<UVRect>
-	{
-		DrawResult operator()(const char* label, UVRect& data) const;
-	};
-
-	template<>
-	struct InputData<TopSidePadding>
-	{
-		DrawResult operator()(const char* label, TopSidePadding& data) const;
-	};
-
-	template<>
 	struct InputData<unsigned int>
 	{
 		DrawResult operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);

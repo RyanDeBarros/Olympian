@@ -1,7 +1,6 @@
 #include "ImGuiWrapper.h"
 
 #include "gui/GUIState.h"
-#include "gui/InlineWidget.h"
 #include "gui/WidgetComponentCommon.h"
 
 #include <imgui_internal.h>
@@ -138,84 +137,6 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		return DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
-	}
-
-	// TODO v9.1 InlineWidget: use child with inner tables more often for layout structuring: define utility to defer calls to input-data so that the number of columns can be dynamically computed + SameLine() automatically called for multiple elements in a column.
-	DrawResult InputData<Rect>::operator()(const char* label, Rect& data) const
-	{
-		const bool header = label && label[0] != '\0';
-		DrawResult result;
-		if (ImGui::BeginTable("##UVRect", header ? 5 : 4))
-		{
-			if (header)
-			{
-				ImGui::TableNextColumn();
-				ImGui::Text(label);
-			}
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("x1", data.x1);
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("x2", data.x2);
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("y1", data.y1);
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("y2", data.y2);
-
-			ImGui::EndTable();
-		}
-		return result;
-	}
-
-	DrawResult InputData<UVRect>::operator()(const char* label, UVRect& data) const
-	{
-		const bool header = label && label[0] != '\0';
-		DrawResult result;
-		if (ImGui::BeginTable("##UVRect", header ? 5 : 4))
-		{
-			if (header)
-			{
-				ImGui::TableNextColumn();
-				ImGui::Text(label);
-			}
-			
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
-
-			ImGui::TableNextColumn();
-			result |= InputData<float>{}("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
-
-			ImGui::EndTable();
-		}
-		return result;
-	}
-
-	DrawResult InputData<TopSidePadding>::operator()(const char* label, TopSidePadding& data) const
-	{
-		// TODO v9.1 DescIO should just create an InlineWidget in the second column of form. In fact, Form should be more of a global state machine than object-based. Then, you can dynamically add components to it and just have DescIO call Draw() on it when the field is done.
-		InlineWidget widget;
-
-		if (label && label[0] != '\0')
-		{
-			widget.AddComponent(TextComponent(label));
-			widget.AddComponent(VerticalSeparatorComponent());
-		}
-
-		widget.AddComponent(InputDataComponent<float>("Left", data.left));
-		widget.AddComponent(VerticalSeparatorComponent());
-		widget.AddComponent(InputDataComponent<float>("Right", data.right));
-		widget.AddComponent(VerticalSeparatorComponent());
-		widget.AddComponent(InputDataComponent<float>("Top", data.top));
-		return widget.Draw();
 	}
 
 	DrawResult InputData<unsigned int>::operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count)

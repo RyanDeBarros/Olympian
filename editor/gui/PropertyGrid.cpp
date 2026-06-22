@@ -35,11 +35,6 @@ namespace oly::editor::gui
 		VALUE_COMPONENTS.push_back(std::move(component));
 	}
 
-	void PropertyGrid::Value::SameLine()
-	{
-		AddComponent({ []() -> DrawResult { ImGui::SameLine(); return false; } });
-	}
-
 	void PropertyGrid::Reset::Button(size_t subrow)
 	{
 		SUBROWS_TO_RESET.insert(subrow);
@@ -60,9 +55,13 @@ namespace oly::editor::gui
 	static void DrawKeyCell()
 	{
 		ImGui::TableSetColumnIndex(0);
-		// TODO v9.1 align to middle vertically
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
+	}
+
+	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
+	{
+		return remaining_count > 0 ? (remaining_width - ImGui::GetStyle().ItemSpacing.x * (remaining_count - 1)) / remaining_count : remaining_width;
 	}
 
 	static void DrawValueCell()
@@ -70,8 +69,19 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(1);
 
 		VALUE_DRAW_RESULT = {};
-		for (const WidgetComponent& component : VALUE_COMPONENTS)
-			VALUE_DRAW_RESULT |= component.draw();
+
+		float remaining_width = ImGui::GetContentRegionAvail().x;
+		for (size_t i = 0; i < VALUE_COMPONENTS.size(); ++i)
+		{
+			const float item_width = GetItemWidth(remaining_width, VALUE_COMPONENTS.size() - i);
+			ImGui::SetNextItemWidth(item_width); // TODO v9.1 some kind of preferred with design with WidgetComponent
+			
+			const float start_x = ImGui::GetCursorPosX();
+			VALUE_DRAW_RESULT |= VALUE_COMPONENTS[i].draw();
+			if (i + 1 < VALUE_COMPONENTS.size())
+				ImGui::SameLine();
+			remaining_width -= ImGui::GetCursorPosX() - start_x;
+		}
 
 		VALUE_COMPONENTS.clear();
 	}

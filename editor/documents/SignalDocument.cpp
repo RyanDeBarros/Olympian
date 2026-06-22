@@ -293,7 +293,6 @@ namespace oly::editor
 			}
 			return result;
 		} });
-		gui::PropertyGrid::Value::SameLine(); // TODO v9.1 auto-insert between widgets? But also be mindful of subsequent widgets on different rows. At this point no need for InlineWidget
 		desc.key.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};

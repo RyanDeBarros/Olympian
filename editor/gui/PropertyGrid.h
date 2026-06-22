@@ -18,7 +18,6 @@ namespace oly::editor::gui
 			static DrawResult GetDrawResult();
 
 			static void AddComponent(WidgetComponent component);
-			static void SameLine();
 		};
 
 		struct Reset

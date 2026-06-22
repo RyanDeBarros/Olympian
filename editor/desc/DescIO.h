@@ -29,7 +29,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			ValueInputData<T>("", data, std::forward<Args>(args)...);
+			ValueInputData<T>("##", data, std::forward<Args>(args)...);
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -49,10 +49,14 @@ namespace oly::editor
 		{
 			RowInputData(label, data, def);
 		}
-		
+
 		static void Draw(const char* label, int& data, const int& def, const char** names, size_t count);
 		static void Draw(const char* label, std::string* data, const std::string* def, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
+
+		static void Draw(const char* label, Rect& data, const Rect& def);
+		static void Draw(const char* label, UVRect& data, const UVRect& def);
+		static void Draw(const char* label, TopSidePadding& data, const TopSidePadding& def);
 
 		template<typename T>
 		static DrawResult ValueDrawDynamicList(std::vector<T>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
@@ -202,7 +206,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return DrawCombo("", data); } });
+			gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return DrawCombo("##", data); } });
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -219,7 +223,7 @@ namespace oly::editor
 		{
 			DrawResult result;
 			int index = static_cast<int>(data);
-			result |= ImGui::Combo("", &index, values, N);
+			result |= ImGui::Combo("##", &index, values, N);
 			result.Query();
 			data = static_cast<E>(index);
 			return result;
