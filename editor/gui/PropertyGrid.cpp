@@ -96,6 +96,8 @@ namespace oly::editor::gui
 			}
 			else
 				ImGui::NewLine();
+
+			++subrow;
 		}
 	}
 

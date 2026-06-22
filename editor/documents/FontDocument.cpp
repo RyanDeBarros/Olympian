@@ -212,6 +212,13 @@ namespace oly::editor
 		for (const auto& k : desc.kerning.vector)
 			counter.increment(k.pair.scratch);
 
+		for (size_t i = 0; i < desc.kerning.Size(); ++i)
+		{
+			auto& k = desc.kerning[i];
+			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
+				gui::PropertyGrid::Reset::Button(1 + i);
+		}
+
 		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
 			auto& k = desc.kerning[row.Index()];
 			DrawResult result;
@@ -251,19 +258,19 @@ namespace oly::editor
 			gui::VerticalSeparator();
 			result |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);
 
-			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
-			{
-				// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
-				//if (DescIO::DrawRevertButton())
-				//{
-				//	k.distance.scratch = k.distance.def;
-				//	k.pair.scratch = k.pair.def;
-				//	result.SetDirty(true);
-				//}
-			}
-
-			return result.IsDirty();
+			return result;
 		}, desc.kerning_ui_state);
+
+		for (size_t i = 0; i < desc.kerning.Size(); ++i)
+		{
+			if (gui::PropertyGrid::Reset::Activated(1 + i))
+			{
+				auto& k = desc.kerning[i];
+				k.distance.scratch = k.distance.def;
+				k.pair.scratch = k.pair.def;
+				MarkDirty();
+			}
+		}
 	}
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)

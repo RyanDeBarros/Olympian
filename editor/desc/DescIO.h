@@ -111,9 +111,44 @@ namespace oly::editor
 				ui_state.DeferResize(def.size());
 		}
 
+		template<typename T>
+		static void DrawDynamicListRevertButtons(const std::vector<T>& data, const std::vector<T>& def)
+		{
+			for (size_t i = 0; i < data.size(); ++i)
+			{
+				if (i < def.size())
+				{
+					if (data[i] != def[i])
+						gui::PropertyGrid::Reset::Button(1 + i);
+				}
+				else
+				{
+					if (data[i] != T{})
+						gui::PropertyGrid::Reset::Button(1 + i);
+				}
+			}
+		}
+
+		template<typename T>
+		static void CheckDynamicListRevertButtons(std::vector<T>& data, const std::vector<T>& def)
+		{
+			for (size_t i = 0; i < data.size(); ++i)
+			{
+				if (gui::PropertyGrid::Reset::Activated(1 + i))
+				{
+					if (i < def.size())
+						data[i] = def[i];
+					else
+						data[i] = T{};
+				}
+			}
+		}
+
 		template<typename T> requires (!std::is_enum_v<T>)
 		static void Draw(const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
+			DrawDynamicListRevertButtons(data, def);
+
 			DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
@@ -123,22 +158,17 @@ namespace oly::editor
 				if (ImGui::IsItemActivated())
 					row.OnSelect();
 
-				// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
-				//if (row.Index() < def.size())
-				//	result |= CheckRevertButton(data[row.Index()], def[row.Index()]);
-				//else
-				//{
-				//	static const T empty = {};
-				//	result |= CheckRevertButton(data[row.Index()], empty);
-				//}
-
 				return result;
 			}, ui_state);
+
+			CheckDynamicListRevertButtons(data, def);
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
 		static void Draw(const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
+			DrawDynamicListRevertButtons(data, def);
+
 			DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
@@ -148,17 +178,10 @@ namespace oly::editor
 				if (ImGui::IsItemActivated())
 					row.OnSelect();
 
-				// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
-				//if (row.Index() < def.size())
-				//	result |= CheckRevertButton(data[row.Index()], def[row.Index()]);
-				//else
-				//{
-				//	static const E empty = {};
-				//	result |= CheckRevertButton(data[row.Index()], empty);
-				//}
-
 				return result;
 			}, ui_state);
+
+			CheckDynamicListRevertButtons(data, def);
 		}
 
 		template<typename E>

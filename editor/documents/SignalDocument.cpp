@@ -241,6 +241,8 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
+		DescIO::DrawDynamicListRevertButtons(desc.signals.scratch, desc.signals.def);
+
 		DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
 			std::string& element = desc.signals.scratch[row.Index()];
 
@@ -267,17 +269,10 @@ namespace oly::editor
 			if (ImGui::IsItemActivated())
 				row.OnSelect();
 
-			// TODO v9.1 this is inside of value component draw() -> this should run before SubmitRow() so that reset buttons can be added to reset column. Reset button should be at the correct inner row within the cell as well.
-			//if (row.Index() < desc.signals.def.size())
-			//	result |= DescIO::CheckRevertButton(element, desc.signals.def[row.Index()]);
-			//else
-			//{
-			//	static const std::string empty = {};
-			//	result |= DescIO::CheckRevertButton(element, empty);
-			//}
-
 			return result;
 		}, desc.signals.ui_state);
+
+		DescIO::CheckDynamicListRevertButtons(desc.signals.scratch, desc.signals.def);
 	}
 
 	void SignalDocument::Draw(KeyDesc& desc)
