@@ -24,7 +24,7 @@ namespace oly::editor
 
 		bool Empty() const;
 
-		static RawPropertyPayload Make(const void* stack_payload, size_t size, PropUID type);
+		static RawPropertyPayload Make(const void* data, size_t size, PropUID type);
 
 		template<typename T>
 		static RawPropertyPayload Make(const T& stack_payload, PropUID type)
@@ -38,7 +38,7 @@ namespace oly::editor
 		virtual ~IPropertyView() = default;
 		virtual RawPropertyPayload Dump() const = 0;
 		virtual bool CanParse(const RawPropertyPayload&) const = 0;
-		virtual bool TryParse(const RawPropertyPayload&) = 0;
+		virtual bool TryParse(const RawPropertyPayload&) const = 0;
 	};
 
 	// TODO v9.1 primitive IPropertyView subclasses: IntPayload, FloatPayload (can parse IntPayload or FloatPayload, etc.), etc.
@@ -49,8 +49,8 @@ namespace oly::editor
 		static void Clear();
 		static void Store(const IPropertyView& prop);
 		static bool CanPaste(const IPropertyView& prop);
-		static bool TryPaste(IPropertyView& prop);
+		static bool TryPaste(const IPropertyView& prop);
 
-		static bool ContextMenuItems(IPropertyView& prop);
+		static bool ContextMenuItems(const IPropertyView& prop);
 	};
 }

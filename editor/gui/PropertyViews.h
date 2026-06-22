@@ -12,30 +12,36 @@ namespace oly::editor::prop
 
 		PrimitivePropertyView(T& ref) : ref(ref) {}
 
-		virtual RawPropertyPayload Dump() const
+		RawPropertyPayload Dump() const override
 		{
 			return MakePropertyPayload(ref);
 		}
 
-		virtual bool CanParse(const RawPropertyPayload& payload) const
+		bool CanParse(const RawPropertyPayload& payload) const override
 		{
-			return ParsePropertyPayload<T>(payload).has_value();
+			return CanParsePropertyPayload<T>(payload);
 		}
 		
-		virtual bool TryParse(const RawPropertyPayload& payload)
+		bool TryParse(const RawPropertyPayload& payload) const override
 		{
-			if (auto value = ParsePropertyPayload<T>(payload))
-			{
-				if (ref != *value)
-				{
-					ref = *value;
-					return true;
-				}
-				else
-					return false;
-			}
+			const T og = ref;
+			if (TryParsePropertyPayload(payload, ref))
+				return ref != og;
 			else
 				return false;
 		}
+	};
+
+	struct ComboPropertyView : public IPropertyView
+	{
+		int& index;
+		const char** names;
+		size_t count;
+
+		ComboPropertyView(int& index, const char** names, size_t count);
+
+		RawPropertyPayload Dump() const override;
+		bool CanParse(const RawPropertyPayload& payload) const override;
+		bool TryParse(const RawPropertyPayload& payload) const override;
 	};
 }

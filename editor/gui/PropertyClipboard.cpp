@@ -20,11 +20,11 @@ namespace oly::editor
 	{
 	}
 
-	RawPropertyPayload RawPropertyPayload::Make(const void* stack_payload, size_t size, PropUID type)
+	RawPropertyPayload RawPropertyPayload::Make(const void* data, size_t size, PropUID type)
 	{
 		RawPropertyPayload payload;
 		payload.data.resize(size);
-		std::memcpy(payload.data.data(), stack_payload, size);
+		std::memcpy(payload.data.data(), data, size);
 		payload.type = type;
 		return payload;
 	}
@@ -54,7 +54,7 @@ namespace oly::editor
 			return false;
 	}
 
-	bool PropertyClipboard::TryPaste(IPropertyView& prop)
+	bool PropertyClipboard::TryPaste(const IPropertyView& prop)
 	{
 		if (!CLIPBOARD.Empty())
 			return prop.TryParse(CLIPBOARD);
@@ -62,7 +62,7 @@ namespace oly::editor
 			return false;
 	}
 
-	bool PropertyClipboard::ContextMenuItems(IPropertyView& prop)
+	bool PropertyClipboard::ContextMenuItems(const IPropertyView& prop)
 	{
 		if (ImGui::MenuItem("Copy"))
 			Store(prop);

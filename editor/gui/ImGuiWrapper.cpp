@@ -2,6 +2,7 @@
 
 #include "gui/GUIState.h"
 #include "gui/WidgetComponentCommon.h"
+#include "gui/PropertyViews.h"
 
 #include <imgui_internal.h>
 
@@ -53,13 +54,33 @@ namespace oly::editor::gui
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::Checkbox(label, &data)).Query();
+		DrawResult result = DrawResult(ImGui::Checkbox(label, &data)).Query();
+
+		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
+		if (ImGui::BeginPopupContextItem("##"))
+		{
+			if (PropertyClipboard::ContextMenuItems(prop::PrimitivePropertyView<bool>(data)))
+				result.SetDirty(true);
+			ImGui::EndPopup();
+		}
+
+		return result;
 	}
 
 	DrawResult InputData<int>::operator()(const char* label, int& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputInt(label, &data)).Query();
+		DrawResult result = DrawResult(ImGui::InputInt(label, &data)).Query();
+
+		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
+		if (ImGui::BeginPopupContextItem("##"))
+		{
+			if (PropertyClipboard::ContextMenuItems(prop::PrimitivePropertyView<int>(data)))
+				result.SetDirty(true);
+			ImGui::EndPopup();
+		}
+
+		return result;
 	}
 
 	DrawResult InputData<int>::operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const
@@ -70,7 +91,17 @@ namespace oly::editor::gui
 	DrawResult InputData<int>::operator()(const char* label, int& data, const char** names, size_t count)
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::Combo(label, &data, names, count)).Query();
+		DrawResult result = DrawResult(ImGui::Combo(label, &data, names, count)).Query();
+
+		// TODO v9.1 append property view to PropertyGrid row -> clicking on key label + copy will accumulate payloads
+		if (ImGui::BeginPopupContextItem("##"))
+		{
+			if (PropertyClipboard::ContextMenuItems(prop::ComboPropertyView(data, names, count)))
+				result.SetDirty(true);
+			ImGui::EndPopup();
+		}
+
+		return result;
 	}
 
 	DrawResult InputData<float>::operator()(const char* label, float& data) const

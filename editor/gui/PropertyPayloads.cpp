@@ -1,5 +1,7 @@
 #include "PropertyPayloads.h"
 
+#include <string>
+
 namespace oly::editor::prop
 {
 #define PRIMITIVE_PAYLOAD(Type, UID) \
@@ -10,15 +12,49 @@ namespace oly::editor::prop
 		return RawPropertyPayload::Make(value, UID); \
 	} \
 	template<> \
-	std::optional<Type> ParsePropertyPayload(const RawPropertyPayload& payload) \
+	bool CanParsePropertyPayload<Type>(const RawPropertyPayload& payload) \
+	{ \
+		return payload.type == UID; \
+	} \
+	template<> \
+	bool TryParsePropertyPayload(const RawPropertyPayload& payload, Type& value) \
 	{ \
 		if (payload.type == UID) \
-			return *reinterpret_cast<const Type*>(payload.data.data()); \
+		{ \
+			value = *reinterpret_cast<const Type*>(payload.data.data()); \
+			return true; \
+		} \
 		else \
-			return std::nullopt; \
+			return false; \
 	}
 
 	PRIMITIVE_PAYLOAD(bool, BOOL_UID);
 	PRIMITIVE_PAYLOAD(int, INT_UID);
 	PRIMITIVE_PAYLOAD(float, FLOAT_UID);
+
+	static PropUID STRING_UID = OLY_DECL_PROP_UID;
+
+	template<>
+	RawPropertyPayload MakePropertyPayload(const std::string& value)
+	{
+		return RawPropertyPayload::Make(value.data(), value.size(), STRING_UID);
+	}
+
+	template<>
+	bool CanParsePropertyPayload<std::string>(const RawPropertyPayload& payload)
+	{
+		return payload.type == STRING_UID;
+	}
+
+	template<>
+	bool TryParsePropertyPayload(const RawPropertyPayload& payload, std::string& value)
+	{
+		if (payload.type == STRING_UID)
+		{
+			value = std::string(reinterpret_cast<const char*>(payload.data.data()), payload.data.size());
+			return true;
+		}
+		else
+			return false;
+	}
 }

@@ -25,6 +25,8 @@ namespace oly::editor::gui
 		KEY_LABEL = label;
 	}
 
+	// TODO v9.1 option to setup context menu for key cell right-click event
+
 	DrawResult PropertyGrid::Value::GetDrawResult()
 	{
 		return VALUE_DRAW_RESULT;
