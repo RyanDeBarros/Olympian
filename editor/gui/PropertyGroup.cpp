@@ -7,10 +7,12 @@
 namespace oly::editor
 {
 	static std::vector<std::unique_ptr<IPropertyView>> PROPERTIES;
+	static IPropertyView* SINGLE_PROPERTY = nullptr;
 
 	void PropertyGroup::Clear()
 	{
 		PROPERTIES.clear();
+		SINGLE_PROPERTY = nullptr;
 	}
 
 	static void ContextMenu(std::span<IPropertyView*> properties, bool& opened, bool& dirty)
@@ -25,31 +27,31 @@ namespace oly::editor
 			ImGui::EndPopup();
 		}
 	}
-
+	
 	bool PropertyGroup::Append(std::unique_ptr<IPropertyView>&& prop)
 	{
-		bool opened, dirty;
 		IPropertyView* p = prop.get();
-		gui::IDScope scope(prop.get());
+		bool opened, dirty;
 		ContextMenu(std::span<IPropertyView*>(&p, 1), opened, dirty);
-
 		if (opened)
-			PROPERTIES.clear();
-		else
-			PROPERTIES.push_back(std::move(prop));
-
+			SINGLE_PROPERTY = p;
+		PROPERTIES.push_back(std::move(prop));
 		return dirty;
 	}
 
 	bool PropertyGroup::Submit()
 	{
-		std::vector<IPropertyView*> properties;
-		properties.reserve(PROPERTIES.size());
-		for (auto& prop : PROPERTIES)
-			properties.push_back(prop.get());
-
-		bool opened, dirty;
-		ContextMenu(properties, opened, dirty);
-		return dirty;
+		if (SINGLE_PROPERTY)
+			return false;
+		else
+		{
+			std::vector<IPropertyView*> properties;
+			properties.reserve(PROPERTIES.size());
+			for (auto& prop : PROPERTIES)
+				properties.push_back(prop.get());
+			bool opened, dirty;
+			ContextMenu(properties, opened, dirty);
+			return dirty;
+		}
 	}
 }

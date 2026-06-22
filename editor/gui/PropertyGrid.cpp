@@ -58,7 +58,7 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(0);
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
-		PropertyGroup::Submit();
+		VALUE_DRAW_RESULT |= PropertyGroup::Submit();
 	}
 
 	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
