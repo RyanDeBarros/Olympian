@@ -50,8 +50,6 @@ namespace oly::editor::gui
 		return !ACTIVATED_RESET_SUBROWS.empty();
 	}
 
-	// TODO v9.1 if table is expanded dynamically with Subform, key column width doesn't adapt - check animated subform for texture document
-
 	static void DrawKeyCell()
 	{
 		ImGui::TableSetColumnIndex(0);
@@ -145,7 +143,7 @@ namespace oly::editor::gui
 
 	bool PropertyGrid::BeginTable()
 	{
-		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH | ImGuiTableFlags_SizingStretchProp))
+		if (ImGui::BeginTable("", 3, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedFit))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
