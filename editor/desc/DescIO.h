@@ -20,7 +20,7 @@ namespace oly::editor
 		template<typename T, typename... Args>
 		static void ValueInputData(const char* label, T& data, Args&&... args)
 		{
-			gui::PropertyGrid::Value::AddComponent(gui::InputDataComponent(label, data, std::forward<Args>(args)...));
+			gui::PropertyGrid::Value::AddComponent(comp::InputData(label, data, std::forward<Args>(args)...));
 		}
 
 	private:
@@ -108,7 +108,7 @@ namespace oly::editor
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent({ [&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }});
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			if (gui::PropertyGrid::Reset::Activated(0))
@@ -193,7 +193,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent({ [&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); } });
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, values, names, disabled, count]() -> DrawResult { return gui::InputData<E>{}(data, values, names, disabled, count); }));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -206,7 +206,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return DrawCombo("##", data); } });
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();

@@ -40,7 +40,7 @@ namespace oly::editor
 			}
 		}
 
-		gui::PropertyGrid::Value::AddComponent({ [data, sublabels, count]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([data, sublabels, count]() -> DrawResult {
 			DrawResult result;
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -51,7 +51,7 @@ namespace oly::editor
 					ImGui::SameLine();
 			}
 			return result;
-		} });
+		}));
 		
 		gui::PropertyGrid::SubmitRow();
 
@@ -69,10 +69,10 @@ namespace oly::editor
 		if (data != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("x1", data.x1); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("x2", data.x2); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("y1", data.y1); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("y2", data.y2); } });
+		ValueInputData("x1", data.x1);
+		ValueInputData("x2", data.x2);
+		ValueInputData("y1", data.y1);
+		ValueInputData("y2", data.y2);
 		
 		gui::PropertyGrid::SubmitRow();
 		if (gui::PropertyGrid::Reset::AnyActivated())
@@ -86,10 +86,10 @@ namespace oly::editor
 		if (data != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f)); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f)); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f)); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f)); } });
+		ValueInputData("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 		gui::PropertyGrid::SubmitRow();
 		if (gui::PropertyGrid::Reset::AnyActivated())
@@ -103,9 +103,9 @@ namespace oly::editor
 		if (data != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("left", data.left); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("right", data.right); } });
-		gui::PropertyGrid::Value::AddComponent({ [&data]() -> DrawResult { return gui::InputData<float>{}("top", data.top); } });
+		ValueInputData("left", data.left);
+		ValueInputData("right", data.right);
+		ValueInputData("top", data.top);
 
 		gui::PropertyGrid::SubmitRow();
 		if (gui::PropertyGrid::Reset::AnyActivated())

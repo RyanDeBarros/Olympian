@@ -1,6 +1,5 @@
 # v9.1
 * More editor work
-	* More layout/gui abstraction
 	* Undo, redo, and context menus on fields/forms to copy/paste properties
 
 # v9.2

@@ -74,7 +74,7 @@ namespace oly::editor::gui
 		for (size_t i = 0; i < VALUE_COMPONENTS.size(); ++i)
 		{
 			const float item_width = GetItemWidth(remaining_width, VALUE_COMPONENTS.size() - i);
-			ImGui::SetNextItemWidth(item_width); // TODO v9.1 some kind of preferred with design with WidgetComponent
+			ImGui::SetNextItemWidth(item_width);
 			
 			const float start_x = ImGui::GetCursorPosX();
 			VALUE_DRAW_RESULT |= VALUE_COMPONENTS[i].draw();

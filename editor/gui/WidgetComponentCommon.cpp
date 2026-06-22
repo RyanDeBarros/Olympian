@@ -1,18 +1,25 @@
 #include "WidgetComponentCommon.h"
 
-namespace oly::editor::gui
+namespace oly::editor::comp
 {
-	WidgetComponent VerticalSeparatorComponent()
+	gui::WidgetComponent VerticalSeparator()
 	{
-		WidgetComponent c;
-		c.draw = []() { VerticalSeparator(); return false; };
+		gui::WidgetComponent c;
+		c.draw = []() -> DrawResult { gui::VerticalSeparator(); return {}; };
 		return c;
 	}
 
-	WidgetComponent TextComponent(const char* label)
+	gui::WidgetComponent Text(const char* label)
 	{
-		WidgetComponent c;
-		c.draw = [label]() { ImGui::TextUnformatted(label); return false; };
+		gui::WidgetComponent c;
+		c.draw = [label]() -> DrawResult { ImGui::TextUnformatted(label); return {}; };
+		return c;
+	}
+
+	gui::WidgetComponent Generic(std::function<DrawResult()> draw)
+	{
+		gui::WidgetComponent c;
+		c.draw = draw;
 		return c;
 	}
 }

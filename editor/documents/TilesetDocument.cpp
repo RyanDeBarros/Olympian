@@ -396,7 +396,7 @@ namespace oly::editor
 				if (desc.texture.scratch != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
-				gui::PropertyGrid::Value::AddComponent({ [this, &desc, grid]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> DrawResult {
 					gui::IDScope scope(&desc.texture.scratch);
 					DrawResult result;
 
@@ -425,7 +425,7 @@ namespace oly::editor
 
 					result.Query();
 					return result;
-				} });
+				}));
 
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())

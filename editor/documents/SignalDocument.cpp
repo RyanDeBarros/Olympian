@@ -107,7 +107,7 @@ namespace oly::editor
 			if (auto scope = gui::IDScope("##Signal"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Signal");
-				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
 					return _signal_slots.DrawComboHeader([this](size_t i) {
 						if (i < _scratch.signals.Size())
 						{
@@ -117,7 +117,7 @@ namespace oly::editor
 						}
 						return "<Signal #" + std::to_string(i) + ">";
 					}, "New signal", "Delete signal", "Clear signals");
-				} });
+				}));
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -138,7 +138,7 @@ namespace oly::editor
 			if (auto scope = gui::IDScope("##Route"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Route");
-				gui::PropertyGrid::Value::AddComponent({ [this]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
 					return _route_slots.DrawComboHeader([this](size_t i) {
 						if (i < _scratch.routes.Size())
 						{
@@ -148,7 +148,7 @@ namespace oly::editor
 						}
 						return "<Route #" + std::to_string(i) + ">";
 					}, "New route", "Delete route", "Clear routes");
-				} });
+				}));
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -277,7 +277,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
 			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
@@ -292,7 +292,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		} });
+		}));
 		desc.key.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
@@ -311,7 +311,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<detail::MouseButton> mb;
 			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
@@ -326,7 +326,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		} });
+		}));
 		desc.button.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
@@ -345,7 +345,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<GLenum> button;
 			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
@@ -360,7 +360,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		} });
+		}));
 		desc.button.Draw();
 
 		if (auto subform = Subform("Modifiers"))
@@ -369,7 +369,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<GLenum> axis;
 			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
@@ -384,7 +384,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		} });
+		}));
 		desc.axis.Draw();
 
 		desc.deadzone.Draw();
@@ -394,7 +394,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
 			std::optional<detail::GamepadAxis2D> axis;
 			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
@@ -409,7 +409,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		} });
+		}));
 		desc.axis.Draw();
 
 		desc.deadzone.Draw();
