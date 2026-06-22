@@ -286,7 +286,7 @@ namespace oly::editor
 				if (*key != desc.key.Scratch())
 				{
 					desc.key.SetScratch(*key);
-					return true;
+					result.SetDirty(true);
 				}
 				else
 					result.SetDirty(false);
@@ -311,28 +311,23 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		// TODO v9.1
-		//{
-		//	DescIO::PrepareValue(desc.button.label);
-		//	gui::IDScope scope(&desc.button);
-
-		//	_stop_listening = false;
-		//	if (auto mb = InputListener::DrawMouseButtonListener(_listen_mode))
-		//	{
-		//		if (*mb != desc.button.Scratch())
-		//		{
-		//			desc.button.SetScratch(*mb);
-		//			MarkDirty();
-		//		}
-		//	}
-
-		//	ImGui::SameLine();
-		//	if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-		//		MarkDirty();
-
-		//	if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-		//		MarkDirty();
-		//}
+		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<detail::MouseButton> mb;
+			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
+			if (mb)
+			{
+				if (*mb != desc.button.Scratch())
+				{
+					desc.button.SetScratch(*mb);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		} });
+		desc.button.Draw();
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -350,28 +345,23 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		// TODO v9.1
-		//{
-		//	DescIO::PrepareValue(desc.button.label);
-		//	gui::IDScope scope(&desc.button);
-
-		//	_stop_listening = false;
-		//	if (auto button = InputListener::DrawGamepadButtonListener(_listen_mode))
-		//	{
-		//		if (*button != desc.button.Scratch())
-		//		{
-		//			desc.button.SetScratch(*button);
-		//			MarkDirty();
-		//		}
-		//	}
-
-		//	ImGui::SameLine();
-		//	if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-		//		MarkDirty();
-
-		//	if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-		//		MarkDirty();
-		//}
+		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<GLenum> button;
+			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+			if (button)
+			{
+				if (*button != desc.button.Scratch())
+				{
+					desc.button.SetScratch(*button);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		} });
+		desc.button.Draw();
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
@@ -379,28 +369,23 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		// TODO v9.1
-		//{
-		//	DescIO::PrepareValue(desc.axis.label);
-		//	gui::IDScope scope(&desc.axis);
-
-		//	_stop_listening = false;
-		//	if (auto axis = InputListener::DrawGamepadAxis1DListener(_listen_mode))
-		//	{
-		//		if (*axis != desc.axis.Scratch())
-		//		{
-		//			desc.axis.SetScratch(*axis);
-		//			MarkDirty();
-		//		}
-		//	}
-
-		//	ImGui::SameLine();
-		//	if (gui::InputData<int>{}("", desc.axis.scratch, desc.axis.names, desc.axis.count))
-		//		MarkDirty();
-
-		//	if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def_index))
-		//		MarkDirty();
-		//}
+		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<GLenum> axis;
+			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+			if (axis)
+			{
+				if (*axis != desc.axis.Scratch())
+				{
+					desc.axis.SetScratch(*axis);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		} });
+		desc.axis.Draw();
 
 		desc.deadzone.Draw();
 		if (auto subform = Subform("Modifiers"))
@@ -409,29 +394,23 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		// TODO v9.1
-		//{
-		//	DescIO::PrepareValue(desc.axis.label);
-		//	gui::IDScope scope(&desc.axis);
-
-		//	_stop_listening = false;
-		//	if (auto axis = InputListener::DrawGamepadAxis2DListener(_listen_mode))
-		//	{
-		//		if (*axis != desc.axis.scratch)
-		//		{
-		//			desc.axis.scratch = *axis;
-		//			MarkDirty();
-		//		}
-		//	}
-
-		//	ImGui::SameLine();
-
-		//	if (DescIO::DrawCombo("", desc.axis.scratch))
-		//		MarkDirty();
-
-		//	if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def))
-		//		MarkDirty();
-		//}
+		gui::PropertyGrid::Value::AddComponent({ [this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<detail::GamepadAxis2D> axis;
+			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
+			if (axis)
+			{
+				if (*axis != desc.axis.scratch)
+				{
+					desc.axis.scratch = *axis;
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		} });
+		desc.axis.Draw();
 
 		desc.deadzone.Draw();
 		if (auto subform = Subform("Modifiers"))
