@@ -1,6 +1,6 @@
 #include "IDocument.h"
 
-#include "gui/PropertyGrid.h"
+#include "gui/properties/PropertyGrid.h"
 
 namespace oly::editor
 {

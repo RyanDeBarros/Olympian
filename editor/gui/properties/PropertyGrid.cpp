@@ -4,7 +4,7 @@
 
 #include "gui/graphics/Toolbar.h"
 #include "gui/scopes/IDScope.h"
-#include "gui/PropertyGroup.h"
+#include "gui/properties/PropertyGroup.h"
 
 #include <array>
 #include <unordered_set>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "gui/PropertyClipboard.h"
-#include "gui/PropertyPayloads.h"
+#include "gui/properties/PropertyClipboard.h"
+#include "gui/properties/PropertyPayloads.h"
 
 namespace oly::editor::prop
 {

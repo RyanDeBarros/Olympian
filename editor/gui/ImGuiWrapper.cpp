@@ -2,8 +2,8 @@
 
 #include "gui/GUIState.h"
 #include "gui/WidgetComponentCommon.h"
-#include "gui/PropertyGroup.h"
-#include "gui/PropertyViews.h"
+#include "gui/properties/PropertyGroup.h"
+#include "gui/properties/PropertyViews.h"
 
 #include <imgui_internal.h>
 

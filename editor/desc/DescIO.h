@@ -5,7 +5,7 @@
 #include "gui/scopes/IDScope.h"
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
-#include "gui/PropertyGrid.h"
+#include "gui/properties/PropertyGrid.h"
 #include "gui/WidgetComponentCommon.h"
 
 #include "external/GL.h"
