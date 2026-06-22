@@ -3,6 +3,7 @@
 namespace oly::editor
 {
 #define UID_GENERATOR(M) \
+	M(None) \
 	M(DynamicRowReorder) \
 	M(PathDrag)
 

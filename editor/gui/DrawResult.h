@@ -95,7 +95,7 @@ namespace oly::editor
 			return flags & Flags::Focused;
 		}
 
-		bool IsItemDeactivatedAfterEdit() const
+		bool IsDeactivatedAfterEdit() const
 		{
 			return flags & Flags::DeactivatedAfterEdit;
 		}

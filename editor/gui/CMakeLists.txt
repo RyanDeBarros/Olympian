@@ -3,6 +3,7 @@ target_sources(OlympianEditor PRIVATE
 	GUIState.cpp
 	ImGuiWrapper.cpp
 	ListModel.cpp
+	PropertyClipboard.cpp
 	PropertyGrid.cpp
 	StyleStack.cpp
 	WidgetComponentCommon.cpp

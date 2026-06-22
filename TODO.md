@@ -1,9 +1,9 @@
 # v9.1
 * More editor work
-	* Undo, redo, and context menus on fields/forms to copy/paste properties
+	* Context menus on fields/forms to copy/paste properties
+	* Local per-document undo/redo stacks
 
 # v9.2
-
 * More editor work
 	* Content Browser Panel
 				
