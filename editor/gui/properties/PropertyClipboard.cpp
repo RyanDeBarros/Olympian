@@ -89,6 +89,6 @@ namespace oly::editor
 				return TryPaste(props);
 		}
 
-		return false; // TODO v9.1 don't use bool to indicate document should MarkDirty(), use some wrapper to make it explicitly referring to a 'changed' event
+		return false;
 	}
 }
