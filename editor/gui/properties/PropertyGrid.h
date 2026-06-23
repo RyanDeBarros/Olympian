@@ -8,6 +8,12 @@ namespace oly::editor::gui
 {
 	struct PropertyGrid
 	{
+		PropertyGrid();
+		PropertyGrid(const PropertyGrid&) = delete;
+		PropertyGrid(PropertyGrid&&) noexcept;
+		~PropertyGrid();
+		PropertyGrid& operator=(PropertyGrid&&) = delete;
+
 		struct Key
 		{
 			static void SetLabel(const std::string_view label);
@@ -30,7 +36,6 @@ namespace oly::editor::gui
 		static void SubmitRow();
 		static bool DirtyRow();
 
-		static void Clear();
 		static bool DirtyGrid();
 
 		static bool BeginTable();

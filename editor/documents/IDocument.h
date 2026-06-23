@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "gui/properties/PropertyGrid.h"
+
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
@@ -35,6 +37,7 @@ namespace oly::editor
 		class GridChecker
 		{
 			IDocument& _doc;
+			gui::PropertyGrid _grid;
 
 		public:
 			GridChecker(IDocument& doc);

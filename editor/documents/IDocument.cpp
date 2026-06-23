@@ -1,7 +1,5 @@
 #include "IDocument.h"
 
-#include "gui/properties/PropertyGrid.h"
-
 namespace oly::editor
 {
 	IDocument::IDocument(detail::ResourcePath&& oly_path)
@@ -56,7 +54,6 @@ namespace oly::editor
 	IDocument::GridChecker::GridChecker(IDocument& doc)
 		: _doc(doc)
 	{
-		gui::PropertyGrid::Clear();
 	}
 
 	IDocument::GridChecker::~GridChecker()

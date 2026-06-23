@@ -35,7 +35,7 @@ namespace oly::editor
 
 	void PreferencesPanel::Draw()
 	{
-		gui::PropertyGrid::Clear();
+		gui::PropertyGrid grid;
 
 		ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
 		if (IsDirty())

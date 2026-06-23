@@ -1,6 +1,7 @@
 #include "PropertyGrid.h"
 
 #include "core/editor/ResourceLoader.h"
+#include "core/Errors.h"
 
 #include "gui/graphics/Toolbar.h"
 #include "gui/scopes/IDScope.h"
@@ -11,6 +12,8 @@
 
 namespace oly::editor::gui
 {
+	static PropertyGrid* GRID_INSTANCE = nullptr;
+
 	static std::string KEY_LABEL;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
@@ -20,6 +23,47 @@ namespace oly::editor::gui
 	static std::unordered_set<size_t> ACTIVATED_RESET_SUBROWS;
 
 	static bool DIRTY_GRID = false;
+
+	static void ClearRow()
+	{
+		KEY_LABEL.clear();
+
+		VALUE_COMPONENTS.clear();
+		VALUE_DRAW_RESULT = {};
+
+		SUBROWS_TO_RESET.clear();
+		ACTIVATED_RESET_SUBROWS.clear();
+
+		DIRTY_GRID = false;
+	}
+
+	PropertyGrid::PropertyGrid()
+	{
+		if (GRID_INSTANCE)
+			BreakoutError::Throw("PropertyGrid::Instance() called while a property grid instance already exists");
+
+		GRID_INSTANCE = this;
+
+		ClearRow();
+
+		PropertyGroup::Begin();
+	}
+
+	PropertyGrid::PropertyGrid(PropertyGrid&& o) noexcept
+	{
+		if (GRID_INSTANCE == &o)
+			GRID_INSTANCE = this;
+	}
+
+	PropertyGrid::~PropertyGrid()
+	{
+		if (GRID_INSTANCE == this)
+		{
+			GRID_INSTANCE = nullptr;
+
+			PropertyGroup::End();
+		}
+	}
 
 	void PropertyGrid::Key::SetLabel(const std::string_view label)
 	{
@@ -58,7 +102,7 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(0);
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
-		VALUE_DRAW_RESULT |= PropertyGroup::Submit();
+		VALUE_DRAW_RESULT |= PropertyGroup::CheckRow();
 	}
 
 	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
@@ -120,27 +164,12 @@ namespace oly::editor::gui
 		DrawValueCell();
 		DrawKeyCell();
 		DIRTY_GRID |= DirtyRow();
-		PropertyGroup::Clear();
+		ClearRow();
 	}
 
 	bool PropertyGrid::DirtyRow()
 	{
 		return Value::GetDrawResult().IsDirty() || Reset::AnyActivated();
-	}
-
-	void PropertyGrid::Clear()
-	{
-		KEY_LABEL.clear();
-
-		VALUE_COMPONENTS.clear();
-		VALUE_DRAW_RESULT = {};
-
-		SUBROWS_TO_RESET.clear();
-		ACTIVATED_RESET_SUBROWS.clear();
-
-		DIRTY_GRID = false;
-
-		PropertyGroup::Clear();
 	}
 
 	bool PropertyGrid::DirtyGrid()
