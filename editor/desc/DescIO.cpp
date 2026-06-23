@@ -12,9 +12,9 @@
 
 namespace oly::editor
 {
-	void DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
+	void DescIO::Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names)
 	{
-		RowInputData(label, data, def, names, count);
+		RowInputData(label, data, def, names);
 	}
 
 	void DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
@@ -22,7 +22,7 @@ namespace oly::editor
 		if (auto subform = Subform(label))
 		{
 			for (size_t i = 0; i < count; ++i)
-				Draw(std::to_string(i).c_str(), data[i], def[i]);
+				RowInputData(std::to_string(i).c_str(), data[i], def[i]);
 		}
 	}
 

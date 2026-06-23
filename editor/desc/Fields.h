@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/editor/LabelRegistry.h"
+
 #include "desc/DescIO.h"
 #include "desc/Serializer.h"
 
@@ -202,12 +204,12 @@ namespace oly::editor
 		detail::Key key;
 		const char* label;
 		const E* values;
-		const char** names;
+		LabelSpanRegistry::Handle names;
 		size_t count;
 
 		template<size_t Count>
 		DisjointEnumField(E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
-			: def(def), key(key), label(label), values(values), names(names), count(Count)
+			: def(def), key(key), label(label), values(values), names(LabelSpanRegistry::Intern(std::span<const char*>(names, Count))), count(Count)
 		{
 			SetScratch(def);
 			def_index = Index(def);
@@ -215,7 +217,7 @@ namespace oly::editor
 
 		void Draw()
 		{
-			DescIO::Draw(label, scratch, def_index, names, count);
+			DescIO::Draw(label, scratch, def_index, names);
 		}
 
 		void Load(TOMLNode node)

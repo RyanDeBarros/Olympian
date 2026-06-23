@@ -22,7 +22,10 @@ namespace oly::editor
 		using Handle = DataStructure::Handle;
 
 		static Handle Intern(const std::span<std::string_view> labels);
+		static Handle Intern(const std::span<const char* const> labels);
 		static const char* String(const Handle handle, size_t i);
 		static size_t Count(const Handle handle);
+
+		static const char* ComboGetter(void* user_data, int idx);
 	};
 }

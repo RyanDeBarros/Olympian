@@ -73,11 +73,11 @@ namespace oly::editor::gui
 		return InputClampedData(label, data, min, max);
 	}
 
-	DrawResult InputData<int>::operator()(const char* label, int& data, const char** names, size_t count)
+	DrawResult InputData<int>::operator()(const char* label, int& data, LabelSpanRegistry::Handle names)
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = DrawResult(ImGui::Combo(label, &data, names, count)).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(data, names, count)));
+		DrawResult result = DrawResult(ImGui::Combo(label, &data, &LabelSpanRegistry::ComboGetter, &names, LabelSpanRegistry::Count(names))).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(data, names)));
 		return result;
 	}
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/editor/LabelRegistry.h"
+
 #include "gui/properties/PropertyClipboard.h"
 #include "gui/properties/PropertyPayloads.h"
 
@@ -35,10 +37,9 @@ namespace oly::editor::prop
 	struct ComboPropertyView : public IPropertyView
 	{
 		int& index;
-		const char** names;
-		size_t count;
-
-		ComboPropertyView(int& index, const char** names, size_t count);
+		LabelSpanRegistry::Handle names;
+		
+		ComboPropertyView(int& index, LabelSpanRegistry::Handle names);
 
 		RawPropertyPayload Dump() const override;
 		bool CanParse(const RawPropertyPayload& payload) const override;

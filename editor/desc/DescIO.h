@@ -1,12 +1,16 @@
 #pragma once
 
+#include "core/editor/LabelRegistry.h"
+
 #include "desc/OptionalPrimitive.h"
 
 #include "gui/scopes/IDScope.h"
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
-#include "gui/properties/PropertyGrid.h"
 #include "gui/WidgetComponentCommon.h"
+#include "gui/properties/PropertyGrid.h"
+#include "gui/properties/PropertyGroup.h"
+#include "gui/properties/PropertyViews.h"
 
 #include "external/GL.h"
 #include "external/GLM.h"
@@ -50,7 +54,7 @@ namespace oly::editor
 			RowInputData(label, data, def);
 		}
 
-		static void Draw(const char* label, int& data, const int& def, const char** names, size_t count);
+		static void Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names);
 		static void Draw(const char* label, std::string* data, const std::string* def, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count);
@@ -211,8 +215,10 @@ namespace oly::editor
 		{
 			DrawResult result;
 			int index = static_cast<int>(data);
-			result |= ImGui::Combo("##", &index, values, N);
+			LabelSpanRegistry::Handle span = LabelSpanRegistry::Intern(std::span<const char* const>(values, N));
+			result |= ImGui::Combo("##", &index, &LabelSpanRegistry::ComboGetter, &span, N);
 			result.Query();
+			result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(index, LabelSpanRegistry::Intern(values))));
 			data = static_cast<E>(index);
 			return result;
 		}
