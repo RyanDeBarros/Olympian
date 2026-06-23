@@ -114,20 +114,37 @@ namespace oly::editor
 			BreakoutError::Throw("PropertyGroup::Append(): active property node is null");
 	}
 
+	// TODO v9.1 Remove Indent. If a tree node is collapsed, its values should still be copied even though the draw functions never execute -> so replace Append() with CheckValue(datapath), and pass datapaths to CheckRow()/CheckHeader() -> no data structure should be stored here.
+
 	PropertyGroup::Indent::Indent()
 	{
 		if (ACTIVE_PROPERTY_NODE)
+		{
 			ACTIVE_PROPERTY_NODE = ACTIVE_PROPERTY_NODE->AppendNode();
+			_active = true;
+		}
 		else
 			BreakoutError::Throw("PropertyGroup::Indent::Indent(): active property node is null");
 	}
 
+	PropertyGroup::Indent::Indent(Indent&& o) noexcept
+		: _active(o._active)
+	{
+		o._active = false;
+	}
+
 	PropertyGroup::Indent::~Indent()
 	{
-		if (ACTIVE_PROPERTY_NODE)
-			ACTIVE_PROPERTY_NODE = ACTIVE_PROPERTY_NODE->parent;
-		else
-			BreakoutError::Throw("PropertyGroup::Indent::~Indent(): active property node is null");
+		if (_active)
+		{
+			if (ACTIVE_PROPERTY_NODE)
+			{
+				ACTIVE_PROPERTY_NODE = ACTIVE_PROPERTY_NODE->parent;
+				CheckHeader();
+			}
+			else
+				BreakoutError::Throw("PropertyGroup::Indent::~Indent(): active property node is null");
+		}
 	}
 
 	bool PropertyGroup::CheckRow()

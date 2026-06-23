@@ -1,5 +1,7 @@
 #include "CollapsingSection.h"
 
+#include "gui/properties/PropertyGroup.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -20,7 +22,10 @@ namespace oly::editor
 	CollapsingSection::~CollapsingSection()
 	{
 		if (_visible)
+		{
 			ImGui::TreePop();
+			PropertyGroup::CheckHeader();
+		}
 	}
 
 	CollapsingSection::operator bool() const

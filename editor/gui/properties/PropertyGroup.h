@@ -13,12 +13,16 @@ namespace oly::editor
 
 		static bool Append(std::unique_ptr<IPropertyView>&& prop);
 
-		struct Indent
+		class Indent
 		{
+			bool _active = false;
+
+		public:
 			Indent();
 			Indent(const Indent&) = delete;
-			Indent(Indent&&) = delete;
+			Indent(Indent&&) noexcept;
 			~Indent();
+			Indent& operator=(Indent&&) = delete;
 		};
 
 		static bool CheckRow();
