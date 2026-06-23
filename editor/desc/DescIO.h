@@ -213,12 +213,9 @@ namespace oly::editor
 		template<Enum E, size_t N>
 		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
-			DrawResult result;
 			int index = static_cast<int>(data);
 			LabelSpanRegistry::Handle span = LabelSpanRegistry::Intern(std::span<const char* const>(values, N));
-			result |= ImGui::Combo("##", &index, &LabelSpanRegistry::ComboGetter, &span, N);
-			result.Query();
-			result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(index, LabelSpanRegistry::Intern(values))));
+			DrawResult result = gui::InputData<int>{}("##", index, span);
 			data = static_cast<E>(index);
 			return result;
 		}

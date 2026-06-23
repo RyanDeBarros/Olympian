@@ -50,10 +50,7 @@ namespace oly::editor
 			for (size_t i = 0; i < count; ++i)
 			{
 				if (auto d = DisabledSection(disabled && disabled[i]))
-				{
 					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
-					result.Query();
-				}
 
 				if (i + 1 < count)
 					ImGui::SameLine();

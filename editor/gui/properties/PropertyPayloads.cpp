@@ -1,5 +1,7 @@
 #include "PropertyPayloads.h"
 
+#include "core/Types.h"
+
 #include <string>
 
 namespace oly::editor::prop
@@ -31,6 +33,11 @@ namespace oly::editor::prop
 	PRIMITIVE_PAYLOAD(bool, BOOL_UID);
 	PRIMITIVE_PAYLOAD(int, INT_UID);
 	PRIMITIVE_PAYLOAD(float, FLOAT_UID);
+	PRIMITIVE_PAYLOAD(double, DOUBLE_UID);
+	PRIMITIVE_PAYLOAD(glm::vec2, VEC2_UID);
+	PRIMITIVE_PAYLOAD(glm::vec3, VEC3_UID);
+	PRIMITIVE_PAYLOAD(glm::vec4, VEC4_UID);
+	PRIMITIVE_PAYLOAD(Color4, COLOR4_UID);
 
 	static PropUID STRING_UID = OLY_DECL_PROP_UID;
 

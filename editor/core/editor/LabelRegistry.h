@@ -21,6 +21,7 @@ namespace oly::editor
 		using DataStructure = Internship<std::vector<std::string>>;
 		using Handle = DataStructure::Handle;
 
+		static Handle Intern(const std::vector<std::string>& labels);
 		static Handle Intern(const std::span<std::string_view> labels);
 		static Handle Intern(const std::span<const char* const> labels);
 		static const char* String(const Handle handle, size_t i);

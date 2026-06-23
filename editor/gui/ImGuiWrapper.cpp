@@ -35,7 +35,9 @@ namespace oly::editor::gui
 		width += 2 * ImGui::GetFrameHeight(); // roughly covers dropdown arrow + padding
 		ImGui::SetNextItemWidth(width);
 
-		return DrawResult(ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()))).Query();
+		DrawResult result = DrawResult(ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()))).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(current_item, LabelSpanRegistry::Intern(items))));
+		return result;
 	}
 
 	DrawResult InputText(const char* label, std::string& string, size_t max_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
@@ -49,7 +51,9 @@ namespace oly::editor::gui
 		size_t n = string.find('\0');
 		if (n != std::string::npos)
 			string.resize(n);
-		return result.Query();
+		result.Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<std::string>>(string)));
+		return result;
 	}
 
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
@@ -84,7 +88,9 @@ namespace oly::editor::gui
 	DrawResult InputData<float>::operator()(const char* label, float& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputFloat(label, &data)).Query();
+		DrawResult result = DrawResult(ImGui::InputFloat(label, &data)).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<float>>(data)));
+		return result;
 	}
 
 	DrawResult InputData<float>::operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -95,7 +101,9 @@ namespace oly::editor::gui
 	DrawResult InputData<double>::operator()(const char* label, double& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputDouble(label, &data)).Query();
+		DrawResult result = DrawResult(ImGui::InputDouble(label, &data)).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<double>>(data)));
+		return result;
 	}
 
 	DrawResult InputData<double>::operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const
@@ -106,7 +114,9 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec2>::operator()(const char* label, glm::vec2& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputFloat2(label, glm::value_ptr(data))).Query();
+		DrawResult result = DrawResult(ImGui::InputFloat2(label, glm::value_ptr(data))).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec2>>(data)));
+		return result;
 	}
 
 	DrawResult InputData<glm::vec2>::operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -117,7 +127,9 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec3>::operator()(const char* label, glm::vec3& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputFloat3(label, glm::value_ptr(data))).Query();
+		DrawResult result = DrawResult(ImGui::InputFloat3(label, glm::value_ptr(data))).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec3>>(data)));
+		return result;
 	}
 
 	DrawResult InputData<glm::vec3>::operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -128,7 +140,9 @@ namespace oly::editor::gui
 	DrawResult InputData<glm::vec4>::operator()(const char* label, glm::vec4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::InputFloat4(label, glm::value_ptr(data))).Query();
+		DrawResult result = DrawResult(ImGui::InputFloat4(label, glm::value_ptr(data))).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec4>>(data)));
+		return result;
 	}
 
 	DrawResult InputData<glm::vec4>::operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
@@ -144,6 +158,8 @@ namespace oly::editor::gui
 	DrawResult InputData<Color4>::operator()(const char* label, Color4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		return DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
+		DrawResult result = DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
+		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<Color4>>(data)));
+		return result;
 	}
 }

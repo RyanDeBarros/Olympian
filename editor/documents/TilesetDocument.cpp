@@ -413,7 +413,7 @@ namespace oly::editor
 							if (path.is_resource())
 							{
 								desc.texture.scratch = path.get_resource_shorthand();
-								result = true;
+								result.SetDirty(true);
 								OnActiveTextureChanged(grid);
 							}
 							else
@@ -423,7 +423,6 @@ namespace oly::editor
 						ImGui::EndDragDropTarget();
 					}
 
-					result.Query();
 					return result;
 				}));
 

@@ -21,7 +21,7 @@ namespace oly::editor
 
 	struct LabelSpanHelper
 	{
-		size_t operator()(const std::span<std::string_view>& span) const
+		size_t operator()(const std::vector<std::string>& span) const
 		{
 			Hasher h;
 			for (const auto& s : span)
@@ -29,7 +29,15 @@ namespace oly::editor
 			return h;
 		}
 
-		size_t operator()(const std::span<const char* const>& span) const
+		size_t operator()(const std::span<std::string_view> span) const
+		{
+			Hasher h;
+			for (const auto& s : span)
+				h.with(s);
+			return h;
+		}
+
+		size_t operator()(const std::span<const char* const> span) const
 		{
 			Hasher h;
 			for (const auto& s : span)
@@ -68,6 +76,11 @@ namespace oly::editor
 			return v;
 		}
 	};
+
+	LabelSpanRegistry::Handle LabelSpanRegistry::Intern(const std::vector<std::string>& labels)
+	{
+		return LABEL_SPAN_REGISTRY.Intern<decltype(labels), LabelSpanHelper>(labels);
+	}
 
 	LabelSpanRegistry::Handle LabelSpanRegistry::Intern(const std::span<std::string_view> labels)
 	{
