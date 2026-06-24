@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/RasterFontDesc.h"
+#include "desc/impl/RasterFontDesc.h"
 
 #include "gui/ListModel.h"
 

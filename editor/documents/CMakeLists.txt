@@ -3,6 +3,7 @@ target_sources(OlympianEditor PRIVATE
 	FontDocument.cpp
 	FontFamilyDocument.cpp
 	IDocument.cpp
+	PreferencesDocument.cpp
 	ProjectDocument.cpp
 	RasterFontDocument.cpp
 	SignalDocument.cpp

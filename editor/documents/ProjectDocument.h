@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/ProjectDesc.h"
+#include "desc/impl/ProjectDesc.h"
 
 #include "assets/MetaSplitter.h"
 

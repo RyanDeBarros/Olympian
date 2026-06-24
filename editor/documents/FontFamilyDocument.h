@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/FontFamilyDesc.h"
+#include "desc/impl/FontFamilyDesc.h"
 
 #include "gui/scopes/Form.h"
 

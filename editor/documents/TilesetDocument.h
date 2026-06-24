@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/TilesetDesc.h"
+#include "desc/impl/TilesetDesc.h"
 
 #include "gui/scopes/Form.h"
 #include "gui/graphics/Texture.h"

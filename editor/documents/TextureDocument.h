@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/TextureDesc.h"
+#include "desc/impl/TextureDesc.h"
 
 #include "gui/graphics/Texture.h"
 
