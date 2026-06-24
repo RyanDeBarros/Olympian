@@ -24,7 +24,8 @@ namespace oly::editor
 		if (_visible)
 		{
 			ImGui::TreePop();
-			PropertyGroup::CheckHeader();
+			// TODO v9.1
+			//PropertyGroup::CheckHeader();
 		}
 	}
 

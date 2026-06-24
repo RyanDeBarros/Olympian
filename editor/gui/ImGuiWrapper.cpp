@@ -2,7 +2,7 @@
 
 #include "gui/GUIState.h"
 #include "gui/WidgetComponentCommon.h"
-#include "gui/properties/PropertyGroup.h"
+#include "gui/properties/PropertyGrid.h"
 #include "gui/properties/PropertyViews.h"
 
 #include <imgui_internal.h>
@@ -36,7 +36,7 @@ namespace oly::editor::gui
 		ImGui::SetNextItemWidth(width);
 
 		DrawResult result = DrawResult(ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()))).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(current_item, LabelSpanRegistry::Intern(items))));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::ComboPropertyView>(current_item, LabelSpanRegistry::Intern(items))));
 		return result;
 	}
 
@@ -52,7 +52,7 @@ namespace oly::editor::gui
 		if (n != std::string::npos)
 			string.resize(n);
 		result.Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<std::string>>(string)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<std::string>>(string)));
 		return result;
 	}
 
@@ -60,7 +60,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::Checkbox(label, &data)).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<bool>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<bool>>(data)));
 		return result;
 	}
 
@@ -68,7 +68,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputInt(label, &data)).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<int>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<int>>(data)));
 		return result;
 	}
 
@@ -81,7 +81,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::Combo(label, &data, &LabelSpanRegistry::ComboGetter, &names, LabelSpanRegistry::Count(names))).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::ComboPropertyView>(data, names)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::ComboPropertyView>(data, names)));
 		return result;
 	}
 
@@ -89,7 +89,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputFloat(label, &data)).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<float>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<float>>(data)));
 		return result;
 	}
 
@@ -102,7 +102,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputDouble(label, &data)).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<double>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<double>>(data)));
 		return result;
 	}
 
@@ -115,7 +115,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputFloat2(label, glm::value_ptr(data))).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec2>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<glm::vec2>>(data)));
 		return result;
 	}
 
@@ -128,7 +128,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputFloat3(label, glm::value_ptr(data))).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec3>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<glm::vec3>>(data)));
 		return result;
 	}
 
@@ -141,7 +141,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::InputFloat4(label, glm::value_ptr(data))).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<glm::vec4>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<glm::vec4>>(data)));
 		return result;
 	}
 
@@ -159,7 +159,7 @@ namespace oly::editor::gui
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
 		DrawResult result = DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
-		result.SetDirty(PropertyGroup::Append(std::make_unique<prop::PrimitivePropertyView<Color4>>(data)));
+		result.SetDirty(PropertyGrid::Value::AppendView(std::make_unique<prop::PrimitivePropertyView<Color4>>(data)));
 		return result;
 	}
 }

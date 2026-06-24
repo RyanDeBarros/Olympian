@@ -5,7 +5,6 @@
 
 #include "gui/graphics/Toolbar.h"
 #include "gui/scopes/IDScope.h"
-#include "gui/properties/PropertyGroup.h"
 
 #include <array>
 #include <unordered_set>
@@ -17,6 +16,7 @@ namespace oly::editor::gui
 	static std::string KEY_LABEL;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
+	static PropertyRow VALUE_PROPERTIES;
 	static DrawResult VALUE_DRAW_RESULT;
 	
 	static std::unordered_set<size_t> SUBROWS_TO_RESET;
@@ -26,15 +26,10 @@ namespace oly::editor::gui
 
 	static void ClearRow()
 	{
-		KEY_LABEL.clear();
-
 		VALUE_COMPONENTS.clear();
-		VALUE_DRAW_RESULT = {};
+		VALUE_PROPERTIES.list.clear();
 
 		SUBROWS_TO_RESET.clear();
-		ACTIVATED_RESET_SUBROWS.clear();
-
-		DIRTY_GRID = false;
 	}
 
 	PropertyGrid::PropertyGrid()
@@ -45,6 +40,10 @@ namespace oly::editor::gui
 		GRID_INSTANCE = this;
 
 		ClearRow();
+
+		DIRTY_GRID = false;
+		KEY_LABEL.clear();
+		ACTIVATED_RESET_SUBROWS.clear();
 
 		PropertyGroup::Begin();
 	}
@@ -82,6 +81,14 @@ namespace oly::editor::gui
 		VALUE_COMPONENTS.push_back(std::move(component));
 	}
 
+	bool PropertyGrid::Value::AppendView(std::unique_ptr<IPropertyView>&& prop)
+	{
+		bool immediate = PropertyGroup::CheckValue(*prop);
+		DIRTY_GRID |= immediate;
+		VALUE_PROPERTIES.list.push_back(std::move(prop));
+		return immediate;
+	}
+
 	void PropertyGrid::Reset::Button(size_t subrow)
 	{
 		SUBROWS_TO_RESET.insert(subrow);
@@ -102,7 +109,7 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(0);
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
-		VALUE_DRAW_RESULT |= PropertyGroup::CheckRow();
+		VALUE_DRAW_RESULT |= PropertyGroup::CheckRow(VALUE_PROPERTIES);
 	}
 
 	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
@@ -128,8 +135,6 @@ namespace oly::editor::gui
 				ImGui::SameLine();
 			remaining_width -= ImGui::GetCursorPosX() - start_x;
 		}
-
-		VALUE_COMPONENTS.clear();
 	}
 
 	static void DrawResetCell()

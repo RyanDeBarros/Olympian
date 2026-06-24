@@ -1,6 +1,8 @@
 #pragma once
 
+#include <memory>
 #include <span>
+#include <variant>
 #include <vector>
 
 namespace oly::editor
@@ -40,13 +42,23 @@ namespace oly::editor
 		virtual bool TryParse(const RawPropertyPayload&) const = 0;
 	};
 
+	struct PropertyRow
+	{
+		std::vector<std::unique_ptr<IPropertyView>> list;
+	};
+
+	struct PropertyPage
+	{
+		using V = std::variant<PropertyRow, std::unique_ptr<PropertyPage>>;
+		std::vector<V> page;
+	};
+
 	struct PropertyClipboard
 	{
 		static void Clear();
-		static void Store(const std::span<IPropertyView*> props);
-		static bool CanPaste(const std::span<IPropertyView*> props);
-		static bool TryPaste(const std::span<IPropertyView*> props);
 
-		static bool ContextMenuItems(const std::span<IPropertyView*> props);
+		static bool ContextMenuItems(const IPropertyView& prop);
+		static bool ContextMenuItems(const PropertyRow& props);
+		static bool ContextMenuItems(const PropertyPage& props);
 	};
 }

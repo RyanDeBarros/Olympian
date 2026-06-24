@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/WidgetComponent.h"
+#include "gui/properties/PropertyGroup.h"
 
 #include <string_view>
 
@@ -24,6 +25,7 @@ namespace oly::editor::gui
 			static DrawResult GetDrawResult();
 
 			static void AddComponent(WidgetComponent component);
+			static bool AppendView(std::unique_ptr<IPropertyView>&& prop);
 		};
 
 		struct Reset
