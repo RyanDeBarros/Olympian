@@ -10,6 +10,8 @@
 
 #include <span>
 
+// TODO v9.1 support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkoboxes or combos enabling/disabling sections.
+
 namespace oly::editor
 {
 	void DescIO::Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names)
@@ -19,7 +21,15 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
 	{
-		if (auto subform = Subform(label))
+		const auto generator = [data, count](PropertyPage& props) {
+			PropertyRow row;
+			for (size_t i = 0; i < count; ++i)
+				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i]));
+
+			props.page.push_back(std::move(row));
+		};
+
+		if (auto subform = Subform(label, generator))
 		{
 			for (size_t i = 0; i < count; ++i)
 				RowInputData(std::to_string(i).c_str(), data[i], def[i]);

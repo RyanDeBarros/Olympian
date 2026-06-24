@@ -137,7 +137,7 @@ namespace oly::editor
 
 	static bool CanPastePage(const PropertyPage& props, const RawPropertyPayloadPage& payload)
 	{
-		if (payload.page.size() != props.page.size())
+		if (payload.page.empty() || payload.page.size() != props.page.size())
 			return false;
 
 		for (size_t i = 0; i < props.page.size(); ++i)
@@ -242,6 +242,7 @@ namespace oly::editor
 		return GenericContextMenuItems(props);
 	}
 	
+	// TODO v9.1 pass row-by-row generator instead so that the full page doesn't need to be generated for CanPaste() check
 	bool PropertyClipboard::ContextMenuItems(const PropertyPage& props)
 	{
 		return GenericContextMenuItems(props);

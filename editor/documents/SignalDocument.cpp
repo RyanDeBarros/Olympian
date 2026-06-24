@@ -297,12 +297,12 @@ namespace oly::editor
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
+			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
 		desc.required_mods.Draw(disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
 		desc.forbidden_mods.Draw(disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
@@ -331,12 +331,12 @@ namespace oly::editor
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
+			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
 		desc.required_mods.Draw(disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
 		desc.forbidden_mods.Draw(disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))

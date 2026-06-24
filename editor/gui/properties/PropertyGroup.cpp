@@ -49,12 +49,12 @@ namespace oly::editor
 		return dirty;
 	}
 
-	bool PropertyGroup::CheckHeader(const PropertyPage& props)
+	bool PropertyGroup::CheckHeader(const PropertyPageGenerator& generator)
 	{
 		bool dirty = false;
 		if (BeginContextMenu())
 		{
-			dirty = PropertyClipboard::ContextMenuItems(props);
+			dirty = PropertyClipboard::ContextMenuItems(generator());
 			ImGui::EndPopup();
 		}
 		return dirty;

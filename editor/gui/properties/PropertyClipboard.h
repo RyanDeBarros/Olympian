@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <span>
 #include <variant>
@@ -52,6 +53,8 @@ namespace oly::editor
 		using V = std::variant<PropertyRow, std::unique_ptr<PropertyPage>>;
 		std::vector<V> page;
 	};
+
+	using PropertyPageGenerator = std::function<PropertyPage()>;
 
 	struct PropertyClipboard
 	{

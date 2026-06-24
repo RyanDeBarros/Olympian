@@ -1,5 +1,6 @@
 #include "Form.h"
 
+#include "core/Errors.h"
 #include "gui/properties/PropertyGrid.h"
 
 namespace oly::editor
@@ -71,6 +72,6 @@ namespace oly::editor
 
 	FormPause::operator bool() const
 	{
-		return _form;
+		return true;
 	}
 }

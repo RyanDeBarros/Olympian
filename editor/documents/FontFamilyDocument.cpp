@@ -3,7 +3,8 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/scopes/CollapsingSection.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
 #include "util/Parser.h"
@@ -31,7 +32,8 @@ namespace oly::editor
 		auto grid = Grid();
 
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		if (auto form = Form())
+			Draw(_scratch);
 	}
 
 	void FontFamilyDocument::Load()
@@ -78,25 +80,22 @@ namespace oly::editor
 
 	void FontFamilyDocument::Draw(FontFamilyDesc& desc)
 	{
-		if (auto section = CollapsingSection("Regular"))
+		if (auto section = Subform("Regular"))
 			Draw(GetFontStyleDesc(detail::FontStyleMode::Regular));
 
-		if (auto section = CollapsingSection("Bold"))
+		if (auto section = Subform("Bold"))
 			Draw(GetFontStyleDesc(detail::FontStyleMode::Bold));
 
-		if (auto section = CollapsingSection("Italic"))
+		if (auto section = Subform("Italic"))
 			Draw(GetFontStyleDesc(detail::FontStyleMode::Italic));
 
-		if (auto section = CollapsingSection("Bold-italic"))
+		if (auto section = Subform("Bold-italic"))
 			Draw(GetFontStyleDesc(detail::FontStyleMode::BoldItalic));
 	}
 	
 	void FontFamilyDocument::Draw(FontStyleDesc& desc)
 	{
-		if (auto form = Form())
-		{
-			DRAW_FIELDS(STYLE_GENERATOR);
-		}
+		DRAW_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)

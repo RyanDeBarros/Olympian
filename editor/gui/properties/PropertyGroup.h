@@ -13,6 +13,6 @@ namespace oly::editor
 
 		static bool CheckValue(const IPropertyView& prop);
 		static bool CheckRow(const PropertyRow& props);
-		static bool CheckHeader(const PropertyPage& props);
+		static bool CheckHeader(const PropertyPageGenerator& generator);
 	};
 }

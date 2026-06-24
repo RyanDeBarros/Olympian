@@ -157,11 +157,8 @@ namespace oly::editor
 		UpdateActiveTextures();
 		gui::IDScope scope(this);
 
-		if (auto section = CollapsingSection("Advanced"))
-		{
-			if (auto form = Form())
-				_scratch.storage.Draw();
-		}
+		if (auto subform = Subform("Advanced"))
+			_scratch.storage.Draw();
 
 		if (ImGui::BeginTabBar("##Editors"))
 		{
