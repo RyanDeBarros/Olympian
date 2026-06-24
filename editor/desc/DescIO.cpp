@@ -10,7 +10,7 @@
 
 #include <span>
 
-// TODO v9.1 support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkoboxes or combos enabling/disabling sections.
+// TODO DEBT support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkoboxes or combos enabling/disabling sections.
 
 namespace oly::editor
 {

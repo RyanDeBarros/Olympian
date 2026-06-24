@@ -1,19 +1,20 @@
-# v9.1
+# Branches
+
+## v9.1
 * More editor work
-	* Context menus on fields/forms to copy/paste properties
 	* Local per-document undo/redo stacks
 
-# v9.2
+## v9.2
 * More editor work
 	* Content Browser Panel
 				
-# v9.3
+## v9.3
 * More editor work
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
 
-# v10
+## v10
 * Physics updates
 * Utilities
 	* TypewriterEffect
@@ -23,7 +24,7 @@
 	* Random class
 * Coroutine system
 
-# v11
+## v11
 * Assets
 	* Rigid body
 	* Material
@@ -35,20 +36,35 @@
 	* Lifetime methods
 	* Scene graph
 
-# v12
+## v12
 * Font size caching/rounding + manual mipmap generation
 * UI widget system
 * Lighting/shadow/post-processing module
 * AI: navigation, blackboard trees, etc.
 
-# v13
+## v13
 * Separation of Tester project into separate repo
 * Texture streaming
 * Shader embedding
 * Multithreading
 
-# v14
+## v14
 * Networking
 
-# v15
+## v15
 * Graphics API expansion/separation
+
+# Misc
+
+* Check `TODO LATER` for optimization/debt tasks.
+* Check `TODO DEBT` for tech debt / maintenance tasks.
+
+# Tech debt
+
+* Add more support methods to classes to avoid chained access operators (e.g. `a.b.c->d.e()` shortened to `a.f()`)
+* Move non-template inline methods to CPP files
+* Use more forward declarations and move as many includes as possible to CPP files
+* Create MKdocs for all public classes/functions
+* Create asset loaders for all assets
+* Create editor tabs for all assets
+* Add more logging in engine and in editor

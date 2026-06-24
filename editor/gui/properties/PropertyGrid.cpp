@@ -69,8 +69,6 @@ namespace oly::editor::gui
 		KEY_LABEL = label;
 	}
 
-	// TODO v9.1 Currently, PropertyGroup::Submit() is called in key cell draw and PropertyGroup::Clear() is called at end of SubmitRow(). Only clear on Form end, but still call Submit() for a row's properties. Instead of continuous vector of all properties, will need to divide PROPERTIES into data structure where each row has a list of properties, and each form has a list of properties + sublists. Can nest forms indefinitely.
-
 	DrawResult PropertyGrid::Value::GetDrawResult()
 	{
 		return VALUE_DRAW_RESULT;

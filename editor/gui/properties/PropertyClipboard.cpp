@@ -242,7 +242,7 @@ namespace oly::editor
 		return GenericContextMenuItems(props);
 	}
 	
-	// TODO v9.1 pass row-by-row generator instead so that the full page doesn't need to be generated for CanPaste() check
+	// TODO LATER pass row-by-row generator instead so that the full page doesn't need to be generated for CanPaste() check
 	bool PropertyClipboard::ContextMenuItems(const PropertyPage& props)
 	{
 		return GenericContextMenuItems(props);
