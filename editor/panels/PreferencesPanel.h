@@ -7,7 +7,8 @@ namespace oly::editor
 {
 	class PreferencesPanel : public IPanel
 	{
-		PreferencesDocument doc;
+		PreferencesDocument _doc;
+		bool _unsaved_changes_modal = false;
 		
 	public:
 		static PreferencesPanel& Instance();
@@ -16,6 +17,9 @@ namespace oly::editor
 		const char* GetTitle() const override;
 		void Draw() override;
 
-		const PreferencesDesc& GetSavedDesc() const;
+		const PreferencesDesc& GetActiveDesc() const;
+
+	private:
+		bool DrawUnsavedChangesModal();
 	};
 }

@@ -33,6 +33,28 @@ namespace oly::editor
 			MarkDirty();
 	}
 
+	void PreferencesDocument::DrawMenuBar()
+	{
+		if (ImGui::BeginMenuBar())
+		{
+			if (ImGui::BeginMenu("File"))
+			{
+				if (ImGui::MenuItem("Apply Changes"))
+					ApplyChanges();
+
+				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
+					Dump();
+
+				if (ImGui::MenuItem("Discard Changes"))
+					Load();
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::EndMenuBar();
+		}
+	}
+
 	void PreferencesDocument::Load()
 	{
 		std::filesystem::path path = GetOlyPath().get_absolute();
@@ -51,6 +73,7 @@ namespace oly::editor
 
 		Load(TOMLNode(table), _disk);
 		_scratch = _disk;
+		_in_effect = _disk;
 		MarkClean();
 	}
 
@@ -63,12 +86,18 @@ namespace oly::editor
 		std::ofstream file(path);
 		file << table;
 		_disk = _scratch;
+		_in_effect = _disk;
 		MarkClean();
 	}
 
-	const PreferencesDesc& PreferencesDocument::GetSavedDesc() const
+	void PreferencesDocument::ApplyChanges()
 	{
-		return _disk;
+		_in_effect = _scratch;
+	}
+
+	const PreferencesDesc& PreferencesDocument::GetActiveDesc() const
+	{
+		return _in_effect;
 	}
 
 	void PreferencesDocument::Draw(PreferencesDesc& desc)
@@ -81,8 +110,23 @@ namespace oly::editor
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
 
-			Draw(desc.tree_view);
+			if (auto subform = Subform("Edit"))
+				Draw(desc.edit);
+		
+			if (auto subform = Subform("Tree View"))
+				Draw(desc.tree_view);
 		}
+	}
+
+	void PreferencesDocument::Draw(EditSettingsDesc& desc)
+	{
+		if (auto subform = Subform("Undo History"))
+			Draw(desc.undo_history);
+	}
+	
+	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
+	{
+		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
@@ -98,7 +142,18 @@ namespace oly::editor
 
 	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)
 	{
+		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
 		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
+	}
+
+	void PreferencesDocument::Load(TOMLNode node, EditSettingsDesc& desc)
+	{
+		Load(node[detail::encode_key(desc.undo_history_key)], desc.undo_history);
+	}
+
+	void PreferencesDocument::Load(TOMLNode node, UndoHistorySettingsDesc& desc)
+	{
+		LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, TreeViewSettingsDesc& desc)
@@ -114,8 +169,26 @@ namespace oly::editor
 	void PreferencesDocument::Dump(toml::table& table, PreferencesDesc& desc)
 	{
 		toml::table subtable;
+
+		subtable.clear();
+		Dump(subtable, desc.edit);
+		table.insert_or_assign(detail::encode_key(desc.edit_key), std::move(subtable));
+
+		subtable.clear();
 		Dump(subtable, desc.tree_view);
 		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
+	}
+
+	void PreferencesDocument::Dump(toml::table& table, EditSettingsDesc& desc)
+	{
+		toml::table subtable;
+		Dump(subtable, desc.undo_history);
+		table.insert_or_assign(detail::encode_key(desc.undo_history_key), std::move(subtable));
+	}
+
+	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
+	{
+		DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)

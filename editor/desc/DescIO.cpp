@@ -3,6 +3,8 @@
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/Subform.h"
 
+#include "core/MemoryUnit.h"
+
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
 
@@ -125,6 +127,12 @@ namespace oly::editor
 		gui::PropertyGrid::SubmitRow();
 		if (gui::PropertyGrid::Reset::AnyActivated())
 			data = def;
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, MemoryUnit& data)
+	{
+		return DrawEnumCombo(label, data, { "B", "KB", "KiB", "MB", "MiB", "GB", "GiB" });
 	}
 
 	template<>

@@ -1,10 +1,12 @@
 #include "UndoHistory.h"
 
+#include "panels/PreferencesPanel.h"
+
 namespace oly::editor
 {
 	UndoHistory::UndoHistory() :
-		_stack_count_limit(500),  // TODO v9.1 use preferences setting (default 500)
-		_stack_size_limit(4 * 1024 * 1024)  // TODO v9.1 use preferences setting (default 32MiB)
+		_stack_count_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.CountLimit()),
+		_stack_size_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.SizeLimit())
 	{
 	}
 

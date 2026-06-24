@@ -10,7 +10,7 @@ namespace oly::editor
 	{
 		PreferencesDesc _scratch;
 		PreferencesDesc _disk;
-		// TODO v9.3 third Desc for _in_effect. That way, you can apply settings without saving them. Replace GetSavedDesc() with GetActiveDesc() that returns _in_effect
+		PreferencesDesc _in_effect;
 
 	public:
 		static const char* GetVersion();
@@ -19,21 +19,30 @@ namespace oly::editor
 
 		void Init() override;
 		void Draw() override;
+		void DrawMenuBar() override;
 		void Load() override;
 		void Dump() override;
 
-		const PreferencesDesc& GetSavedDesc() const;
+		void ApplyChanges();
+
+		const PreferencesDesc& GetActiveDesc() const;
 
 	private:
 		void Draw(PreferencesDesc& desc);
+		void Draw(EditSettingsDesc& desc);
+		void Draw(UndoHistorySettingsDesc& desc);
 		void Draw(TreeViewSettingsDesc& desc);
 		void Draw(TreeViewAdvancedSettingsDesc& desc);
 
 		void Load(TOMLNode node, PreferencesDesc& desc);
+		void Load(TOMLNode node, EditSettingsDesc& desc);
+		void Load(TOMLNode node, UndoHistorySettingsDesc& desc);
 		void Load(TOMLNode node, TreeViewSettingsDesc& desc);
 		void Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc);
 
 		void Dump(toml::table& table, PreferencesDesc& desc);
+		void Dump(toml::table& table, EditSettingsDesc& desc);
+		void Dump(toml::table& table, UndoHistorySettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewSettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc);
 	};

@@ -75,6 +75,7 @@ Domain = Domain
 DoubleBuffer = DBuffer
 Duration = Duration
 
+Edit = Edit
 Element = Element
 Enable = Enable
 EnableMaxPriorLogBytes = EnMxPBs
@@ -235,6 +236,10 @@ TreeView = TreeView
 UseCommonBufferPreset = UseComBP
 UseConsole = UseCons
 UseLogfile = UseFile
+UndoHistory = UndoH
+UndoHistoryCountLimit = UndoCL
+UndoHistorySizeLimit = UndoSL
+UndoHistorySizeLimitUnit = UndoSLu
 Uniform = Uniform
 UVvec4 = UVs
 
