@@ -4,6 +4,7 @@ target_sources(OlympianEditor PRIVATE
 	Main.cpp
 	PathInfo.cpp
 	Types.cpp
+	UndoHistory.cpp
 )
 
 add_subdirectory(editor)
