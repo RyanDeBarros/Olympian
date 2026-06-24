@@ -1,5 +1,7 @@
 #pragma once
 
+#include "util/FunctionalEvent.h"
+
 #include <memory>
 #include <vector>
 
@@ -22,6 +24,7 @@ namespace oly::editor
 		size_t _undo_stack_size = 0;
 		std::vector<std::unique_ptr<UndoAction>> _redo;
 		size_t _redo_stack_size = 0;
+		FunctionalEvent<>::Handle _listener;
 
 	public:
 		UndoHistory();

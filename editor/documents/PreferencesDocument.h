@@ -4,6 +4,8 @@
 
 #include "desc/impl/PreferencesDesc.h"
 
+#include "util/FunctionalEvent.h"
+
 namespace oly::editor
 {
 	class PreferencesDocument : public IDocument
@@ -13,6 +15,8 @@ namespace oly::editor
 		PreferencesDesc _in_effect;
 
 	public:
+		FunctionalEvent<> OnActiveDescChanged;
+
 		static const char* GetVersion();
 
 		PreferencesDocument();
@@ -28,6 +32,8 @@ namespace oly::editor
 		const PreferencesDesc& GetActiveDesc() const;
 
 	private:
+		void ActiveDescChanged();
+
 		void Draw(PreferencesDesc& desc);
 		void Draw(EditSettingsDesc& desc);
 		void Draw(UndoHistorySettingsDesc& desc);

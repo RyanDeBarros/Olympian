@@ -18,6 +18,7 @@ namespace oly::editor
 		void Draw() override;
 
 		const PreferencesDesc& GetActiveDesc() const;
+		FunctionalEvent<>& OnActiveDescChanged();
 
 	private:
 		bool DrawUnsavedChangesModal();

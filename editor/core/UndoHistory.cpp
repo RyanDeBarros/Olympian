@@ -8,6 +8,7 @@ namespace oly::editor
 		_stack_count_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.CountLimit()),
 		_stack_size_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.SizeLimit())
 	{
+		_listener = PreferencesPanel::Instance().OnActiveDescChanged().subscribe([this]() { Prune(); });
 	}
 
 	void UndoHistory::Execute(std::unique_ptr<UndoAction>&& action)

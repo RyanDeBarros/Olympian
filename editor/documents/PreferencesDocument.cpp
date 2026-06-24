@@ -74,6 +74,7 @@ namespace oly::editor
 		Load(TOMLNode(table), _disk);
 		_scratch = _disk;
 		_in_effect = _disk;
+		ActiveDescChanged();
 		MarkClean();
 	}
 
@@ -87,17 +88,24 @@ namespace oly::editor
 		file << table;
 		_disk = _scratch;
 		_in_effect = _disk;
+		ActiveDescChanged();
 		MarkClean();
 	}
 
 	void PreferencesDocument::ApplyChanges()
 	{
 		_in_effect = _scratch;
+		ActiveDescChanged();
 	}
 
 	const PreferencesDesc& PreferencesDocument::GetActiveDesc() const
 	{
 		return _in_effect;
+	}
+
+	void PreferencesDocument::ActiveDescChanged()
+	{
+		OnActiveDescChanged.invoke();
 	}
 
 	void PreferencesDocument::Draw(PreferencesDesc& desc)

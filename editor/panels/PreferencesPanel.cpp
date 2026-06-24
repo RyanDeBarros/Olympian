@@ -67,8 +67,12 @@ namespace oly::editor
 
 	const PreferencesDesc& PreferencesPanel::GetActiveDesc() const
 	{
-		// TODO v9.1 some kind of event system for when settings are applied -> other entities that use preferences are notified
 		return _doc.GetActiveDesc();
+	}
+
+	FunctionalEvent<>& PreferencesPanel::OnActiveDescChanged()
+	{
+		return _doc.OnActiveDescChanged;
 	}
 
 	bool PreferencesPanel::DrawUnsavedChangesModal()
