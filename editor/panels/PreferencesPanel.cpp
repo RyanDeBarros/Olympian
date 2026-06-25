@@ -4,6 +4,7 @@
 #include "core/editor/Editor.h"
 #include "core/windows/MainWindow.h"
 #include "panels/PanelManager.h"
+#include "gui/UnsavedChangesModal.h"
 
 #include "definitions/Keys.h"
 
@@ -82,40 +83,18 @@ namespace oly::editor
 
 	bool PreferencesPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
 	{
-		bool close_window = false;
+		std::vector<std::string> description;
+		description.push_back("Editor preferences");
+		auto result = gui::DrawUnsavedChangesModal(popup, description);
 
-		if (ImGui::BeginPopupModal(popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::Text("Editor preferences");
+		if (result == gui::UnsavedChangesModalResult::SaveChanges)
+			_doc.Dump();
 
-			if (ImGui::Button("Save Changes"))
-			{
-				_doc.Dump();
-				ImGui::CloseCurrentPopup();
-				unsaved_changes_modal = false;
-				close_window = true;
-			}
+		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
+			_doc.Load();
 
-			ImGui::SameLine();
-			if (ImGui::Button("Discard Changes"))
-			{
-				_doc.Load();
-				ImGui::CloseCurrentPopup();
-				unsaved_changes_modal = false;
-				close_window = true;
-			}
-
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel Close"))
-			{
-				ImGui::CloseCurrentPopup();
-				unsaved_changes_modal = false;
-			}
-
-			ImGui::EndPopup();
-		}
-
-		return close_window;
+		unsaved_changes_modal = result != gui::UnsavedChangesModalResult::None;
+		return result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges;
 	}
 
 	bool PreferencesPanel::RequestShutdown()

@@ -12,6 +12,7 @@
 #include "documents/IDocument.h"
 
 #include "gui/scopes/IDScope.h"
+#include "gui/UnsavedChangesModal.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -236,52 +237,22 @@ namespace oly::editor
 		}
 	}
 
-	// TODO v9.1 general utility for unsaved changes modal in gui/. That way any decorative changes can be made to one source
-	enum class UnsavedChangesModalResult
+	static gui::UnsavedChangesModalResult DrawUnsavedChangesModalImpl(const char* popup, IDocument* doc)
 	{
-		None,
-		SaveChanges,
-		DiscardChanges,
-		CancelClose
-	};
-
-	static UnsavedChangesModalResult DrawUnsavedChangesModalImpl(const char* popup, IDocument* doc)
-	{
-		UnsavedChangesModalResult result = UnsavedChangesModalResult::None;
-
 		if (!doc)
-			return result;
+			return gui::UnsavedChangesModalResult::None;
 
-		if (ImGui::BeginPopupModal(popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			ImGui::Text(("Asset " + doc->TabName()).c_str());
-			ImGui::Text(("Full path: " + doc->GetOlyPath().string()).c_str());
+		std::vector<std::string> description;
+		description.push_back("Asset " + doc->TabName());
+		description.push_back("Full path: " + doc->GetOlyPath().string());
+		auto result = gui::DrawUnsavedChangesModal(popup, description);
 
-			if (ImGui::Button("Save Changes"))
-			{
-				doc->Dump();
-				ImGui::CloseCurrentPopup();
-				result = UnsavedChangesModalResult::SaveChanges;
-			}
+		if (result == gui::UnsavedChangesModalResult::SaveChanges)
+			doc->Dump();
 
-			ImGui::SameLine();
-			if (ImGui::Button("Discard Changes"))
-			{
-				doc->Load();
-				ImGui::CloseCurrentPopup();
-				result = UnsavedChangesModalResult::DiscardChanges;
-			}
+		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
+			doc->Load();
 
-			ImGui::SameLine();
-			if (ImGui::Button("Cancel Close"))
-			{
-				ImGui::CloseCurrentPopup();
-				result = UnsavedChangesModalResult::CancelClose;
-			}
-
-			ImGui::EndPopup();
-		}
-		
 		return result;
 	}
 
@@ -290,7 +261,7 @@ namespace oly::editor
 		IDocument* doc = _pending_close.empty() ? nullptr : _pending_close.front();
 		switch (DrawUnsavedChangesModalImpl(kTabUnsavedChangesPopup, doc))
 		{
-		case UnsavedChangesModalResult::SaveChanges:
+		case gui::UnsavedChangesModalResult::SaveChanges:
 			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
 			if (doc == _selected_tab)
 				_selected_tab = nullptr;
@@ -298,7 +269,7 @@ namespace oly::editor
 			_pending_close_set.erase(doc);
 			break;
 
-		case UnsavedChangesModalResult::DiscardChanges:
+		case gui::UnsavedChangesModalResult::DiscardChanges:
 			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
 			if (doc == _selected_tab)
 				_selected_tab = nullptr;
@@ -306,7 +277,7 @@ namespace oly::editor
 			_pending_close_set.erase(doc);
 			break;
 
-		case UnsavedChangesModalResult::CancelClose:
+		case gui::UnsavedChangesModalResult::CancelClose:
 			_pending_close.erase(_pending_close.begin());
 			_pending_close_set.erase(doc);
 			break;
@@ -317,14 +288,14 @@ namespace oly::editor
 	{
 		switch (DrawUnsavedChangesModalImpl(popup, _selected_tab))
 		{
-		case UnsavedChangesModalResult::SaveChanges:
-		case UnsavedChangesModalResult::DiscardChanges:
+		case gui::UnsavedChangesModalResult::SaveChanges:
+		case gui::UnsavedChangesModalResult::DiscardChanges:
 			CloseAllTabs(unsaved_changes_modal);
 			if (unsaved_changes_modal)
 				ImGui::OpenPopup(popup);
 			return !unsaved_changes_modal;
 
-		case UnsavedChangesModalResult::CancelClose:
+		case gui::UnsavedChangesModalResult::CancelClose:
 			unsaved_changes_modal = false;
 			return false;
 
