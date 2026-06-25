@@ -55,6 +55,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -66,11 +67,11 @@ namespace oly::editor
 		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
-		void Draw(TextureVariantDesc& desc);
-		void Draw(RasterTextureDesc& desc);
-		void Draw(VectorTextureDesc& desc);
-		void Draw(BaseTextureDesc& desc);
-		void Draw(SpritesheetDesc& desc);
+		void Draw(DataPath path, TextureVariantDesc& desc);
+		void Draw(DataPath path, RasterTextureDesc& desc);
+		void Draw(DataPath path, VectorTextureDesc& desc);
+		void Draw(DataPath path, BaseTextureDesc& desc);
+		void Draw(DataPath path, SpritesheetDesc& desc);
 
 		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
 		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);

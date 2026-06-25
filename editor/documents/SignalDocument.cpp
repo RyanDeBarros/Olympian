@@ -100,6 +100,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void* SignalDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
+	}
+
 	void SignalDocument::DrawSignals()
 	{
 		if (auto form = Form())
@@ -122,7 +127,7 @@ namespace oly::editor
 			}
 
 			if (!_scratch.signals.Empty())
-				Draw(_scratch.signals[_signal_slots.active_index]);
+				Draw(_scratch.signals.Subpath(DataPath(), _signal_slots.active_index), _scratch.signals[_signal_slots.active_index]);
 
 			if (_signal_slots.ConsumeOps(*_scratch.signals.ListAdapter()))
 				MarkDirty();
@@ -153,7 +158,7 @@ namespace oly::editor
 			}
 
 			if (!_scratch.routes.Empty())
-				Draw(_scratch.routes[_route_slots.active_index]);
+				Draw(_scratch.routes.Subpath(DataPath(), _route_slots.active_index), _scratch.routes[_route_slots.active_index]);
 
 			if (_route_slots.ConsumeOps(*_scratch.routes.ListAdapter()))
 				MarkDirty();
@@ -189,11 +194,11 @@ namespace oly::editor
 		return id_counter;
 	}
 
-	void SignalDocument::Draw(SignalDesc& desc)
+	void SignalDocument::Draw(DataPath path, SignalDesc& desc)
 	{
 		gui::Outline dup_outline;
 		
-		desc.id.Draw();
+		desc.id.Draw(path / desc.subpaths.id);
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -202,7 +207,7 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		desc.binding.Draw();
+		desc.binding.Draw(path / desc.subpaths.binding); // TODO v9.1 add back individual DRAW_FIELD() for safety
 
 		switch (desc.binding.scratch)
 		{
@@ -219,10 +224,10 @@ namespace oly::editor
 #undef SWITCH_CASE
 		}
 
-		desc.variant.Visit([this](auto& desc) { Draw(desc); });
+		desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc) { Draw(path, desc); });
 	}
 	
-	void SignalDocument::Draw(RouteDesc& desc)
+	void SignalDocument::Draw(DataPath path, RouteDesc& desc)
 	{
 		auto signal_id_counter = GetSignalIDCounter();
 		auto id_counter = GetIDCounter();
@@ -232,7 +237,7 @@ namespace oly::editor
 
 		gui::Outline dup_outline;
 
-		desc.id.Draw();
+		desc.id.Draw(path / desc.subpaths.id);
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -275,7 +280,7 @@ namespace oly::editor
 		DescIO::CheckDynamicListRevertButtons(desc.signals.scratch, desc.signals.def);
 	}
 
-	void SignalDocument::Draw(KeyDesc& desc)
+	void SignalDocument::Draw(DataPath path, KeyDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -293,23 +298,23 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.key.Draw();
+		desc.key.Draw(path / desc.subpaths.key);
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
 			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
-		desc.required_mods.Draw(disabled_required_mods);
+		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
-		desc.forbidden_mods.Draw(disabled_forbidden_mods);
+		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(MouseButtonDesc& desc)
+	void SignalDocument::Draw(DataPath path, MouseButtonDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -327,23 +332,23 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.button.Draw();
+		desc.button.Draw(path / desc.subpaths.button);
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
 			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
-		desc.required_mods.Draw(disabled_required_mods);
+		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
-		desc.forbidden_mods.Draw(disabled_forbidden_mods);
+		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(GamepadButtonDesc& desc)
+	void SignalDocument::Draw(DataPath path, GamepadButtonDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -361,13 +366,13 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.button.Draw();
+		desc.button.Draw(path / desc.subpaths.button);
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
+	void SignalDocument::Draw(DataPath path, GamepadAxis1DDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -385,14 +390,14 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.axis.Draw();
+		desc.axis.Draw(path / desc.subpaths.axis);
 
-		desc.deadzone.Draw();
+		desc.deadzone.Draw(path / desc.subpaths.deadzone);
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
+	void SignalDocument::Draw(DataPath path, GamepadAxis2DDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -410,46 +415,46 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.axis.Draw();
+		desc.axis.Draw(path / desc.subpaths.axis);
 
-		desc.deadzone.Draw();
+		desc.deadzone.Draw(path / desc.subpaths.deadzone);
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(CursorPosDesc& desc)
+	void SignalDocument::Draw(DataPath path, CursorPosDesc& desc)
 	{
 		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(ScrollDesc& desc)
+	void SignalDocument::Draw(DataPath path, ScrollDesc& desc)
 	{
 		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 
-	void SignalDocument::Draw(Modifier0dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier0dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Draw(desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(Modifier1dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier1dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Draw(desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(Modifier2dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier2dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Draw(desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(ModifierBaseDesc& desc)
+	void SignalDocument::Draw(DataPath path, ModifierBaseDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}

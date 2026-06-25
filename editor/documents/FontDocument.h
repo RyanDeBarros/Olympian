@@ -27,6 +27,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -38,8 +39,8 @@ namespace oly::editor
 		void DrawFontAtlases();
 		void DrawAtlasPreview();
 		
-		void Draw(FontFaceDesc& desc);
-		void Draw(FontAtlasDesc& desc);
+		void Draw(DataPath path, FontFaceDesc& desc);
+		void Draw(DataPath path, FontAtlasDesc& desc);
 
 		void Load(TOMLNode node, FullFontDesc& desc);
 		void Load(TOMLNode node, FontFaceDesc& desc);

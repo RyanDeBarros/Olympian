@@ -28,7 +28,7 @@ namespace oly::editor
 	{
 		gui::PropertyGrid grid;
 
-		Draw(_scratch);
+		Draw(DataPath(), _scratch);
 
 		if (gui::PropertyGrid::DirtyGrid())
 			MarkDirty();
@@ -91,6 +91,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void* PreferencesDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
+	}
+
 	void PreferencesDocument::ApplyEditorPreferences()
 	{
 		Editor::GetPreferences() = _scratch;
@@ -108,7 +113,7 @@ namespace oly::editor
 		Editor::Instance().OnPreferencesChanged.invoke();
 	}
 
-	void PreferencesDocument::Draw(PreferencesDesc& desc)
+	void PreferencesDocument::Draw(DataPath path, PreferencesDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -119,31 +124,31 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 
 			if (auto subform = Subform("Edit"))
-				Draw(desc.edit);
+				Draw(path / desc.subpaths.edit, desc.edit);
 		
 			if (auto subform = Subform("Tree View"))
-				Draw(desc.tree_view);
+				Draw(path / desc.subpaths.tree_view, desc.tree_view);
 		}
 	}
 
-	void PreferencesDocument::Draw(EditSettingsDesc& desc)
+	void PreferencesDocument::Draw(DataPath path, EditSettingsDesc& desc)
 	{
 		if (auto subform = Subform("Undo History"))
-			Draw(desc.undo_history);
+			Draw(path / desc.subpaths.undo_history, desc.undo_history);
 	}
 	
-	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Draw(DataPath path, UndoHistorySettingsDesc& desc)
 	{
 		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
+	void PreferencesDocument::Draw(DataPath path, TreeViewSettingsDesc& desc)
 	{
 		if (auto subform = Subform("Advanced##TreeView"))
-			Draw(desc.advanced);
+			Draw(path / desc.subpaths.advanced, desc.advanced);
 	}
 
-	void PreferencesDocument::Draw(TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesDocument::Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc)
 	{
 		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}

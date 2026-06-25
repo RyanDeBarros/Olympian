@@ -26,10 +26,15 @@ namespace oly::editor
 
 	void UndoHistory::Execute(std::unique_ptr<UndoAction>&& action)
 	{
+		action->Forward();
+		Push(std::move(action));
+	}
+
+	void UndoHistory::Push(std::unique_ptr<UndoAction>&& action)
+	{
 		_undo_stack_size += action->EmpiricalSize();
 		_redo_stack_size = 0;
 
-		action->Forward();
 		_undo.push_back(std::move(action));
 		_redo.clear();
 		Prune();

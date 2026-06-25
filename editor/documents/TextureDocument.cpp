@@ -47,7 +47,7 @@ namespace oly::editor
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
-			Draw(_scratch);
+			Draw(DataPath(), _scratch);
 
 			ImGui::TableNextColumn();
 			DrawPreview();
@@ -103,6 +103,11 @@ namespace oly::editor
 		_oly_path.dump_toml(table, _meta);
 		_disk = _scratch;
 		MarkClean();
+	}
+
+	void* TextureDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
 	}
 
 	detail::ResourcePath TextureDocument::GetSourcePath() const
@@ -410,7 +415,7 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
 	}
 
-	void TextureDocument::Draw(TextureVariantDesc& desc)
+	void TextureDocument::Draw(DataPath path, TextureVariantDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -423,7 +428,10 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 			}
 
-			desc.Visit(_slots.active_index, [this, &form](auto& d) { Draw(d); });
+			desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc_list) {
+				size_t index = _slots.active_index;
+				Draw(desc_list.Subpath(path, index), desc_list[index]);
+			});
 
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
@@ -433,25 +441,25 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(RasterTextureDesc& desc)
+	void TextureDocument::Draw(DataPath path, RasterTextureDesc& desc)
 	{
-		Draw(desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			desc.generate_mipmaps.Draw();
+			desc.generate_mipmaps.Draw(path / desc.subpaths.generate_mipmaps);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.storage.Draw();
+			desc.storage.Draw(path / desc.subpaths.storage);
 		}
 	}
 	
-	void TextureDocument::Draw(VectorTextureDesc& desc)
+	void TextureDocument::Draw(DataPath path, VectorTextureDesc& desc)
 	{
-		Draw(desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			desc.generate_mipmaps.Draw();
+			desc.generate_mipmaps.Draw(path / desc.subpaths.generate_mipmaps);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
@@ -459,43 +467,43 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(BaseTextureDesc& desc)
+	void TextureDocument::Draw(DataPath path, BaseTextureDesc& desc)
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
-			desc.min_filter.Draw();
+			desc.min_filter.Draw(path / desc.subpaths.min_filter);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.mag_filter.Draw();
+			desc.mag_filter.Draw(path / desc.subpaths.mag_filter);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.wrap_s.Draw();
-			desc.wrap_t.Draw();
+			desc.wrap_s.Draw(path / desc.subpaths.wrap_s);
+			desc.wrap_t.Draw(path / desc.subpaths.wrap_t);
 		}
 
 		if (auto subform = Subform("Animation", true))
 		{
 			if (auto disabled = DisabledSection(_gif))
 			{
-				desc.anim.Draw();
+				desc.anim.Draw(path / desc.subpaths.anim);
 				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 
 			if (desc.anim.scratch && !_gif)
-				Draw(desc.spritesheet);
+				Draw(path / desc.subpaths.spritesheet, desc.spritesheet);
 		}
 	}
 
-	void TextureDocument::Draw(SpritesheetDesc& desc)
+	void TextureDocument::Draw(DataPath path, SpritesheetDesc& desc)
 	{
-		desc.col_type.Draw();
+		desc.col_type.Draw(path / desc.subpaths.col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
 		DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
 
-		desc.row_type.Draw();
+		desc.row_type.Draw(path / desc.subpaths.row_type);
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
 		DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
 

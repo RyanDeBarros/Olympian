@@ -30,6 +30,8 @@ namespace oly::editor
 		EnumField<detail::PositioningMode> origin_offset_mode;
 		Vec2Field<MakeOpt<float>(), MakeOpt<float>()> origin_offset;
 
+		GENERATE_SUBPATHS(GLYPH_GENERATOR);
+
 		GlyphDesc();
 	};
 
@@ -39,6 +41,10 @@ namespace oly::editor
 		M(font_scale) \
 		M(storage)
 
+#define RASTER_FONT_GENERATOR(M) \
+		RASTER_FONT_PARTIAL_GENERATOR(M) \
+		M(glyphs)
+
 	struct RasterFontDesc
 	{
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> space_advance_width;
@@ -47,6 +53,8 @@ namespace oly::editor
 		EnumField<detail::StorageMode> storage;
 		VectorDesc<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;
+
+		GENERATE_SUBPATHS(RASTER_FONT_GENERATOR);
 
 		RasterFontDesc();
 	};

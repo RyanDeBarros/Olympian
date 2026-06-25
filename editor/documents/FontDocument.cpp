@@ -106,6 +106,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void* FontDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
+	}
+
 	detail::ResourcePath FontDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();
@@ -129,7 +134,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
-			Draw(_scratch.font_face);
+			Draw(DataPath() / _scratch.subpaths.font_face, _scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -149,7 +154,7 @@ namespace oly::editor
 				}
 
 				if (!_scratch.font_atlases.Empty())
-					Draw(_scratch.font_atlases[_atlas_slots.active_index]);
+					Draw(DataPath() / _scratch.subpaths.font_atlases, _scratch.font_atlases[_atlas_slots.active_index]);
 
 				if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
 					MarkDirty();
@@ -185,7 +190,7 @@ namespace oly::editor
 		ImGui::EndChild();
 	}
 
-	void FontDocument::Draw(FontFaceDesc& desc)
+	void FontDocument::Draw(DataPath path, FontFaceDesc& desc)
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
@@ -273,9 +278,9 @@ namespace oly::editor
 		}
 	}
 	
-	void FontDocument::Draw(FontAtlasDesc& desc)
+	void FontDocument::Draw(DataPath path, FontAtlasDesc& desc)
 	{
-		desc.font_size.Draw();
+		desc.font_size.Draw(path / desc.subpaths.font_size);
 		if (gui::PropertyGrid::DirtyRow())
 			DestroyFont();
 
@@ -283,13 +288,13 @@ namespace oly::editor
 
 		if (auto subform = Subform("Common buffer"))
 		{
-			desc.use_common_buffer_preset.Draw();
+			desc.use_common_buffer_preset.Draw(path / desc.subpaths.use_common_buffer_preset);
 
 			bool preset = desc.use_common_buffer_preset.scratch;
 			
 			if (auto disabled = DisabledSection(!preset))
 			{
-				desc.common_buffer_preset.Draw();
+				desc.common_buffer_preset.Draw(path / desc.subpaths.common_buffer_preset);
 
 				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
 				{
@@ -305,7 +310,7 @@ namespace oly::editor
 			}
 
 			if (auto disabled = DisabledSection(preset))
-				desc.common_buffer.Draw();
+				desc.common_buffer.Draw(path / desc.subpaths.common_buffer);
 		}
 	}
 

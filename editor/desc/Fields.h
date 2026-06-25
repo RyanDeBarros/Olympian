@@ -4,6 +4,7 @@
 
 #include "desc/DescIO.h"
 #include "desc/Serializer.h"
+#include "desc/UndoActions.h"
 
 #include "assets/TranslateKey.h"
 
@@ -13,12 +14,32 @@
 
 namespace oly::editor
 {
-#define _DRAW_FIELD(field) desc.field.Draw();
-#define DRAW_FIELDS(generator) generator(_DRAW_FIELD);
+#define _DRAW_FIELD(field) desc.field.Draw(path / desc.subpaths.field);
+#define DRAW_FIELDS(GENERATOR) GENERATOR(_DRAW_FIELD);
+
 #define _LOAD_FIELD(field) desc.field.Load(node);
-#define LOAD_FIELDS(generator) generator(_LOAD_FIELD)
+#define LOAD_FIELDS(GENERATOR) GENERATOR(_LOAD_FIELD)
+
 #define _DUMP_FIELD(field) desc.field.Dump(table);
-#define DUMP_FIELDS(generator) generator(_DUMP_FIELD)
+#define DUMP_FIELDS(GENERATOR) GENERATOR(_DUMP_FIELD)
+
+#define _SUBPATH_ENUM_ENTRY(field) _E_##field,
+#define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = _E_##field;
+#define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
+#define GENERATE_SUBPATHS(GENERATOR) \
+		private: enum : DataPathStep { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
+		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
+		void* VisitPath(DataPath path, std::type_index type) \
+		{ \
+			if (path.Empty()) \
+				return nullptr; \
+			switch (path.Step()) \
+			{ \
+				GENERATOR(_SUBPATH_VISIT_PATH); \
+			default: \
+				return nullptr; \
+			} \
+		}
 
 	extern detail::Key NullKey();
 
@@ -51,15 +72,26 @@ namespace oly::editor
 		{
 			array.push_back(Serializer<T>{}.Dump(scratch));
 		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (type == typeid(decltype(scratch)) && path.Empty())
+				return reinterpret_cast<void*>(&scratch);
+			else
+				return nullptr;
+		}
 	};
 
 	struct BoolField : public PrimitiveField<bool>
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -71,9 +103,12 @@ namespace oly::editor
 
 		using PrimitiveField<T>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
@@ -93,9 +128,12 @@ namespace oly::editor
 
 		using PrimitiveField<E>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch, this->def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
@@ -103,9 +141,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::string>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow()) // TODO v9.1 && gui::PropertyGrid::Value::GetDrawResult().ItemDeactivatedAfterEdit()? -> also for StringVector/ArrayField, etc.
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -113,9 +154,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<Color4>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -123,9 +167,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<Rect>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -133,9 +180,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<UVRect>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -143,9 +193,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
@@ -157,9 +210,12 @@ namespace oly::editor
 		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
 			: PrimitiveField<std::array<T, N>>(def, key, label), sublabels(sublabels) {}
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
@@ -171,9 +227,12 @@ namespace oly::editor
 	{
 		using PrimitiveField<std::array<T, N>>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
@@ -187,9 +246,12 @@ namespace oly::editor
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch, this->def, ui_state);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
@@ -215,9 +277,12 @@ namespace oly::editor
 			def_index = Index(def);
 		}
 
-		void Draw()
+		void Draw(DataPath path)
 		{
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def_index, names);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 
 		void Load(TOMLNode node)
@@ -255,6 +320,14 @@ namespace oly::editor
 
 			return -1;
 		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (type == typeid(decltype(scratch)) && path.Empty())
+				return reinterpret_cast<void*>(&scratch);
+			else
+				return nullptr;
+		}
 	};
 	
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
@@ -275,9 +348,12 @@ namespace oly::editor
 		{
 		}
 
-		void Draw()
+		void Draw(DataPath path)
 		{
-			DescIO::Draw(label, scratch, this->def, Min, Max);
+			auto initial = scratch;
+			DescIO::Draw(label, scratch, def, Min, Max);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 
 		void Load(TOMLNode node)
@@ -297,6 +373,14 @@ namespace oly::editor
 				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.Dump(scratch.has_value));
 				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.Dump(scratch.value));
 			}
+		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (type == typeid(decltype(scratch)) && path.Empty())
+				return reinterpret_cast<void*>(&scratch);
+			else
+				return nullptr;
 		}
 	};
 
@@ -326,10 +410,13 @@ namespace oly::editor
 		{
 		}
 
-		void Draw()
+		void Draw(DataPath path)
 		{
 			scratch.has_value = scratch.value != nullopt;
+			auto initial = scratch;
 			DescIO::Draw(label, scratch, def, Min, Max);
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSetAction(path, initial, scratch);
 		}
 
 		void Load(TOMLNode node)
@@ -346,6 +433,14 @@ namespace oly::editor
 		{
 			if (key != NullKey())
 				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch.has_value ? scratch.value : nullopt));
+		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (type == typeid(decltype(scratch)) && path.Empty())
+				return reinterpret_cast<void*>(&scratch);
+			else
+				return nullptr;
 		}
 	};
 
@@ -387,22 +482,25 @@ namespace oly::editor
 			SetFlags();
 		}
 
-		void Draw(const bool (&disabled)[Count])
+		void Draw(DataPath path, const bool (&disabled)[Count])
 		{
-			return Draw(static_cast<const bool*>(disabled));
+			return Draw(path, static_cast<const bool*>(disabled));
 		}
 
-		void Draw()
+		void Draw(DataPath path)
 		{
-			return Draw(nullptr);
+			return Draw(path, nullptr);
 		}
 
 	private:
-		void Draw(const bool* disabled)
+		void Draw(DataPath path, const bool* disabled)
 		{
+			auto initial = scratch;
 			SetFlags();
 			DescIO::Draw(label, scratch_flags, def_flags, names, disabled, Count);
 			SetEnum();
+			if (gui::PropertyGrid::DirtyRow())
+				PushFieldSyncSetAction(path, initial, scratch, [this]() { SetFlags(); });
 		}
 
 		void SetFlags()
@@ -435,6 +533,14 @@ namespace oly::editor
 		void Dump(toml::table& table) const
 		{
 			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(scratch));
+		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (type == typeid(decltype(scratch)) && path.Empty())
+				return reinterpret_cast<void*>(&scratch);
+			else
+				return nullptr;
 		}
 	};
 }

@@ -102,6 +102,23 @@ namespace oly::editor
 		{
 			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
 		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (path.Empty())
+				return nullptr;
+
+			int index = path.Step();
+			if (index >= 0 && index < vector.size())
+				return vector[index].VisitPath(path.Next(), type);
+			else
+				return nullptr;
+		}
+
+		DataPathSource Subpath(DataPath path, size_t index)
+		{
+			return path / static_cast<int>(index);
+		}
 	};
 
 	template<typename... Descriptors>
@@ -148,6 +165,11 @@ namespace oly::editor
 		{
 			return std::get_if<Descriptor>(&variant);
 		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			return std::visit([path, type](auto& desc) { return desc.VisitPath(path, type); }, variant);
+		}
 	};
 
 	template<typename Key, typename ValueDescriptor>
@@ -178,6 +200,23 @@ namespace oly::editor
 		auto end()
 		{
 			return map.end();
+		}
+
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (path.Empty())
+				return nullptr;
+
+			auto it = map.find(static_cast<Key>(path.Step()));
+			if (it != map.end())
+				return it->second.VisitPath(path.Next(), type);
+			else
+				return nullptr;
+		}
+
+		DataPathSource Subpath(DataPath path, Key key)
+		{
+			return path / static_cast<int>(key);
 		}
 	};
 }

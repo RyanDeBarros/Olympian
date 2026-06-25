@@ -59,16 +59,18 @@ namespace oly::editor
 
 	void IDocument::Undo()
 	{
+		DataPathVisitor _data_path_visitor([this](DataPath path, std::type_index type) { return VisitPath(path, type); });
 		_undo_history->Undo();
 	}
 
 	void IDocument::Redo()
 	{
+		DataPathVisitor _data_path_visitor([this](DataPath path, std::type_index type) { return VisitPath(path, type); });
 		_undo_history->Redo();
 	}
 
-	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc)
-		: _doc(doc), _uh_scope(*doc._undo_history)
+	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
+		_doc(doc), _uh_scope(*doc._undo_history)
 	{
 	}
 

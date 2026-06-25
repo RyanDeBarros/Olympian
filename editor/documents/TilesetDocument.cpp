@@ -157,8 +157,10 @@ namespace oly::editor
 		UpdateActiveTextures();
 		gui::IDScope scope(this);
 
+		DataPathSource path;
+
 		if (auto subform = Subform("Advanced"))
-			_scratch.storage.Draw();
+			_scratch.storage.Draw(path / _scratch.subpaths.storage);
 
 		if (ImGui::BeginTabBar("##Editors"))
 		{
@@ -218,6 +220,11 @@ namespace oly::editor
 		_oly_path.dump_toml(table, _meta);
 		_disk = _scratch;
 		MarkClean();
+	}
+
+	void* TilesetDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
 	}
 
 	void TilesetDocument::DrawGroupEditor()
@@ -426,18 +433,20 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
+					// TODO v9.1 push undo actions for all manual document drawing outside of field system
 					desc.texture.scratch = desc.texture.def;
 					OnActiveTextureChanged(grid);
 				}
 			}
 
-			desc.texture_index.Draw();
+			auto path = GetAssignmentPath(grid);
+			desc.texture_index.Draw(path / desc.subpaths.texture_index);
 			if (gui::PropertyGrid::DirtyRow())
 				OnActiveTextureChanged(grid);
 
-			desc.uvs.Draw();
-			desc.reflection.Draw();
-			desc.rotation.Draw();
+			desc.uvs.Draw(path / desc.subpaths.uvs);
+			desc.reflection.Draw(path / desc.subpaths.reflection);
+			desc.rotation.Draw(path / desc.subpaths.rotation);
 		}
 	}
 
@@ -492,6 +501,19 @@ namespace oly::editor
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
 	{
 		return _scratch.assignments.map[config];
+	}
+
+	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfigGrid grid)
+	{
+		return GetAssignmentPath(GetResolvedTileConfig(grid));
+	}
+
+	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
+	{
+		DataPathSource path;
+		path /= _scratch.subpaths.assignments;
+		path /= _scratch.assignments.subpaths.map;
+		return _scratch.assignments.map.Subpath(path, config);
 	}
 
 	void TilesetDocument::OnActiveTextureChanged(const detail::TileConfigGrid grid)

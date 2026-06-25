@@ -27,10 +27,11 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 	private:
-		void Draw(RasterFontDesc& desc);
-		void Draw(GlyphDesc& desc);
+		void Draw(DataPath path, RasterFontDesc& desc);
+		void Draw(DataPath path, GlyphDesc& desc);
 
 		void Load(TOMLNode node, RasterFontDesc& desc);
 		void Load(TOMLNode node, GlyphDesc& desc);

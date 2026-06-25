@@ -30,6 +30,7 @@ namespace oly::editor
 		static UndoHistory& ActiveInstance();
 
 		void Execute(std::unique_ptr<UndoAction>&& action);
+		void Push(std::unique_ptr<UndoAction>&& action);
 
 		void Undo();
 		void Redo();

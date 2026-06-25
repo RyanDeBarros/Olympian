@@ -13,6 +13,8 @@ namespace oly::editor
 		BoolField boxed;
 		BoolField stretch;
 
+		GENERATE_SUBPATHS(VIEWPORT_GENERATOR);
+
 		ViewportDesc();
 	};
 
@@ -65,6 +67,8 @@ namespace oly::editor
 		BoolField window_opengl_forward_compat;
 		BoolField window_context_debug;
 
+		GENERATE_SUBPATHS(WINDOW_HINTS_GENERATOR);
+
 		WindowHintsDesc();
 	};
 
@@ -88,6 +92,8 @@ namespace oly::editor
 		WindowHintsDesc window_hints;
 		static const detail::Key window_hints_key;
 
+		GENERATE_SUBPATHS(WINDOW_GENERATOR);
+
 		WindowDesc();
 	};
 
@@ -104,6 +110,8 @@ namespace oly::editor
 		static const detail::Key window_key;
 		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
 
+		GENERATE_SUBPATHS(PLATFORM_GENERATOR);
+
 		PlatformDesc();
 	};
 
@@ -115,6 +123,8 @@ namespace oly::editor
 	{
 		StringArrayField<32> masks;
 		StringArrayField<32> layers;
+
+		GENERATE_SUBPATHS(COLLISION_GENERATOR);
 
 		CollisionDesc();
 	};
@@ -133,6 +143,8 @@ namespace oly::editor
 		BoolField warning;
 		BoolField error;
 		BoolField fatal;
+
+		GENERATE_SUBPATHS(LOGGER_ENABLE_GENERATOR);
 
 		LoggerEnableDesc();
 	};
@@ -157,6 +169,8 @@ namespace oly::editor
 		LoggerEnableDesc enable;
 		static const detail::Key enable_key;
 
+		GENERATE_SUBPATHS(LOGGER_GENERATOR);
+
 		LoggerDesc();
 	};
 
@@ -168,6 +182,8 @@ namespace oly::editor
 	{
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> frame_length_clip;
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
+
+		GENERATE_SUBPATHS(FRAME_RATE_GENERATOR);
 
 		FrameRateDesc();
 	};
@@ -188,6 +204,8 @@ namespace oly::editor
 		static const detail::Key logger_key;
 		FrameRateDesc frame_rate;
 		static const detail::Key frame_rate_key;
+
+		GENERATE_SUBPATHS(CONTEXT_GENERATOR);
 	};
 
 #define PROJECT_GENERATOR(M) \
@@ -197,5 +215,7 @@ namespace oly::editor
 	{
 		ContextDesc context;
 		static const detail::Key context_key;
+
+		GENERATE_SUBPATHS(PROJECT_GENERATOR);
 	};
 }

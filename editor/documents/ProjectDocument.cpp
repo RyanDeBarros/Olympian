@@ -32,7 +32,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		Draw(DataPath(), _scratch);
 	}
 
 	void ProjectDocument::DrawMenuBar()
@@ -97,79 +97,84 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	void* ProjectDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
+	}
+
 	std::string ProjectDocument::TabName() const
 	{
 		return ProjectInfo::Instance().ProjectName();
 	}
 
-	void ProjectDocument::Draw(ProjectDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ProjectDesc& desc)
 	{
 		if (auto form = Form())
-			Draw(desc.context);
+			Draw(path / desc.subpaths.context, desc.context);
 	}
 	
-	void ProjectDocument::Draw(ContextDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ContextDesc& desc)
 	{
 		if (auto subform = Subform("Platform"))
-			Draw(desc.platform);
+			Draw(path / desc.subpaths.platform, desc.platform);
 
 		if (auto subform = Subform("Collision"))
-			Draw(desc.collision);
+			Draw(path / desc.subpaths.collision, desc.collision);
 
 		if (auto subform = Subform("Logger"))
-			Draw(desc.logger);
+			Draw(path / desc.subpaths.logger, desc.logger);
 
 		if (auto subform = Subform("Frame Rate"))
-			Draw(desc.frame_rate);
+			Draw(path / desc.subpaths.frame_rate, desc.frame_rate);
 	}
 
-	void ProjectDocument::Draw(PlatformDesc& desc)
+	void ProjectDocument::Draw(DataPath path, PlatformDesc& desc)
 	{
 		if (auto subform = Subform("Window"))
-			Draw(desc.window);
+			Draw(path / desc.subpaths.window, desc.window);
 		
 		DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 	}
 	
-	void ProjectDocument::Draw(WindowDesc& desc)
+	void ProjectDocument::Draw(DataPath path, WindowDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		if (auto subform = Subform("Viewport"))
-			Draw(desc.viewport);
+			Draw(path / desc.subpaths.viewport, desc.viewport);
 
 		if (auto subform = Subform("Window hints"))
-			Draw(desc.window_hints);
+			Draw(path / desc.subpaths.window_hints, desc.window_hints);
 	}
 
-	void ProjectDocument::Draw(ViewportDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ViewportDesc& desc)
 	{
 		DRAW_FIELDS(VIEWPORT_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(WindowHintsDesc& desc)
+	void ProjectDocument::Draw(DataPath path, WindowHintsDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(CollisionDesc& desc)
+	void ProjectDocument::Draw(DataPath path, CollisionDesc& desc)
 	{
 		DRAW_FIELDS(COLLISION_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(LoggerDesc& desc)
+	void ProjectDocument::Draw(DataPath path, LoggerDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Enable Streams"))
-			Draw(desc.enable);
+			Draw(path / desc.subpaths.enable, desc.enable);
 	}
 	
-	void ProjectDocument::Draw(LoggerEnableDesc& desc)
+	void ProjectDocument::Draw(DataPath path, LoggerEnableDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(FrameRateDesc& desc)
+	void ProjectDocument::Draw(DataPath path, FrameRateDesc& desc)
 	{
 		DRAW_FIELDS(FRAME_RATE_GENERATOR);
 	}

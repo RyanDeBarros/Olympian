@@ -42,6 +42,8 @@ namespace oly::editor
 		BoolField row_major;
 		BoolField row_up;
 
+		GENERATE_SUBPATHS(SPRITESHEET_GENERATOR);
+
 		SpritesheetDesc();
 	};
 
@@ -50,6 +52,11 @@ namespace oly::editor
 		M(mag_filter) \
 		M(wrap_s) \
 		M(wrap_t)
+
+#define BASE_TEXTURE_GENERATOR(M) \
+		TEXTURE_PARAMS_GENERATOR(M) \
+		M(anim) \
+		M(spritesheet)
 
 	struct BaseTextureDesc
 	{
@@ -60,6 +67,8 @@ namespace oly::editor
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 
+		GENERATE_SUBPATHS(BASE_TEXTURE_GENERATOR);
+
 		BaseTextureDesc(GLenum default_filter);
 	};
 
@@ -67,11 +76,17 @@ namespace oly::editor
 		M(generate_mipmaps) \
 		M(storage)
 
+#define RASTER_TEXTURE_GENERATOR(M) \
+		M(base) \
+		RASTER_TEXTURE_PARTIAL_GENERATOR(M)
+
 	struct RasterTextureDesc
 	{
 		BaseTextureDesc base;
 		BoolField generate_mipmaps;
 		EnumField<detail::StorageMode> storage;
+
+		GENERATE_SUBPATHS(RASTER_TEXTURE_GENERATOR);
 
 		RasterTextureDesc();
 	};
@@ -85,6 +100,10 @@ namespace oly::editor
 		M(generate_mipmaps) \
 		VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M)
 
+#define VECTOR_TEXTURE_GENERATOR(M) \
+		M(base) \
+		VECTOR_TEXTURE_PARTIAL_GENERATOR(M)
+
 	struct VectorTextureDesc
 	{
 		BaseTextureDesc base;
@@ -93,8 +112,13 @@ namespace oly::editor
 		EnumField<detail::StorageMode> abstract_storage;
 		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
 
+		GENERATE_SUBPATHS(VECTOR_TEXTURE_GENERATOR);
+
 		VectorTextureDesc();
 	};
+
+#define TEXTURE_VARIANT_GENERATOR(M) \
+		M(variant)
 
 	template<typename T>
 	concept TextureSlotDesc = std::is_same_v<T, RasterTextureDesc> || std::is_same_v<T, VectorTextureDesc>;
@@ -103,6 +127,8 @@ namespace oly::editor
 	{
 		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
+
+		GENERATE_SUBPATHS(TEXTURE_VARIANT_GENERATOR);
 
 		size_t Size() const;
 		bool Empty() const;

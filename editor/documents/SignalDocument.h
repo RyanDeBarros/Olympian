@@ -31,6 +31,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 	private:
 		void DrawSignals();
@@ -39,19 +40,19 @@ namespace oly::editor
 		Counter<std::string> GetRouteIDCounter() const;
 		Counter<std::string> GetIDCounter() const;
 
-		void Draw(SignalDesc& desc);
-		void Draw(RouteDesc& desc);
-		void Draw(KeyDesc& desc);
-		void Draw(MouseButtonDesc& desc);
-		void Draw(GamepadButtonDesc& desc);
-		void Draw(GamepadAxis1DDesc& desc);
-		void Draw(GamepadAxis2DDesc& desc);
-		void Draw(CursorPosDesc& desc);
-		void Draw(ScrollDesc& desc);
-		void Draw(Modifier0dDesc& desc);
-		void Draw(Modifier1dDesc& desc);
-		void Draw(Modifier2dDesc& desc);
-		void Draw(ModifierBaseDesc& desc);
+		void Draw(DataPath path, SignalDesc& desc);
+		void Draw(DataPath path, RouteDesc& desc);
+		void Draw(DataPath path, KeyDesc& desc);
+		void Draw(DataPath path, MouseButtonDesc& desc);
+		void Draw(DataPath path, GamepadButtonDesc& desc);
+		void Draw(DataPath path, GamepadAxis1DDesc& desc);
+		void Draw(DataPath path, GamepadAxis2DDesc& desc);
+		void Draw(DataPath path, CursorPosDesc& desc);
+		void Draw(DataPath path, ScrollDesc& desc);
+		void Draw(DataPath path, Modifier0dDesc& desc);
+		void Draw(DataPath path, Modifier1dDesc& desc);
+		void Draw(DataPath path, Modifier2dDesc& desc);
+		void Draw(DataPath path, ModifierBaseDesc& desc);
 
 		void Load(TOMLNode node, SignalFullDesc& desc);
 		void Load(TOMLNode node, SignalDesc& desc);

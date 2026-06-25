@@ -4,6 +4,7 @@
 
 #include "gui/properties/PropertyGrid.h"
 #include "core/UndoHistory.h"
+#include "desc/DataPath.h"
 
 #include "assets/ResourcePath.h"
 
@@ -28,6 +29,7 @@ namespace oly::editor
 		virtual void DrawMenuBar();
 		virtual void Load() = 0;
 		virtual void Dump() = 0;
+		virtual void* VisitPath(DataPath path, std::type_index type) = 0;
 
 		const detail::ResourcePath& GetOlyPath() const;
 		virtual std::string TabName() const;

@@ -33,7 +33,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		Draw(DataPath(), _scratch);
 	}
 
 	void RasterFontDocument::Load()
@@ -84,7 +84,12 @@ namespace oly::editor
 		MarkClean();
 	}
 
-	void RasterFontDocument::Draw(RasterFontDesc& desc)
+	void* RasterFontDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return _scratch.VisitPath(path, type);
+	}
+
+	void RasterFontDocument::Draw(DataPath path, RasterFontDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -107,7 +112,7 @@ namespace oly::editor
 				}
 
 				if (!desc.glyphs.Empty())
-					Draw(_scratch.glyphs[_glyph_model.active_index]);
+					Draw(desc.glyphs.Subpath(path, _glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
 
 				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
@@ -118,7 +123,7 @@ namespace oly::editor
 		}
 	}
 
-	void RasterFontDocument::Draw(GlyphDesc& desc)
+	void RasterFontDocument::Draw(DataPath path, GlyphDesc& desc)
 	{
 		GUIState::InputDataStyleStack style_stack;
 		const bool empty_codepoint = desc.codepoint.scratch.empty();
@@ -131,7 +136,7 @@ namespace oly::editor
 		}
 
 		std::string previous_codepoint = desc.codepoint.scratch;
-		desc.codepoint.Draw();
+		desc.codepoint.Draw(path / desc.subpaths.codepoint);
 		if (gui::PropertyGrid::DirtyRow())
 		{
 			_codepoint_counter.increment(desc.codepoint.scratch);

@@ -25,17 +25,16 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 	private:
-		void Draw(FontFamilyDesc& desc);
-		void Draw(FontStyleDesc& desc);
+		void Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
+		void Draw(DataPath path, FontStyleDesc& desc);
 
 		void Load(TOMLNode node, FontFamilyDesc& desc);
 		void Load(TOMLNode node, FontStyleDesc& desc);
 
 		void Dump(toml::table& table, FontFamilyDesc& desc);
 		void Dump(toml::table& table, FontStyleDesc& desc);
-
-		FontStyleDesc& GetFontStyleDesc(detail::FontStyleMode style);
 	};
 }

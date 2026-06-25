@@ -21,6 +21,7 @@ namespace oly::editor
 		void DrawMenuBar() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 		void ApplyEditorPreferences();
 		void RevertEditorPreferences();
@@ -28,11 +29,11 @@ namespace oly::editor
 	private:
 		void ActiveDescChanged();
 
-		void Draw(PreferencesDesc& desc);
-		void Draw(EditSettingsDesc& desc);
-		void Draw(UndoHistorySettingsDesc& desc);
-		void Draw(TreeViewSettingsDesc& desc);
-		void Draw(TreeViewAdvancedSettingsDesc& desc);
+		void Draw(DataPath path, PreferencesDesc& desc);
+		void Draw(DataPath path, EditSettingsDesc& desc);
+		void Draw(DataPath path, UndoHistorySettingsDesc& desc);
+		void Draw(DataPath path, TreeViewSettingsDesc& desc);
+		void Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc);
 
 		void Load(TOMLNode node, PreferencesDesc& desc);
 		void Load(TOMLNode node, EditSettingsDesc& desc);

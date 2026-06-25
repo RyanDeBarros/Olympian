@@ -15,6 +15,9 @@ namespace oly::editor
 		M(reflection) \
 		M(rotation)
 
+#define TILESET_ASSIGNMENT_SUBPATH_GENERATOR(M) \
+		TILESET_ASSIGNMENT_GENERATOR(M)
+
 	struct TilesetAssignmentDesc
 	{
 		StringField texture;
@@ -23,12 +26,19 @@ namespace oly::editor
 		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
 		EnumField<detail::TileRotation> rotation;
 
+		GENERATE_SUBPATHS(TILESET_ASSIGNMENT_SUBPATH_GENERATOR);
+
 		TilesetAssignmentDesc();
 	};
+
+#define TILESET_ASSIGNMENT_MAP_SUBPATH_GENERATOR(M) \
+		M(map)
 
 	struct TilesetAssignmentMapDesc
 	{
 		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
+
+		GENERATE_SUBPATHS(TILESET_ASSIGNMENT_MAP_SUBPATH_GENERATOR);
 
 		TilesetAssignmentMapDesc();
 	};
@@ -36,11 +46,17 @@ namespace oly::editor
 #define TILESET_PARTIAL_GENERATOR(M) \
 		M(storage)
 
+#define TILESET_SUBPATH_GENERATOR(M) \
+		TILESET_PARTIAL_GENERATOR(M) \
+		M(assignments)
+
 	struct TilesetDesc
 	{
 		EnumField<detail::StorageMode> storage;
 		TilesetAssignmentMapDesc assignments;
 		static const detail::Key assignments_key;
+
+		GENERATE_SUBPATHS(TILESET_SUBPATH_GENERATOR);
 
 		TilesetDesc();
 	};

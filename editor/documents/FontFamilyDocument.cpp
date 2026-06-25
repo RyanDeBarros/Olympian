@@ -33,7 +33,13 @@ namespace oly::editor
 
 		gui::IDScope scope(this);
 		if (auto form = Form())
-			Draw(_scratch);
+		{
+			DataPath path;
+			Draw(path, _scratch, "Regular", detail::FontStyleMode::Regular);
+			Draw(path, _scratch, "Bold", detail::FontStyleMode::Bold);
+			Draw(path, _scratch, "Italic", detail::FontStyleMode::Italic);
+			Draw(path, _scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+		}
 	}
 
 	void FontFamilyDocument::Load()
@@ -78,22 +84,18 @@ namespace oly::editor
 		MarkClean();
 	}
 
-	void FontFamilyDocument::Draw(FontFamilyDesc& desc)
+	void* FontFamilyDocument::VisitPath(DataPath path, std::type_index type)
 	{
-		if (auto section = Subform("Regular"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Regular));
-
-		if (auto section = Subform("Bold"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Bold));
-
-		if (auto section = Subform("Italic"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Italic));
-
-		if (auto section = Subform("Bold-italic"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::BoldItalic));
+		return _scratch.VisitPath(path, type);
 	}
-	
-	void FontFamilyDocument::Draw(FontStyleDesc& desc)
+
+	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
+	{
+		if (auto section = Subform(subform_header))
+			Draw(desc.styles.Subpath(path / desc.subpaths.styles, style), desc.styles[style]);
+	}
+
+	void FontFamilyDocument::Draw(DataPath path, FontStyleDesc& desc)
 	{
 		DRAW_FIELDS(STYLE_GENERATOR);
 	}
@@ -137,10 +139,5 @@ namespace oly::editor
 	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)
 	{
 		DUMP_FIELDS(STYLE_GENERATOR);
-	}
-
-	FontStyleDesc& FontFamilyDocument::GetFontStyleDesc(detail::FontStyleMode style)
-	{
-		return _scratch.styles[style];
 	}
 }

@@ -23,6 +23,8 @@ namespace oly::editor
 		Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
 		BoolArrayField<3> invert;
 
+		GENERATE_SUBPATHS(MODIFIER_BASE_GENERATOR);
+
 		ModifierBaseDesc();
 	};
 
@@ -37,6 +39,8 @@ namespace oly::editor
 	{
 		ModifierBaseDesc base;
 		EnumField<detail::Axis0dConversion> conversion;
+
+		GENERATE_SUBPATHS(MODIFIER_0D_GENERATOR);
 
 		Modifier0dDesc();
 	};
@@ -53,6 +57,8 @@ namespace oly::editor
 		ModifierBaseDesc base;
 		EnumField<detail::Axis1dConversion> conversion;
 
+		GENERATE_SUBPATHS(MODIFIER_1D_GENERATOR);
+
 		Modifier1dDesc();
 	};
 
@@ -67,6 +73,8 @@ namespace oly::editor
 	{
 		ModifierBaseDesc base;
 		EnumField<detail::Axis2dConversion> conversion;
+
+		GENERATE_SUBPATHS(MODIFIER_2D_GENERATOR);
 
 		Modifier2dDesc();
 	};
@@ -90,6 +98,8 @@ namespace oly::editor
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
+		GENERATE_SUBPATHS(KEY_GENERATOR);
+
 		KeyDesc();
 	};
 
@@ -112,6 +122,8 @@ namespace oly::editor
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
+		GENERATE_SUBPATHS(MOUSE_BUTTON_GENERATOR);
+
 		MouseButtonDesc();
 	};
 
@@ -126,6 +138,8 @@ namespace oly::editor
 	{
 		DisjointEnumField<GLenum> button;
 		Modifier0dDesc modifier;
+
+		GENERATE_SUBPATHS(GAMEPAD_BUTTON_GENERATOR);
 
 		GamepadButtonDesc();
 	};
@@ -144,6 +158,8 @@ namespace oly::editor
 		Modifier1dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
+		GENERATE_SUBPATHS(GAMEPAD_AXIS_1D_GENERATOR);
+
 		GamepadAxis1DDesc();
 	};
 
@@ -161,6 +177,8 @@ namespace oly::editor
 		Modifier2dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
+		GENERATE_SUBPATHS(GAMEPAD_AXIS_2D_GENERATOR);
+
 		GamepadAxis2DDesc();
 	};
 
@@ -173,6 +191,8 @@ namespace oly::editor
 	struct CursorPosDesc
 	{
 		Modifier2dDesc modifier;
+
+		GENERATE_SUBPATHS(CURSOR_POS_GENERATOR);
 	};
 
 #define SCROLL_PARTIAL_GENERATOR(M)
@@ -184,6 +204,8 @@ namespace oly::editor
 	struct ScrollDesc
 	{
 		Modifier2dDesc modifier;
+
+		GENERATE_SUBPATHS(SCROLL_GENERATOR);
 	};
 
 #define SIGNAL_PARTIAL_GENERATOR(M) \
@@ -210,6 +232,8 @@ namespace oly::editor
 		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
+		GENERATE_SUBPATHS(SIGNAL_GENERATOR);
+
 		SignalDesc();
 	};
 
@@ -221,6 +245,8 @@ namespace oly::editor
 	{
 		StringField id;
 		StringVectorField signals;
+
+		GENERATE_SUBPATHS(ROUTE_GENERATOR);
 
 		RouteDesc();
 	};
@@ -235,5 +261,7 @@ namespace oly::editor
 		static const detail::Key signals_key;
 		VectorDesc<RouteDesc> routes;
 		static const detail::Key routes_key;
+
+		GENERATE_SUBPATHS(SIGNAL_FULL_GENERATOR);
 	};
 }

@@ -154,6 +154,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		void* VisitPath(DataPath path, std::type_index type) override;
 
 	private:
 		void DrawGroupEditor();
@@ -169,6 +170,8 @@ namespace oly::editor
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
+		DataPathSource GetAssignmentPath(const detail::TileConfigGrid grid);
+		DataPathSource GetAssignmentPath(const detail::TileConfig config);
 		void OnActiveTextureChanged(const detail::TileConfigGrid grid);
 		void UpdateActiveTextures();
 
