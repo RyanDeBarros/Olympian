@@ -22,14 +22,14 @@ namespace oly::editor
 	{
 	}
 
-	void ProjectDocument::Init()
+	void ProjectDocument::InitImpl()
 	{
 		Load();
 	}
 
 	void ProjectDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
 		Draw(_scratch);

@@ -25,7 +25,7 @@ namespace oly::editor
 		DestroyFont();
 	}
 
-	void FontDocument::Init()
+	void FontDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
 		{
@@ -40,7 +40,7 @@ namespace oly::editor
 
 	void FontDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
 

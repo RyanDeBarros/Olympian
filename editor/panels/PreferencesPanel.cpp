@@ -23,7 +23,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of PreferencesPanel");
 	}
 
-	void PreferencesPanel::Init()
+	void PreferencesPanel::InitImpl()
 	{
 		_doc.Init();
 	}
@@ -80,6 +80,7 @@ namespace oly::editor
 		}
 	}
 
+	// TODO v9.1 Editor should own preferences desc, not PreferencesPanel. PreferencesDocument _in_effect should actually be a reference to the editor's copy
 	const PreferencesDesc& PreferencesPanel::GetActiveDesc() const
 	{
 		return _doc.GetActiveDesc();

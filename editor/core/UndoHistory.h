@@ -18,8 +18,6 @@ namespace oly::editor
 
 	class UndoHistory
 	{
-		size_t _stack_count_limit;
-		size_t _stack_size_limit;
 		std::vector<std::unique_ptr<UndoAction>> _undo;
 		size_t _undo_stack_size = 0;
 		std::vector<std::unique_ptr<UndoAction>> _redo;
@@ -28,6 +26,8 @@ namespace oly::editor
 
 	public:
 		UndoHistory();
+
+		static UndoHistory& ActiveInstance();
 
 		void Execute(std::unique_ptr<UndoAction>&& action);
 
@@ -39,5 +39,13 @@ namespace oly::editor
 	private:
 		void PruneUndoCount(size_t count_limit);
 		void PruneUndoSize(size_t size_limit);
+	};
+
+	struct UndoHistoryActiveScope
+	{
+		UndoHistoryActiveScope(UndoHistory& undo_history);
+		UndoHistoryActiveScope(const UndoHistoryActiveScope&) = delete;
+		UndoHistoryActiveScope(UndoHistoryActiveScope&&) = delete;
+		~UndoHistoryActiveScope();
 	};
 }

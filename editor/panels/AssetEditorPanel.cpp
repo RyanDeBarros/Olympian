@@ -35,7 +35,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of AssetEditorPanel");
 	}
 
-	void AssetEditorPanel::Init()
+	void AssetEditorPanel::InitImpl()
 	{
 		open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
 	}
@@ -120,6 +120,12 @@ namespace oly::editor
 
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
 			SaveAllTabs();
+
+		if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal))
+			SelectedTabUndo();
+
+		if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal))
+			SelectedTabRedo();
 	}
 
 	void AssetEditorPanel::DrawTabBar()
@@ -392,6 +398,18 @@ namespace oly::editor
 	{
 		for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			DocumentManager::Instance().GetDocument(i).Dump();
+	}
+
+	void AssetEditorPanel::SelectedTabUndo() const
+	{
+		if (_selected_tab)
+			_selected_tab->Undo();
+	}
+
+	void AssetEditorPanel::SelectedTabRedo() const
+	{
+		if (_selected_tab)
+			_selected_tab->Redo();
 	}
 
 	bool AssetEditorPanel::RequestShutdown()

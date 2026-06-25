@@ -16,7 +16,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of ContentBrowserPanel");
 	}
 
-	void ContentBrowserPanel::Init()
+	void ContentBrowserPanel::InitImpl()
 	{
 		// NOP
 	}

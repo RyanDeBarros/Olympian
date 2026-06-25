@@ -23,7 +23,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void TextureDocument::Init()
+	void TextureDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
 		{
@@ -39,7 +39,7 @@ namespace oly::editor
 
 	void TextureDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		UpdatePreviewTexture();
 

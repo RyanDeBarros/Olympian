@@ -21,7 +21,7 @@ namespace oly::editor
 
 		PreferencesDocument();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
 		void DrawMenuBar() override;
 		void Load() override;

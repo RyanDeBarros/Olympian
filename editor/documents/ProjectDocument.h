@@ -20,7 +20,7 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
 		void DrawMenuBar() override;
 		void Load() override;

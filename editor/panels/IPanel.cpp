@@ -25,6 +25,16 @@ namespace oly::editor
 
 	IPanel* IPanel::_gain_next = nullptr;
 
+	void IPanel::Init()
+	{
+		InitImpl();
+	}
+
+	void IPanel::Terminate()
+	{
+		TerminateImpl();
+	}
+
 	void IPanel::Open()
 	{
 		_open = true;

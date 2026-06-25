@@ -15,7 +15,7 @@ namespace oly::editor
 	public:
 		static PreferencesPanel& Instance();
 
-		void Init() override;
+		void InitImpl() override;
 		const char* GetTitle() const override;
 		void Draw() override;
 

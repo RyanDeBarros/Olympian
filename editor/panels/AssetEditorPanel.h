@@ -21,7 +21,7 @@ namespace oly::editor
 	public:
 		static AssetEditorPanel& Instance();
 
-		void Init() override;
+		void InitImpl() override;
 		const char* GetTitle() const override;
 		void Draw() override;
 
@@ -44,6 +44,9 @@ namespace oly::editor
 
 		void SaveSelectedTab() const;
 		void SaveAllTabs() const;
+
+		void SelectedTabUndo() const;
+		void SelectedTabRedo() const;
 
 		bool RequestShutdown();
 	};

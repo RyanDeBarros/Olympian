@@ -1,14 +1,25 @@
 #include "UndoHistory.h"
 
+#include "core/Errors.h"
 #include "panels/PreferencesPanel.h"
+
+#include <stack>
 
 namespace oly::editor
 {
-	UndoHistory::UndoHistory() :
-		_stack_count_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.CountLimit()),
-		_stack_size_limit(PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.SizeLimit())
+	static std::stack<UndoHistory*> UNDO_HISTORY_STACK;
+
+	UndoHistory::UndoHistory()
 	{
 		_listener = PreferencesPanel::Instance().OnActiveDescChanged().subscribe([this]() { Prune(); });
+	}
+
+	UndoHistory& UndoHistory::ActiveInstance()
+	{
+		if (UNDO_HISTORY_STACK.empty())
+			BreakoutError::Throw("UndoHistory::ActiveInstance(): live undo history stack is empty");
+		else
+			return *UNDO_HISTORY_STACK.top();
 	}
 
 	void UndoHistory::Execute(std::unique_ptr<UndoAction>&& action)
@@ -56,15 +67,17 @@ namespace oly::editor
 
 	void UndoHistory::Prune()
 	{
-		if (_redo.size() >= _stack_count_limit)
+		const size_t count_limit = PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.CountLimit();
+		if (_redo.size() >= count_limit)
 			PruneUndoCount(0);
 		else
-			PruneUndoCount(_stack_count_limit - _redo.size());
+			PruneUndoCount(count_limit - _redo.size());
 
-		if (_redo_stack_size >= _stack_size_limit)
+		const size_t size_limit = PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.SizeLimit();
+		if (_redo_stack_size >= size_limit)
 			PruneUndoSize(0);
 		else
-			PruneUndoSize(_stack_size_limit - _redo_stack_size);
+			PruneUndoSize(size_limit - _redo_stack_size);
 	}
 
 	void UndoHistory::PruneUndoCount(size_t count_limit)
@@ -104,5 +117,15 @@ namespace oly::editor
 			if (it != _undo.begin())
 				_undo.erase(_undo.begin(), it);
 		}
+	}
+
+	UndoHistoryActiveScope::UndoHistoryActiveScope(UndoHistory& undo_history)
+	{
+		UNDO_HISTORY_STACK.push(&undo_history);
+	}
+
+	UndoHistoryActiveScope::~UndoHistoryActiveScope()
+	{
+		UNDO_HISTORY_STACK.pop();
 	}
 }

@@ -17,7 +17,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void RasterFontDocument::Init()
+	void RasterFontDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -30,7 +30,7 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
 		Draw(_scratch);

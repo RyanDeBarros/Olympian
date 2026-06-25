@@ -137,7 +137,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void TilesetDocument::Init()
+	void TilesetDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -152,7 +152,7 @@ namespace oly::editor
 
 	void TilesetDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		UpdateActiveTextures();
 		gui::IDScope scope(this);

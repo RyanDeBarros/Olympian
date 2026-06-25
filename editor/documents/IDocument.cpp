@@ -7,6 +7,12 @@ namespace oly::editor
 	{
 	}
 
+	void IDocument::Init()
+	{
+		_undo_history.emplace();
+		InitImpl();
+	}
+
 	void IDocument::DrawMenuBar()
 	{
 		if (ImGui::BeginMenuBar())
@@ -51,19 +57,29 @@ namespace oly::editor
 		return _dirty;
 	}
 
-	IDocument::GridChecker::GridChecker(IDocument& doc)
-		: _doc(doc)
+	void IDocument::Undo()
+	{
+		_undo_history->Undo();
+	}
+
+	void IDocument::Redo()
+	{
+		_undo_history->Redo();
+	}
+
+	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc)
+		: _doc(doc), _uh_scope(*doc._undo_history)
 	{
 	}
 
-	IDocument::GridChecker::~GridChecker()
+	IDocument::PreDrawImpl::~PreDrawImpl()
 	{
 		if (gui::PropertyGrid::DirtyGrid())
 			_doc.MarkDirty();
 	}
 
-	IDocument::GridChecker IDocument::Grid()
+	IDocument::PreDrawImpl IDocument::PreDraw()
 	{
-		return GridChecker(*this);
+		return PreDrawImpl(*this);
 	}
 }

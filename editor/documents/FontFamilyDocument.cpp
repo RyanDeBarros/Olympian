@@ -16,7 +16,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void FontFamilyDocument::Init()
+	void FontFamilyDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -29,7 +29,7 @@ namespace oly::editor
 
 	void FontFamilyDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
 		if (auto form = Form())

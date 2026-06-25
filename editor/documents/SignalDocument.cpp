@@ -17,7 +17,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void SignalDocument::Init()
+	void SignalDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -30,7 +30,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw()
 	{
-		auto grid = Grid();
+		auto pre_draw = PreDraw();
 
 		_stop_listening = true;
 		gui::IDScope scope(this);

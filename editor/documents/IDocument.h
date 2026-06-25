@@ -3,6 +3,7 @@
 #include <string>
 
 #include "gui/properties/PropertyGrid.h"
+#include "core/UndoHistory.h"
 
 #include "assets/ResourcePath.h"
 
@@ -12,6 +13,7 @@ namespace oly::editor
 	{
 	protected:
 		detail::ResourcePath _oly_path;
+		std::optional<UndoHistory> _undo_history;
 
 	private:
 		bool _dirty = false;
@@ -20,7 +22,8 @@ namespace oly::editor
 		IDocument(detail::ResourcePath&& oly_path);
 		virtual ~IDocument() = default;
 
-		virtual void Init() = 0;
+		void Init();
+		virtual void InitImpl() = 0;
 		virtual void Draw() = 0;
 		virtual void DrawMenuBar();
 		virtual void Load() = 0;
@@ -33,20 +36,24 @@ namespace oly::editor
 		void MarkClean();
 		bool IsDirty() const;
 
+		void Undo();
+		void Redo();
+
 	private:
-		class GridChecker
+		class PreDrawImpl
 		{
 			IDocument& _doc;
 			gui::PropertyGrid _grid;
+			UndoHistoryActiveScope _uh_scope;
 
 		public:
-			GridChecker(IDocument& doc);
-			GridChecker(const GridChecker&) = delete;
-			GridChecker(GridChecker&&) = delete;
-			~GridChecker();
+			PreDrawImpl(IDocument& doc);
+			PreDrawImpl(const PreDrawImpl&) = delete;
+			PreDrawImpl(PreDrawImpl&&) = delete;
+			~PreDrawImpl();
 		};
 
 	protected:
-		GridChecker Grid();
+		PreDrawImpl PreDraw();
 	};
 }

@@ -177,7 +177,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of TreeViewPanel");
 	}
 
-	void TreeViewPanel::Init()
+	void TreeViewPanel::InitImpl()
 	{
 		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
 	}

@@ -18,7 +18,7 @@ namespace oly::editor
 	{
 	}
 
-	void PreferencesDocument::Init()
+	void PreferencesDocument::InitImpl()
 	{
 		Load();
 	}

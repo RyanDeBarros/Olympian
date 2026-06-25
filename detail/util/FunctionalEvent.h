@@ -88,6 +88,11 @@ namespace oly
 		FunctionalEvent(const FunctionalEvent&) = delete;
 		FunctionalEvent(FunctionalEvent&&) = delete;
 
+		~FunctionalEvent()
+		{
+			clear();
+		}
+
 		Handle subscribe(Callback callback)
 		{
 			size_t h;
