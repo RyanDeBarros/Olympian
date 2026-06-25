@@ -23,82 +23,22 @@ namespace oly::editor
 
 		Flags flags = Flags::None;
 
-		DrawResult(bool dirty = false)
-		{
-			SetDirty(dirty);
-		}
+		DrawResult(bool dirty = false);
 
-		DrawResult& Query()
-		{
-			if (ImGui::IsItemHovered())
-				flags |= Flags::Hovered;
-			
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Left))
-				flags |= Flags::LeftClicked;
-			
-			if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-				flags |= Flags::RightClicked;
+		DrawResult& Query();
 
-			if (ImGui::IsItemFocused())
-				flags |= Flags::Focused;
+		operator bool() const;
+		DrawResult operator|(const DrawResult& o);
+		DrawResult& operator|=(const DrawResult& o);
 
-			if (ImGui::IsItemDeactivatedAfterEdit())
-				flags |= Flags::DeactivatedAfterEdit;
-
-			return *this;
-		}
-
-		operator bool() const
-		{
-			return flags & Flags::Dirty;
-		}
-
-		DrawResult& operator|=(const DrawResult& result)
-		{
-			flags |= result.flags;
-			return *this;
-		}
-
-		void SetDirty(bool dirty)
-		{
-			if (dirty)
-				flags |= Flags::Dirty;
-		}
-
-		bool IsDirty() const
-		{
-			return flags & Flags::Dirty;
-		}
-
-		bool IsHovered() const
-		{
-			return flags & Flags::Hovered;
-		}
-
-		bool IsLeftClicked() const
-		{
-			return flags & Flags::LeftClicked;
-		}
-
-		bool IsRightClicked() const
-		{
-			return flags & Flags::RightClicked;
-		}
-
-		bool IsClicked() const
-		{
-			return IsLeftClicked() || IsRightClicked();
-		}
-
-		bool IsFocused() const
-		{
-			return flags & Flags::Focused;
-		}
-
-		bool IsDeactivatedAfterEdit() const
-		{
-			return flags & Flags::DeactivatedAfterEdit;
-		}
+		void SetDirty(bool dirty);
+		bool IsDirty() const;
+		bool IsHovered() const;
+		bool IsLeftClicked() const;
+		bool IsRightClicked() const;
+		bool IsClicked() const;
+		bool IsFocused() const;
+		bool IsDeactivatedAfterEdit() const;
 	};
 
 	OLY_DETAIL_IMPLEMENT_BITMASK(DrawResult::Flags);

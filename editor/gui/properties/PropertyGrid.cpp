@@ -14,10 +14,13 @@ namespace oly::editor::gui
 	static PropertyGrid* GRID_INSTANCE = nullptr;
 
 	static std::string KEY_LABEL;
+	static DrawResult KEY_DRAW_RESULT;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
 	static PropertyRow VALUE_PROPERTIES;
 	static DrawResult VALUE_DRAW_RESULT;
+
+	static DrawResult FULL_DRAW_RESULT;
 	
 	static std::unordered_set<size_t> SUBROWS_TO_RESET;
 	static std::unordered_set<size_t> ACTIVATED_RESET_SUBROWS;
@@ -41,6 +44,9 @@ namespace oly::editor::gui
 
 		ClearRow();
 
+		KEY_DRAW_RESULT = {};
+		VALUE_DRAW_RESULT = {};
+		FULL_DRAW_RESULT = {};
 		DIRTY_GRID = false;
 		KEY_LABEL.clear();
 		ACTIVATED_RESET_SUBROWS.clear();
@@ -62,6 +68,11 @@ namespace oly::editor::gui
 
 			PropertyGroup::End();
 		}
+	}
+
+	DrawResult PropertyGrid::Key::GetDrawResult()
+	{
+		return KEY_DRAW_RESULT;
 	}
 
 	void PropertyGrid::Key::SetLabel(const std::string_view label)
@@ -107,7 +118,9 @@ namespace oly::editor::gui
 		ImGui::TableSetColumnIndex(0);
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
-		VALUE_DRAW_RESULT |= PropertyGroup::CheckRow(VALUE_PROPERTIES);
+
+		KEY_DRAW_RESULT = DrawResult().Query();
+		KEY_DRAW_RESULT |= PropertyGroup::CheckRow(VALUE_PROPERTIES);
 	}
 
 	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
@@ -160,12 +173,18 @@ namespace oly::editor::gui
 		}
 	}
 
+	DrawResult PropertyGrid::GetFullDrawResult()
+	{
+		return FULL_DRAW_RESULT;
+	}
+
 	void PropertyGrid::SubmitRow()
 	{
 		ImGui::TableNextRow();
 		DrawResetCell();
 		DrawValueCell();
 		DrawKeyCell();
+		FULL_DRAW_RESULT = VALUE_DRAW_RESULT | KEY_DRAW_RESULT;
 		DIRTY_GRID |= DirtyRow();
 		ClearRow();
 	}

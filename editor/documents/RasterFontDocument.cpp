@@ -140,7 +140,7 @@ namespace oly::editor
 
 		style_stack.PopStyles();
 
-		if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
+		if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");

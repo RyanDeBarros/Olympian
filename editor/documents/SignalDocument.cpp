@@ -196,7 +196,7 @@ namespace oly::editor
 		desc.id.Draw();
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
-			if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
+			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -235,7 +235,7 @@ namespace oly::editor
 		desc.id.Draw();
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
-			if (gui::PropertyGrid::Value::GetDrawResult().IsHovered())
+			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
