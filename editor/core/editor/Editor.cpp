@@ -9,9 +9,13 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/graphics/Texture.h"
+
 #include "documents/DocumentManager.h"
+
 #include "panels/AssetEditorPanel.h"
 #include "panels/PreferencesPanel.h"
+
+#include "desc/impl/PreferencesDesc.h"
 
 #include <imgui_impl_glfw.h>
 
@@ -22,7 +26,8 @@ namespace oly::editor
 		_logger(std::make_unique<Logger>()),
 		_main_window(std::make_unique<MainWindow>()),
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
-		_project_info(std::make_unique<ProjectInfo>())
+		_project_info(std::make_unique<ProjectInfo>()),
+		_preferences_desc(std::make_unique<PreferencesDesc>())
 	{
 	}
 
@@ -138,6 +143,11 @@ namespace oly::editor
 		}
 
 		glfwSetWindowShouldClose(_os_window, GLFW_TRUE);
+	}
+
+	PreferencesDesc& Editor::GetPreferences()
+	{
+		return *Instance()._preferences_desc;
 	}
 
 	AppState Editor::GetAppState() const

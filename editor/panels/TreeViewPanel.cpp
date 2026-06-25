@@ -12,11 +12,10 @@
 #include "core/PathInfo.h"
 
 #include "panels/PanelManager.h"
-#include "panels/PreferencesPanel.h"
 
 #include "gui/graphics/Toolbar.h"
 
-#include <imgui.h>
+#include "desc/impl/PreferencesDesc.h"
 
 #include <algorithm>
 #include <stack>
@@ -37,7 +36,7 @@ namespace oly::editor
 
 	void TreeViewNode::Update()
 	{
-		const float update_interval = PreferencesPanel::Instance().GetActiveDesc().tree_view.advanced.AnalysisInterval();
+		const float update_interval = Editor::GetPreferences().tree_view.advanced.AnalysisInterval();
 		timer += ImGui::GetIO().DeltaTime;
 		if (timer >= update_interval)
 		{

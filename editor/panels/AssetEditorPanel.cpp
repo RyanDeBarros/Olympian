@@ -236,6 +236,7 @@ namespace oly::editor
 		}
 	}
 
+	// TODO v9.1 general utility for unsaved changes modal in gui/. That way any decorative changes can be made to one source
 	enum class UnsavedChangesModalResult
 	{
 		None,

@@ -1,7 +1,9 @@
 #include "UndoHistory.h"
 
+#include "core/editor/Editor.h"
 #include "core/Errors.h"
-#include "panels/PreferencesPanel.h"
+
+#include "desc/impl/PreferencesDesc.h"
 
 #include <stack>
 
@@ -11,7 +13,7 @@ namespace oly::editor
 
 	UndoHistory::UndoHistory()
 	{
-		_listener = PreferencesPanel::Instance().OnActiveDescChanged().subscribe([this]() { Prune(); });
+		_listener = Editor::Instance().OnPreferencesChanged.subscribe([this]() { Prune(); });
 	}
 
 	UndoHistory& UndoHistory::ActiveInstance()
@@ -67,13 +69,13 @@ namespace oly::editor
 
 	void UndoHistory::Prune()
 	{
-		const size_t count_limit = PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.CountLimit();
+		const size_t count_limit = Editor::GetPreferences().edit.undo_history.CountLimit();
 		if (_redo.size() >= count_limit)
 			PruneUndoCount(0);
 		else
 			PruneUndoCount(count_limit - _redo.size());
 
-		const size_t size_limit = PreferencesPanel::Instance().GetActiveDesc().edit.undo_history.SizeLimit();
+		const size_t size_limit = Editor::GetPreferences().edit.undo_history.SizeLimit();
 		if (_redo_stack_size >= size_limit)
 			PruneUndoSize(0);
 		else

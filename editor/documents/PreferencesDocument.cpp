@@ -1,5 +1,6 @@
 #include "PreferencesDocument.h"
 
+#include "core/editor/Editor.h"
 #include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
@@ -40,7 +41,7 @@ namespace oly::editor
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Apply Changes"))
-					ApplyChanges();
+					ApplyEditorPreferences();
 
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
 					Dump();
@@ -73,8 +74,7 @@ namespace oly::editor
 
 		Load(TOMLNode(table), _disk);
 		_scratch = _disk;
-		_in_effect = _disk;
-		ActiveDescChanged();
+		RevertEditorPreferences();
 		MarkClean();
 	}
 
@@ -87,25 +87,25 @@ namespace oly::editor
 		std::ofstream file(path);
 		file << table;
 		_disk = _scratch;
-		_in_effect = _disk;
-		ActiveDescChanged();
+		RevertEditorPreferences();
 		MarkClean();
 	}
 
-	void PreferencesDocument::ApplyChanges()
+	void PreferencesDocument::ApplyEditorPreferences()
 	{
-		_in_effect = _scratch;
+		Editor::GetPreferences() = _scratch;
 		ActiveDescChanged();
 	}
 
-	const PreferencesDesc& PreferencesDocument::GetActiveDesc() const
+	void PreferencesDocument::RevertEditorPreferences()
 	{
-		return _in_effect;
+		Editor::GetPreferences() = _disk;
+		ActiveDescChanged();
 	}
 
 	void PreferencesDocument::ActiveDescChanged()
 	{
-		OnActiveDescChanged.invoke();
+		Editor::Instance().OnPreferencesChanged.invoke();
 	}
 
 	void PreferencesDocument::Draw(PreferencesDesc& desc)

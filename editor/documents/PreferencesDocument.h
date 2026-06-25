@@ -4,19 +4,14 @@
 
 #include "desc/impl/PreferencesDesc.h"
 
-#include "util/FunctionalEvent.h"
-
 namespace oly::editor
 {
 	class PreferencesDocument : public IDocument
 	{
 		PreferencesDesc _scratch;
 		PreferencesDesc _disk;
-		PreferencesDesc _in_effect;
 
 	public:
-		FunctionalEvent<> OnActiveDescChanged;
-
 		static const char* GetVersion();
 
 		PreferencesDocument();
@@ -27,9 +22,8 @@ namespace oly::editor
 		void Load() override;
 		void Dump() override;
 
-		void ApplyChanges();
-
-		const PreferencesDesc& GetActiveDesc() const;
+		void ApplyEditorPreferences();
+		void RevertEditorPreferences();
 
 	private:
 		void ActiveDescChanged();

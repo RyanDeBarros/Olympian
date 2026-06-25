@@ -80,17 +80,6 @@ namespace oly::editor
 		}
 	}
 
-	// TODO v9.1 Editor should own preferences desc, not PreferencesPanel. PreferencesDocument _in_effect should actually be a reference to the editor's copy
-	const PreferencesDesc& PreferencesPanel::GetActiveDesc() const
-	{
-		return _doc.GetActiveDesc();
-	}
-
-	FunctionalEvent<>& PreferencesPanel::OnActiveDescChanged()
-	{
-		return _doc.OnActiveDescChanged;
-	}
-
 	bool PreferencesPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
 	{
 		bool close_window = false;

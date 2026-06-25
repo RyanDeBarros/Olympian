@@ -2,6 +2,8 @@
 
 #include "external/GL.h"
 
+#include "util/FunctionalEvent.h"
+
 #include <filesystem>
 #include <memory>
 
@@ -12,6 +14,7 @@ namespace oly::editor
 	class MainWindow;
 	class ShortcutManager;
 	class ProjectInfo;
+	class PreferencesDesc;
 
 	enum class AppState
 	{
@@ -39,12 +42,15 @@ namespace oly::editor
 		std::unique_ptr<MainWindow> _main_window;
 		std::unique_ptr<ShortcutManager> _shortcut_manager;
 		std::unique_ptr<ProjectInfo> _project_info;
+		std::unique_ptr<PreferencesDesc> _preferences_desc;
 
 		Editor();
 		Editor(const Editor&) = delete;
 		Editor(Editor&&) = delete;
 
 	public:
+		FunctionalEvent<> OnPreferencesChanged;
+
 		static Editor& Instance();
 		void Init(GLFWwindow* window);
 		void Terminate();
@@ -55,6 +61,8 @@ namespace oly::editor
 		void SetOSWindowFullScreen(bool fullscreen);
 		bool IsOSWindowFullScreen() const;
 		void RequestShutdown();
+
+		static PreferencesDesc& GetPreferences();
 
 		AppState GetAppState() const;
 		ProjectSelectWindow& GetProjectSelectWindow();

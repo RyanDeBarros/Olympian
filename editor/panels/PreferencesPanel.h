@@ -19,9 +19,6 @@ namespace oly::editor
 		const char* GetTitle() const override;
 		void Draw() override;
 
-		const PreferencesDesc& GetActiveDesc() const;
-		FunctionalEvent<>& OnActiveDescChanged();
-
 	private:
 		bool DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup);
 
