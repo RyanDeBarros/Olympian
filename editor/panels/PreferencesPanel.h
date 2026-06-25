@@ -22,5 +22,8 @@ namespace oly::editor
 
 	private:
 		bool DrawUnsavedChangesModal();
+
+	public:
+		bool RequestShutdown();
 	};
 }

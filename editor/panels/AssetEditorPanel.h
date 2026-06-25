@@ -15,6 +15,8 @@ namespace oly::editor
 		std::vector<IDocument*> _pending_close;
 		std::unordered_set<IDocument*> _pending_close_set;
 		bool _window_unsaved_changes_modal = false;
+		bool _shutdown_unsaved_changes_modal = false;
+		bool _open_shutdown_modal = false;
 
 	public:
 		static AssetEditorPanel& Instance();
@@ -29,8 +31,8 @@ namespace oly::editor
 		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
 		void DrawTabUnsavedChangesModal(std::vector<size_t>& closed);
 
-		bool DrawWindowUnsavedChangesModal();
-		void CloseAllTabs();
+		bool DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup);
+		void CloseAllTabs(bool& unsaved_changes_modal);
 
 		void DrawDefaultMenuBar();
 
@@ -42,5 +44,7 @@ namespace oly::editor
 
 		void SaveSelectedTab() const;
 		void SaveAllTabs() const;
+
+		bool RequestShutdown();
 	};
 }

@@ -54,7 +54,7 @@ namespace oly::editor
 		void SetOSWindowMaximized(bool maximized);
 		void SetOSWindowFullScreen(bool fullscreen);
 		bool IsOSWindowFullScreen() const;
-		bool RequestShutdown();
+		void RequestShutdown();
 
 		AppState GetAppState() const;
 		ProjectSelectWindow& GetProjectSelectWindow();

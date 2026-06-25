@@ -22,6 +22,7 @@ namespace oly::editor
 {
 	static constexpr const char* kTabUnsavedChangesPopup = "Unsaved Changes##Tab";
 	static constexpr const char* kWindowUnsavedChangesPopup = "Unsaved Changes##Window";
+	static constexpr const char* kShutdownUnsavedChangesPopup = "Unsaved Changes##App";
 	static constexpr const char* kOpenFile = "OpenFileDlg";
 
 	static std::string open_file_parent = ".";
@@ -50,11 +51,12 @@ namespace oly::editor
 		bool draw_window = true;
 		if (window.RequestsClose())
 		{
-			CloseAllTabs();
+			CloseAllTabs(_window_unsaved_changes_modal);
 			if (_window_unsaved_changes_modal)
 			{
 				Open();
 				ImGui::SetWindowFocus();
+				ImGui::OpenPopup(kWindowUnsavedChangesPopup);
 			}
 			else
 				draw_window = false;
@@ -88,8 +90,23 @@ namespace oly::editor
 
 		if (_window_unsaved_changes_modal)
 		{
-			if (DrawWindowUnsavedChangesModal())
+			if (DrawUnsavedChangesModal(_window_unsaved_changes_modal, kWindowUnsavedChangesPopup))
 				Close();
+		}
+
+		if (_shutdown_unsaved_changes_modal)
+		{
+			if (_open_shutdown_modal)
+			{
+				_open_shutdown_modal = false;
+				ImGui::OpenPopup(kShutdownUnsavedChangesPopup);
+			}
+
+			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
+			{
+				Close();
+				Editor::Instance().RequestShutdown();
+			}
 		}
 	}
 
@@ -213,121 +230,122 @@ namespace oly::editor
 		}
 	}
 
-	void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
+	enum class UnsavedChangesModalResult
 	{
-		if (ImGui::BeginPopupModal(kTabUnsavedChangesPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			IDocument* doc = _pending_close.front();
+		None,
+		SaveChanges,
+		DiscardChanges,
+		CancelClose
+	};
 
+	static UnsavedChangesModalResult DrawUnsavedChangesModalImpl(const char* popup, IDocument* doc)
+	{
+		UnsavedChangesModalResult result = UnsavedChangesModalResult::None;
+
+		if (!doc)
+			return result;
+
+		if (ImGui::BeginPopupModal(popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		{
 			ImGui::Text(("Asset " + doc->TabName()).c_str());
 			ImGui::Text(("Full path: " + doc->GetOlyPath().string()).c_str());
 
 			if (ImGui::Button("Save Changes"))
 			{
 				doc->Dump();
-				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-				if (doc == _selected_tab)
-					_selected_tab = nullptr;
-				_pending_close.erase(_pending_close.begin());
-				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
+				result = UnsavedChangesModalResult::SaveChanges;
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Discard Changes"))
 			{
 				doc->Load();
-				closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-				if (doc == _selected_tab)
-					_selected_tab = nullptr;
-				_pending_close.erase(_pending_close.begin());
-				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
+				result = UnsavedChangesModalResult::DiscardChanges;
 			}
 
 			ImGui::SameLine();
 			if (ImGui::Button("Cancel Close"))
 			{
-				_pending_close.erase(_pending_close.begin());
-				_pending_close_set.erase(doc);
 				ImGui::CloseCurrentPopup();
+				result = UnsavedChangesModalResult::CancelClose;
 			}
 
 			ImGui::EndPopup();
 		}
+		
+		return result;
 	}
 
-	bool AssetEditorPanel::DrawWindowUnsavedChangesModal()
+	void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
 	{
-		bool close_window = false;
-
-		if (_selected_tab)
+		IDocument* doc = _pending_close.empty() ? nullptr : _pending_close.front();
+		switch (DrawUnsavedChangesModalImpl(kTabUnsavedChangesPopup, doc))
 		{
-			if (ImGui::BeginPopupModal(kWindowUnsavedChangesPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
-			{
-				ImGui::Text(("Asset " + _selected_tab->TabName()).c_str());
-				ImGui::Text(("Full path: " + _selected_tab->GetOlyPath().string()).c_str());
+		case UnsavedChangesModalResult::SaveChanges:
+			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+			if (doc == _selected_tab)
+				_selected_tab = nullptr;
+			_pending_close.erase(_pending_close.begin());
+			_pending_close_set.erase(doc);
+			break;
 
-				if (ImGui::Button("Save Changes"))
-				{
-					_selected_tab->Dump();
-					ImGui::CloseCurrentPopup();
-					_window_unsaved_changes_modal = false;
-					close_window = true;
-				}
+		case UnsavedChangesModalResult::DiscardChanges:
+			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+			if (doc == _selected_tab)
+				_selected_tab = nullptr;
+			_pending_close.erase(_pending_close.begin());
+			_pending_close_set.erase(doc);
+			break;
 
-				ImGui::SameLine();
-				if (ImGui::Button("Discard Changes"))
-				{
-					_selected_tab->Load();
-					ImGui::CloseCurrentPopup();
-					_window_unsaved_changes_modal = false;
-					close_window = true;
-				}
-
-				ImGui::SameLine();
-				if (ImGui::Button("Cancel Close"))
-				{
-					ImGui::CloseCurrentPopup();
-					_window_unsaved_changes_modal = false;
-				}
-
-				ImGui::EndPopup();
-			}
+		case UnsavedChangesModalResult::CancelClose:
+			_pending_close.erase(_pending_close.begin());
+			_pending_close_set.erase(doc);
+			break;
 		}
-
-		if (close_window)
-		{
-			CloseAllTabs();
-			return !_window_unsaved_changes_modal;
-		}
-		else
-			return false;
 	}
 
-	void AssetEditorPanel::CloseAllTabs()
+	bool AssetEditorPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
+	{
+		switch (DrawUnsavedChangesModalImpl(popup, _selected_tab))
+		{
+		case UnsavedChangesModalResult::SaveChanges:
+		case UnsavedChangesModalResult::DiscardChanges:
+			CloseAllTabs(unsaved_changes_modal);
+			if (unsaved_changes_modal)
+				ImGui::OpenPopup(popup);
+			return !unsaved_changes_modal;
+
+		case UnsavedChangesModalResult::CancelClose:
+			unsaved_changes_modal = false;
+			return false;
+
+		default:
+			return false;
+		}
+	}
+
+	void AssetEditorPanel::CloseAllTabs(bool& unsaved_changes_modal)
 	{
 		_pending_close.clear();
 		_pending_close_set.clear();
-		_window_unsaved_changes_modal = false;
+		unsaved_changes_modal = false;
 
 		for (int i = DocumentManager::Instance().DocumentCount() - 1; i >= 0; --i)
 		{
 			IDocument& doc = DocumentManager::Instance().GetDocument(i);
 			_selected_tab = &doc;
-			_focused_tab = _selected_tab;
 
 			if (doc.IsDirty())
 			{
-				_window_unsaved_changes_modal = true;
+				unsaved_changes_modal = true;
 				break;
 			}
 
 			DocumentManager::Instance().Remove(i);
+			_selected_tab = nullptr;
 		}
-
-		if (_window_unsaved_changes_modal)
-			ImGui::OpenPopup(kWindowUnsavedChangesPopup);
 	}
 
 	void AssetEditorPanel::DrawDefaultMenuBar()
@@ -374,5 +392,19 @@ namespace oly::editor
 	{
 		for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			DocumentManager::Instance().GetDocument(i).Dump();
+	}
+
+	bool AssetEditorPanel::RequestShutdown()
+	{
+		CloseAllTabs(_shutdown_unsaved_changes_modal);
+		if (_shutdown_unsaved_changes_modal)
+		{
+			Open();
+			ImGui::SetWindowFocus();
+			_open_shutdown_modal = true;
+			return false;
+		}
+		else
+			return true;
 	}
 }

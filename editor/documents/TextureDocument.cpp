@@ -480,6 +480,9 @@ namespace oly::editor
 			if (auto disabled = DisabledSection(_gif))
 			{
 				desc.anim.Draw();
+				// TODO v9.1 hover is not being set
+				if (gui::PropertyGrid::Value::GetDrawResult().IsHovered()) // TODO v9.1 Add back draw result for Key so that there can also be a generic ItemHovered() bool that returns Key::GetDrawResult().IsHovered() || Value::GetDrawResult().IsHovered()
+					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 
 			if (desc.anim.scratch && !_gif)
@@ -540,7 +543,10 @@ namespace oly::editor
 		LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
 		if (gif)
+		{
+			desc.anim.def = true;
 			desc.anim.scratch = true;
+		}
 		else
 		{
 			desc.anim.Load(node);

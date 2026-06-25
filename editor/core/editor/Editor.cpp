@@ -11,6 +11,7 @@
 #include "gui/graphics/Texture.h"
 #include "documents/DocumentManager.h"
 #include "panels/AssetEditorPanel.h"
+#include "panels/PreferencesPanel.h"
 
 #include <imgui_impl_glfw.h>
 
@@ -40,8 +41,8 @@ namespace oly::editor
 		});
 
 		glfwSetWindowCloseCallback(_os_window, [](GLFWwindow* w) {
-			if (!Editor::Instance().RequestShutdown())
-				glfwSetWindowShouldClose(w, GLFW_FALSE);
+			glfwSetWindowShouldClose(w, GLFW_FALSE);
+			Editor::Instance().RequestShutdown();
 		});
 
 		ResourceLoader::LoadAll();
@@ -125,10 +126,18 @@ namespace oly::editor
 		return _os_state.fullscreen;
 	}
 
-	bool Editor::RequestShutdown()
+	void Editor::RequestShutdown()
 	{
-		// TODO v9.1
-		return true;
+		if (_app_state == AppState::Main)
+		{
+			if (!PreferencesPanel::Instance().RequestShutdown())
+				return;
+
+			if (!AssetEditorPanel::Instance().RequestShutdown())
+				return;
+		}
+
+		glfwSetWindowShouldClose(_os_window, GLFW_TRUE);
 	}
 
 	AppState Editor::GetAppState() const

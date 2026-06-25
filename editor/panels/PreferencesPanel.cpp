@@ -112,4 +112,10 @@ namespace oly::editor
 
 		return close_window;
 	}
+
+	bool PreferencesPanel::RequestShutdown()
+	{
+		// TODO v9.1
+		return true;
+	}
 }
