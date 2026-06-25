@@ -10,7 +10,7 @@
 
 namespace oly::editor
 {
-	// TODO v9.1 use kPascalCase notation for constants instead of all caps
+	// TODO DEBT use kPascalCase notation for constants instead of all caps
 	static constexpr const char* kUnsavedChangesPopup = "Unsaved Changes";
 
 	PreferencesPanel& PreferencesPanel::Instance()

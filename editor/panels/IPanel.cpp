@@ -52,7 +52,8 @@ namespace oly::editor
 			bool visible = ImGui::Begin(GetTitle(), &_open, flags);
 			if (_gain_next == this)
 			{
-				ImGui::SetWindowFocus();
+				if (visible)
+					ImGui::SetWindowFocus();
 				_gain_next = nullptr;
 			}
 			return DrawDockedWindowImpl(true, visible, !_open);

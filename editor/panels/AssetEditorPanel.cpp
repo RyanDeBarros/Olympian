@@ -20,7 +20,9 @@
 
 namespace oly::editor
 {
-	static const char* OPEN_FILE = "OpenFileDlg";
+	static constexpr const char* kTabUnsavedChangesPopup = "Unsaved Changes##Tab";
+	static constexpr const char* kWindowUnsavedChangesPopup = "Unsaved Changes##Window";
+	static constexpr const char* kOpenFile = "OpenFileDlg";
 
 	static std::string open_file_parent = ".";
 
@@ -45,7 +47,20 @@ namespace oly::editor
 	void AssetEditorPanel::Draw()
 	{
 		auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar);
-		if (window.IsVisible())
+		bool draw_window = true;
+		if (window.RequestsClose())
+		{
+			CloseAllTabs();
+			if (_window_unsaved_changes_modal)
+			{
+				Open();
+				ImGui::SetWindowFocus();
+			}
+			else
+				draw_window = false;
+		}
+
+		if (draw_window && window.IsVisible())
 		{
 			PollShortcuts();
 
@@ -58,7 +73,7 @@ namespace oly::editor
 
 			ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
 
-			if (ImGuiFileDialog::Instance()->Display(OPEN_FILE, ImGuiWindowFlags_NoCollapse))
+			if (ImGuiFileDialog::Instance()->Display(kOpenFile, ImGuiWindowFlags_NoCollapse))
 			{
 				if (ImGuiFileDialog::Instance()->IsOk())
 				{
@@ -69,6 +84,12 @@ namespace oly::editor
 
 				ImGuiFileDialog::Instance()->Close();
 			}
+		}
+
+		if (_window_unsaved_changes_modal)
+		{
+			if (DrawWindowUnsavedChangesModal())
+				Close();
 		}
 	}
 
@@ -149,13 +170,20 @@ namespace oly::editor
 					{
 						_pending_close_set.insert(&doc);
 						_pending_close.push_back(&doc);
-						ImGui::OpenPopup("Unsaved Changes");
+						ImGui::OpenPopup(kTabUnsavedChangesPopup);
 					}
 				}
 			}
 
 			RemoveOldPendingDocuments(seen_documents);
-			DrawUnsavedChangesModal(closed);
+
+			if (!_window_unsaved_changes_modal)
+				DrawTabUnsavedChangesModal(closed);
+			else
+			{
+				_pending_close.clear();
+				_pending_close_set.clear();
+			}
 
 			std::sort(closed.begin(), closed.end());
 			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
@@ -185,9 +213,9 @@ namespace oly::editor
 		}
 	}
 
-	void AssetEditorPanel::DrawUnsavedChangesModal(std::vector<size_t>& closed)
+	void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
 	{
-		if (ImGui::BeginPopupModal("Unsaved Changes", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::BeginPopupModal(kTabUnsavedChangesPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			IDocument* doc = _pending_close.front();
 
@@ -229,6 +257,79 @@ namespace oly::editor
 		}
 	}
 
+	bool AssetEditorPanel::DrawWindowUnsavedChangesModal()
+	{
+		bool close_window = false;
+
+		if (_selected_tab)
+		{
+			if (ImGui::BeginPopupModal(kWindowUnsavedChangesPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text(("Asset " + _selected_tab->TabName()).c_str());
+				ImGui::Text(("Full path: " + _selected_tab->GetOlyPath().string()).c_str());
+
+				if (ImGui::Button("Save Changes"))
+				{
+					_selected_tab->Dump();
+					ImGui::CloseCurrentPopup();
+					_window_unsaved_changes_modal = false;
+					close_window = true;
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("Discard Changes"))
+				{
+					_selected_tab->Load();
+					ImGui::CloseCurrentPopup();
+					_window_unsaved_changes_modal = false;
+					close_window = true;
+				}
+
+				ImGui::SameLine();
+				if (ImGui::Button("Cancel Close"))
+				{
+					ImGui::CloseCurrentPopup();
+					_window_unsaved_changes_modal = false;
+				}
+
+				ImGui::EndPopup();
+			}
+		}
+
+		if (close_window)
+		{
+			CloseAllTabs();
+			return !_window_unsaved_changes_modal;
+		}
+		else
+			return false;
+	}
+
+	void AssetEditorPanel::CloseAllTabs()
+	{
+		_pending_close.clear();
+		_pending_close_set.clear();
+		_window_unsaved_changes_modal = false;
+
+		for (int i = DocumentManager::Instance().DocumentCount() - 1; i >= 0; --i)
+		{
+			IDocument& doc = DocumentManager::Instance().GetDocument(i);
+			_selected_tab = &doc;
+			_focused_tab = _selected_tab;
+
+			if (doc.IsDirty())
+			{
+				_window_unsaved_changes_modal = true;
+				break;
+			}
+
+			DocumentManager::Instance().Remove(i);
+		}
+
+		if (_window_unsaved_changes_modal)
+			ImGui::OpenPopup(kWindowUnsavedChangesPopup);
+	}
+
 	void AssetEditorPanel::DrawDefaultMenuBar()
 	{
 		if (ImGui::BeginMenuBar())
@@ -250,7 +351,7 @@ namespace oly::editor
 		config.path = open_file_parent;
 		config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
 
-		ImGuiFileDialog::Instance()->OpenDialog(OPEN_FILE, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
+		ImGuiFileDialog::Instance()->OpenDialog(kOpenFile, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
 	}
 
 	void AssetEditorPanel::FocusTab(IDocument* doc)

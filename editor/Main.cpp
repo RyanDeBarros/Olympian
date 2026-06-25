@@ -1,6 +1,5 @@
 #include "core/editor/Editor.h"
 #include "core/editor/Logger.h"
-#include "core/editor/ShortcutManager.h"
 
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -13,11 +12,6 @@ static void glfw_error_callback(int error, const char* description)
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
     oly::editor::Logger::Instance().Log(oly::editor::LogLevel::Error, ss.str().c_str());
-}
-
-static void glfw_drop_callback(GLFWwindow* window, int count, const char** paths)
-{
-    oly::editor::ShortcutManager::Instance().HandlePathDrop(count, paths);
 }
 
 int main()
@@ -39,7 +33,6 @@ int main()
         return 1;
 
     glfwSwapInterval(1);
-    glfwSetDropCallback(window, glfw_drop_callback);
 
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     int monitor_x, monitor_y;

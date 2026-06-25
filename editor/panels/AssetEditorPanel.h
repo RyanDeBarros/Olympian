@@ -14,6 +14,7 @@ namespace oly::editor
 		IDocument* _focused_tab = nullptr;
 		std::vector<IDocument*> _pending_close;
 		std::unordered_set<IDocument*> _pending_close_set;
+		bool _window_unsaved_changes_modal = false;
 
 	public:
 		static AssetEditorPanel& Instance();
@@ -26,7 +27,10 @@ namespace oly::editor
 		void PollShortcuts();
 		void DrawTabBar();
 		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
-		void DrawUnsavedChangesModal(std::vector<size_t>& closed);
+		void DrawTabUnsavedChangesModal(std::vector<size_t>& closed);
+
+		bool DrawWindowUnsavedChangesModal();
+		void CloseAllTabs();
 
 		void DrawDefaultMenuBar();
 

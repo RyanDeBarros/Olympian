@@ -205,6 +205,10 @@ target_include_directories(OlympianEditor PUBLIC
 	${nanosvg_SOURCE_DIR}/src
 )
 
+target_sources(OlympianEditor PRIVATE
+    Main.cpp
+)
+
 # Add subdirectories
 add_subdirectory(core)
 add_subdirectory(desc)

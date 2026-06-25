@@ -34,6 +34,16 @@ namespace oly::editor
 	void Editor::Init(GLFWwindow* window)
 	{
 		_os_window = window;
+
+		glfwSetDropCallback(_os_window, [](GLFWwindow* window, int count, const char** paths) {
+			ShortcutManager::Instance().HandlePathDrop(count, paths);
+		});
+
+		glfwSetWindowCloseCallback(_os_window, [](GLFWwindow* w) {
+			if (!Editor::Instance().RequestShutdown())
+				glfwSetWindowShouldClose(w, GLFW_FALSE);
+		});
+
 		ResourceLoader::LoadAll();
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
@@ -115,6 +125,12 @@ namespace oly::editor
 		return _os_state.fullscreen;
 	}
 
+	bool Editor::RequestShutdown()
+	{
+		// TODO v9.1
+		return true;
+	}
+
 	AppState Editor::GetAppState() const
 	{
 		return _app_state;
@@ -157,6 +173,7 @@ namespace oly::editor
 		OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
 		if (code == OpenAssetCode::Success)
 		{
+			AssetEditorPanel::Instance().Open();
 			AssetEditorPanel::Instance().GainFocus();
 			return;
 		}
