@@ -1,6 +1,7 @@
 #include "PreferencesPanel.h"
 
 #include "core/Errors.h"
+#include "core/editor/Editor.h"
 #include "core/windows/MainWindow.h"
 #include "panels/PanelManager.h"
 
@@ -11,7 +12,8 @@
 namespace oly::editor
 {
 	// TODO DEBT use kPascalCase notation for constants instead of all caps
-	static constexpr const char* kUnsavedChangesPopup = "Unsaved Changes";
+	static constexpr const char* kWindowUnsavedChangesPopup = "Unsaved Changes##Window";
+	static constexpr const char* kShutdownUnsavedChangesPopup = "Unsaved Changes##App";
 
 	PreferencesPanel& PreferencesPanel::Instance()
 	{
@@ -31,8 +33,6 @@ namespace oly::editor
 		return "Preferences";
 	}
 
-	// TODO v9.1 in AssetEditorPanel and PreferencesPanel, handle application on-close event for unsaved changes just like with tabs/windows close events
-
 	void PreferencesPanel::Draw()
 	{
 		ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
@@ -45,8 +45,8 @@ namespace oly::editor
 			Open();
 			ImGui::SetWindowFocus();
 
-			_unsaved_changes_modal = true;
-			ImGui::OpenPopup(kUnsavedChangesPopup);
+			_window_unsaved_changes_modal = true;
+			ImGui::OpenPopup(kWindowUnsavedChangesPopup);
 		}
 
 		if (window.IsVisible())
@@ -58,10 +58,25 @@ namespace oly::editor
 			_doc.Draw();
 		}
 
-		if (_unsaved_changes_modal)
+		if (_window_unsaved_changes_modal)
 		{
-			if (DrawUnsavedChangesModal())
+			if (DrawUnsavedChangesModal(_window_unsaved_changes_modal, kWindowUnsavedChangesPopup))
 				Close();
+		}
+
+		if (_shutdown_unsaved_changes_modal)
+		{
+			if (_open_shutdown_modal)
+			{
+				_open_shutdown_modal = false;
+				ImGui::OpenPopup(kShutdownUnsavedChangesPopup);
+			}
+
+			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
+			{
+				Close();
+				Editor::Instance().RequestShutdown();
+			}
 		}
 	}
 
@@ -75,11 +90,11 @@ namespace oly::editor
 		return _doc.OnActiveDescChanged;
 	}
 
-	bool PreferencesPanel::DrawUnsavedChangesModal()
+	bool PreferencesPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
 	{
 		bool close_window = false;
 
-		if (ImGui::BeginPopupModal(kUnsavedChangesPopup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::BeginPopupModal(popup, nullptr, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			ImGui::Text("Editor preferences");
 
@@ -87,7 +102,7 @@ namespace oly::editor
 			{
 				_doc.Dump();
 				ImGui::CloseCurrentPopup();
-				_unsaved_changes_modal = false;
+				unsaved_changes_modal = false;
 				close_window = true;
 			}
 
@@ -96,7 +111,7 @@ namespace oly::editor
 			{
 				_doc.Load();
 				ImGui::CloseCurrentPopup();
-				_unsaved_changes_modal = false;
+				unsaved_changes_modal = false;
 				close_window = true;
 			}
 
@@ -104,7 +119,7 @@ namespace oly::editor
 			if (ImGui::Button("Cancel Close"))
 			{
 				ImGui::CloseCurrentPopup();
-				_unsaved_changes_modal = false;
+				unsaved_changes_modal = false;
 			}
 
 			ImGui::EndPopup();
@@ -115,7 +130,15 @@ namespace oly::editor
 
 	bool PreferencesPanel::RequestShutdown()
 	{
-		// TODO v9.1
-		return true;
+		if (_doc.IsDirty())
+		{
+			Open();
+			GainFocus();
+			_shutdown_unsaved_changes_modal = true;
+			_open_shutdown_modal = true;
+			return false;
+		}
+		else
+			return true;
 	}
 }

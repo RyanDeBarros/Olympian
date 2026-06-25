@@ -400,7 +400,7 @@ namespace oly::editor
 		if (_shutdown_unsaved_changes_modal)
 		{
 			Open();
-			ImGui::SetWindowFocus();
+			GainFocus();
 			_open_shutdown_modal = true;
 			return false;
 		}
