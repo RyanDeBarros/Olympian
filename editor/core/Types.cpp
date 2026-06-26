@@ -51,6 +51,11 @@ namespace oly::editor
 			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
 	}
 
+	std::ostream& operator<<(std::ostream& os, Color4 color)
+	{
+		return os << "Color4(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
+	}
+
 	Rect::Rect()
 		: x1(0.f), x2(0.f), y1(0.f), y2(0.f)
 	{
@@ -95,6 +100,11 @@ namespace oly::editor
 			return v[i];
 		else
 			throw std::out_of_range(std::to_string(i) + " is invalid index for Rect");
+	}
+
+	std::ostream& operator<<(std::ostream& os, Rect rect)
+	{
+		return os << "Rect([" << rect.x1 << ", " << rect.y1 << "], [" << rect.x2 << ", " << rect.y2 << "])";
 	}
 
 	UVRect::UVRect()
@@ -143,6 +153,11 @@ namespace oly::editor
 			throw std::out_of_range(std::to_string(i) + " is invalid index for UVRect");
 	}
 
+	std::ostream& operator<<(std::ostream& os, UVRect uv_rect)
+	{
+		return os << "UVRect([" << uv_rect.x1 << ", " << uv_rect.y1 << "], [" << uv_rect.x2 << ", " << uv_rect.y2 << "])";
+	}
+
 	TopSidePadding::TopSidePadding()
 		: left(0.f), right(0.f), top(0.f)
 	{
@@ -187,5 +202,10 @@ namespace oly::editor
 			return v[i];
 		else
 			throw std::out_of_range(std::to_string(i) + " is invalid index for TopSidePadding");
+	}
+
+	std::ostream& operator<<(std::ostream& os, TopSidePadding padding)
+	{
+		return os << "TopSidePadding(left=" << padding.left << ", right=" << padding.right << ", top=" << padding.top << ")";
 	}
 }

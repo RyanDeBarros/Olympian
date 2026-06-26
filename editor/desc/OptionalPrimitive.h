@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <ostream>
 
 namespace oly::editor
 {
@@ -20,6 +21,19 @@ namespace oly::editor
 
 		bool operator==(const OptionalPrimitive<T>&) const = default;
 	};
+
+	template<typename T>
+	std::ostream& operator<<(std::ostream& os, const OptionalPrimitive<T>& opt)
+	{
+		os << "Optional[has_value=" << opt.has_value;
+		
+		if (opt.has_value)
+			os << ", value=" << opt.value << "]";
+		else
+			os << "]";
+
+		return os;
+	}
 
 	template<typename T>
 	constexpr OptionalPrimitive<T> MakeOpt()

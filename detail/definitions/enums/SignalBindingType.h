@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace oly::detail
 {
 	enum class SignalBindingType
@@ -12,4 +14,6 @@ namespace oly::detail
 		CursorPos,
 		Scroll
 	};
+
+	extern std::ostream& operator<<(std::ostream& os, SignalBindingType type);
 }

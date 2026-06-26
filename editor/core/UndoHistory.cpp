@@ -26,8 +26,10 @@ namespace oly::editor
 
 	void UndoHistory::Execute(std::unique_ptr<UndoAction>&& action)
 	{
-		action->Forward();
-		Push(std::move(action));
+		if (action->Forward())
+			Push(std::move(action));
+		else
+			Clear();
 	}
 
 	void UndoHistory::Push(std::unique_ptr<UndoAction>&& action)
@@ -48,9 +50,16 @@ namespace oly::editor
 			_undo_stack_size -= sz;
 			_redo_stack_size += sz;
 
-			_undo.back()->Backward();
-			_redo.push_back(std::move(_undo.back()));
+			std::unique_ptr<UndoAction> action = std::move(_undo.back());
 			_undo.pop_back();
+
+			if (action->Backward())
+				_redo.push_back(std::move(action));
+			else
+			{
+				_undo_stack_size = 0;
+				_undo.clear();
+			}
 
 			Prune();
 		}
@@ -64,9 +73,16 @@ namespace oly::editor
 			_redo_stack_size -= sz;
 			_undo_stack_size += sz;
 
-			_redo.back()->Forward();
-			_undo.push_back(std::move(_redo.back()));
+			std::unique_ptr<UndoAction> action = std::move(_redo.back());
 			_redo.pop_back();
+
+			if (action->Forward())
+				_undo.push_back(std::move(action));
+			else
+			{
+				_redo_stack_size = 0;
+				_redo.clear();
+			}
 
 			Prune();
 		}
@@ -85,6 +101,15 @@ namespace oly::editor
 			PruneUndoSize(0);
 		else
 			PruneUndoSize(size_limit - _redo_stack_size);
+	}
+
+	void UndoHistory::Clear()
+	{
+		_undo_stack_size = 0;
+		_undo.clear();
+
+		_redo_stack_size = 0;
+		_redo.clear();
 	}
 
 	void UndoHistory::PruneUndoCount(size_t count_limit)

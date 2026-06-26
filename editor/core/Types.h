@@ -2,6 +2,8 @@
 
 #include "external/GLM.h"
 
+#include <ostream>
+
 namespace oly::editor
 {
 	struct Color4
@@ -24,6 +26,8 @@ namespace oly::editor
 		const float* ValuePtr() const;
 		float& operator[](size_t i);
 		float operator[](size_t i) const;
+
+		friend std::ostream& operator<<(std::ostream& os, Color4 color);
 	};
 
 	struct Rect
@@ -46,6 +50,8 @@ namespace oly::editor
 		const float* ValuePtr() const;
 		float& operator[](size_t i);
 		float operator[](size_t i) const;
+
+		friend std::ostream& operator<<(std::ostream& os, Rect rect);
 	};
 
 	struct UVRect
@@ -68,6 +74,8 @@ namespace oly::editor
 		const float* ValuePtr() const;
 		float& operator[](size_t i);
 		float operator[](size_t i) const;
+
+		friend std::ostream& operator<<(std::ostream& os, UVRect uv_rect);
 	};
 
 	struct TopSidePadding
@@ -90,5 +98,7 @@ namespace oly::editor
 		const float* ValuePtr() const;
 		float& operator[](size_t i);
 		float operator[](size_t i) const;
+
+		friend std::ostream& operator<<(std::ostream& os, TopSidePadding padding);
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <ostream>
 
 namespace oly::detail
 {
@@ -70,6 +71,8 @@ namespace oly::detail
 		Y = 1 << 1
 	};
 
+	extern std::ostream& operator<<(std::ostream& os, TileReflection reflection);
+
 	constexpr size_t TILE_REFLECTION_BITSET_COUNT = 2;
 	extern TileReflection TILE_REFLECTION_BITSET_DEFAULT;
 	extern TileReflection TILE_REFLECTION_BITSET_VALUES[TILE_REFLECTION_BITSET_COUNT];
@@ -121,6 +124,8 @@ namespace oly::detail
 		By270,
 		_c
 	};
+
+	extern std::ostream& operator<<(std::ostream& os, TileRotation rotation);
 
 	inline TileRotation operator+(TileRotation a, TileRotation b)
 	{

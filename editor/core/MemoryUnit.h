@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace oly::editor
 {
 	enum class MemoryUnit
@@ -14,4 +16,5 @@ namespace oly::editor
 	};
 
 	extern size_t MemorySize(size_t count, MemoryUnit unit);
+	extern std::ostream& operator<<(std::ostream& os, MemoryUnit unit);
 }

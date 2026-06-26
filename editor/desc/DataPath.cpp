@@ -59,6 +59,21 @@ namespace oly::editor
 		return next;
 	}
 
+	std::ostream& operator<<(std::ostream& os, DataPath path)
+	{
+		os << "DataPath(";
+
+		for (size_t i = 0; i < path._path.size(); ++i)
+		{
+			os << path._path[i];
+
+			if (i + 1 < path._path.size())
+				os << ", ";
+		}
+
+		return os << ")";
+	}
+
 	static std::stack<DataPathVisitor*> DATA_PATH_VISITORS;
 
 	DataPathVisitor::DataPathVisitor(DataPathVisitorFn fn)

@@ -1,11 +1,24 @@
 #pragma once
 
 #include "core/UndoHistory.h"
+#include "core/editor/Logger.h"
+
 #include "desc/DataPath.h"
+
+#include "util/CommonOStream.h"
 
 namespace oly::editor
 {
-	// TODO v9.1 log warnings if visitor returns nullptr -> remove earlier undo actions + self from history (break stack). Forward()/Backward() should return true if successful, so UndoHistory can manage removeing failed actions that return false.
+	namespace internal
+	{
+		template<typename T>
+		void LogUndoActionFail(const char* function, DataPath path, const T& initial_value, const T& final_value)
+		{
+			std::stringstream ss;
+			ss << function << " failed: [path=" << path << ", initial_value=" << initial_value << ", final_value=" << final_value << "]";
+			Logger::Instance().Log(LogLevel::Warning, ss.str());
+		}
+	}
 
 	template<typename T>
 	struct FieldSetAction : public UndoAction
@@ -19,21 +32,33 @@ namespace oly::editor
 		{
 		}
 
-		void Forward() override
+		bool Forward() override
 		{
 			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
+				return true;
+			}
+			else
+			{
+				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				return false;
 			}
 		}
 
-		void Backward() override
+		bool Backward() override
 		{
 			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
+				return true;
+			}
+			else
+			{
+				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				return false;
 			}
 		}
 
@@ -62,23 +87,35 @@ namespace oly::editor
 		{
 		}
 
-		void Forward() override
+		bool Forward() override
 		{
 			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
 				sync();
+				return true;
+			}
+			else
+			{
+				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				return false;
 			}
 		}
 
-		void Backward() override
+		bool Backward() override
 		{
 			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
 				sync();
+				return true;
+			}
+			else
+			{
+				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				return false;
 			}
 		}
 

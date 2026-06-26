@@ -31,4 +31,46 @@ namespace oly::editor
 			return 0;
 		}
 	}
+
+	std::ostream& operator<<(std::ostream& os, MemoryUnit unit)
+	{
+		os << "MemoryUnit(";
+
+		switch (unit)
+		{
+		case MemoryUnit::B:
+			os << "B";
+			break;
+
+		case MemoryUnit::KB:
+			os << "KB";
+			break;
+
+		case MemoryUnit::KiB:
+			os << "KiB";
+			break;
+
+		case MemoryUnit::MB:
+			os << "MB";
+			break;
+
+		case MemoryUnit::MiB:
+			os << "MiB";
+			break;
+
+		case MemoryUnit::GB:
+			os << "GB";
+			break;
+
+		case MemoryUnit::GiB:
+			os << "GiB";
+			break;
+
+		default:
+			os << "unknown";
+			break;
+		}
+
+		return os << ")";
+	}
 }

@@ -11,8 +11,8 @@ namespace oly::editor
 	{
 		virtual ~UndoAction() = default;
 
-		virtual void Forward() = 0;
-		virtual void Backward() = 0;
+		virtual bool Forward() = 0;
+		virtual bool Backward() = 0;
 		virtual size_t EmpiricalSize() const = 0;
 	};
 
@@ -36,6 +36,7 @@ namespace oly::editor
 		void Redo();
 
 		void Prune();
+		void Clear();
 
 	private:
 		void PruneUndoCount(size_t count_limit);

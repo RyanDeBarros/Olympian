@@ -1,9 +1,10 @@
 #pragma once
 
 #include <functional>
+#include <ostream>
 #include <span>
-#include <vector>
 #include <typeindex>
+#include <vector>
 
 namespace oly::editor
 {
@@ -36,6 +37,8 @@ namespace oly::editor
 		bool Empty() const;
 		DataPathStep Step() const;
 		DataPath Next() const;
+
+		friend std::ostream& operator<<(std::ostream& os, DataPath path);
 	};
 
 	using DataPathVisitorFn = std::function<void*(DataPath, std::type_index)>;
