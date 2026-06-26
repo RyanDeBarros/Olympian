@@ -406,7 +406,7 @@ namespace oly::editor
 
 					result |= gui::InputData<std::string>{}("", desc.texture.scratch);
 
-					if (ImGui::IsItemDeactivatedAfterEdit()) // TODO v9.1 this doesn't trigger when closing window or switching tabs, etc.
+					if (ImGui::IsItemDeactivatedAfterEdit()) // TODO v9.1 this doesn't trigger when closing window or switching tabs, etc. For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession.
 						OnActiveTextureChanged(grid);
 
 					if (ImGui::BeginDragDropTarget())
@@ -433,7 +433,7 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
-					// TODO v9.1 push undo actions for all manual document drawing outside of field system
+					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements.
 					desc.texture.scratch = desc.texture.def;
 					OnActiveTextureChanged(grid);
 				}

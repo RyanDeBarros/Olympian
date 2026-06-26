@@ -245,7 +245,7 @@ namespace oly::editor
 		std::vector<std::string> description;
 		description.push_back("Asset " + doc->TabName());
 		description.push_back("Full path: " + doc->GetOlyPath().string());
-		auto result = gui::DrawUnsavedChangesModal(popup, description);
+		const auto result = gui::DrawUnsavedChangesModal(popup, description);
 
 		if (result == gui::UnsavedChangesModalResult::SaveChanges)
 			doc->Dump();
@@ -259,28 +259,19 @@ namespace oly::editor
 	void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
 	{
 		IDocument* doc = _pending_close.empty() ? nullptr : _pending_close.front();
-		switch (DrawUnsavedChangesModalImpl(kTabUnsavedChangesPopup, doc))
+		const auto result = DrawUnsavedChangesModalImpl(kTabUnsavedChangesPopup, doc);
+
+		if (result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges)
 		{
-		case gui::UnsavedChangesModalResult::SaveChanges:
 			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
 			if (doc == _selected_tab)
 				_selected_tab = nullptr;
-			_pending_close.erase(_pending_close.begin());
-			_pending_close_set.erase(doc);
-			break;
+		}
 
-		case gui::UnsavedChangesModalResult::DiscardChanges:
-			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-			if (doc == _selected_tab)
-				_selected_tab = nullptr;
+		if (result != gui::UnsavedChangesModalResult::None)
+		{
 			_pending_close.erase(_pending_close.begin());
 			_pending_close_set.erase(doc);
-			break;
-
-		case gui::UnsavedChangesModalResult::CancelClose:
-			_pending_close.erase(_pending_close.begin());
-			_pending_close_set.erase(doc);
-			break;
 		}
 	}
 

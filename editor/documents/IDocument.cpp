@@ -59,6 +59,8 @@ namespace oly::editor
 		return _dirty;
 	}
 
+	// TODO v9.1 support holding down ctrl+z or ctrl+shift+z to undo/redo multiple actions over time
+
 	void IDocument::Undo()
 	{
 		DataPathVisitor _data_path_visitor([this](DataPath path, std::type_index type) { return VisitPath(path, type); });

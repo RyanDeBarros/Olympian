@@ -26,7 +26,7 @@ namespace oly::editor
 
 	void PreferencesDocument::Draw()
 	{
-		gui::PropertyGrid grid;
+		auto pre_draw = PreDraw();
 
 		Draw(DataPath(), _scratch);
 

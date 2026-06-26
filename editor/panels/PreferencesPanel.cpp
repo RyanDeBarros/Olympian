@@ -55,6 +55,12 @@ namespace oly::editor
 			if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
 				_doc.Dump();
 
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal))
+				_doc.Undo();
+
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal))
+				_doc.Redo();
+
 			_doc.DrawMenuBar();
 			_doc.Draw();
 		}
@@ -93,7 +99,7 @@ namespace oly::editor
 		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
 			_doc.Load();
 
-		unsaved_changes_modal = result != gui::UnsavedChangesModalResult::None;
+		unsaved_changes_modal = result == gui::UnsavedChangesModalResult::None;
 		return result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges;
 	}
 

@@ -419,20 +419,87 @@ namespace oly::editor
 	template<typename T, size_t N>
 	struct AnonArrayField : public PrimitiveField<std::array<T, N>>
 	{
-		using PrimitiveField<std::array<T, N>>::PrimitiveField;
+		std::array<EditSession<T>, N> edits;
+
+		AnonArrayField(std::array<T, N> def, detail::Key key, const char* label)
+			: PrimitiveField<std::array<T, N>>(def, key, label), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{})) {}
+
+	private:
+		template<size_t... Is>
+		static std::array<EditSession<T>, N> _MakeEdits(std::array<T, N>& scratch, std::index_sequence<Is...>)
+		{
+			return { EditSession<T>{scratch[Is]}... };
+		}
+
+	public:
+		AnonArrayField(const AnonArrayField& o)
+			: PrimitiveField<std::array<T, N>>(o), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+		{
+		}
+
+		AnonArrayField(AnonArrayField&& o) noexcept
+			: PrimitiveField<std::array<T, N>>(std::move(o)), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+		{
+		}
+
+		AnonArrayField& operator=(const AnonArrayField& o)
+		{
+			if (this != &o)
+				PrimitiveField<std::array<T, N>>::operator=(o);
+
+			return *this;
+		}
+
+		AnonArrayField& operator=(AnonArrayField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField<std::array<T, N>>::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = this->scratch;
-			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
-			if (initial != this->scratch)
-				PushFieldSetAction(path, initial, this->scratch);
+			DescIO::Draw(this->label, this->edits.data(), this->def.data(), N);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
+			_CheckUndoAction(path, std::make_index_sequence<N>{});
+		}
+
+	private:
+		template<size_t... Is>
+		void _CheckUndoAction(DataPath path, std::index_sequence<Is...>)
+		{
+			((
+				edits[Is].ConsumeModified() ? (PushFieldSetAction(path / DataPathStep(Is), std::move(edits[Is].buffer), this->scratch[Is]), void()) : void()
+			), ...);
+		}
+
+	public:
+		void* VisitPath(DataPath path, std::type_index type)
+		{
+			if (path.Empty())
+				return nullptr;
+
+			auto index = path.Step().v;
+			if (index >= 0 && index < N)
+			{
+				path = path.Next();
+				if (type == typeid(this->scratch[index]) && path.Empty())
+					return reinterpret_cast<void*>(&this->scratch[index]);
+				else
+					return nullptr;
+			}
+			else
+				return nullptr;
 		}
 	};
 
 	template<size_t N>
 	using StringArrayField = AnonArrayField<std::string, N>;
-	// TODO v9.1 inherit from AnonArrayField<std::string, N> instead and add edit session
 
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
@@ -440,18 +507,9 @@ namespace oly::editor
 		gui::DynamicListState ui_state;
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
-
-		void Draw(DataPath path)
-		{
-			const auto initial = this->scratch;
-			DescIO::Draw(this->label, this->edit, this->def, ui_state);
-			if (initial != this->scratch)
-				PushFieldSetAction(path, initial, this->scratch);
-		}
 	};
 
 	using StringVectorField = VectorField<std::string>;
-	// TODO v9.1 inherit from VectorField<std::string> instead and add edit session
 
 	template<typename E>
 	struct DisjointEnumField

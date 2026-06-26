@@ -21,15 +21,15 @@ namespace oly::editor
 		RowInputData(label, data, def, names);
 	}
 
-	void DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
+	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count)
 	{
 		const auto generator = [data, count](PropertyPage& props) {
 			PropertyRow row;
 			for (size_t i = 0; i < count; ++i)
-				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i]));
+				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
 
 			props.page.push_back(std::move(row));
-		};
+			};
 
 		if (auto subform = Subform(label, generator))
 		{
