@@ -133,11 +133,9 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			const auto initial = this->scratch;
-			// TODO v9.1 use edit session instead of this->scratch
-			DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
-			if (initial != this->scratch)
-				PushFieldSetAction(path, initial, this->scratch);
+			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, this->scratch);
 		}
 	};
 
@@ -201,7 +199,7 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
-			if (edit.Modified())
+			if (edit.ConsumeModified())
 				PushFieldSetAction(path, std::move(edit.buffer), scratch);
 		}
 	};
@@ -223,46 +221,124 @@ namespace oly::editor
 
 	struct RectField : public PrimitiveField<Rect>
 	{
-		// TODO v9.1 edit session
+		EditSession<Rect> edit;
 
-		using PrimitiveField<Rect>::PrimitiveField;
+		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label),
+			edit(scratch) {}
+
+		RectField(const RectField& o)
+			: PrimitiveField(o), edit(scratch)
+		{
+		}
+
+		RectField(RectField&& o) noexcept
+			: PrimitiveField(std::move(o)), edit(scratch)
+		{
+		}
+
+		RectField& operator=(const RectField& o)
+		{
+			if (this != &o)
+				PrimitiveField::operator=(o);
+
+			return *this;
+		}
+
+		RectField& operator=(RectField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def);
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 	};
 
 	struct UVRectField : public PrimitiveField<UVRect>
 	{
-		// TODO v9.1 edit session
+		EditSession<UVRect> edit;
 
-		using PrimitiveField<UVRect>::PrimitiveField;
+		UVRectField(UVRect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
+
+		UVRectField(const UVRectField& o)
+			: PrimitiveField(o), edit(scratch)
+		{
+		}
+
+		UVRectField(UVRectField&& o) noexcept
+			: PrimitiveField(std::move(o)), edit(scratch)
+		{
+		}
+
+		UVRectField& operator=(const UVRectField& o)
+		{
+			if (this != &o)
+				PrimitiveField::operator=(o);
+
+			return *this;
+		}
+
+		UVRectField& operator=(UVRectField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def);
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 	};
 
 	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>
 	{
-		// TODO v9.1 edit session
+		EditSession<TopSidePadding> edit;
+
+		TopSidePaddingField(TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
+
+		TopSidePaddingField(const TopSidePaddingField& o)
+			: PrimitiveField(o), edit(scratch)
+		{
+		}
+
+		TopSidePaddingField(TopSidePaddingField&& o) noexcept
+			: PrimitiveField(std::move(o)), edit(scratch)
+		{
+		}
+
+		TopSidePaddingField& operator=(const TopSidePaddingField& o)
+		{
+			if (this != &o)
+				PrimitiveField::operator=(o);
+
+			return *this;
+		}
+
+		TopSidePaddingField& operator=(TopSidePaddingField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField::operator=(std::move(o));
+
+			return *this;
+		}
 
 		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def);
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 	};
 

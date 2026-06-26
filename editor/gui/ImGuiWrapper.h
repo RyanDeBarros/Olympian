@@ -6,7 +6,6 @@
 #include "core/editor/LabelRegistry.h"
 
 #include "gui/DrawResult.h"
-#include "gui/EditSession.h"
 
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/IDScope.h"
@@ -143,7 +142,6 @@ namespace oly::editor::gui
 	struct InputData<std::string>
 	{
 		DrawResult operator()(const char* label, std::string& data) const;
-		DrawResult operator()(const char* label, EditSession<std::string>& data) const;
 	};
 
 	template<>

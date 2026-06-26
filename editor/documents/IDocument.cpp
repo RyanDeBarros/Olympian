@@ -1,5 +1,7 @@
 #include "IDocument.h"
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	IDocument::IDocument(detail::ResourcePath&& oly_path)

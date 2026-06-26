@@ -1,5 +1,7 @@
 #include "DrawResult.h"
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	DrawResult::DrawResult(bool dirty)

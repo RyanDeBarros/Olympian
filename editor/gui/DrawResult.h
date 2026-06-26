@@ -2,8 +2,6 @@
 
 #include "util/Macros.h"
 
-#include <imgui.h>
-
 namespace oly::editor
 {
 	struct DrawResult

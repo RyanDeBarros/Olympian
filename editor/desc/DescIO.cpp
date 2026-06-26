@@ -79,54 +79,63 @@ namespace oly::editor
 		}
 	}
 
-	void DescIO::Draw(const char* label, Rect& data, const Rect& def)
+	void DescIO::Draw(const char* label, EditSession<Rect>& data, const Rect& def)
 	{
 		gui::IDScope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
-		if (data != def)
+
+		data.PreEdit();
+		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("x1", data.x1);
-		ValueInputData("x2", data.x2);
-		ValueInputData("y1", data.y1);
-		ValueInputData("y2", data.y2);
-		
+		ValueInputData("x1", data.buffer.x1);
+		ValueInputData("x2", data.buffer.x2);
+		ValueInputData("y1", data.buffer.y1);
+		ValueInputData("y2", data.buffer.y2);
+
 		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 		if (gui::PropertyGrid::Reset::AnyActivated())
-			data = def;
+			data.PublishReset(def);
 	}
 	
-	void DescIO::Draw(const char* label, UVRect& data, const UVRect& def)
+	void DescIO::Draw(const char* label, EditSession<UVRect>& data, const UVRect& def)
 	{
 		gui::IDScope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
-		if (data != def)
+
+		data.PreEdit();
+		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("x1", data.x1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("x2", data.x2, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("y1", data.y1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("y2", data.y2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData("y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 		if (gui::PropertyGrid::Reset::AnyActivated())
-			data = def;
+			data.PublishReset(def);
 	}
 	
-	void DescIO::Draw(const char* label, TopSidePadding& data, const TopSidePadding& def)
+	void DescIO::Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def)
 	{
 		gui::IDScope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
-		if (data != def)
+
+		data.PreEdit();
+		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("left", data.left);
-		ValueInputData("right", data.right);
-		ValueInputData("top", data.top);
+		ValueInputData("left", data.buffer.left);
+		ValueInputData("right", data.buffer.right);
+		ValueInputData("top", data.buffer.top);
 
 		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 		if (gui::PropertyGrid::Reset::AnyActivated())
-			data = def;
+			data.PublishReset(def);
 	}
 
 	template<>

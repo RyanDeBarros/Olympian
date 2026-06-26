@@ -1,6 +1,8 @@
 #pragma once
 
-#include <imgui.h>
+#include "gui/DrawResult.h"
+
+#include <tuple>
 
 namespace oly::editor
 {
@@ -28,20 +30,20 @@ namespace oly::editor
 			published = false;
 		}
 
-		void PostEdit()
+		void PostEdit(DrawResult result)
 		{
-			if (ImGui::IsItemActivated())
-				editing = true;
-
-			if (ImGui::IsItemDeactivatedAfterEdit())
+			if (result.IsDeactivatedAfterEdit())
 			{
 				editing = false;
 				std::swap(truth, buffer);
 				published = true;
 			}
+
+			if (result.IsActivated())
+				editing = true;
 		}
 
-		// TODO v9.1 document should call finalize on all properties, regardless of whether they were drawn
+		// TODO v9.1 document should call finalize on all properties, regardless of whether they were drawn. After Finalize(), ConsumeModified() = true should push the undo action
 		void Finalize()
 		{
 			if (!seen_this_frame && editing)
@@ -54,15 +56,23 @@ namespace oly::editor
 			seen_this_frame = false;
 		}
 
-		bool Modified()
+		bool Modified() const
 		{
 			return published && buffer != truth;
 		}
 
-		void SetAll(T to)
+		bool ConsumeModified()
+		{
+			const bool modified = Modified();
+			published = false;
+			return modified;
+		}
+
+		void PublishReset(T to)
 		{
 			truth = to;
 			buffer = std::move(to);
+			published = true;
 		}
 	};
 }

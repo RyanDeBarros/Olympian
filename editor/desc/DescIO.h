@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/DynamicList.h"
+#include "gui/EditSession.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/WidgetComponentCommon.h"
 
@@ -19,12 +20,6 @@ namespace oly::editor
 	{
 		template<typename T, typename... Args>
 		static void ValueInputData(const char* label, T& data, Args&&... args)
-		{
-			gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
-		}
-
-		template<typename T, typename... Args>
-		static void ValueInputData(const char* label, EditSession<T>& data, Args&&... args)
 		{
 			gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
 		}
@@ -48,17 +43,28 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			ValueInputData<T>("##", data, std::forward<Args>(args)...);
-			if (data.Modified())
+
+			data.PreEdit();
+			if (data.buffer != def)
 				gui::PropertyGrid::Reset::Button();
+
+			ValueInputData<T>("##", data.buffer, std::forward<Args>(args)...);
+
 			gui::PropertyGrid::SubmitRow();
+			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 			if (gui::PropertyGrid::Reset::AnyActivated())
-				data.SetAll(def);
+				data.PublishReset(def);
 		}
 
 	public:
 		template<typename T, typename U = T>
 		static void Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		{
+			RowInputData(label, data, def, min, max);
+		}
+
+		template<typename T, typename U = T>
+		static void Draw(const char* label, EditSession<T>& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{
 			RowInputData(label, data, def, min, max);
 		}
@@ -80,9 +86,9 @@ namespace oly::editor
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count);
 
-		static void Draw(const char* label, Rect& data, const Rect& def);
-		static void Draw(const char* label, UVRect& data, const UVRect& def);
-		static void Draw(const char* label, TopSidePadding& data, const TopSidePadding& def);
+		static void Draw(const char* label, EditSession<Rect>& data, const Rect& def);
+		static void Draw(const char* label, EditSession<UVRect>& data, const UVRect& def);
+		static void Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def);
 
 		template<typename T>
 		static DrawResult ValueDrawDynamicList(std::vector<T>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)

@@ -2,6 +2,8 @@
 
 #include "gui/DrawResult.h"
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	enum class IconResource : int;

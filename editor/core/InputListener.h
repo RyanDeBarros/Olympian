@@ -10,6 +10,8 @@
 
 #include <optional>
 
+#include <imgui.h>
+
 namespace oly::editor
 {
 	enum class ListenMode
