@@ -71,7 +71,7 @@ namespace oly::editor
 	template<typename T>
 	void PushFieldSetAction(DataPath path, T initial_value, T final_value)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T>>(path, initial_value, final_value));
+		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T>>(path, std::move(initial_value), std::move(final_value)));
 	}
 
 	template<typename T>
@@ -128,6 +128,6 @@ namespace oly::editor
 	template<typename T>
 	void PushFieldSyncSetAction(DataPath path, T initial_value, T final_value, std::function<void()> sync)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSyncSetAction<T>>(path, initial_value, final_value, std::move(sync)));
+		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSyncSetAction<T>>(path, std::move(initial_value), std::move(final_value), std::move(sync)));
 	}
 }

@@ -2,12 +2,16 @@
 
 #include "core/Meta.h"
 #include "core/Types.h"
+
 #include "core/editor/LabelRegistry.h"
-#include "desc/OptionalPrimitive.h"
+
+#include "gui/DrawResult.h"
+#include "gui/EditSession.h"
 
 #include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/IDScope.h"
-#include "gui/DrawResult.h"
+
+#include "desc/OptionalPrimitive.h"
 
 #include "external/GLM.h"
 
@@ -139,6 +143,7 @@ namespace oly::editor::gui
 	struct InputData<std::string>
 	{
 		DrawResult operator()(const char* label, std::string& data) const;
+		DrawResult operator()(const char* label, EditSession<std::string>& data) const;
 	};
 
 	template<>

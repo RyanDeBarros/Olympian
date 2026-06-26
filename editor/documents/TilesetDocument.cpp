@@ -406,7 +406,7 @@ namespace oly::editor
 
 					result |= gui::InputData<std::string>{}("", desc.texture.scratch);
 
-					if (ImGui::IsItemDeactivatedAfterEdit())
+					if (ImGui::IsItemDeactivatedAfterEdit()) // TODO v9.1 this doesn't trigger when closing window or switching tabs, etc.
 						OnActiveTextureChanged(grid);
 
 					if (ImGui::BeginDragDropTarget())

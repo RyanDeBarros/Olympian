@@ -155,6 +155,15 @@ namespace oly::editor::gui
 		return InputText(label, data);
 	}
 
+	DrawResult InputData<std::string>::operator()(const char* label, EditSession<std::string>& data) const
+	{
+		data.PreEdit();
+		DrawResult result = InputText(label, data.buffer);
+		data.PostEdit();
+		result.SetDirty(data.Modified());
+		return result;
+	}
+
 	DrawResult InputData<Color4>::operator()(const char* label, Color4& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);

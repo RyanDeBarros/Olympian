@@ -16,7 +16,8 @@ namespace oly::editor
 			LeftClicked = 1 << 2,
 			RightClicked = 1 << 3,
 			Focused = 1 << 4,
-			DeactivatedAfterEdit = 1 << 5
+			Activated = 1 << 5,
+			DeactivatedAfterEdit = 1 << 6
 		};
 
 		OLY_DETAIL_DECLARE_NESTED_BITMASK(Flags);
@@ -38,6 +39,7 @@ namespace oly::editor
 		bool IsRightClicked() const;
 		bool IsClicked() const;
 		bool IsFocused() const;
+		bool IsActivated() const;
 		bool IsDeactivatedAfterEdit() const;
 	};
 

@@ -21,6 +21,9 @@ namespace oly::editor
 		if (ImGui::IsItemFocused())
 			flags |= Flags::Focused;
 
+		if (ImGui::IsItemActivated())
+			flags |= Flags::Activated;
+
 		if (ImGui::IsItemDeactivatedAfterEdit())
 			flags |= Flags::DeactivatedAfterEdit;
 
@@ -79,6 +82,11 @@ namespace oly::editor
 	bool DrawResult::IsFocused() const
 	{
 		return flags & Flags::Focused;
+	}
+
+	bool DrawResult::IsActivated() const
+	{
+		return flags & Flags::Activated;
 	}
 
 	bool DrawResult::IsDeactivatedAfterEdit() const

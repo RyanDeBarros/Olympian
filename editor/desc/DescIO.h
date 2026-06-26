@@ -1,13 +1,9 @@
 #pragma once
 
-#include "core/editor/LabelRegistry.h"
-
-#include "desc/OptionalPrimitive.h"
-
-#include "gui/scopes/IDScope.h"
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/WidgetComponentCommon.h"
+
 #include "gui/properties/PropertyGrid.h"
 #include "gui/properties/PropertyGroup.h"
 #include "gui/properties/PropertyViews.h"
@@ -24,7 +20,13 @@ namespace oly::editor
 		template<typename T, typename... Args>
 		static void ValueInputData(const char* label, T& data, Args&&... args)
 		{
-			gui::PropertyGrid::Value::AddComponent(comp::InputData(label, data, std::forward<Args>(args)...));
+			gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
+		}
+
+		template<typename T, typename... Args>
+		static void ValueInputData(const char* label, EditSession<T>& data, Args&&... args)
+		{
+			gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
 		}
 
 	private:
@@ -41,6 +43,19 @@ namespace oly::editor
 				data = def;
 		}
 
+		template<typename T, typename... Args>
+		static void RowInputData(const char* label, EditSession<T>& data, const T& def, Args&&... args)
+		{
+			gui::IDScope scope(&data);
+			gui::PropertyGrid::Key::SetLabel(label);
+			ValueInputData<T>("##", data, std::forward<Args>(args)...);
+			if (data.Modified())
+				gui::PropertyGrid::Reset::Button();
+			gui::PropertyGrid::SubmitRow();
+			if (gui::PropertyGrid::Reset::AnyActivated())
+				data.SetAll(def);
+		}
+
 	public:
 		template<typename T, typename U = T>
 		static void Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
@@ -50,6 +65,12 @@ namespace oly::editor
 
 		template<typename T>
 		static void Draw(const char* label, T& data, const T& def)
+		{
+			RowInputData(label, data, def);
+		}
+
+		template<typename T>
+		static void Draw(const char* label, EditSession<T>& data, const T& def)
 		{
 			RowInputData(label, data, def);
 		}

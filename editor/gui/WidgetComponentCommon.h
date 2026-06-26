@@ -3,7 +3,6 @@
 #include "WidgetComponent.h"
 
 #include "gui/ImGuiWrapper.h"
-#include "gui/scopes/IDScope.h"
 
 namespace oly::editor::comp
 {
@@ -12,6 +11,14 @@ namespace oly::editor::comp
 
 	template<typename T, typename... Args>
 	extern gui::WidgetComponent InputData(const char* label, T& data, Args&&... args)
+	{
+		gui::WidgetComponent c;
+		c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable { gui::IDScope scope(&data); return gui::InputData<T>{}(label, data, std::forward<Args>(args)...); };
+		return c;
+	}
+
+	template<typename T, typename... Args>
+	extern gui::WidgetComponent InputData(const char* label, EditSession<T>& data, Args&&... args)
 	{
 		gui::WidgetComponent c;
 		c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable { gui::IDScope scope(&data); return gui::InputData<T>{}(label, data, std::forward<Args>(args)...); };

@@ -88,9 +88,9 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 	};
@@ -101,13 +101,42 @@ namespace oly::editor
 		inline static const OptionalPrimitive<U> Min = _Min;
 		inline static const OptionalPrimitive<U> Max = _Max;
 
-		using PrimitiveField<T>::PrimitiveField;
+		EditSession<T> edit;
+
+		RangeField(T def, detail::Key key, const char* label) : PrimitiveField<T>(def, key, label), edit(this->scratch) {}
+
+		RangeField(const RangeField& o)
+			: PrimitiveField<T>(o), edit(this->scratch)
+		{
+		}
+
+		RangeField(RangeField&& o) noexcept
+			: PrimitiveField<T>(std::move(o)), edit(this->scratch)
+		{
+		}
+
+		RangeField& operator=(const RangeField& o)
+		{
+			if (this != &o)
+				PrimitiveField<T>::operator=(o);
+
+			return *this;
+		}
+
+		RangeField& operator=(RangeField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField<T>::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			auto initial = this->scratch;
+			const auto initial = this->scratch;
+			// TODO v9.1 use edit session instead of this->scratch
 			DescIO::Draw(this->label, this->scratch, this->def, Min, Max);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != this->scratch)
 				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
@@ -130,74 +159,109 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = this->scratch;
+			const auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch, this->def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != this->scratch)
 				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
 	struct StringField : public PrimitiveField<std::string>
 	{
-		using PrimitiveField<std::string>::PrimitiveField;
+		EditSession<std::string> edit;
+
+		StringField(std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(def), key, label), edit(scratch) {}
+
+		StringField(const StringField& o)
+			: PrimitiveField(o), edit(scratch)
+		{
+		}
+
+		StringField(StringField&& o) noexcept
+			: PrimitiveField(std::move(o)), edit(scratch)
+		{
+		}
+
+		StringField& operator=(const StringField& o)
+		{
+			if (this != &o)
+				PrimitiveField::operator=(o);
+
+			return *this;
+		}
+
+		StringField& operator=(StringField&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow()) // TODO v9.1 && gui::PropertyGrid::Value::GetDrawResult().ItemDeactivatedAfterEdit()? -> also for StringVector/ArrayField, etc.
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def);
+			if (edit.Modified())
+				PushFieldSetAction(path, std::move(edit.buffer), scratch);
 		}
 	};
 
 	struct Color4Field : public PrimitiveField<Color4>
 	{
+		// TODO v9.1 edit session
+
 		using PrimitiveField<Color4>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
 	struct RectField : public PrimitiveField<Rect>
 	{
+		// TODO v9.1 edit session
+
 		using PrimitiveField<Rect>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
 	struct UVRectField : public PrimitiveField<UVRect>
 	{
+		// TODO v9.1 edit session
+
 		using PrimitiveField<UVRect>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 	};
 
 	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>
 	{
+		// TODO v9.1 edit session
+
 		using PrimitiveField<TopSidePadding>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 	};
@@ -212,9 +276,9 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = this->scratch;
+			const auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != this->scratch)
 				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
@@ -229,15 +293,16 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = this->scratch;
+			const auto initial = this->scratch;
 			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), N);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != this->scratch)
 				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
 	template<size_t N>
 	using StringArrayField = AnonArrayField<std::string, N>;
+	// TODO v9.1 inherit from AnonArrayField<std::string, N> instead and add edit session
 
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
@@ -248,14 +313,15 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = this->scratch;
-			DescIO::Draw(this->label, this->scratch, this->def, ui_state);
-			if (gui::PropertyGrid::DirtyRow())
+			const auto initial = this->scratch;
+			DescIO::Draw(this->label, this->edit, this->def, ui_state);
+			if (initial != this->scratch)
 				PushFieldSetAction(path, initial, this->scratch);
 		}
 	};
 
 	using StringVectorField = VectorField<std::string>;
+	// TODO v9.1 inherit from VectorField<std::string> instead and add edit session
 
 	template<typename E>
 	struct DisjointEnumField
@@ -279,9 +345,9 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def_index, names);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 
@@ -339,6 +405,7 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
+		// TODO v9.1 edit session
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
@@ -350,9 +417,9 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def, Min, Max);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 
@@ -401,6 +468,7 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
+		// TODO v9.1 edit session
 		T nullopt;
 		detail::Key key;
 		const char* label;
@@ -413,9 +481,9 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			scratch.has_value = scratch.value != nullopt;
-			auto initial = scratch;
+			const auto initial = scratch;
 			DescIO::Draw(label, scratch, def, Min, Max);
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSetAction(path, initial, scratch);
 		}
 
@@ -469,6 +537,7 @@ namespace oly::editor
 		bool scratch_flags[Count];
 		E def;
 		E scratch;
+		// TODO v9.1 edit session
 		detail::Key key;
 		const char* label;
 		const E* values;
@@ -495,11 +564,11 @@ namespace oly::editor
 	private:
 		void Draw(DataPath path, const bool* disabled)
 		{
-			auto initial = scratch;
+			const auto initial = scratch;
 			SetFlags();
 			DescIO::Draw(label, scratch_flags, def_flags, names, disabled, Count);
 			SetEnum();
-			if (gui::PropertyGrid::DirtyRow())
+			if (initial != scratch)
 				PushFieldSyncSetAction(path, initial, scratch, [this]() { SetFlags(); });
 		}
 

@@ -39,13 +39,13 @@ namespace oly::editor
 		{
 			if (ImGui::BeginTabItem("Signals"))
 			{
-				DrawSignals();
+				Draw(DataPath() / _scratch.subpaths.signals, _scratch.signals);
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Routes"))
 			{
-				DrawRoutes();
+				Draw(DataPath() / _scratch.subpaths.routes, _scratch.routes);
 				ImGui::EndTabItem();
 			}
 
@@ -105,18 +105,18 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	void SignalDocument::DrawSignals()
+	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
 	{
 		if (auto form = Form())
 		{
 			if (auto scope = gui::IDScope("##Signal"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Signal");
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
-					return _signal_slots.DrawComboHeader([this](size_t i) {
-						if (i < _scratch.signals.Size())
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+					return _signal_slots.DrawComboHeader([&desc](size_t i) {
+						if (i < desc.Size())
 						{
-							std::string id = _scratch.signals[i].id.scratch;
+							std::string id = desc[i].id.scratch;
 							if (!id.empty())
 								return id;
 						}
@@ -126,28 +126,28 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 			}
 
-			if (!_scratch.signals.Empty())
-				Draw(_scratch.signals.Subpath(DataPath(), _signal_slots.active_index), _scratch.signals[_signal_slots.active_index]);
+			if (!desc.Empty())
+				Draw(desc.Subpath(path, _signal_slots.active_index), desc[_signal_slots.active_index]);
 
-			if (_signal_slots.ConsumeOps(*_scratch.signals.ListAdapter()))
+			if (_signal_slots.ConsumeOps(*desc.ListAdapter()))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
 		}
 	}
 
-	void SignalDocument::DrawRoutes()
+	void SignalDocument::Draw(DataPath path, VectorDesc<RouteDesc>& desc)
 	{
 		if (auto form = Form())
 		{
 			if (auto scope = gui::IDScope("##Route"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Route");
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
-					return _route_slots.DrawComboHeader([this](size_t i) {
-						if (i < _scratch.routes.Size())
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+					return _route_slots.DrawComboHeader([&desc](size_t i) {
+						if (i < desc.Size())
 						{
-							std::string id = _scratch.routes[i].id.scratch;
+							std::string id = desc[i].id.scratch;
 							if (!id.empty())
 								return id;
 						}
@@ -157,10 +157,10 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 			}
 
-			if (!_scratch.routes.Empty())
-				Draw(_scratch.routes.Subpath(DataPath(), _route_slots.active_index), _scratch.routes[_route_slots.active_index]);
+			if (!desc.Empty())
+				Draw(desc.Subpath(path, _route_slots.active_index), desc[_route_slots.active_index]);
 
-			if (_route_slots.ConsumeOps(*_scratch.routes.ListAdapter()))
+			if (_route_slots.ConsumeOps(*desc.ListAdapter()))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();

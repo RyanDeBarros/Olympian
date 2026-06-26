@@ -34,8 +34,8 @@ namespace oly::editor
 		void* VisitPath(DataPath path, std::type_index type) override;
 
 	private:
-		void DrawSignals();
-		void DrawRoutes();
+		void Draw(DataPath path, VectorDesc<SignalDesc>& desc);
+		void Draw(DataPath path, VectorDesc<RouteDesc>& desc);
 		Counter<std::string> GetSignalIDCounter() const;
 		Counter<std::string> GetRouteIDCounter() const;
 		Counter<std::string> GetIDCounter() const;
