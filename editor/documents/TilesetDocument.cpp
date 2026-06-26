@@ -440,13 +440,13 @@ namespace oly::editor
 			}
 
 			auto path = GetAssignmentPath(grid);
-			desc.texture_index.Draw(path / desc.subpaths.texture_index);
+			DRAW_FIELD(texture_index);
 			if (gui::PropertyGrid::DirtyRow())
 				OnActiveTextureChanged(grid);
 
-			desc.uvs.Draw(path / desc.subpaths.uvs);
-			desc.reflection.Draw(path / desc.subpaths.reflection);
-			desc.rotation.Draw(path / desc.subpaths.rotation);
+			DRAW_FIELD(uvs);
+			DRAW_FIELD(reflection);
+			DRAW_FIELD(rotation);
 		}
 	}
 
@@ -510,10 +510,7 @@ namespace oly::editor
 
 	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
 	{
-		DataPathSource path;
-		path /= _scratch.subpaths.assignments;
-		path /= _scratch.assignments.subpaths.map;
-		return _scratch.assignments.map.Subpath(path, config);
+		return DataPath() / _scratch.subpaths.assignments / _scratch.assignments.subpaths.map / _scratch.assignments.map.Subpath(config);
 	}
 
 	void TilesetDocument::OnActiveTextureChanged(const detail::TileConfigGrid grid)

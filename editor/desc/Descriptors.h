@@ -108,16 +108,16 @@ namespace oly::editor
 			if (path.Empty())
 				return nullptr;
 
-			int index = path.Step();
+			int index = path.Step().v;
 			if (index >= 0 && index < vector.size())
 				return vector[index].VisitPath(path.Next(), type);
 			else
 				return nullptr;
 		}
 
-		DataPathSource Subpath(DataPath path, size_t index)
+		DataPathStep Subpath(size_t index)
 		{
-			return path / static_cast<int>(index);
+			return DataPathStep(index);
 		}
 	};
 
@@ -187,11 +187,6 @@ namespace oly::editor
 			return map[key];
 		}
 
-		const ValueDescriptor& operator[](Key key) const
-		{
-			return map[key];
-		}
-
 		auto begin()
 		{
 			return map.begin();
@@ -207,16 +202,16 @@ namespace oly::editor
 			if (path.Empty())
 				return nullptr;
 
-			auto it = map.find(static_cast<Key>(path.Step()));
+			auto it = map.find(static_cast<Key>(path.Step().v));
 			if (it != map.end())
 				return it->second.VisitPath(path.Next(), type);
 			else
 				return nullptr;
 		}
 
-		DataPathSource Subpath(DataPath path, Key key)
+		DataPathStep Subpath(Key key)
 		{
-			return path / static_cast<int>(key);
+			return DataPathStep(key);
 		}
 	};
 }

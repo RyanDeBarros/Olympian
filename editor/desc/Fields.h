@@ -14,26 +14,26 @@
 
 namespace oly::editor
 {
-#define _DRAW_FIELD(field) desc.field.Draw(path / desc.subpaths.field);
-#define DRAW_FIELDS(GENERATOR) GENERATOR(_DRAW_FIELD);
+#define DRAW_FIELD(field) desc.field.Draw(path / desc.subpaths.field);
+#define DRAW_FIELDS(GENERATOR) GENERATOR(DRAW_FIELD);
 
-#define _LOAD_FIELD(field) desc.field.Load(node);
-#define LOAD_FIELDS(GENERATOR) GENERATOR(_LOAD_FIELD)
+#define LOAD_FIELD(field) desc.field.Load(node);
+#define LOAD_FIELDS(GENERATOR) GENERATOR(LOAD_FIELD)
 
-#define _DUMP_FIELD(field) desc.field.Dump(table);
-#define DUMP_FIELDS(GENERATOR) GENERATOR(_DUMP_FIELD)
+#define DUMP_FIELD(field) desc.field.Dump(table);
+#define DUMP_FIELDS(GENERATOR) GENERATOR(DUMP_FIELD)
 
 #define _SUBPATH_ENUM_ENTRY(field) _E_##field,
-#define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = _E_##field;
+#define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
 #define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
 #define GENERATE_SUBPATHS(GENERATOR) \
-		private: enum : DataPathStep { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
+		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
 		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
 		void* VisitPath(DataPath path, std::type_index type) \
 		{ \
 			if (path.Empty()) \
 				return nullptr; \
-			switch (path.Step()) \
+			switch (path.Step().v) \
 			{ \
 				GENERATOR(_SUBPATH_VISIT_PATH); \
 			default: \
@@ -134,6 +134,11 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
 			if (edit.ConsumeModified())
 				PushFieldSetAction(path, edit.buffer, this->scratch);
 		}
@@ -199,6 +204,11 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
 			if (edit.ConsumeModified())
 				PushFieldSetAction(path, std::move(edit.buffer), scratch);
 		}
@@ -206,16 +216,48 @@ namespace oly::editor
 
 	struct Color4Field : public PrimitiveField<Color4>
 	{
-		// TODO v9.1 edit session
+		EditSession<Color4> edit;
 
-		using PrimitiveField<Color4>::PrimitiveField;
+		Color4Field(Color4 def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch)
+		{
+		}
+
+		Color4Field(const Color4Field& o)
+			: PrimitiveField(o), edit(scratch)
+		{
+		}
+
+		Color4Field(Color4Field&& o) noexcept
+			: PrimitiveField(std::move(o)), edit(scratch)
+		{
+		}
+
+		Color4Field& operator=(const Color4Field& o)
+		{
+			if (this != &o)
+				PrimitiveField::operator=(o);
+
+			return *this;
+		}
+
+		Color4Field& operator=(Color4Field&& o) noexcept
+		{
+			if (this != &o)
+				PrimitiveField::operator=(std::move(o));
+
+			return *this;
+		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 	};
 
@@ -223,8 +265,7 @@ namespace oly::editor
 	{
 		EditSession<Rect> edit;
 
-		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label),
-			edit(scratch) {}
+		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
 
 		RectField(const RectField& o)
 			: PrimitiveField(o), edit(scratch)
@@ -255,6 +296,11 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
 			if (edit.ConsumeModified())
 				PushFieldSetAction(path, edit.buffer, scratch);
 		}
@@ -295,6 +341,11 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
 			if (edit.ConsumeModified())
 				PushFieldSetAction(path, edit.buffer, scratch);
 		}
@@ -332,11 +383,14 @@ namespace oly::editor
 			return *this;
 		}
 
-		using PrimitiveField<TopSidePadding>::PrimitiveField;
-
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
 			if (edit.ConsumeModified())
 				PushFieldSetAction(path, edit.buffer, scratch);
 		}

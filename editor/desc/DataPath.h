@@ -8,7 +8,15 @@
 
 namespace oly::editor
 {
-	using DataPathStep = int;
+	struct DataPathStep
+	{
+		int v;
+
+		constexpr DataPathStep(int v) : v(v) {}
+		
+		constexpr bool operator==(const DataPathStep& o) const { return v == o.v; }
+		constexpr bool operator==(int o) const { return v == o; }
+	};
 
 	class DataPath;
 

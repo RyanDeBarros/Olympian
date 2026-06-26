@@ -65,7 +65,7 @@ namespace oly::editor
 
 		for (size_t i = 0; i < path._path.size(); ++i)
 		{
-			os << path._path[i];
+			os << path._path[i].v;
 
 			if (i + 1 < path._path.size())
 				os << ", ";

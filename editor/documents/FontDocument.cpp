@@ -280,7 +280,7 @@ namespace oly::editor
 	
 	void FontDocument::Draw(DataPath path, FontAtlasDesc& desc)
 	{
-		desc.font_size.Draw(path / desc.subpaths.font_size);
+		DRAW_FIELD(font_size);
 		if (gui::PropertyGrid::DirtyRow())
 			DestroyFont();
 
@@ -288,13 +288,13 @@ namespace oly::editor
 
 		if (auto subform = Subform("Common buffer"))
 		{
-			desc.use_common_buffer_preset.Draw(path / desc.subpaths.use_common_buffer_preset);
+			DRAW_FIELD(use_common_buffer_preset);
 
 			bool preset = desc.use_common_buffer_preset.scratch;
 			
 			if (auto disabled = DisabledSection(!preset))
 			{
-				desc.common_buffer_preset.Draw(path / desc.subpaths.common_buffer_preset);
+				DRAW_FIELD(common_buffer_preset);
 
 				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
 				{
@@ -310,7 +310,9 @@ namespace oly::editor
 			}
 
 			if (auto disabled = DisabledSection(preset))
-				desc.common_buffer.Draw(path / desc.subpaths.common_buffer);
+			{
+				DRAW_FIELD(common_buffer);
+			}
 		}
 	}
 

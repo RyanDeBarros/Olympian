@@ -92,7 +92,7 @@ namespace oly::editor
 	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
 	{
 		if (auto section = Subform(subform_header))
-			Draw(desc.styles.Subpath(path / desc.subpaths.styles, style), desc.styles[style]);
+			Draw(path / desc.subpaths.styles / desc.styles.Subpath(style), desc.styles[style]);
 	}
 
 	void FontFamilyDocument::Draw(DataPath path, FontStyleDesc& desc)

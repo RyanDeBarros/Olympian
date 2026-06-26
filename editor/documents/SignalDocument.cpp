@@ -127,7 +127,7 @@ namespace oly::editor
 			}
 
 			if (!desc.Empty())
-				Draw(desc.Subpath(path, _signal_slots.active_index), desc[_signal_slots.active_index]);
+				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
 			if (_signal_slots.ConsumeOps(*desc.ListAdapter()))
 				MarkDirty();
@@ -158,7 +158,7 @@ namespace oly::editor
 			}
 
 			if (!desc.Empty())
-				Draw(desc.Subpath(path, _route_slots.active_index), desc[_route_slots.active_index]);
+				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 
 			if (_route_slots.ConsumeOps(*desc.ListAdapter()))
 				MarkDirty();
@@ -198,7 +198,7 @@ namespace oly::editor
 	{
 		gui::Outline dup_outline;
 		
-		desc.id.Draw(path / desc.subpaths.id);
+		DRAW_FIELD(id);
 		if (GetIDCounter().count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -207,7 +207,7 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		desc.binding.Draw(path / desc.subpaths.binding); // TODO v9.1 add back individual DRAW_FIELD() for safety
+		DRAW_FIELD(binding);
 
 		switch (desc.binding.scratch)
 		{
@@ -237,7 +237,7 @@ namespace oly::editor
 
 		gui::Outline dup_outline;
 
-		desc.id.Draw(path / desc.subpaths.id);
+		DRAW_FIELD(id);
 		if (id_counter.count(desc.id.scratch) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -298,7 +298,7 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.key.Draw(path / desc.subpaths.key);
+		DRAW_FIELD(key);
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -332,7 +332,7 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.button.Draw(path / desc.subpaths.button);
+		DRAW_FIELD(button);
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -366,7 +366,7 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.button.Draw(path / desc.subpaths.button);
+		DRAW_FIELD(button);
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(path / desc.subpaths.modifier, desc.modifier);
@@ -390,9 +390,9 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.axis.Draw(path / desc.subpaths.axis);
+		DRAW_FIELD(axis);
 
-		desc.deadzone.Draw(path / desc.subpaths.deadzone);
+		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))
 			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
@@ -415,9 +415,9 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		desc.axis.Draw(path / desc.subpaths.axis);
+		DRAW_FIELD(axis);
 
-		desc.deadzone.Draw(path / desc.subpaths.deadzone);
+		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))
 			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}

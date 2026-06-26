@@ -430,7 +430,7 @@ namespace oly::editor
 
 			desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc_list) {
 				size_t index = _slots.active_index;
-				Draw(desc_list.Subpath(path, index), desc_list[index]);
+				Draw(path / desc_list.Subpath(index), desc_list[index]);
 			});
 
 			if (_slots.ConsumeOps(*ListAdapter()))
@@ -446,11 +446,11 @@ namespace oly::editor
 		Draw(path / desc.subpaths.base, desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			desc.generate_mipmaps.Draw(path / desc.subpaths.generate_mipmaps);
+			DRAW_FIELD(generate_mipmaps);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.storage.Draw(path / desc.subpaths.storage);
+			DRAW_FIELD(storage);
 		}
 	}
 	
@@ -459,7 +459,7 @@ namespace oly::editor
 		Draw(path / desc.subpaths.base, desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			desc.generate_mipmaps.Draw(path / desc.subpaths.generate_mipmaps);
+			DRAW_FIELD(generate_mipmaps);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
@@ -471,23 +471,23 @@ namespace oly::editor
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
-			desc.min_filter.Draw(path / desc.subpaths.min_filter);
+			DRAW_FIELD(min_filter);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.mag_filter.Draw(path / desc.subpaths.mag_filter);
+			DRAW_FIELD(mag_filter);
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			desc.wrap_s.Draw(path / desc.subpaths.wrap_s);
-			desc.wrap_t.Draw(path / desc.subpaths.wrap_t);
+			DRAW_FIELD(wrap_s);
+			DRAW_FIELD(wrap_t);
 		}
 
 		if (auto subform = Subform("Animation", true))
 		{
 			if (auto disabled = DisabledSection(_gif))
 			{
-				desc.anim.Draw(path / desc.subpaths.anim);
+				DRAW_FIELD(anim);
 				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
@@ -499,11 +499,11 @@ namespace oly::editor
 
 	void TextureDocument::Draw(DataPath path, SpritesheetDesc& desc)
 	{
-		desc.col_type.Draw(path / desc.subpaths.col_type);
+		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
 		DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
 
-		desc.row_type.Draw(path / desc.subpaths.row_type);
+		DRAW_FIELD(row_type);
 		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
 		DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
 

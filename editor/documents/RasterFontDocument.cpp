@@ -112,7 +112,7 @@ namespace oly::editor
 				}
 
 				if (!desc.glyphs.Empty())
-					Draw(desc.glyphs.Subpath(path, _glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
+					Draw(path / desc.subpaths.glyphs / desc.glyphs.Subpath(_glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
 
 				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
@@ -136,6 +136,7 @@ namespace oly::editor
 		}
 
 		std::string previous_codepoint = desc.codepoint.scratch;
+		DRAW_FIELD(codepoint);
 		desc.codepoint.Draw(path / desc.subpaths.codepoint);
 		if (gui::PropertyGrid::DirtyRow())
 		{
