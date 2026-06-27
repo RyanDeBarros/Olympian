@@ -2,8 +2,12 @@
 
 #include <string>
 
-#include "gui/properties/PropertyGrid.h"
+#include "documents/ActiveDocument.h"
+
 #include "core/UndoHistory.h"
+
+#include "gui/properties/PropertyGrid.h"
+
 #include "desc/DoubleDescriptor.h"
 
 #include "assets/ResourcePath.h"
@@ -51,7 +55,7 @@ namespace oly::editor
 			IDocument& _doc;
 			gui::PropertyGrid _grid;
 			UndoHistoryActiveScope _uh_scope;
-			DataPathVisitor _data_path_visitor;
+			ActiveDocument _active_instance;
 
 		public:
 			PreDrawImpl(IDocument& doc);

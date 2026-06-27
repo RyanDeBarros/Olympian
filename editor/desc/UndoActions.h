@@ -3,6 +3,9 @@
 #include "core/UndoHistory.h"
 #include "core/editor/Logger.h"
 
+#include "documents/ActiveDocument.h"
+#include "documents/IDocument.h"
+
 #include "desc/DataPath.h"
 
 #include "util/CommonOStream.h"
@@ -11,11 +14,29 @@ namespace oly::editor
 {
 	namespace internal
 	{
+		// TODO v9.1 log data path as a string: 'a.b.c.d'. Use active document's PathString()
+
 		template<typename T>
-		void LogUndoActionFail(const char* function, DataPath path, const T& initial_value, const T& final_value)
+		void LogUndoActionSuccess(bool undo, DataPath path, const T& initial_value, const T& final_value)
 		{
 			std::stringstream ss;
-			ss << function << " failed: [path=" << path << ", initial_value=" << initial_value << ", final_value=" << final_value << "]";
+			if (undo)
+				ss << "Undo";
+			else
+				ss << "Redo";
+			ss << " action success: [path=" << path << ", from=" << initial_value << ", to=" << final_value << "]";
+			Logger::Instance().Log(LogLevel::Success, ss.str());
+		}
+
+		template<typename T>
+		void LogUndoActionFail(bool undo, DataPath path, const T& initial_value, const T& final_value)
+		{
+			std::stringstream ss;
+			if (undo)
+				ss << "Undo";
+			else
+				ss << "Redo";
+			ss << " action failed: [path=" << path << ", from=" << initial_value << ", to=" << final_value << "]";
 			Logger::Instance().Log(LogLevel::Warning, ss.str());
 		}
 	}
@@ -33,44 +54,46 @@ namespace oly::editor
 		bool initially_dirty;
 
 		FieldSetAction(DataPath path, T initial_value, T final_value) :
-			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), initially_dirty(DataPathVisitor::ActiveInstance().is_dirty())
+			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), initially_dirty(ActiveDocument::Get().IsDirty())
 		{
 		}
 
 		bool Forward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
 
 				if (!initially_dirty)
-					DataPathVisitor::ActiveInstance().query_dirty();
+					ActiveDocument::Get().QueryDirty();
 
+				internal::LogUndoActionSuccess(false, path, initial_value, final_value);
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				internal::LogUndoActionFail(false, path, initial_value, final_value);
 				return false;
 			}
 		}
 
 		bool Backward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
 
 				if (!initially_dirty)
-					DataPathVisitor::ActiveInstance().query_dirty();
+					ActiveDocument::Get().QueryDirty();
 
+				internal::LogUndoActionSuccess(true, path, initial_value, final_value);
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				internal::LogUndoActionFail(true, path, initial_value, final_value);
 				return false;
 			}
 		}
@@ -97,46 +120,48 @@ namespace oly::editor
 		bool initially_dirty;
 
 		FieldSyncSetAction(DataPath path, T initial_value, T final_value, std::function<void()> sync) :
-			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), sync(std::move(sync)), initially_dirty(DataPathVisitor::ActiveInstance().is_dirty())
+			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), sync(std::move(sync)), initially_dirty(ActiveDocument::Get().IsDirty())
 		{
 		}
 
 		bool Forward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
 				sync();
 
 				if (!initially_dirty)
-					DataPathVisitor::ActiveInstance().query_dirty();
+					ActiveDocument::Get().QueryDirty();
 
+				internal::LogUndoActionSuccess(false, path, initial_value, final_value);
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				internal::LogUndoActionFail(false, path, initial_value, final_value);
 				return false;
 			}
 		}
 
 		bool Backward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
 				sync();
 
 				if (!initially_dirty)
-					DataPathVisitor::ActiveInstance().query_dirty();
+					ActiveDocument::Get().QueryDirty();
 
+				internal::LogUndoActionSuccess(true, path, initial_value, final_value);
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(__FUNCTION__, path, initial_value, final_value);
+				internal::LogUndoActionFail(true, path, initial_value, final_value);
 				return false;
 			}
 		}
