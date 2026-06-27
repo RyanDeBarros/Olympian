@@ -28,7 +28,7 @@ namespace oly::editor
 	private:
 		void PollShortcuts();
 		void DrawTabBar();
-		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents);
+		void RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents);
 		void DrawTabUnsavedChangesModal(std::vector<size_t>& closed);
 
 		bool DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup);

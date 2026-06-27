@@ -141,9 +141,11 @@ namespace oly::editor
 		{
 			std::vector<size_t> closed;
 
+			IDocument* previously_selected_doc = _selected_tab;
 			_selected_tab = nullptr;
 			std::unordered_set<IDocument*> seen_documents;
 
+			bool unsaved_changes_popup = false;
 			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			{
 				scope.Push(i);
@@ -178,6 +180,7 @@ namespace oly::editor
 					}
 
 					doc.Draw();
+					doc.DrawFinalize();
 					_selected_tab = &doc;
 					ImGui::EndTabItem();
 				}
@@ -194,15 +197,23 @@ namespace oly::editor
 					{
 						_pending_close_set.insert(&doc);
 						_pending_close.push_back(&doc);
-						ImGui::OpenPopup(kTabUnsavedChangesPopup);
+						unsaved_changes_popup = true;
 					}
 				}
 			}
 
+			if (previously_selected_doc && _selected_tab != previously_selected_doc)
+				previously_selected_doc->DrawFinalize();
+
 			RemoveOldPendingDocuments(seen_documents);
 
 			if (!_window_unsaved_changes_modal)
+			{
+				if (unsaved_changes_popup)
+					ImGui::OpenPopup(kTabUnsavedChangesPopup);
+
 				DrawTabUnsavedChangesModal(closed);
+			}
 			else
 			{
 				_pending_close.clear();
@@ -218,7 +229,7 @@ namespace oly::editor
 		}
 	}
 
-	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*> seen_documents)
+	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents)
 	{
 		for (auto it = _pending_close.begin(); it != _pending_close.end();)
 		{

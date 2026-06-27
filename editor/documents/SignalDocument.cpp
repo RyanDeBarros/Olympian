@@ -105,7 +105,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool SignalDocument::DrawFinalize()
+	bool SignalDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

@@ -34,6 +34,12 @@ namespace oly::editor
 		}
 	}
 
+	void IDocument::DrawFinalize()
+	{
+		if (DrawFinalizeImpl())
+			MarkDirty();
+	}
+
 	const detail::ResourcePath& IDocument::GetOlyPath() const
 	{
 		return _oly_path;

@@ -102,7 +102,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool ProjectDocument::DrawFinalize()
+	bool ProjectDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

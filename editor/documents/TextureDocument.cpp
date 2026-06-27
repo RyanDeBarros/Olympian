@@ -110,7 +110,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool TextureDocument::DrawFinalize()
+	bool TextureDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

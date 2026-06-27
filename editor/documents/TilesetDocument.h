@@ -155,7 +155,7 @@ namespace oly::editor
 		void Load() override;
 		void Dump() override;
 		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalize() override;
+		bool DrawFinalizeImpl() override;
 
 	private:
 		void DrawGroupEditor();

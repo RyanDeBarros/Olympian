@@ -89,7 +89,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool RasterFontDocument::DrawFinalize()
+	bool RasterFontDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

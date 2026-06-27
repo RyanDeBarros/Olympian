@@ -30,7 +30,8 @@ namespace oly::editor
 		virtual void Load() = 0;
 		virtual void Dump() = 0;
 		virtual void* VisitPath(DataPath path, std::type_index type) = 0;
-		virtual bool DrawFinalize() = 0;
+		void DrawFinalize();
+		virtual bool DrawFinalizeImpl() = 0;
 
 		const detail::ResourcePath& GetOlyPath() const;
 		virtual std::string TabName() const;

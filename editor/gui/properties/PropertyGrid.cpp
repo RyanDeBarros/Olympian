@@ -90,7 +90,7 @@ namespace oly::editor::gui
 		VALUE_COMPONENTS.push_back(std::move(component));
 	}
 
-	bool PropertyGrid::Value::AppendView(std::unique_ptr<IPropertyView>&& prop)
+	bool PropertyGrid::Value::CheckProperty(std::unique_ptr<IPropertyView>&& prop)
 	{
 		bool immediate = PropertyGroup::CheckValue(*prop);
 		DIRTY_GRID |= immediate;

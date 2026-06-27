@@ -227,7 +227,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool TilesetDocument::DrawFinalize()
+	bool TilesetDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

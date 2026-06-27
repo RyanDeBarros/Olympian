@@ -98,7 +98,7 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
-	bool PreferencesDocument::DrawFinalize()
+	bool PreferencesDocument::DrawFinalizeImpl()
 	{
 		return _scratch.DrawFinalize(DataPath());
 	}

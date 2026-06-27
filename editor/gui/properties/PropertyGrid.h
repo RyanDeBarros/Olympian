@@ -27,7 +27,7 @@ namespace oly::editor::gui
 			static DrawResult GetDrawResult();
 
 			static void AddComponent(WidgetComponent component);
-			static bool AppendView(std::unique_ptr<IPropertyView>&& prop);
+			static bool CheckProperty(std::unique_ptr<IPropertyView>&& prop);
 		};
 
 		struct Reset
