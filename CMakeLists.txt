@@ -8,5 +8,5 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_subdirectory(detail)
 add_subdirectory(engine)
 add_subdirectory(editor)
-# TODO v9.3 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this. In fact, this CMakeLists.txt can probably be removed since engine and editor should be built separately.
+# TODO v9.3 remove Tester - this is only since Tester is in same project. When project is in other repo, remove this.
 add_subdirectory(Tester)

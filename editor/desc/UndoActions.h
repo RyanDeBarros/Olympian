@@ -57,7 +57,7 @@ namespace oly::editor
 
 		bool Forward() override
 		{
-			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
@@ -77,7 +77,7 @@ namespace oly::editor
 
 		bool Backward() override
 		{
-			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
@@ -123,7 +123,7 @@ namespace oly::editor
 
 		bool Forward() override
 		{
-			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
@@ -144,7 +144,7 @@ namespace oly::editor
 
 		bool Backward() override
 		{
-			if (void* var = ActiveDocument::Get().VisitPath(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;

@@ -43,20 +43,20 @@ namespace oly::editor
 
 #define _SUBPATH_ENUM_ENTRY(field) _E_##field,
 #define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
-#define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
+#define _SUBPATH_PATH_GET(field) case _E_##field: return field.PathGet(path.Next(), type);
 #define _SUBPATH_PRINT_PATH(field) case _E_##field: internal::PrintDescPath(os, path.Next(), #field, field); break;
 #define _SUBPATH_DRAW_FINALIZE(field) dirty |= field.DrawFinalize(path / subpaths.field);
 #define _SUBPATH_QUERY_DIRTY(field) if (field.QueryDirty(disk.field)) return true;
 #define DESCRIPTOR_BODY(Klass, GENERATOR) \
 		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
 		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
-		void* VisitPath(DataPath path, std::type_index type) \
+		void* PathGet(DataPath path, std::type_index type) \
 		{ \
 			if (path.Empty()) \
 				return nullptr; \
 			switch (path.Step().v) \
 			{ \
-				GENERATOR(_SUBPATH_VISIT_PATH); \
+				GENERATOR(_SUBPATH_PATH_GET); \
 			default: \
 				return nullptr; \
 			} \
@@ -117,7 +117,7 @@ namespace oly::editor
 			array.push_back(Serializer<T>{}.Dump(value));
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.Empty())
 				return reinterpret_cast<void*>(&value);
@@ -599,7 +599,7 @@ namespace oly::editor
 			return modified;
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
 				return nullptr;
@@ -697,7 +697,7 @@ namespace oly::editor
 			return -1;
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (type == typeid(decltype(index)) && path.Empty())
 				return reinterpret_cast<void*>(&index);
@@ -809,7 +809,7 @@ namespace oly::editor
 			}
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.Empty())
 				return reinterpret_cast<void*>(&value);
@@ -934,7 +934,7 @@ namespace oly::editor
 				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value.has_value ? value.value : nullopt));
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.Empty())
 				return reinterpret_cast<void*>(&value);
@@ -1045,7 +1045,7 @@ namespace oly::editor
 			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(value));
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.Empty())
 				return reinterpret_cast<void*>(&value);

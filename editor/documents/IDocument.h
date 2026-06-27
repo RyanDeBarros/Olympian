@@ -36,7 +36,7 @@ namespace oly::editor
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 
-		void* VisitPath(DataPath path, std::type_index type);
+		void* PathGet(DataPath path, std::type_index type);
 		void PrintPath(std::ostream& os, DataPath path) const;
 		std::string PathString(DataPath path) const;
 		void DrawFinalize();

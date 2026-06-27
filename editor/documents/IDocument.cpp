@@ -34,9 +34,9 @@ namespace oly::editor
 		}
 	}
 
-	void* IDocument::VisitPath(DataPath path, std::type_index type)
+	void* IDocument::PathGet(DataPath path, std::type_index type)
 	{
-		return GetDoubleDescriptor().VisitPath(path, type);
+		return GetDoubleDescriptor().PathGet(path, type);
 	}
 
 	void IDocument::PrintPath(std::ostream& os, DataPath path) const

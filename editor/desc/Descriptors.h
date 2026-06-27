@@ -103,15 +103,14 @@ namespace oly::editor
 			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
 		}
 
-		// TODO v9.1 rename VisitPath() to PathGet()
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
 				return nullptr;
 
 			int index = path.Step().v;
 			if (index >= 0 && index < vector.size())
-				return vector[index].VisitPath(path.Next(), type);
+				return vector[index].PathGet(path.Next(), type);
 			else
 				return nullptr;
 		}
@@ -206,9 +205,9 @@ namespace oly::editor
 			return std::get_if<Descriptor>(&variant);
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
-			return std::visit([path, type](auto& desc) { return desc.VisitPath(path, type); }, variant);
+			return std::visit([path, type](auto& desc) { return desc.PathGet(path, type); }, variant);
 		}
 
 		void PrintPath(std::ostream& os, DataPath path) const
@@ -260,14 +259,14 @@ namespace oly::editor
 			return map.end();
 		}
 
-		void* VisitPath(DataPath path, std::type_index type)
+		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
 				return nullptr;
 
 			auto it = map.find(static_cast<Key>(path.Step().v));
 			if (it != map.end())
-				return it->second.VisitPath(path.Next(), type);
+				return it->second.PathGet(path.Next(), type);
 			else
 				return nullptr;
 		}

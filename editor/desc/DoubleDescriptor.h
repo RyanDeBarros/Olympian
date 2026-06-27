@@ -7,7 +7,7 @@ namespace oly::editor
 	struct IDoubleDescriptor
 	{
 		virtual ~IDoubleDescriptor() = default;
-		virtual void* VisitPath(DataPath path, std::type_index type) = 0;
+		virtual void* PathGet(DataPath path, std::type_index type) = 0;
 		virtual void PrintPath(std::ostream& os, DataPath path) const = 0;
 		virtual bool DrawFinalize() = 0;
 		virtual bool QueryDirty() = 0;
@@ -19,9 +19,9 @@ namespace oly::editor
 		Descriptor scratch;
 		Descriptor disk;
 
-		void* VisitPath(DataPath path, std::type_index type) override
+		void* PathGet(DataPath path, std::type_index type) override
 		{
-			return scratch.VisitPath(path, type);
+			return scratch.PathGet(path, type);
 		}
 
 		void PrintPath(std::ostream& os, DataPath path) const override
