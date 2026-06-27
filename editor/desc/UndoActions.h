@@ -20,24 +20,33 @@ namespace oly::editor
 		}
 	}
 
+	// TODO v9.1 also handle case of Forward() -> Save() -> Backward() -> Forward(). At this point, call doc.QueryDirty() again since it should be clean from the previous save. Basically, call query_dirty() if doc is clean in the before state OR the after state, in both Forward() and Backward().
+	// TODO v9.1 undo action for reload/revert asset if it changed anything.
+	// TODO v9.1 log successful undo/redo actions
+
 	template<typename T>
 	struct FieldSetAction : public UndoAction
 	{
 		DataPathSource path;
 		T initial_value;
 		T final_value;
+		bool initially_dirty;
 
 		FieldSetAction(DataPath path, T initial_value, T final_value) :
-			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value))
+			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), initially_dirty(DataPathVisitor::ActiveInstance().is_dirty())
 		{
 		}
 
 		bool Forward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
+			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
+
+				if (!initially_dirty)
+					DataPathVisitor::ActiveInstance().query_dirty();
+
 				return true;
 			}
 			else
@@ -49,10 +58,14 @@ namespace oly::editor
 
 		bool Backward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
+			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
+
+				if (!initially_dirty)
+					DataPathVisitor::ActiveInstance().query_dirty();
+
 				return true;
 			}
 			else
@@ -81,19 +94,24 @@ namespace oly::editor
 		T initial_value;
 		T final_value;
 		std::function<void()> sync;
+		bool initially_dirty;
 
 		FieldSyncSetAction(DataPath path, T initial_value, T final_value, std::function<void()> sync) :
-			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), sync(std::move(sync))
+			path(path.Copy()), initial_value(std::move(initial_value)), final_value(std::move(final_value)), sync(std::move(sync)), initially_dirty(DataPathVisitor::ActiveInstance().is_dirty())
 		{
 		}
 
 		bool Forward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
+			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
 				sync();
+
+				if (!initially_dirty)
+					DataPathVisitor::ActiveInstance().query_dirty();
+
 				return true;
 			}
 			else
@@ -105,11 +123,15 @@ namespace oly::editor
 
 		bool Backward() override
 		{
-			if (void* var = DataPathVisitor::ActiveInstance()(path, typeid(T)))
+			if (void* var = DataPathVisitor::ActiveInstance().visit_path(path, typeid(T)))
 			{
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
 				sync();
+
+				if (!initially_dirty)
+					DataPathVisitor::ActiveInstance().query_dirty();
+
 				return true;
 			}
 			else

@@ -75,23 +75,31 @@ namespace oly::editor
 		_dirty = GetDoubleDescriptor().QueryDirty();
 	}
 
-	// TODO v9.1 in undo actions, also store whether the document was dirty before the action. If it was NOT dirty, in Backward(), do a query on the document to check if the inverse action truly restored to a clean state, in which case we can do a QoL MarkClean().
 	// TODO v9.1 support holding down ctrl+z or ctrl+shift+z to undo/redo multiple actions over time
+
+	static DataPathVisitor MakeDataPathVisitor(IDocument& doc)
+	{
+		DataPathVisitor visitor;
+		visitor.visit_path = [&doc](DataPath path, std::type_index type) { return doc.VisitPath(path, type); };
+		visitor.is_dirty = [&doc]() { return doc.IsDirty(); };
+		visitor.query_dirty = [&doc]() { doc.QueryDirty(); };
+		return visitor;
+	}
 
 	void IDocument::Undo()
 	{
-		DataPathVisitor _data_path_visitor([this](DataPath path, std::type_index type) { return VisitPath(path, type); });
+		auto visitor = MakeDataPathVisitor(*this);
 		_undo_history->Undo();
 	}
 
 	void IDocument::Redo()
 	{
-		DataPathVisitor _data_path_visitor([this](DataPath path, std::type_index type) { return VisitPath(path, type); });
+		auto visitor = MakeDataPathVisitor(*this);
 		_undo_history->Redo();
 	}
 
 	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
-		_doc(doc), _uh_scope(*doc._undo_history)
+		_doc(doc), _uh_scope(*doc._undo_history), _data_path_visitor(MakeDataPathVisitor(doc))
 	{
 	}
 

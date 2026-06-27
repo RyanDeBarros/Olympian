@@ -49,20 +49,19 @@ namespace oly::editor
 		friend std::ostream& operator<<(std::ostream& os, DataPath path);
 	};
 
-	using DataPathVisitorFn = std::function<void*(DataPath, std::type_index)>;
-
-	class DataPathVisitor
+	// TODO v9.1 use ActiveDocument instead in separate file
+	struct DataPathVisitor
 	{
-		DataPathVisitorFn _fn;
+		std::function<void* (DataPath, std::type_index)> visit_path;
+		std::function<bool()> is_dirty;
+		std::function<void()> query_dirty;
 
-	public:
-		DataPathVisitor(DataPathVisitorFn fn);
+		DataPathVisitor();
 		DataPathVisitor(const DataPathVisitor&) = delete;
-		DataPathVisitor(DataPathVisitor&&) = delete;
+		DataPathVisitor(DataPathVisitor&&) noexcept;
 		~DataPathVisitor();
+		DataPathVisitor& operator=(DataPathVisitor&&) = delete;
 
 		static DataPathVisitor& ActiveInstance();
-
-		void* operator()(DataPath path, std::type_index type);
 	};
 }

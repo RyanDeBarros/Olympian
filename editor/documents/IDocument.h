@@ -51,6 +51,7 @@ namespace oly::editor
 			IDocument& _doc;
 			gui::PropertyGrid _grid;
 			UndoHistoryActiveScope _uh_scope;
+			DataPathVisitor _data_path_visitor;
 
 		public:
 			PreDrawImpl(IDocument& doc);

@@ -74,29 +74,34 @@ namespace oly::editor
 		return os << ")";
 	}
 
-	static std::stack<DataPathVisitor*> DATA_PATH_VISITORS;
+	DataPathVisitor* ACTIVE_DATA_PATH_VISITOR = nullptr;
 
-	DataPathVisitor::DataPathVisitor(DataPathVisitorFn fn)
-		: _fn(fn)
+	DataPathVisitor::DataPathVisitor()
 	{
-		DATA_PATH_VISITORS.push(this);
+		if (ACTIVE_DATA_PATH_VISITOR)
+			BreakoutError::Throw("DataPathVisitor::DataPathVisitor(): active data path visitor already exists");
+
+		ACTIVE_DATA_PATH_VISITOR = this;
+	}
+
+	DataPathVisitor::DataPathVisitor(DataPathVisitor&& o) noexcept
+		: visit_path(std::move(o.visit_path)), query_dirty(std::move(o.query_dirty))
+	{
+		if (ACTIVE_DATA_PATH_VISITOR == &o)
+			ACTIVE_DATA_PATH_VISITOR = this;
 	}
 
 	DataPathVisitor::~DataPathVisitor()
 	{
-		DATA_PATH_VISITORS.pop();
+		if (ACTIVE_DATA_PATH_VISITOR == this)
+			ACTIVE_DATA_PATH_VISITOR = nullptr;
 	}
 	
 	DataPathVisitor& DataPathVisitor::ActiveInstance()
 	{
-		if (DATA_PATH_VISITORS.empty())
-			BreakoutError::Throw("DataPathVisitor::ActiveInstance(): data path visitor stack is empty");
+		if (ACTIVE_DATA_PATH_VISITOR)
+			return *ACTIVE_DATA_PATH_VISITOR;
 		else
-			return *DATA_PATH_VISITORS.top();
-	}
-
-	void* DataPathVisitor::operator()(DataPath path, std::type_index type)
-	{
-		return _fn(path, type);
+			BreakoutError::Throw("DataPathVisitor::ActiveInstance(): no active data path visitor");
 	}
 }
