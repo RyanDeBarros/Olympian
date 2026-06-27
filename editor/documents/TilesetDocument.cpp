@@ -397,14 +397,14 @@ namespace oly::editor
 			if (auto scope = gui::IDScope(&desc.texture))
 			{
 				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
-				if (desc.texture.scratch != desc.texture.def)
+				if (desc.texture.value != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> DrawResult {
-					gui::IDScope scope(&desc.texture.scratch);
+					gui::IDScope scope(&desc.texture.value);
 					DrawResult result;
 
-					result |= gui::InputData<std::string>{}("", desc.texture.scratch);
+					result |= gui::InputData<std::string>{}("", desc.texture.value);
 
 					if (ImGui::IsItemDeactivatedAfterEdit()) // TODO v9.1 this doesn't trigger when closing window or switching tabs, etc. For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession.
 						OnActiveTextureChanged(grid);
@@ -416,7 +416,7 @@ namespace oly::editor
 							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
 							if (path.is_resource())
 							{
-								desc.texture.scratch = path.get_resource_shorthand();
+								desc.texture.value = path.get_resource_shorthand();
 								result.SetDirty(true);
 								OnActiveTextureChanged(grid);
 							}
@@ -434,7 +434,7 @@ namespace oly::editor
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
 					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements.
-					desc.texture.scratch = desc.texture.def;
+					desc.texture.value = desc.texture.def;
 					OnActiveTextureChanged(grid);
 				}
 			}
@@ -528,18 +528,18 @@ namespace oly::editor
 			active.stale = false;
 			active.error = TextureError::None;
 			auto& desc = GetAssignment(config);
-			if (desc.texture.scratch.empty())
+			if (desc.texture.value.empty())
 				active.texture = {};
 			else
 			{
 				BreakoutError::NotifyScope notify(true);
 				try
 				{
-					std::string filepath = detail::ResourcePath(desc.texture.scratch).string();
+					std::string filepath = detail::ResourcePath(desc.texture.value).string();
 					GLenum min_filter, mag_filter;
 					float scale = 1.f;
 					bool generate_mipmaps = false;
-					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.scratch, min_filter, mag_filter, scale, generate_mipmaps);
+					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
 						active.texture = Texture::LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
 					else
@@ -601,9 +601,9 @@ namespace oly::editor
 	{
 		auto& desc = GetAssignment(grid);
 		auto& active = GetActiveTexture(grid);
-		auto uv_rect = desc.uvs.scratch;
-		detail::TileReflection reflection = desc.reflection.scratch;
-		detail::TileRotation rotation = desc.rotation.scratch;
+		auto uv_rect = desc.uvs.value;
+		detail::TileReflection reflection = desc.reflection.value;
+		detail::TileRotation rotation = desc.rotation.value;
 
 		std::array<ImVec2, 4> uvs;
 		uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);

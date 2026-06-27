@@ -119,7 +119,7 @@ namespace oly::editor
 	void FontDocument::ReloadFont()
 	{
 		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.scratch);
+		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.value);
 	}
 
 	void FontDocument::DestroyFont()
@@ -215,12 +215,12 @@ namespace oly::editor
 
 		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
 		for (const auto& k : desc.kerning.vector)
-			counter.increment(k.pair.scratch);
+			counter.increment(k.pair.value);
 
 		for (size_t i = 0; i < desc.kerning.Size(); ++i)
 		{
 			auto& k = desc.kerning[i];
-			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
+			if (k.distance.value != k.distance.def || k.pair.value != k.pair.def)
 				gui::PropertyGrid::Reset::Button(1 + i);
 		}
 
@@ -229,16 +229,16 @@ namespace oly::editor
 			DrawResult result;
 
 			ImGui::SameLine();
-			bool dup_warning = counter.count(k.pair.scratch) > 1;
+			bool dup_warning = counter.count(k.pair.value) > 1;
 			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
-				bool bad_codepoint = !stocdpt(k.pair.scratch[i]).has_value();
+				bool bad_codepoint = !stocdpt(k.pair.value[i]).has_value();
 				gui::Outline bad_outline;
 				if (bad_codepoint)
 					dup_warning = false;
 
-				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
+				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.value[i]);
 				result |= codepoint_result;
 
 				if (dup_warning && codepoint_result.IsHovered())
@@ -261,7 +261,7 @@ namespace oly::editor
 			ImGui::Text(k.pair.label);
 
 			gui::VerticalSeparator();
-			result |= gui::InputData<int>{}(k.distance.label, k.distance.scratch);
+			result |= gui::InputData<int>{}(k.distance.label, k.distance.value);
 
 			return result;
 		}, desc.kerning_ui_state);
@@ -271,8 +271,8 @@ namespace oly::editor
 			if (gui::PropertyGrid::Reset::Activated(1 + i))
 			{
 				auto& k = desc.kerning[i];
-				k.distance.scratch = k.distance.def;
-				k.pair.scratch = k.pair.def;
+				k.distance.value = k.distance.def;
+				k.pair.value = k.pair.def;
 				MarkDirty();
 			}
 		}
@@ -290,7 +290,7 @@ namespace oly::editor
 		{
 			DRAW_FIELD(use_common_buffer_preset);
 
-			bool preset = desc.use_common_buffer_preset.scratch;
+			bool preset = desc.use_common_buffer_preset.value;
 			
 			if (auto disabled = DisabledSection(!preset))
 			{
@@ -301,7 +301,7 @@ namespace oly::editor
 					scope.Push("##Preview");
 					gui::PropertyGrid::Key::SetLabel("Preview");
 					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
-						std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
+						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
 						return false;
 					}));

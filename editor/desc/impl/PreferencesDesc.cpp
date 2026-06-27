@@ -13,12 +13,12 @@ namespace oly::editor
 
 	size_t UndoHistorySettingsDesc::CountLimit() const
 	{
-		return count_limit.scratch;
+		return count_limit.value;
 	}
 
 	size_t UndoHistorySettingsDesc::SizeLimit() const
 	{
-		return MemorySize(size_limit.scratch, size_limit_unit.scratch);
+		return MemorySize(size_limit.value, size_limit_unit.value);
 	}
 
 	const detail::Key EditSettingsDesc::undo_history_key = detail::Key::UndoHistory;
@@ -30,7 +30,7 @@ namespace oly::editor
 
 	float TreeViewAdvancedSettingsDesc::AnalysisInterval() const
 	{
-		return analysis_interval.scratch;
+		return analysis_interval.value;
 	}
 
 	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;

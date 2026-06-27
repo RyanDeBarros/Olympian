@@ -91,7 +91,7 @@ namespace oly::editor
 
 		_preview_nav = {};
 		if (auto svg_desc = _desc.scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
-			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.scratch;
+			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.value;
 
 		_stale_preview_texture = true;
 	}
@@ -122,13 +122,13 @@ namespace oly::editor
 
 		_stale_preview_texture = false;
 
-		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
-		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Value(); });
+		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Value(); });
 		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
-			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.scratch), bool>)
-				return desc.generate_mipmaps.scratch;
+			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.value), bool>)
+				return desc.generate_mipmaps.value;
 			else
-				return desc.generate_mipmaps.scratch != detail::SVGMipmapGenerationMode::Off;
+				return desc.generate_mipmaps.value != detail::SVGMipmapGenerationMode::Off;
 		});
 
 		if (_svg)
@@ -236,7 +236,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _desc.scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _desc.scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.value ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -244,34 +244,34 @@ namespace oly::editor
 
 	SpritesheetInfo TextureDocument::CalcSpritesheetInfo(const SpritesheetDesc& desc)
 	{
-		int xoff = _texture.Width() > 1 ? std::min(desc.col_offset_pixel.scratch, static_cast<int>(_texture.Width())) : 0;
+		int xoff = _texture.Width() > 1 ? std::min(desc.col_offset_pixel.value, static_cast<int>(_texture.Width())) : 0;
 		int working_width = static_cast<int>(_texture.Width()) - xoff;
 
-		int cols = desc.col_type.scratch == detail::SpritesheetParamType::Index ? desc.col_value.scratch : 1;
-		float cell_width = desc.col_type.scratch == detail::SpritesheetParamType::Pixel ? desc.col_value.scratch : 1;
+		int cols = desc.col_type.value == detail::SpritesheetParamType::Index ? desc.col_value.value : 1;
+		float cell_width = desc.col_type.value == detail::SpritesheetParamType::Pixel ? desc.col_value.value : 1;
 
-		if (desc.col_type.scratch == detail::SpritesheetParamType::Index)
+		if (desc.col_type.value == detail::SpritesheetParamType::Index)
 			cell_width = static_cast<float>(working_width) / cols;
 		else
 			cols = working_width / static_cast<int>(cell_width);
 
-		int col_offset = std::min(desc.col_offset_index.scratch, cols);
+		int col_offset = std::min(desc.col_offset_index.value, cols);
 		cols -= col_offset;
 
 		const float full_width = cols * cell_width;
 
-		int yoff = _texture.Height() > 1 ? std::min(desc.row_offset_pixel.scratch, static_cast<int>(_texture.Height())) : 0;
+		int yoff = _texture.Height() > 1 ? std::min(desc.row_offset_pixel.value, static_cast<int>(_texture.Height())) : 0;
 		int working_height = static_cast<int>(_texture.Height()) - yoff;
 
-		int rows = desc.row_type.scratch == detail::SpritesheetParamType::Index ? desc.row_value.scratch : 1;
-		float cell_height = desc.row_type.scratch == detail::SpritesheetParamType::Pixel ? desc.row_value.scratch : 1;
+		int rows = desc.row_type.value == detail::SpritesheetParamType::Index ? desc.row_value.value : 1;
+		float cell_height = desc.row_type.value == detail::SpritesheetParamType::Pixel ? desc.row_value.value : 1;
 
-		if (desc.row_type.scratch == detail::SpritesheetParamType::Index)
+		if (desc.row_type.value == detail::SpritesheetParamType::Index)
 			cell_height = static_cast<float>(working_height) / rows;
 		else
 			rows = working_height / static_cast<int>(cell_height);
 
-		int row_offset = std::min(desc.row_offset_index.scratch, rows);
+		int row_offset = std::min(desc.row_offset_index.value, rows);
 		rows -= row_offset;
 
 		const float full_height = rows * cell_height;
@@ -340,9 +340,9 @@ namespace oly::editor
 		};
 
 		int digit = 0;
-		if (desc.row_major.scratch)
+		if (desc.row_major.value)
 		{
-			if (desc.row_up.scratch)
+			if (desc.row_up.value)
 			{
 				for (int i = info.rows - 1; i >= 0; --i)
 					for (int j = 0; j < info.cols; ++j)
@@ -357,7 +357,7 @@ namespace oly::editor
 		}
 		else
 		{
-			if (desc.row_up.scratch)
+			if (desc.row_up.value)
 			{
 				for (int j = 0; j < info.cols; ++j)
 					for (int i = info.rows - 1; i >= 0; --i)
@@ -377,11 +377,11 @@ namespace oly::editor
 		auto info = CalcSpritesheetInfo(desc);
 
 		_spritesheet_preview_data.timer += ImGui::GetIO().DeltaTime;
-		if (desc.delay.scratch > 0.f)
+		if (desc.delay.value > 0.f)
 		{
-			while (_spritesheet_preview_data.timer >= desc.delay.scratch)
+			while (_spritesheet_preview_data.timer >= desc.delay.value)
 			{
-				_spritesheet_preview_data.timer -= desc.delay.scratch;
+				_spritesheet_preview_data.timer -= desc.delay.value;
 				++_spritesheet_preview_data.active_index;
 			}
 			_spritesheet_preview_data.active_index %= info.rows * info.cols;
@@ -400,10 +400,10 @@ namespace oly::editor
 		ImVec2 pos = cursor + offset;
 
 		const int active_index = _spritesheet_preview_data.active_index;
-		const int row1 = desc.row_up.scratch ? info.rows - active_index / info.cols : active_index / info.cols;
-		const int row2 = desc.row_up.scratch ? row1 - 1 : row1 + 1;
-		const int col1 = desc.row_major.scratch ? active_index % info.cols : info.cols - (active_index % info.cols);
-		const int col2 = desc.row_major.scratch ? col1 + 1 : col1 - 1;
+		const int row1 = desc.row_up.value ? info.rows - active_index / info.cols : active_index / info.cols;
+		const int row2 = desc.row_up.value ? row1 - 1 : row1 + 1;
+		const int col1 = desc.row_major.value ? active_index % info.cols : info.cols - (active_index % info.cols);
+		const int col2 = desc.row_major.value ? col1 + 1 : col1 - 1;
 
 		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.Width(), std::min(row1, row2) * info.cell_height / _texture.Height());
 		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.Width(), std::max(row1, row2) * info.cell_height / _texture.Height());
@@ -492,7 +492,7 @@ namespace oly::editor
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 
-			if (desc.anim.scratch && !_gif)
+			if (desc.anim.value && !_gif)
 				Draw(path / desc.subpaths.spritesheet, desc.spritesheet);
 		}
 	}
@@ -500,12 +500,12 @@ namespace oly::editor
 	void TextureDocument::Draw(DataPath path, SpritesheetDesc& desc)
 	{
 		DRAW_FIELD(col_type);
-		const char* col_label = desc.col_type.scratch == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		DescIO::Draw(col_label, desc.col_value.scratch, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
+		const char* col_label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
+		DescIO::Draw(col_label, desc.col_value.value, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
 
 		DRAW_FIELD(row_type);
-		const char* row_label = desc.row_type.scratch == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		DescIO::Draw(row_label, desc.row_value.scratch, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
+		const char* row_label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
+		DescIO::Draw(row_label, desc.row_value.value, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
@@ -552,7 +552,7 @@ namespace oly::editor
 		if (gif)
 		{
 			desc.anim.def = true;
-			desc.anim.scratch = true;
+			desc.anim.value = true;
 		}
 		else
 		{
@@ -596,7 +596,7 @@ namespace oly::editor
 	{
 		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
 		desc.anim.Dump(table);
-		if (desc.anim.scratch && !_gif)
+		if (desc.anim.value && !_gif)
 			Dump(table, desc.spritesheet);
 	}
 
@@ -645,16 +645,16 @@ namespace oly::editor
 			Load(node, desc, svg, gif);
 			
 			desc.Visit(slot, [&](const auto& d) {
-				min_filter = d.base.min_filter.Scratch();
-				mag_filter = d.base.mag_filter.Scratch();
+				min_filter = d.base.min_filter.Value();
+				mag_filter = d.base.mag_filter.Value();
 
 				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
 				{
-					scale = d.scale.scratch;
-					generate_mipmaps = d.generate_mipmaps.scratch != detail::SVGMipmapGenerationMode::Off;
+					scale = d.scale.value;
+					generate_mipmaps = d.generate_mipmaps.value != detail::SVGMipmapGenerationMode::Off;
 				}
 				else
-					generate_mipmaps = d.generate_mipmaps.scratch;
+					generate_mipmaps = d.generate_mipmaps.value;
 			});
 
 			if (!path.is_resource())

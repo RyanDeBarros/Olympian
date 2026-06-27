@@ -53,41 +53,41 @@ namespace oly::editor
 		using SelfType = std::conditional_t<std::is_void_v<Self>, PrimitiveField<T, Self>, Self>;
 
 		T def;
-		T scratch; // TODO v9.1 rename 'scratch' to 'value'
+		T value;
 		detail::Key key;
 		const char* label;
 
-		PrimitiveField(T def, detail::Key key, const char* label) : def(def), scratch(def), key(key), label(label) {}
+		PrimitiveField(T def, detail::Key key, const char* label) : def(def), value(def), key(key), label(label) {}
 
 		bool QueryDirty(const SelfType& disk) const
 		{
-			return scratch != disk.scratch;
+			return value != disk.value;
 		}
 
 		void Load(TOMLNode node)
 		{
-			scratch = def;
+			value = def;
 			if (key != NullKey())
-				Serializer<T>{}.Load(scratch, node[detail::encode_key(key)]);
+				Serializer<T>{}.Load(value, node[detail::encode_key(key)]);
 			else
-				Serializer<T>{}.Load(scratch, node);
+				Serializer<T>{}.Load(value, node);
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch));
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value));
 		}
 
 		void Dump(toml::array& array) const
 		{
-			array.push_back(Serializer<T>{}.Dump(scratch));
+			array.push_back(Serializer<T>{}.Dump(value));
 		}
 
 		void* VisitPath(DataPath path, std::type_index type)
 		{
-			if (type == typeid(decltype(scratch)) && path.Empty())
-				return reinterpret_cast<void*>(&scratch);
+			if (type == typeid(decltype(value)) && path.Empty())
+				return reinterpret_cast<void*>(&value);
 			else
 				return nullptr;
 		}
@@ -104,10 +104,10 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			const auto initial = value;
+			DescIO::Draw(label, value, def);
+			if (initial != value)
+				PushFieldSetAction(path, initial, value);
 		}
 	};
 
@@ -121,15 +121,15 @@ namespace oly::editor
 
 		EditSession<T> edit;
 
-		RangeField(T def, detail::Key key, const char* label) : Super(def, key, label), edit(this->scratch) {}
+		RangeField(T def, detail::Key key, const char* label) : Super(def, key, label), edit(this->value) {}
 
 		RangeField(const RangeField& o)
-			: Super(o), edit(this->scratch)
+			: Super(o), edit(this->value)
 		{
 		}
 
 		RangeField(RangeField&& o) noexcept
-			: Super(std::move(o)), edit(this->scratch)
+			: Super(std::move(o)), edit(this->value)
 		{
 		}
 
@@ -159,7 +159,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, this->scratch);
+				PushFieldSetAction(path, edit.buffer, this->value);
 				return true;
 			}
 			else
@@ -191,10 +191,10 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			const auto initial = this->scratch;
-			DescIO::Draw(this->label, this->scratch, this->def);
-			if (initial != this->scratch)
-				PushFieldSetAction(path, initial, this->scratch);
+			const auto initial = this->value;
+			DescIO::Draw(this->label, this->value, this->def);
+			if (initial != this->value)
+				PushFieldSetAction(path, initial, this->value);
 		}
 	};
 
@@ -202,15 +202,15 @@ namespace oly::editor
 	{
 		EditSession<std::string> edit;
 
-		StringField(std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(def), key, label), edit(scratch) {}
+		StringField(std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(def), key, label), edit(value) {}
 
 		StringField(const StringField& o)
-			: PrimitiveField(o), edit(scratch)
+			: PrimitiveField(o), edit(value)
 		{
 		}
 
 		StringField(StringField&& o) noexcept
-			: PrimitiveField(std::move(o)), edit(scratch)
+			: PrimitiveField(std::move(o)), edit(value)
 		{
 		}
 
@@ -240,7 +240,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, std::move(edit.buffer), scratch);
+				PushFieldSetAction(path, std::move(edit.buffer), value);
 				return true;
 			}
 			else
@@ -258,17 +258,17 @@ namespace oly::editor
 	{
 		EditSession<Color4> edit;
 
-		Color4Field(Color4 def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch)
+		Color4Field(Color4 def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value)
 		{
 		}
 
 		Color4Field(const Color4Field& o)
-			: PrimitiveField(o), edit(scratch)
+			: PrimitiveField(o), edit(value)
 		{
 		}
 
 		Color4Field(Color4Field&& o) noexcept
-			: PrimitiveField(std::move(o)), edit(scratch)
+			: PrimitiveField(std::move(o)), edit(value)
 		{
 		}
 
@@ -298,7 +298,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -316,15 +316,15 @@ namespace oly::editor
 	{
 		EditSession<Rect> edit;
 
-		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
+		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
 
 		RectField(const RectField& o)
-			: PrimitiveField(o), edit(scratch)
+			: PrimitiveField(o), edit(value)
 		{
 		}
 
 		RectField(RectField&& o) noexcept
-			: PrimitiveField(std::move(o)), edit(scratch)
+			: PrimitiveField(std::move(o)), edit(value)
 		{
 		}
 
@@ -354,7 +354,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -372,15 +372,15 @@ namespace oly::editor
 	{
 		EditSession<UVRect> edit;
 
-		UVRectField(UVRect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
+		UVRectField(UVRect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
 
 		UVRectField(const UVRectField& o)
-			: PrimitiveField(o), edit(scratch)
+			: PrimitiveField(o), edit(value)
 		{
 		}
 
 		UVRectField(UVRectField&& o) noexcept
-			: PrimitiveField(std::move(o)), edit(scratch)
+			: PrimitiveField(std::move(o)), edit(value)
 		{
 		}
 
@@ -410,7 +410,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -428,15 +428,15 @@ namespace oly::editor
 	{
 		EditSession<TopSidePadding> edit;
 
-		TopSidePaddingField(TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(scratch) {}
+		TopSidePaddingField(TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
 
 		TopSidePaddingField(const TopSidePaddingField& o)
-			: PrimitiveField(o), edit(scratch)
+			: PrimitiveField(o), edit(value)
 		{
 		}
 
 		TopSidePaddingField(TopSidePaddingField&& o) noexcept
-			: PrimitiveField(std::move(o)), edit(scratch)
+			: PrimitiveField(std::move(o)), edit(value)
 		{
 		}
 
@@ -466,7 +466,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -492,10 +492,10 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			const auto initial = this->scratch;
-			DescIO::Draw(this->label, this->scratch.data(), this->def.data(), sublabels, N);
-			if (initial != this->scratch)
-				PushFieldSetAction(path, initial, this->scratch);
+			const auto initial = this->value;
+			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N);
+			if (initial != this->value)
+				PushFieldSetAction(path, initial, this->value);
 		}
 	};
 
@@ -510,23 +510,23 @@ namespace oly::editor
 		std::array<EditSession<T>, N> edits;
 
 		AnonArrayField(std::array<T, N> def, detail::Key key, const char* label)
-			: Super(def, key, label), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{})) {}
+			: Super(def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})) {}
 
 	private:
 		template<size_t... Is>
-		static std::array<EditSession<T>, N> _MakeEdits(std::array<T, N>& scratch, std::index_sequence<Is...>)
+		static std::array<EditSession<T>, N> _MakeEdits(std::array<T, N>& value, std::index_sequence<Is...>)
 		{
-			return { EditSession<T>{scratch[Is]}... };
+			return { EditSession<T>{value[Is]}... };
 		}
 
 	public:
 		AnonArrayField(const AnonArrayField& o)
-			: Super(o), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+			: Super(o), edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
 		{
 		}
 
 		AnonArrayField(AnonArrayField&& o) noexcept
-			: Super(std::move(o)), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+			: Super(std::move(o)), edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
 		{
 		}
 
@@ -560,7 +560,7 @@ namespace oly::editor
 				if (edits[i].ConsumeModified())
 				{
 					modified = true;
-					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].buffer), this->scratch[i]);
+					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].buffer), this->value[i]);
 				}
 			}
 			return modified;
@@ -575,8 +575,8 @@ namespace oly::editor
 			if (index >= 0 && index < N)
 			{
 				path = path.Next();
-				if (type == typeid(this->scratch[index]) && path.Empty())
-					return reinterpret_cast<void*>(&this->scratch[index]);
+				if (type == typeid(this->value[index]) && path.Empty())
+					return reinterpret_cast<void*>(&this->value[index]);
 				else
 					return nullptr;
 			}
@@ -609,7 +609,7 @@ namespace oly::editor
 	struct DisjointEnumField
 	{
 		E def;
-		int scratch;
+		int index;
 		int def_index;
 		detail::Key key;
 		const char* label;
@@ -621,41 +621,36 @@ namespace oly::editor
 		DisjointEnumField(E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
 			: def(def), key(key), label(label), values(values), names(LabelSpanRegistry::Intern(std::span<const char*>(names, Count))), count(Count)
 		{
-			SetScratch(def);
+			SetValue(def);
 			def_index = Index(def);
 		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def_index, names);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			const auto initial = index;
+			DescIO::Draw(label, index, def_index, names);
+			if (initial != index)
+				PushFieldSetAction(path, initial, index);
 		}
 
 		void Load(TOMLNode node)
 		{
-			scratch = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
+			index = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
 		}
 		
 		void Dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), Scratch());
+			table.insert_or_assign(detail::encode_key(key), Value());
 		}
 
-		E Scratch() const
-		{
-			return Value(scratch);
-		}
-		
-		void SetScratch(const E val)
-		{
-			scratch = Index(val);
-		}
-
-		E Value(int index) const
+		E Value() const
 		{
 			return values[index];
+		}
+		
+		void SetValue(const E val)
+		{
+			index = Index(val);
 		}
 		
 		int Index(const E val) const
@@ -671,8 +666,8 @@ namespace oly::editor
 
 		void* VisitPath(DataPath path, std::type_index type)
 		{
-			if (type == typeid(decltype(scratch)) && path.Empty())
-				return reinterpret_cast<void*>(&scratch);
+			if (type == typeid(decltype(index)) && path.Empty())
+				return reinterpret_cast<void*>(&index);
 			else
 				return nullptr;
 		}
@@ -684,7 +679,7 @@ namespace oly::editor
 
 		bool QueryDirty(const DisjointEnumField<E>& disk) const
 		{
-			return scratch != disk.scratch;
+			return index != disk.index;
 		}
 	};
 	
@@ -696,24 +691,24 @@ namespace oly::editor
 		inline static const OptionalPrimitive<T> Max = _Max;
 
 		OptionalPrimitive<T> def;
-		OptionalPrimitive<T> scratch;
+		OptionalPrimitive<T> value;
 		EditSession<OptionalPrimitive<T>> edit;
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
 
 		OptionalRangeField(OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
-			: def(def), scratch(def), edit(scratch), value_key(value_key), enable_key(enable_key), label(label)
+			: def(def), value(def), edit(value), value_key(value_key), enable_key(enable_key), label(label)
 		{
 		}
 
 		OptionalRangeField(const OptionalRangeField& o)
-			: def(o.def), scratch(o.scratch), edit(scratch), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+			: def(o.def), value(o.value), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
 		{
 		}
 
 		OptionalRangeField(OptionalRangeField&& o)
-			: def(std::move(o.def)), scratch(std::move(o.scratch)), edit(scratch), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+			: def(std::move(o.def)), value(std::move(o.value)), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
 		{
 		}
 
@@ -722,7 +717,7 @@ namespace oly::editor
 			if (this != &o)
 			{
 				def = o.def;
-				scratch = o.scratch;
+				value = o.value;
 				value_key = o.value_key;
 				enable_key = o.enable_key;
 				label = o.label;
@@ -736,7 +731,7 @@ namespace oly::editor
 			if (this != &o)
 			{
 				def = std::move(o.def);
-				scratch = std::move(o.scratch);
+				value = std::move(o.value);
 				value_key = o.value_key;
 				enable_key = o.enable_key;
 				label = o.label;
@@ -755,7 +750,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -764,11 +759,11 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			scratch = def;
+			value = def;
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				Serializer<T>{}.Load(scratch.value, node[detail::encode_key(value_key)]);
-				Serializer<bool>{}.Load(scratch.has_value, node[detail::encode_key(enable_key)]);
+				Serializer<T>{}.Load(value.value, node[detail::encode_key(value_key)]);
+				Serializer<bool>{}.Load(value.has_value, node[detail::encode_key(enable_key)]);
 			}
 		}
 
@@ -776,15 +771,15 @@ namespace oly::editor
 		{
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.Dump(scratch.has_value));
-				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.Dump(scratch.value));
+				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.Dump(value.has_value));
+				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.Dump(value.value));
 			}
 		}
 
 		void* VisitPath(DataPath path, std::type_index type)
 		{
-			if (type == typeid(decltype(scratch)) && path.Empty())
-				return reinterpret_cast<void*>(&scratch);
+			if (type == typeid(decltype(value)) && path.Empty())
+				return reinterpret_cast<void*>(&value);
 			else
 				return nullptr;
 		}
@@ -797,7 +792,7 @@ namespace oly::editor
 
 		bool QueryDirty(const OptionalRangeField& disk) const
 		{
-			return scratch != disk.scratch;
+			return value != disk.value;
 		}
 	};
 
@@ -817,24 +812,24 @@ namespace oly::editor
 		inline static const OptionalPrimitive<T> Max = _Max;
 
 		OptionalPrimitive<T> def;
-		OptionalPrimitive<T> scratch;
+		OptionalPrimitive<T> value;
 		EditSession<OptionalPrimitive<T>> edit;
 		T nullopt;
 		detail::Key key;
 		const char* label;
 
 		CompactOptionalRangeField(OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
-			: def(def), scratch(def), edit(scratch), nullopt(nullopt), key(key), label(label)
+			: def(def), value(def), edit(value), nullopt(nullopt), key(key), label(label)
 		{
 		}
 
 		CompactOptionalRangeField(const CompactOptionalRangeField& o)
-			: def(o.def), scratch(o.scratch), edit(scratch), nullopt(o.nullopt), key(o.key), label(o.label)
+			: def(o.def), value(o.value), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
 		{
 		}
 
 		CompactOptionalRangeField(CompactOptionalRangeField&& o) noexcept
-			: def(std::move(o.def)), scratch(std::move(o.scratch)), edit(scratch), nullopt(o.nullopt), key(o.key), label(o.label)
+			: def(std::move(o.def)), value(std::move(o.value)), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
 		{
 		}
 
@@ -843,7 +838,7 @@ namespace oly::editor
 			if (this != &o)
 			{
 				def = o.def;
-				scratch = o.scratch;
+				value = o.value;
 				nullopt = o.nullopt;
 				key = o.key;
 				label = o.label;
@@ -857,7 +852,7 @@ namespace oly::editor
 			if (this != &o)
 			{
 				std::move(def) = std::move(o.def);
-				std::move(scratch) = std::move(o.scratch);
+				std::move(value) = std::move(o.value);
 				nullopt = o.nullopt;
 				key = o.key;
 				label = o.label;
@@ -876,7 +871,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, scratch);
+				PushFieldSetAction(path, edit.buffer, value);
 				return true;
 			}
 			else
@@ -885,31 +880,31 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			scratch = def;
+			value = def;
 			if (key != NullKey())
 			{
-				T value = def.value;
-				if (Serializer<T>{}.Load(value, node[detail::encode_key(key)]))
+				T temp = def.value;
+				if (Serializer<T>{}.Load(temp, node[detail::encode_key(key)]))
 				{
-					scratch.has_value = value != nullopt;
-					if (scratch.has_value)
-						scratch.value = value;
+					value.has_value = temp != nullopt;
+					if (value.has_value)
+						value.value = temp;
 				}
 				else
-					scratch.has_value = false;
+					value.has_value = false;
 			}
 		}
 
 		void Dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(scratch.has_value ? scratch.value : nullopt));
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value.has_value ? value.value : nullopt));
 		}
 
 		void* VisitPath(DataPath path, std::type_index type)
 		{
-			if (type == typeid(decltype(scratch)) && path.Empty())
-				return reinterpret_cast<void*>(&scratch);
+			if (type == typeid(decltype(value)) && path.Empty())
+				return reinterpret_cast<void*>(&value);
 			else
 				return nullptr;
 		}
@@ -922,7 +917,7 @@ namespace oly::editor
 
 		bool QueryDirty(const CompactOptionalRangeField& disk) const
 		{
-			return scratch != disk.scratch;
+			return value != disk.value;
 		}
 	};
 
@@ -948,9 +943,9 @@ namespace oly::editor
 	struct BitsetField
 	{
 		bool def_flags[Count];
-		bool scratch_flags[Count];
+		bool value_flags[Count];
 		E def;
-		E scratch;
+		E value;
 		detail::Key key;
 		const char* label;
 		const E* values;
@@ -959,7 +954,7 @@ namespace oly::editor
 		static const inline size_t Count = Count;
 
 		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count])
-			: def(def), scratch(def), key(key), label(label), values(values), names(names)
+			: def(def), value(def), key(key), label(label), values(values), names(names)
 		{
 			SetFlags();
 		}
@@ -977,19 +972,19 @@ namespace oly::editor
 	private:
 		void Draw(DataPath path, const bool* disabled)
 		{
-			const auto initial = scratch;
+			const auto initial = value;
 			SetFlags();
-			DescIO::Draw(label, scratch_flags, def_flags, names, disabled, Count);
+			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count);
 			SetEnum();
-			if (initial != scratch)
-				PushFieldSyncSetAction(path, initial, scratch, [this]() { SetFlags(); });
+			if (initial != value)
+				PushFieldSyncSetAction(path, initial, value, [this]() { SetFlags(); });
 		}
 
 		void SetFlags()
 		{
 			for (size_t i = 0; i < Count; ++i)
 			{
-				scratch_flags[i] = static_cast<bool>(scratch & values[i]);
+				value_flags[i] = static_cast<bool>(value & values[i]);
 				def_flags[i] = static_cast<bool>(def & values[i]);
 			}
 		}
@@ -998,29 +993,29 @@ namespace oly::editor
 		{
 			for (size_t i = 0; i < Count; ++i)
 			{
-				if (scratch_flags[i])
-					scratch |= values[i];
+				if (value_flags[i])
+					value |= values[i];
 				else
-					scratch &= ~values[i];
+					value &= ~values[i];
 			}
 		}
 
 	public:
 		void Load(TOMLNode node)
 		{
-			scratch = def;
-			Serializer<E>{}.Load(scratch, node[detail::encode_key(key)]);
+			value = def;
+			Serializer<E>{}.Load(value, node[detail::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(scratch));
+			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(value));
 		}
 
 		void* VisitPath(DataPath path, std::type_index type)
 		{
-			if (type == typeid(decltype(scratch)) && path.Empty())
-				return reinterpret_cast<void*>(&scratch);
+			if (type == typeid(decltype(value)) && path.Empty())
+				return reinterpret_cast<void*>(&value);
 			else
 				return nullptr;
 		}
@@ -1032,7 +1027,7 @@ namespace oly::editor
 
 		bool QueryDirty(const BitsetField<E, Count>& disk) const
 		{
-			return scratch != disk.scratch;
+			return value != disk.value;
 		}
 	};
 }

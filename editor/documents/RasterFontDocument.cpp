@@ -70,7 +70,7 @@ namespace oly::editor
 		
 		_codepoint_counter.clear();
 		for (auto& desc : _desc.scratch.glyphs)
-			_codepoint_counter.increment(desc.codepoint.scratch);
+			_codepoint_counter.increment(desc.codepoint.value);
 
 		_glyph_model.Init(*ListAdapter());
 	}
@@ -102,8 +102,8 @@ namespace oly::editor
 					gui::PropertyGrid::Key::SetLabel("Select Glyph");
 					gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 						return _glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
-							if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
-								return desc.glyphs[i].codepoint.scratch;
+							if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.value.empty())
+								return desc.glyphs[i].codepoint.value;
 							else
 								return "Glyph #" + std::to_string(i);
 						}, "New glyph", "Delete glyph", "Clear glyphs");
@@ -126,8 +126,8 @@ namespace oly::editor
 	void RasterFontDocument::Draw(DataPath path, GlyphDesc& desc)
 	{
 		GUIState::InputDataStyleStack style_stack;
-		const bool empty_codepoint = desc.codepoint.scratch.empty();
-		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.scratch) > 1;
+		const bool empty_codepoint = desc.codepoint.value.empty();
+		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
 
 		if (empty_codepoint || duplicate_codepoint)
 		{
@@ -135,12 +135,12 @@ namespace oly::editor
 			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
 		}
 
-		std::string previous_codepoint = desc.codepoint.scratch;
+		std::string previous_codepoint = desc.codepoint.value;
 		DRAW_FIELD(codepoint);
 		desc.codepoint.Draw(path / desc.subpaths.codepoint);
 		if (gui::PropertyGrid::DirtyRow())
 		{
-			_codepoint_counter.increment(desc.codepoint.scratch);
+			_codepoint_counter.increment(desc.codepoint.value);
 			_codepoint_counter.decrement(previous_codepoint);
 		}
 
@@ -200,6 +200,6 @@ namespace oly::editor
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
 		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter(),
-			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.scratch; }));
+			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

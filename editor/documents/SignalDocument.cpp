@@ -116,7 +116,7 @@ namespace oly::editor
 					return _signal_slots.DrawComboHeader([&desc](size_t i) {
 						if (i < desc.Size())
 						{
-							std::string id = desc[i].id.scratch;
+							std::string id = desc[i].id.value;
 							if (!id.empty())
 								return id;
 						}
@@ -147,7 +147,7 @@ namespace oly::editor
 					return _route_slots.DrawComboHeader([&desc](size_t i) {
 						if (i < desc.Size())
 						{
-							std::string id = desc[i].id.scratch;
+							std::string id = desc[i].id.value;
 							if (!id.empty())
 								return id;
 						}
@@ -172,7 +172,7 @@ namespace oly::editor
 		Counter<std::string> id_counter;
 
 		for (const auto& subdesc : _desc.scratch.signals)
-			id_counter.increment(subdesc.id.scratch);
+			id_counter.increment(subdesc.id.value);
 
 		return id_counter;
 	}
@@ -182,7 +182,7 @@ namespace oly::editor
 		Counter<std::string> id_counter;
 
 		for (const auto& subdesc : _desc.scratch.routes)
-			id_counter.increment(subdesc.id.scratch);
+			id_counter.increment(subdesc.id.value);
 
 		return id_counter;
 	}
@@ -199,7 +199,7 @@ namespace oly::editor
 		gui::Outline dup_outline;
 		
 		DRAW_FIELD(id);
-		if (GetIDCounter().count(desc.id.scratch) > 1)
+		if (GetIDCounter().count(desc.id.value) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
@@ -209,7 +209,7 @@ namespace oly::editor
 
 		DRAW_FIELD(binding);
 
-		switch (desc.binding.scratch)
+		switch (desc.binding.value)
 		{
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
@@ -233,12 +233,12 @@ namespace oly::editor
 		auto id_counter = GetIDCounter();
 
 		Counter<std::string> local_id_counter;
-		local_id_counter.accumulate(desc.signals.scratch);
+		local_id_counter.accumulate(desc.signals.value);
 
 		gui::Outline dup_outline;
 
 		DRAW_FIELD(id);
-		if (id_counter.count(desc.id.scratch) > 1)
+		if (id_counter.count(desc.id.value) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
@@ -246,10 +246,10 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		DescIO::DrawDynamicListRevertButtons(desc.signals.scratch, desc.signals.def);
+		DescIO::DrawDynamicListRevertButtons(desc.signals.value, desc.signals.def);
 
-		DescIO::DrawDynamicList(desc.signals.label, desc.signals.scratch, desc.signals.def, [&](gui::DynamicRow& row) {
-			std::string& element = desc.signals.scratch[row.Index()];
+		DescIO::DrawDynamicList(desc.signals.label, desc.signals.value, desc.signals.def, [&](gui::DynamicRow& row) {
+			std::string& element = desc.signals.value[row.Index()];
 
 			DrawResult result;
 
@@ -277,7 +277,7 @@ namespace oly::editor
 			return result;
 		}, desc.signals.ui_state);
 
-		DescIO::CheckDynamicListRevertButtons(desc.signals.scratch, desc.signals.def);
+		DescIO::CheckDynamicListRevertButtons(desc.signals.value, desc.signals.def);
 	}
 
 	void SignalDocument::Draw(DataPath path, KeyDesc& desc)
@@ -288,9 +288,9 @@ namespace oly::editor
 			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
 			if (key)
 			{
-				if (*key != desc.key.Scratch())
+				if (*key != desc.key.Value())
 				{
-					desc.key.SetScratch(*key);
+					desc.key.SetValue(*key);
 					result.SetDirty(true);
 				}
 				else
@@ -302,12 +302,12 @@ namespace oly::editor
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
+			disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
 		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
+			disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
 		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
@@ -322,9 +322,9 @@ namespace oly::editor
 			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
 			if (mb)
 			{
-				if (*mb != desc.button.Scratch())
+				if (*mb != desc.button.Value())
 				{
-					desc.button.SetScratch(*mb);
+					desc.button.SetValue(*mb);
 					result.SetDirty(true);
 				}
 				else
@@ -336,12 +336,12 @@ namespace oly::editor
 
 		bool disabled_required_mods[desc.required_mods.Count]{};
 		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = (desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]) && !(desc.required_mods.scratch & desc.required_mods.values[i]);
+			disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
 		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
 		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = (desc.required_mods.scratch & desc.required_mods.values[i]) && !(desc.forbidden_mods.scratch & desc.forbidden_mods.values[i]);
+			disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
 		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 
 		if (auto subform = Subform("Modifiers"))
@@ -356,9 +356,9 @@ namespace oly::editor
 			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
 			if (button)
 			{
-				if (*button != desc.button.Scratch())
+				if (*button != desc.button.Value())
 				{
-					desc.button.SetScratch(*button);
+					desc.button.SetValue(*button);
 					result.SetDirty(true);
 				}
 				else
@@ -380,9 +380,9 @@ namespace oly::editor
 			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
 			if (axis)
 			{
-				if (*axis != desc.axis.Scratch())
+				if (*axis != desc.axis.Value())
 				{
-					desc.axis.SetScratch(*axis);
+					desc.axis.SetValue(*axis);
 					result.SetDirty(true);
 				}
 				else
@@ -405,9 +405,9 @@ namespace oly::editor
 			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
 			if (axis)
 			{
-				if (*axis != desc.axis.scratch)
+				if (*axis != desc.axis.value)
 				{
-					desc.axis.scratch = *axis;
+					desc.axis.value = *axis;
 					result.SetDirty(true);
 				}
 				else

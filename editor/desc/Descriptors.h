@@ -200,7 +200,6 @@ namespace oly::editor
 
 		bool QueryDirty(const VariantDesc<Descriptors...>& disk) const
 		{
-			// TODO v9.1 use multi-arg visit over nested visits in engine/.
 			return std::visit([](const auto& lhs, const auto& rhs) {
 				using L = std::decay_t<decltype(lhs)>;
 				using R = std::decay_t<decltype(rhs)>;
