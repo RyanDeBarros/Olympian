@@ -26,6 +26,7 @@ namespace oly::editor
 #define _SUBPATH_ENUM_ENTRY(field) _E_##field,
 #define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
 #define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
+#define _SUBPATH_DRAW_FINALIZE(field) dirty |= field.DrawFinalize(path / subpaths.field);
 #define GENERATE_SUBPATHS(GENERATOR) \
 		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
 		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
@@ -39,7 +40,8 @@ namespace oly::editor
 			default: \
 				return nullptr; \
 			} \
-		}
+		} \
+		bool DrawFinalize(DataPath path) { bool dirty = false; GENERATOR(_SUBPATH_DRAW_FINALIZE); return dirty; }
 
 	extern detail::Key NullKey();
 
@@ -79,6 +81,11 @@ namespace oly::editor
 				return reinterpret_cast<void*>(&scratch);
 			else
 				return nullptr;
+		}
+		
+		bool DrawFinalize(DataPath path)
+		{
+			return false;
 		}
 	};
 
@@ -137,10 +144,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, this->scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -207,10 +225,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, std::move(edit.buffer), scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -254,10 +283,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -299,10 +339,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -344,10 +395,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -389,10 +451,21 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -460,25 +533,24 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			DescIO::Draw(this->label, this->edits.data(), this->def.data(), N);
+			DescIO::Draw(this->label, edits.data(), this->def.data(), N);
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
-			_CheckUndoAction(path, std::make_index_sequence<N>{});
+			bool modified = false;
+			for (size_t i = 0; i < N; ++i)
+			{
+				if (edits[i].ConsumeModified())
+				{
+					modified = true;
+					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].buffer), this->scratch[i]);
+				}
+			}
+			return modified;
 		}
 
-	private:
-		template<size_t... Is>
-		void _CheckUndoAction(DataPath path, std::index_sequence<Is...>)
-		{
-			((
-				edits[Is].ConsumeModified() ? (PushFieldSetAction(path / DataPathStep(Is), std::move(edits[Is].buffer), this->scratch[Is]), void()) : void()
-			), ...);
-		}
-
-	public:
 		void* VisitPath(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
@@ -495,6 +567,13 @@ namespace oly::editor
 			}
 			else
 				return nullptr;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			for (auto& edit : edits)
+				edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -582,6 +661,11 @@ namespace oly::editor
 			else
 				return nullptr;
 		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			return false;
+		}
 	};
 	
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
@@ -647,10 +731,15 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
 		}
 
 		void Load(TOMLNode node)
@@ -678,6 +767,12 @@ namespace oly::editor
 				return reinterpret_cast<void*>(&scratch);
 			else
 				return nullptr;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
 		}
 	};
 
@@ -752,10 +847,15 @@ namespace oly::editor
 			CheckUndoAction(path);
 		}
 
-		void CheckUndoAction(DataPath path)
+		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
+			{
 				PushFieldSetAction(path, edit.buffer, scratch);
+				return true;
+			}
+			else
+				return false;
 		}
 
 		void Load(TOMLNode node)
@@ -788,6 +888,12 @@ namespace oly::editor
 			else
 				return nullptr;
 		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			edit.DrawFinalize();
+			return CheckUndoAction(path);
+		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
@@ -815,7 +921,6 @@ namespace oly::editor
 		bool scratch_flags[Count];
 		E def;
 		E scratch;
-		// TODO v9.1 edit session
 		detail::Key key;
 		const char* label;
 		const E* values;
@@ -888,6 +993,11 @@ namespace oly::editor
 				return reinterpret_cast<void*>(&scratch);
 			else
 				return nullptr;
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			return false;
 		}
 	};
 }

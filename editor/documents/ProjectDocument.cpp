@@ -102,6 +102,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool ProjectDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	std::string ProjectDocument::TabName() const
 	{
 		return ProjectInfo::Instance().ProjectName();

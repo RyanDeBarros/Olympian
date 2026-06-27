@@ -32,6 +32,7 @@ namespace oly::editor
 		void Load() override;
 		void Dump() override;
 		void* VisitPath(DataPath path, std::type_index type) override;
+		bool DrawFinalize() override;
 
 	private:
 		void Draw(DataPath path, VectorDesc<SignalDesc>& desc);

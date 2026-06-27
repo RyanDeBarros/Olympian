@@ -89,6 +89,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool RasterFontDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	void RasterFontDocument::Draw(DataPath path, RasterFontDesc& desc)
 	{
 		if (auto form = Form())

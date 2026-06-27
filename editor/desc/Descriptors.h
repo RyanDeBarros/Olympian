@@ -119,6 +119,14 @@ namespace oly::editor
 		{
 			return DataPathStep(index);
 		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < vector.size(); ++i)
+				dirty |= vector[i].DrawFinalize(path / Subpath(i));
+			return dirty;
+		}
 	};
 
 	template<typename... Descriptors>
@@ -170,6 +178,11 @@ namespace oly::editor
 		{
 			return std::visit([path, type](auto& desc) { return desc.VisitPath(path, type); }, variant);
 		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			return std::visit([path](auto& desc) { return desc.DrawFinalize(path); }, variant);
+		}
 	};
 
 	template<typename Key, typename ValueDescriptor>
@@ -212,6 +225,14 @@ namespace oly::editor
 		DataPathStep Subpath(Key key)
 		{
 			return DataPathStep(key);
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			bool dirty = false;
+			for (auto& [key, desc] : map)
+				dirty |= desc.DrawFinalize(path / Subpath(key));
+			return dirty;
 		}
 	};
 }

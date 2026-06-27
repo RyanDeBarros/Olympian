@@ -105,6 +105,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool SignalDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
 	{
 		if (auto form = Form())

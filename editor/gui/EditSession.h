@@ -43,8 +43,7 @@ namespace oly::editor
 				editing = true;
 		}
 
-		// TODO v9.1 document should call finalize on all properties, regardless of whether they were drawn. After Finalize(), ConsumeModified() = true should push the undo action
-		void Finalize()
+		void DrawFinalize()
 		{
 			if (!seen_this_frame && editing)
 			{

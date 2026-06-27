@@ -91,9 +91,16 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	// TODO v9.1 lots of duplicate logic across documents. Define a virtual base class IDescriptor that only the document root descriptor should inherit from. Then, IDocument can just have a virtual accessor for the scratch descriptor, which has VisitPath()/DrawFinalize()
+
 	void* PreferencesDocument::VisitPath(DataPath path, std::type_index type)
 	{
 		return _scratch.VisitPath(path, type);
+	}
+
+	bool PreferencesDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
 	}
 
 	void PreferencesDocument::ApplyEditorPreferences()

@@ -111,6 +111,12 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	// TODO v9.1 call DrawFinalize() after Draw() in AssetEditorPanel and PreferencesPanel. In AssetEditorPanel, also call DrawFinalize() on a tab that just lost focus (tabs switched).
+	bool FontDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	detail::ResourcePath FontDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();

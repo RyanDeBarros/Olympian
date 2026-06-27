@@ -89,6 +89,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool FontFamilyDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
 	{
 		if (auto section = Subform(subform_header))

@@ -227,6 +227,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool TilesetDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	void TilesetDocument::DrawGroupEditor()
 	{
 		int type_index = static_cast<int>(_group_editors.current_type);

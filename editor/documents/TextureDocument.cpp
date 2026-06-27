@@ -110,6 +110,11 @@ namespace oly::editor
 		return _scratch.VisitPath(path, type);
 	}
 
+	bool TextureDocument::DrawFinalize()
+	{
+		return _scratch.DrawFinalize(DataPath());
+	}
+
 	detail::ResourcePath TextureDocument::GetSourcePath() const
 	{
 		return _oly_path.get_source_path();

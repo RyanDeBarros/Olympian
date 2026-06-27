@@ -57,18 +57,15 @@ namespace oly::editor
 			}
 		}
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([data, sublabels, disabled, count]() -> DrawResult {
-			DrawResult result;
-			for (size_t i = 0; i < count; ++i)
-			{
-				if (auto d = DisabledSection(disabled && disabled[i]))
-					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
-
-				if (i + 1 < count)
-					ImGui::SameLine();
-			}
-			return result;
+		for (size_t i = 0; i < count; ++i)
+		{
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data = data[i], sublabel = sublabels[i], disable = disabled && disabled[i]]() -> DrawResult {
+				if (auto d = DisabledSection(disable))
+					return gui::InputData<bool>{}(sublabel, data);
+				else
+					return {};
 			}));
+		}
 
 		gui::PropertyGrid::SubmitRow();
 

@@ -26,6 +26,7 @@ namespace oly::editor
 		void Load() override;
 		void Dump() override;
 		void* VisitPath(DataPath path, std::type_index type) override;
+		bool DrawFinalize() override;
 
 		std::string TabName() const override;
 

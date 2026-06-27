@@ -35,17 +35,13 @@ namespace oly::editor
 			void operator()(const char* label, OptionalPrimitive<T>& data, Args&&... args) const
 			{
 				gui::PropertyGrid::Value::AddComponent(comp::InputData<bool>("##", data.has_value));
-
-				gui::WidgetComponent c;
-				c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
 					gui::IDScope scope(&data.value);
 					if (auto disabled = DisabledSection(!data.has_value))
 						return gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
 					else
 						return {};
-					};
-
-				gui::PropertyGrid::Value::AddComponent(c);
+				}));
 			}
 		};
 
