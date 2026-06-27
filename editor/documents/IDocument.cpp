@@ -39,6 +39,18 @@ namespace oly::editor
 		return GetDoubleDescriptor().VisitPath(path, type);
 	}
 
+	void IDocument::PrintPath(std::ostream& os, DataPath path) const
+	{
+		GetDoubleDescriptor().PrintPath(os, path);
+	}
+	
+	std::string IDocument::PathString(DataPath path) const
+	{
+		std::stringstream ss;
+		PrintPath(ss, path);
+		return ss.str();
+	}
+
 	void IDocument::DrawFinalize()
 	{
 		if (GetDoubleDescriptor().DrawFinalize())

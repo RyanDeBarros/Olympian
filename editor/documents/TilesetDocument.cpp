@@ -222,6 +222,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	const IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
 	IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor()
 	{
 		return _desc;

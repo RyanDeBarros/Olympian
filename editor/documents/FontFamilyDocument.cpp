@@ -84,6 +84,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	const IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
 	IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor()
 	{
 		return _desc;

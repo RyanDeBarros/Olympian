@@ -105,6 +105,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	const IDoubleDescriptor& TextureDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
 	IDoubleDescriptor& TextureDocument::GetDoubleDescriptor()
 	{
 		return _desc;

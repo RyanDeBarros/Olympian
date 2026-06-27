@@ -100,6 +100,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	const IDoubleDescriptor& SignalDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
 	IDoubleDescriptor& SignalDocument::GetDoubleDescriptor()
 	{
 		return _desc;

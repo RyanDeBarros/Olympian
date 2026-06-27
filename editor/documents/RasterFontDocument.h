@@ -26,6 +26,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:

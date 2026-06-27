@@ -23,9 +23,28 @@ namespace oly::editor
 #define DUMP_FIELD(field) desc.field.Dump(table);
 #define DUMP_FIELDS(GENERATOR) GENERATOR(DUMP_FIELD)
 
+	namespace internal
+	{
+		template<typename T>
+		void PrintDescPath(std::ostream& os, DataPath path, const char* name, const T& field)
+		{
+			if constexpr (requires(T t, std::ostream os, DataPath path) { t.PrintPath(os, path); })
+			{
+				os << name << ".";
+				if (path.Empty())
+					os << "<error>";
+				else
+					field.PrintPath(os, path);
+			}
+			else
+				os << name;
+		}
+	}
+
 #define _SUBPATH_ENUM_ENTRY(field) _E_##field,
 #define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
 #define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
+#define _SUBPATH_PRINT_PATH(field) case _E_##field: internal::PrintDescPath(os, path.Next(), #field, field); break;
 #define _SUBPATH_DRAW_FINALIZE(field) dirty |= field.DrawFinalize(path / subpaths.field);
 #define _SUBPATH_QUERY_DIRTY(field) if (field.QueryDirty(disk.field)) return true;
 #define DESCRIPTOR_BODY(Klass, GENERATOR) \
@@ -40,6 +59,20 @@ namespace oly::editor
 				GENERATOR(_SUBPATH_VISIT_PATH); \
 			default: \
 				return nullptr; \
+			} \
+		} \
+		void PrintPath(std::ostream& os, DataPath path) const \
+		{ \
+			if (path.Empty()) \
+				os << "<error>"; \
+			else \
+			{ \
+				switch (path.Step().v) \
+				{ \
+					GENERATOR(_SUBPATH_PRINT_PATH); \
+				default: \
+					os << "<error>"; \
+				} \
 			} \
 		} \
 		bool DrawFinalize(DataPath path) { bool dirty = false; GENERATOR(_SUBPATH_DRAW_FINALIZE); return dirty; } \

@@ -14,8 +14,6 @@ namespace oly::editor
 {
 	namespace internal
 	{
-		// TODO v9.1 log data path as a string: 'a.b.c.d'. Use active document's PathString()
-
 		template<typename T>
 		void LogUndoActionSuccess(bool undo, DataPath path, const T& initial_value, const T& final_value)
 		{
@@ -24,7 +22,7 @@ namespace oly::editor
 				ss << "Undo";
 			else
 				ss << "Redo";
-			ss << " action success: [path=" << path << ", from=" << initial_value << ", to=" << final_value << "]";
+			ss << " action success: [path=" << ActiveDocument::Get().PathString(path) << ", from=" << initial_value << ", to=" << final_value << "]";
 			Logger::Instance().Log(LogLevel::Success, ss.str());
 		}
 
@@ -36,14 +34,13 @@ namespace oly::editor
 				ss << "Undo";
 			else
 				ss << "Redo";
-			ss << " action failed: [path=" << path << ", from=" << initial_value << ", to=" << final_value << "]";
+			ss << " action failed: [path=" << ActiveDocument::Get().PathString(path) << ", from=" << initial_value << ", to=" << final_value << "]";
 			Logger::Instance().Log(LogLevel::Warning, ss.str());
 		}
 	}
 
 	// TODO v9.1 also handle case of Forward() -> Save() -> Backward() -> Forward(). At this point, call doc.QueryDirty() again since it should be clean from the previous save. Basically, call query_dirty() if doc is clean in the before state OR the after state, in both Forward() and Backward().
 	// TODO v9.1 undo action for reload/revert asset if it changed anything.
-	// TODO v9.1 log successful undo/redo actions
 
 	template<typename T>
 	struct FieldSetAction : public UndoAction

@@ -20,6 +20,7 @@ namespace oly::editor
 		void DrawMenuBar() override;
 		void Load() override;
 		void Dump() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		void ApplyEditorPreferences();

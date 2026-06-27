@@ -84,6 +84,11 @@ namespace oly::editor
 		MarkClean();
 	}
 
+	const IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
 	IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor()
 	{
 		return _desc;

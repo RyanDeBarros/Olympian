@@ -103,6 +103,7 @@ namespace oly::editor
 			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
 		}
 
+		// TODO v9.1 rename VisitPath() to PathGet()
 		void* VisitPath(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
@@ -113,6 +114,23 @@ namespace oly::editor
 				return vector[index].VisitPath(path.Next(), type);
 			else
 				return nullptr;
+		}
+
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			if (path.Empty())
+				os << "<error>";
+			else
+			{
+				int index = path.Step().v;
+				if (index >= 0 && index < vector.size())
+				{
+					os << index << ".";
+					vector[index].PrintPath(os, path.Next());
+				}
+				else
+					os << "<error>";
+			}
 		}
 
 		DataPathStep Subpath(size_t index)
@@ -193,6 +211,11 @@ namespace oly::editor
 			return std::visit([path, type](auto& desc) { return desc.VisitPath(path, type); }, variant);
 		}
 
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			return std::visit([&os, path](auto& desc) { return desc.PrintPath(os, path); }, variant);
+		}
+
 		bool DrawFinalize(DataPath path)
 		{
 			return std::visit([path](auto& desc) { return desc.DrawFinalize(path); }, variant);
@@ -247,6 +270,24 @@ namespace oly::editor
 				return it->second.VisitPath(path.Next(), type);
 			else
 				return nullptr;
+		}
+
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			if (path.Empty())
+				os << "<error>";
+			else
+			{
+				auto key = static_cast<Key>(path.Step().v);
+				auto it = map.find(key);
+				if (it != map.end())
+				{
+					os << key << ".";
+					it->second.PrintPath(os, path.Next());
+				}
+				else
+					os << "<error>";
+			}
 		}
 
 		DataPathStep Subpath(Key key)
