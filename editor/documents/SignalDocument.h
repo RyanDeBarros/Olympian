@@ -13,8 +13,7 @@ namespace oly::editor
 {
 	class SignalDocument : public IDocument
 	{
-		SignalFullDesc _scratch;
-		SignalFullDesc _disk;
+		DoubleDescriptor<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _signal_slots;
 		gui::ListModel _route_slots;
@@ -31,8 +30,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
 		void Draw(DataPath path, VectorDesc<SignalDesc>& desc);

@@ -4,7 +4,7 @@
 
 #include "gui/properties/PropertyGrid.h"
 #include "core/UndoHistory.h"
-#include "desc/DataPath.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "assets/ResourcePath.h"
 
@@ -29,9 +29,10 @@ namespace oly::editor
 		virtual void DrawMenuBar();
 		virtual void Load() = 0;
 		virtual void Dump() = 0;
-		virtual void* VisitPath(DataPath path, std::type_index type) = 0;
+		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
+
+		void* VisitPath(DataPath path, std::type_index type);
 		void DrawFinalize();
-		virtual bool DrawFinalizeImpl() = 0;
 
 		const detail::ResourcePath& GetOlyPath() const;
 		virtual std::string TabName() const;
@@ -39,6 +40,7 @@ namespace oly::editor
 		void MarkDirty();
 		void MarkClean();
 		bool IsDirty() const;
+		void QueryDirty();
 
 		void Undo();
 		void Redo();

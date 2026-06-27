@@ -35,10 +35,10 @@ namespace oly::editor
 		if (auto form = Form())
 		{
 			DataPath path;
-			Draw(path, _scratch, "Regular", detail::FontStyleMode::Regular);
-			Draw(path, _scratch, "Bold", detail::FontStyleMode::Bold);
-			Draw(path, _scratch, "Italic", detail::FontStyleMode::Italic);
-			Draw(path, _scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+			Draw(path, _desc.scratch, "Regular", detail::FontStyleMode::Regular);
+			Draw(path, _desc.scratch, "Bold", detail::FontStyleMode::Bold);
+			Draw(path, _desc.scratch, "Italic", detail::FontStyleMode::Italic);
+			Draw(path, _desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
 		}
 	}
 
@@ -51,7 +51,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load font family - corrupted asset: " + _oly_path.string());
@@ -62,7 +62,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -72,26 +72,21 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
 	void FontFamilyDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* FontFamilyDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool FontFamilyDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)

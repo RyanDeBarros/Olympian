@@ -10,8 +10,7 @@ namespace oly::editor
 {
 	class ProjectDocument : public IDocument
 	{
-		ProjectDesc _scratch;
-		ProjectDesc _disk;
+		DoubleDescriptor<ProjectDesc> _desc;
 		detail::MetaMap _meta;
 
 	public:
@@ -25,8 +24,7 @@ namespace oly::editor
 		void DrawMenuBar() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		std::string TabName() const override;
 

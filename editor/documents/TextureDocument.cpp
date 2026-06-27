@@ -47,7 +47,7 @@ namespace oly::editor
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
-			Draw(DataPath(), _scratch);
+			Draw(DataPath(), _desc.scratch);
 
 			ImGui::TableNextColumn();
 			DrawPreview();
@@ -64,7 +64,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk, _svg, _gif);
+				Load(TOMLNode(table), _desc.disk, _svg, _gif);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load texture - corrupted asset: " + GetSourcePath().string());
@@ -75,7 +75,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk, _svg, _gif);
+			Load(TOMLNode(), _desc.disk, _svg, _gif);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -85,12 +85,12 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 
 		_slots.Init(*ListAdapter());
 
 		_preview_nav = {};
-		if (auto svg_desc = _scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
+		if (auto svg_desc = _desc.scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
 			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.scratch;
 
 		_stale_preview_texture = true;
@@ -99,20 +99,15 @@ namespace oly::editor
 	void TextureDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* TextureDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& TextureDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool TextureDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	detail::ResourcePath TextureDocument::GetSourcePath() const
@@ -127,9 +122,9 @@ namespace oly::editor
 
 		_stale_preview_texture = false;
 
-		std::optional<GLenum> min_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
-		std::optional<GLenum> mag_filter = _scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
-		std::optional<bool> generate_mipmaps = _scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
+		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Scratch(); });
+		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Scratch(); });
+		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
 			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.scratch), bool>)
 				return desc.generate_mipmaps.scratch;
 			else
@@ -241,7 +236,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _desc.scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.scratch ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -617,7 +612,7 @@ namespace oly::editor
 
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
-		return _scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
+		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)

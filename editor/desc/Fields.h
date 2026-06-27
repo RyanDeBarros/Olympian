@@ -27,7 +27,8 @@ namespace oly::editor
 #define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
 #define _SUBPATH_VISIT_PATH(field) case _E_##field: return field.VisitPath(path.Next(), type);
 #define _SUBPATH_DRAW_FINALIZE(field) dirty |= field.DrawFinalize(path / subpaths.field);
-#define GENERATE_SUBPATHS(GENERATOR) \
+#define _SUBPATH_QUERY_DIRTY(field) if (field.QueryDirty(disk.field)) return true;
+#define DESCRIPTOR_BODY(Klass, GENERATOR) \
 		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
 		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
 		void* VisitPath(DataPath path, std::type_index type) \
@@ -41,19 +42,27 @@ namespace oly::editor
 				return nullptr; \
 			} \
 		} \
-		bool DrawFinalize(DataPath path) { bool dirty = false; GENERATOR(_SUBPATH_DRAW_FINALIZE); return dirty; }
+		bool DrawFinalize(DataPath path) { bool dirty = false; GENERATOR(_SUBPATH_DRAW_FINALIZE); return dirty; } \
+		bool QueryDirty(const Klass& disk) const { GENERATOR(_SUBPATH_QUERY_DIRTY); return false; }
 
 	extern detail::Key NullKey();
 
-	template<typename T>
+	template<typename T, typename Self>
 	struct PrimitiveField
 	{
+		using SelfType = std::conditional_t<std::is_void_v<Self>, PrimitiveField<T, Self>, Self>;
+
 		T def;
-		T scratch;
+		T scratch; // TODO v9.1 rename 'scratch' to 'value'
 		detail::Key key;
 		const char* label;
 
 		PrimitiveField(T def, detail::Key key, const char* label) : def(def), scratch(def), key(key), label(label) {}
+
+		bool QueryDirty(const SelfType& disk) const
+		{
+			return scratch != disk.scratch;
+		}
 
 		void Load(TOMLNode node)
 		{
@@ -89,9 +98,9 @@ namespace oly::editor
 		}
 	};
 
-	struct BoolField : public PrimitiveField<bool>
+	struct BoolField : public PrimitiveField<bool, BoolField>
 	{
-		using PrimitiveField<bool>::PrimitiveField;
+		using PrimitiveField<bool, BoolField>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
@@ -103,29 +112,31 @@ namespace oly::editor
 	};
 
 	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
-	struct RangeField : public PrimitiveField<T>
+	struct RangeField : public PrimitiveField<T, RangeField<T, U, _Min, _Max>>
 	{
+		using Super = PrimitiveField<T, RangeField<T, U, _Min, _Max>>;
+
 		inline static const OptionalPrimitive<U> Min = _Min;
 		inline static const OptionalPrimitive<U> Max = _Max;
 
 		EditSession<T> edit;
 
-		RangeField(T def, detail::Key key, const char* label) : PrimitiveField<T>(def, key, label), edit(this->scratch) {}
+		RangeField(T def, detail::Key key, const char* label) : Super(def, key, label), edit(this->scratch) {}
 
 		RangeField(const RangeField& o)
-			: PrimitiveField<T>(o), edit(this->scratch)
+			: Super(o), edit(this->scratch)
 		{
 		}
 
 		RangeField(RangeField&& o) noexcept
-			: PrimitiveField<T>(std::move(o)), edit(this->scratch)
+			: Super(std::move(o)), edit(this->scratch)
 		{
 		}
 
 		RangeField& operator=(const RangeField& o)
 		{
 			if (this != &o)
-				PrimitiveField<T>::operator=(o);
+				Super::operator=(o);
 
 			return *this;
 		}
@@ -133,7 +144,7 @@ namespace oly::editor
 		RangeField& operator=(RangeField&& o) noexcept
 		{
 			if (this != &o)
-				PrimitiveField<T>::operator=(std::move(o));
+				Super::operator=(std::move(o));
 
 			return *this;
 		}
@@ -172,11 +183,11 @@ namespace oly::editor
 	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E>
+	struct EnumField : public PrimitiveField<E, EnumField<E>>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E>::PrimitiveField;
+		using PrimitiveField<E, EnumField<E>>::PrimitiveField;
 
 		void Draw(DataPath path)
 		{
@@ -187,7 +198,7 @@ namespace oly::editor
 		}
 	};
 
-	struct StringField : public PrimitiveField<std::string>
+	struct StringField : public PrimitiveField<std::string, StringField>
 	{
 		EditSession<std::string> edit;
 
@@ -243,7 +254,7 @@ namespace oly::editor
 		}
 	};
 
-	struct Color4Field : public PrimitiveField<Color4>
+	struct Color4Field : public PrimitiveField<Color4, Color4Field>
 	{
 		EditSession<Color4> edit;
 
@@ -301,7 +312,7 @@ namespace oly::editor
 		}
 	};
 
-	struct RectField : public PrimitiveField<Rect>
+	struct RectField : public PrimitiveField<Rect, RectField>
 	{
 		EditSession<Rect> edit;
 
@@ -357,7 +368,7 @@ namespace oly::editor
 		}
 	};
 
-	struct UVRectField : public PrimitiveField<UVRect>
+	struct UVRectField : public PrimitiveField<UVRect, UVRectField>
 	{
 		EditSession<UVRect> edit;
 
@@ -413,7 +424,7 @@ namespace oly::editor
 		}
 	};
 
-	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>
+	struct TopSidePaddingField : public PrimitiveField<TopSidePadding, TopSidePaddingField>
 	{
 		EditSession<TopSidePadding> edit;
 
@@ -470,12 +481,14 @@ namespace oly::editor
 	};
 
 	template<typename T, size_t N>
-	struct ArrayField : public PrimitiveField<std::array<T, N>>
+	struct ArrayField : public PrimitiveField<std::array<T, N>, ArrayField<T, N>>
 	{
+		using Super = PrimitiveField<std::array<T, N>, ArrayField<T, N>>;
+
 		const char** sublabels;
 
 		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: PrimitiveField<std::array<T, N>>(def, key, label), sublabels(sublabels) {}
+			: Super(def, key, label), sublabels(sublabels) {}
 
 		void Draw(DataPath path)
 		{
@@ -490,12 +503,14 @@ namespace oly::editor
 	using BoolArrayField = ArrayField<bool, N>;
 
 	template<typename T, size_t N>
-	struct AnonArrayField : public PrimitiveField<std::array<T, N>>
+	struct AnonArrayField : public PrimitiveField<std::array<T, N>, AnonArrayField<T, N>>
 	{
+		using Super = PrimitiveField<std::array<T, N>, AnonArrayField<T, N>>;
+
 		std::array<EditSession<T>, N> edits;
 
 		AnonArrayField(std::array<T, N> def, detail::Key key, const char* label)
-			: PrimitiveField<std::array<T, N>>(def, key, label), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{})) {}
+			: Super(def, key, label), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{})) {}
 
 	private:
 		template<size_t... Is>
@@ -506,19 +521,19 @@ namespace oly::editor
 
 	public:
 		AnonArrayField(const AnonArrayField& o)
-			: PrimitiveField<std::array<T, N>>(o), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+			: Super(o), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
 		{
 		}
 
 		AnonArrayField(AnonArrayField&& o) noexcept
-			: PrimitiveField<std::array<T, N>>(std::move(o)), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
+			: Super(std::move(o)), edits(_MakeEdits(this->scratch, std::make_index_sequence<N>{}))
 		{
 		}
 
 		AnonArrayField& operator=(const AnonArrayField& o)
 		{
 			if (this != &o)
-				PrimitiveField<std::array<T, N>>::operator=(o);
+				Super::operator=(o);
 
 			return *this;
 		}
@@ -526,7 +541,7 @@ namespace oly::editor
 		AnonArrayField& operator=(AnonArrayField&& o) noexcept
 		{
 			if (this != &o)
-				PrimitiveField<std::array<T, N>>::operator=(std::move(o));
+				Super::operator=(std::move(o));
 
 			return *this;
 		}
@@ -581,11 +596,11 @@ namespace oly::editor
 	using StringArrayField = AnonArrayField<std::string, N>;
 
 	template<typename T>
-	struct VectorField : public PrimitiveField<std::vector<T>>
+	struct VectorField : public PrimitiveField<std::vector<T>, VectorField<T>>
 	{
 		gui::DynamicListState ui_state;
 
-		using PrimitiveField<std::vector<T>>::PrimitiveField;
+		using PrimitiveField<std::vector<T>, VectorField<T>>::PrimitiveField;
 	};
 
 	using StringVectorField = VectorField<std::string>;
@@ -665,6 +680,11 @@ namespace oly::editor
 		bool DrawFinalize(DataPath path)
 		{
 			return false;
+		}
+
+		bool QueryDirty(const DisjointEnumField<E>& disk) const
+		{
+			return scratch != disk.scratch;
 		}
 	};
 	
@@ -773,6 +793,11 @@ namespace oly::editor
 		{
 			edit.DrawFinalize();
 			return CheckUndoAction(path);
+		}
+
+		bool QueryDirty(const OptionalRangeField& disk) const
+		{
+			return scratch != disk.scratch;
 		}
 	};
 
@@ -894,6 +919,11 @@ namespace oly::editor
 			edit.DrawFinalize();
 			return CheckUndoAction(path);
 		}
+
+		bool QueryDirty(const CompactOptionalRangeField& disk) const
+		{
+			return scratch != disk.scratch;
+		}
 	};
 
 	template<OptionalInt Min, OptionalInt Max>
@@ -998,6 +1028,11 @@ namespace oly::editor
 		bool DrawFinalize(DataPath path)
 		{
 			return false;
+		}
+
+		bool QueryDirty(const BitsetField<E, Count>& disk) const
+		{
+			return scratch != disk.scratch;
 		}
 	};
 }

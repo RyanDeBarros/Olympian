@@ -8,8 +8,7 @@ namespace oly::editor
 {
 	class PreferencesDocument : public IDocument
 	{
-		PreferencesDesc _scratch;
-		PreferencesDesc _disk;
+		DoubleDescriptor<PreferencesDesc> _desc;
 
 	public:
 		static const char* GetVersion();
@@ -21,8 +20,7 @@ namespace oly::editor
 		void DrawMenuBar() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		void ApplyEditorPreferences();
 		void RevertEditorPreferences();

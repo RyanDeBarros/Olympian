@@ -118,8 +118,7 @@ namespace oly::editor
 
 	class TilesetDocument : public IDocument
 	{
-		TilesetDesc _scratch;
-		TilesetDesc _disk;
+		DoubleDescriptor<TilesetDesc> _desc;
 		detail::MetaMap _meta;
 		IndividualEditorState _individual_editor;
 		GroupEditorsState _group_editors;
@@ -154,8 +153,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
 		void DrawGroupEditor();

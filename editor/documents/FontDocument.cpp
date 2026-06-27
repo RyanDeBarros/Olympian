@@ -71,7 +71,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load font - corrupted asset: " + GetSourcePath().string());
@@ -82,7 +82,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -92,28 +92,23 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 
-		_atlas_slots.Init(*_scratch.font_atlases.ListAdapter());
+		_atlas_slots.Init(*_desc.scratch.font_atlases.ListAdapter());
 	}
 
 	void FontDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* FontDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& FontDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool FontDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	detail::ResourcePath FontDocument::GetSourcePath() const
@@ -124,7 +119,7 @@ namespace oly::editor
 	void FontDocument::ReloadFont()
 	{
 		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _scratch.font_atlases[_atlas_slots.active_index].font_size.scratch);
+		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.scratch);
 	}
 
 	void FontDocument::DestroyFont()
@@ -139,7 +134,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
-			Draw(DataPath() / _scratch.subpaths.font_face, _scratch.font_face);
+			Draw(DataPath() / _desc.scratch.subpaths.font_face, _desc.scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -158,10 +153,10 @@ namespace oly::editor
 					gui::PropertyGrid::SubmitRow();
 				}
 
-				if (!_scratch.font_atlases.Empty())
-					Draw(DataPath() / _scratch.subpaths.font_atlases, _scratch.font_atlases[_atlas_slots.active_index]);
+				if (!_desc.scratch.font_atlases.Empty())
+					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
 
-				if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
+				if (_atlas_slots.ConsumeOps(*_desc.scratch.font_atlases.ListAdapter()))
 					MarkDirty();
 
 				if (_atlas_slots.active_index.ConsumeModified())

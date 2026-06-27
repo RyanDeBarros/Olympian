@@ -33,7 +33,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
-		Draw(DataPath(), _scratch);
+		Draw(DataPath(), _desc.scratch);
 	}
 
 	void RasterFontDocument::Load()
@@ -45,7 +45,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load raster font - corrupted asset: " + _oly_path.string());
@@ -56,7 +56,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -66,10 +66,10 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 		
 		_codepoint_counter.clear();
-		for (auto& desc : _scratch.glyphs)
+		for (auto& desc : _desc.scratch.glyphs)
 			_codepoint_counter.increment(desc.codepoint.scratch);
 
 		_glyph_model.Init(*ListAdapter());
@@ -78,20 +78,15 @@ namespace oly::editor
 	void RasterFontDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* RasterFontDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool RasterFontDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	void RasterFontDocument::Draw(DataPath path, RasterFontDesc& desc)
@@ -204,7 +199,7 @@ namespace oly::editor
 
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
-		return std::make_unique<gui::ListCallbackAdapter>(_scratch.glyphs.ListAdapter(),
-			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _scratch.glyphs[i].codepoint.scratch; }));
+		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter(),
+			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.scratch; }));
 	}
 }

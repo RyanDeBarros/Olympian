@@ -127,6 +127,20 @@ namespace oly::editor
 				dirty |= vector[i].DrawFinalize(path / Subpath(i));
 			return dirty;
 		}
+
+		bool QueryDirty(const VectorDesc<Descriptor>& disk) const
+		{
+			if (vector.size() != disk.vector.size())
+				return true;
+
+			for (size_t i = 0; i < vector.size(); ++i)
+			{
+				if (vector[i].QueryDirty(disk.vector[i]))
+					return true;
+			}
+
+			return false;
+		}
 	};
 
 	template<typename... Descriptors>
@@ -183,6 +197,20 @@ namespace oly::editor
 		{
 			return std::visit([path](auto& desc) { return desc.DrawFinalize(path); }, variant);
 		}
+
+		bool QueryDirty(const VariantDesc<Descriptors...>& disk) const
+		{
+			// TODO v9.1 use multi-arg visit over nested visits in engine/.
+			return std::visit([](const auto& lhs, const auto& rhs) {
+				using L = std::decay_t<decltype(lhs)>;
+				using R = std::decay_t<decltype(rhs)>;
+
+				if constexpr (std::is_same_v<L, R>)
+					return lhs.QueryDirty(rhs);
+				else
+					return true;
+			}, variant, disk.variant);
+		}
 	};
 
 	template<typename Key, typename ValueDescriptor>
@@ -233,6 +261,24 @@ namespace oly::editor
 			for (auto& [key, desc] : map)
 				dirty |= desc.DrawFinalize(path / Subpath(key));
 			return dirty;
+		}
+
+		bool QueryDirty(const MapDesc<Key, ValueDescriptor>& disk) const
+		{
+			if (map.size() != disk.map.size())
+				return true;
+
+			for (const auto& [key, desc] : map)
+			{
+				auto it = disk.map.find(key);
+				if (it == disk.map.end())
+					return true;
+
+				if (desc.QueryDirty(it->second))
+					return true;
+			}
+
+			return false;
 		}
 	};
 }

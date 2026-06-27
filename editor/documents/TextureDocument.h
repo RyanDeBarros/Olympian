@@ -34,8 +34,7 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		TextureVariantDesc _scratch;
-		TextureVariantDesc _disk;
+		DoubleDescriptor<TextureVariantDesc> _desc;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
@@ -55,8 +54,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 

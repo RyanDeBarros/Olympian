@@ -160,7 +160,7 @@ namespace oly::editor
 		DataPathSource path;
 
 		if (auto subform = Subform("Advanced"))
-			_scratch.storage.Draw(path / _scratch.subpaths.storage);
+			_desc.scratch.storage.Draw(path / _desc.scratch.subpaths.storage);
 
 		if (ImGui::BeginTabBar("##Editors"))
 		{
@@ -189,7 +189,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load tileset - corrupted asset: " + _oly_path.string());
@@ -200,7 +200,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -210,26 +210,21 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
 	void TilesetDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* TilesetDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool TilesetDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	void TilesetDocument::DrawGroupEditor()
@@ -505,7 +500,7 @@ namespace oly::editor
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
 	{
-		return _scratch.assignments.map[config];
+		return _desc.scratch.assignments.map[config];
 	}
 
 	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfigGrid grid)
@@ -515,7 +510,7 @@ namespace oly::editor
 
 	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
 	{
-		return DataPath() / _scratch.subpaths.assignments / _scratch.assignments.subpaths.map / _scratch.assignments.map.Subpath(config);
+		return DataPath() / _desc.scratch.subpaths.assignments / _desc.scratch.assignments.subpaths.map / _desc.scratch.assignments.map.Subpath(config);
 	}
 
 	void TilesetDocument::OnActiveTextureChanged(const detail::TileConfigGrid grid)

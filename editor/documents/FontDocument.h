@@ -10,8 +10,7 @@ namespace oly::editor
 {
 	class FontDocument : public IDocument
 	{
-		FullFontDesc _scratch;
-		FullFontDesc _disk;
+		DoubleDescriptor<FullFontDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _atlas_slots;
 		std::string _display_text;
@@ -27,8 +26,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 

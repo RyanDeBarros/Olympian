@@ -42,7 +42,7 @@ namespace oly::editor
 		BoolField row_major;
 		BoolField row_up;
 
-		GENERATE_SUBPATHS(SPRITESHEET_GENERATOR);
+		DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
 
 		SpritesheetDesc();
 	};
@@ -67,7 +67,7 @@ namespace oly::editor
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 
-		GENERATE_SUBPATHS(BASE_TEXTURE_GENERATOR);
+		DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
 
 		BaseTextureDesc(GLenum default_filter);
 	};
@@ -86,7 +86,7 @@ namespace oly::editor
 		BoolField generate_mipmaps;
 		EnumField<detail::StorageMode> storage;
 
-		GENERATE_SUBPATHS(RASTER_TEXTURE_GENERATOR);
+		DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
 
 		RasterTextureDesc();
 	};
@@ -112,7 +112,7 @@ namespace oly::editor
 		EnumField<detail::StorageMode> abstract_storage;
 		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
 
-		GENERATE_SUBPATHS(VECTOR_TEXTURE_GENERATOR);
+		DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
 
 		VectorTextureDesc();
 	};
@@ -128,7 +128,7 @@ namespace oly::editor
 		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
-		GENERATE_SUBPATHS(TEXTURE_VARIANT_GENERATOR);
+		DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
 
 		size_t Size() const;
 		bool Empty() const;

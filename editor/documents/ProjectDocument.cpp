@@ -32,7 +32,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		gui::IDScope scope(this);
-		Draw(DataPath(), _scratch);
+		Draw(DataPath(), _desc.scratch);
 	}
 
 	void ProjectDocument::DrawMenuBar()
@@ -65,7 +65,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load project file - corrupted asset: " + GetOlyPath().string());
@@ -76,7 +76,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -85,26 +85,21 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
 	void ProjectDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* ProjectDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& ProjectDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool ProjectDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	std::string ProjectDocument::TabName() const

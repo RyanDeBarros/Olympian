@@ -12,8 +12,7 @@ namespace oly::editor
 {
 	class FontFamilyDocument : public IDocument
 	{
-		FontFamilyDesc _scratch;
-		FontFamilyDesc _disk;
+		DoubleDescriptor<FontFamilyDesc> _desc;
 		detail::MetaMap _meta;
 
 	public:
@@ -25,8 +24,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
 		void Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);

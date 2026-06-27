@@ -12,15 +12,12 @@ namespace oly::editor
 		M(pair) \
 		M(distance)
 
-#define KERNING_SUBPATH_GENERATOR(M) \
-		KERNING_GENERATOR(M)
-
 	struct KerningDesc
 	{
 		ArrayField<std::string, 2> pair;
 		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
 
-		GENERATE_SUBPATHS(KERNING_SUBPATH_GENERATOR);
+		DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
 
 		KerningDesc();
 	};
@@ -28,7 +25,7 @@ namespace oly::editor
 #define FONT_FACE_PARTIAL_GENERATOR(M) \
 		M(storage)
 
-#define FONT_FACE_SUBPATH_GENERATOR(M) \
+#define FONT_FACE_GENERATOR(M) \
 		FONT_FACE_PARTIAL_GENERATOR(M) \
 		M(kerning)
 
@@ -39,7 +36,7 @@ namespace oly::editor
 		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
-		GENERATE_SUBPATHS(FONT_FACE_SUBPATH_GENERATOR);
+		DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
 
 		FontFaceDesc();
 	};
@@ -60,9 +57,6 @@ namespace oly::editor
 		M(common_buffer_preset) \
 		M(common_buffer)
 
-#define FONT_ATLAS_SUBPATH_GENERATOR(M) \
-		FONT_ATLAS_GENERATOR(M)
-
 	struct FontAtlasDesc
 	{
 		FloatField<MakeOpt(1.f), MakeOpt<float>()> font_size;
@@ -75,12 +69,12 @@ namespace oly::editor
 		EnumField<detail::CommonBufferPreset> common_buffer_preset;
 		StringField common_buffer;
 
-		GENERATE_SUBPATHS(FONT_ATLAS_SUBPATH_GENERATOR);
+		DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
 
 		FontAtlasDesc();
 	};
 
-#define FULL_FONT_SUBPATH_GENERATOR(M) \
+#define FULL_FONT_GENERATOR(M) \
 		M(font_face) \
 		M(font_atlases)
 
@@ -91,7 +85,7 @@ namespace oly::editor
 		VectorDesc<FontAtlasDesc> font_atlases;
 		static const detail::Key font_atlas_key;
 
-		GENERATE_SUBPATHS(FULL_FONT_SUBPATH_GENERATOR);
+		DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
 
 		FullFontDesc();
 	};

@@ -39,13 +39,13 @@ namespace oly::editor
 		{
 			if (ImGui::BeginTabItem("Signals"))
 			{
-				Draw(DataPath() / _scratch.subpaths.signals, _scratch.signals);
+				Draw(DataPath() / _desc.scratch.subpaths.signals, _desc.scratch.signals);
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Routes"))
 			{
-				Draw(DataPath() / _scratch.subpaths.routes, _scratch.routes);
+				Draw(DataPath() / _desc.scratch.subpaths.routes, _desc.scratch.routes);
 				ImGui::EndTabItem();
 			}
 
@@ -65,7 +65,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load signal - corrupted asset: " + _oly_path.string());
@@ -76,7 +76,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -86,28 +86,23 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
-		_signal_slots.Init(*_scratch.signals.ListAdapter());
-		_route_slots.Init(*_scratch.routes.ListAdapter());
+		_desc.LoadFromDisk();
+		_signal_slots.Init(*_desc.scratch.signals.ListAdapter());
+		_route_slots.Init(*_desc.scratch.routes.ListAdapter());
 	}
 
 	void SignalDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void* SignalDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& SignalDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool SignalDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
@@ -176,7 +171,7 @@ namespace oly::editor
 	{
 		Counter<std::string> id_counter;
 
-		for (const auto& subdesc : _scratch.signals)
+		for (const auto& subdesc : _desc.scratch.signals)
 			id_counter.increment(subdesc.id.scratch);
 
 		return id_counter;
@@ -186,7 +181,7 @@ namespace oly::editor
 	{
 		Counter<std::string> id_counter;
 
-		for (const auto& subdesc : _scratch.routes)
+		for (const auto& subdesc : _desc.scratch.routes)
 			id_counter.increment(subdesc.id.scratch);
 
 		return id_counter;
@@ -583,11 +578,11 @@ namespace oly::editor
 	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
 	{
 		toml::table subtable;
-		_scratch.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
+		desc.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(subtable));
 
 		subtable.clear();
-		_scratch.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
+		desc.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(subtable));
 	}
 

@@ -17,7 +17,7 @@ namespace oly::editor
 		IntField<MakeOpt(1), MakeOpt<int>()> size_limit;
 		EnumField<MemoryUnit> size_limit_unit;
 
-		GENERATE_SUBPATHS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		DESCRIPTOR_BODY(UndoHistorySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
 
 		UndoHistorySettingsDesc();
 
@@ -25,7 +25,7 @@ namespace oly::editor
 		size_t SizeLimit() const;
 	};
 
-#define EDIT_SETTINGS_SUBPATH_GENERATOR(M) \
+#define EDIT_SETTINGS_GENERATOR(M) \
 		M(undo_history)
 
 	struct EditSettingsDesc
@@ -33,7 +33,7 @@ namespace oly::editor
 		UndoHistorySettingsDesc undo_history;
 		static const detail::Key undo_history_key;
 
-		GENERATE_SUBPATHS(EDIT_SETTINGS_SUBPATH_GENERATOR);
+		DESCRIPTOR_BODY(EditSettingsDesc, EDIT_SETTINGS_GENERATOR);
 	};
 
 #define TREE_VIEW_ADVANCED_SETTINGS_GENERATOR(M) \
@@ -43,10 +43,10 @@ namespace oly::editor
 	{
 		FloatField<MakeOpt(0.1f), MakeOpt<float>()> analysis_interval;
 
-		GENERATE_SUBPATHS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		DESCRIPTOR_BODY(TreeViewAdvancedSettingsDesc, TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 
 		TreeViewAdvancedSettingsDesc();
-
+		
 		float AnalysisInterval() const;
 	};
 
@@ -58,7 +58,7 @@ namespace oly::editor
 		TreeViewAdvancedSettingsDesc advanced;
 		static const detail::Key advanced_key;
 
-		GENERATE_SUBPATHS(TREE_VIEW_SETTINGS_GENERATOR);
+		DESCRIPTOR_BODY(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
 	};
 
 #define PREFERENCES_GENERATOR(M) \
@@ -72,6 +72,6 @@ namespace oly::editor
 		TreeViewSettingsDesc tree_view;
 		static const detail::Key tree_view_key;
 
-		GENERATE_SUBPATHS(PREFERENCES_GENERATOR);
+		DESCRIPTOR_BODY(PreferencesDesc, PREFERENCES_GENERATOR);
 	};
 }

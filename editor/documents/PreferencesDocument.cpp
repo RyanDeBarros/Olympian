@@ -28,7 +28,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		Draw(DataPath(), _scratch);
+		Draw(DataPath(), _desc.scratch);
 
 		if (gui::PropertyGrid::DirtyGrid())
 			MarkDirty();
@@ -72,8 +72,9 @@ namespace oly::editor
 			}
 		}
 
-		Load(TOMLNode(table), _disk);
-		_scratch = _disk;
+		Load(TOMLNode(table), _desc.disk);
+
+		_desc.LoadFromDisk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
@@ -81,37 +82,30 @@ namespace oly::editor
 	void PreferencesDocument::Dump()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		std::filesystem::path path = GetOlyPath().get_absolute();
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << table;
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
 
-	// TODO v9.1 lots of duplicate logic across documents. Define a virtual base class IDescriptor that only the document root descriptor should inherit from. Then, IDocument can just have a virtual accessor for the scratch descriptor, which has VisitPath()/DrawFinalize()
-
-	void* PreferencesDocument::VisitPath(DataPath path, std::type_index type)
+	IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor()
 	{
-		return _scratch.VisitPath(path, type);
-	}
-
-	bool PreferencesDocument::DrawFinalizeImpl()
-	{
-		return _scratch.DrawFinalize(DataPath());
+		return _desc;
 	}
 
 	void PreferencesDocument::ApplyEditorPreferences()
 	{
-		Editor::GetPreferences() = _scratch;
+		Editor::GetPreferences() = _desc.scratch;
 		ActiveDescChanged();
 	}
 
 	void PreferencesDocument::RevertEditorPreferences()
 	{
-		Editor::GetPreferences() = _disk;
+		Editor::GetPreferences() = _desc.disk;
 		ActiveDescChanged();
 	}
 

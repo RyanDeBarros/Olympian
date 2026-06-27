@@ -12,8 +12,7 @@ namespace oly::editor
 {
 	class RasterFontDocument : public IDocument
 	{
-		RasterFontDesc _scratch;
-		RasterFontDesc _disk;
+		DoubleDescriptor<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _glyph_model;
 		Counter<std::string> _codepoint_counter;
@@ -27,8 +26,7 @@ namespace oly::editor
 		void Draw() override;
 		void Load() override;
 		void Dump() override;
-		void* VisitPath(DataPath path, std::type_index type) override;
-		bool DrawFinalizeImpl() override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
 		void Draw(DataPath path, RasterFontDesc& desc);

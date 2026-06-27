@@ -34,9 +34,14 @@ namespace oly::editor
 		}
 	}
 
+	void* IDocument::VisitPath(DataPath path, std::type_index type)
+	{
+		return GetDoubleDescriptor().VisitPath(path, type);
+	}
+
 	void IDocument::DrawFinalize()
 	{
-		if (DrawFinalizeImpl())
+		if (GetDoubleDescriptor().DrawFinalize())
 			MarkDirty();
 	}
 
@@ -63,6 +68,11 @@ namespace oly::editor
 	bool IDocument::IsDirty() const
 	{
 		return _dirty;
+	}
+
+	void IDocument::QueryDirty()
+	{
+		_dirty = GetDoubleDescriptor().QueryDirty();
 	}
 
 	// TODO v9.1 in undo actions, also store whether the document was dirty before the action. If it was NOT dirty, in Backward(), do a query on the document to check if the inverse action truly restored to a clean state, in which case we can do a QoL MarkClean().
