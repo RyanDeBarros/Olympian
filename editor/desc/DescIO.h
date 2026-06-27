@@ -18,19 +18,43 @@ namespace oly::editor
 {
 	struct DescIO
 	{
-		template<typename T, typename... Args>
-		static void ValueInputData(const char* label, T& data, Args&&... args)
+		template<typename T>
+		struct ValueInputData
 		{
-			gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
-		}
+			template<typename... Args>
+			void operator()(const char* label, T& data, Args&&... args) const
+			{
+				gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
+			}
+		};
 
-	private:
+		template<typename T>
+		struct ValueInputData<OptionalPrimitive<T>>
+		{
+			template<typename... Args>
+			void operator()(const char* label, OptionalPrimitive<T>& data, Args&&... args) const
+			{
+				gui::PropertyGrid::Value::AddComponent(comp::InputData<bool>("##", data.has_value));
+
+				gui::WidgetComponent c;
+				c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
+					gui::IDScope scope(&data.value);
+					if (auto disabled = DisabledSection(!data.has_value))
+						return gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
+					else
+						return {};
+					};
+
+				gui::PropertyGrid::Value::AddComponent(c);
+			}
+		};
+
 		template<typename T, typename... Args>
 		static void RowInputData(const char* label, T& data, const T& def, Args&&... args)
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			ValueInputData<T>("##", data, std::forward<Args>(args)...);
+			ValueInputData<T>{}("##", data, std::forward<Args>(args)...);
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -48,7 +72,7 @@ namespace oly::editor
 			if (data.buffer != def)
 				gui::PropertyGrid::Reset::Button();
 
-			ValueInputData<T>("##", data.buffer, std::forward<Args>(args)...);
+			ValueInputData<T>{}("##", data.buffer, std::forward<Args>(args)...);
 
 			gui::PropertyGrid::SubmitRow();
 			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -56,7 +80,6 @@ namespace oly::editor
 				data.PublishReset(def);
 		}
 
-	public:
 		template<typename T, typename U = T>
 		static void Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{

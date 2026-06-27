@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 #include <ostream>
 
 namespace oly::editor
@@ -11,12 +10,9 @@ namespace oly::editor
 		bool has_value;
 		T value;
 
-		constexpr std::optional<T> Opt() const
+		constexpr OptionalPrimitive(bool has_value = false, T value = T())
+			: has_value(has_value), value(value)
 		{
-			if (has_value)
-				return value;
-			else
-				return std::nullopt;
 		}
 
 		bool operator==(const OptionalPrimitive<T>&) const = default;
@@ -38,13 +34,13 @@ namespace oly::editor
 	template<typename T>
 	constexpr OptionalPrimitive<T> MakeOpt()
 	{
-		return OptionalPrimitive<T>{.has_value = false };
+		return OptionalPrimitive<T>(false, T());
 	}
 
 	template<typename T>
 	constexpr OptionalPrimitive<T> MakeOpt(T value)
 	{
-		return OptionalPrimitive<T>{.has_value = true, .value = value };
+		return OptionalPrimitive<T>(true, value);
 	}
 
 	using OptionalInt = OptionalPrimitive<int>;

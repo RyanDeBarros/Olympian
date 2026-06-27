@@ -59,6 +59,7 @@ namespace oly::editor
 		return _dirty;
 	}
 
+	// TODO v9.1 in undo actions, also store whether the document was dirty before the action. If it was NOT dirty, in Backward(), do a query on the document to check if the inverse action truly restored to a clean state, in which case we can do a QoL MarkClean().
 	// TODO v9.1 support holding down ctrl+z or ctrl+shift+z to undo/redo multiple actions over time
 
 	void IDocument::Undo()

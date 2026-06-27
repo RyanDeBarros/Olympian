@@ -10,14 +10,14 @@ namespace oly::editor
 	struct EditSession
 	{
 		T& truth;
-		T buffer;
+		T buffer = T();
 
 		bool editing = false;
 		bool seen_this_frame = false;
 		bool published = false;
 
 		EditSession(T& truth)
-			: truth(truth), buffer(truth)
+			: truth(truth)
 		{
 		}
 

@@ -593,22 +593,64 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
-		// TODO v9.1 edit session
+		EditSession<OptionalPrimitive<T>> edit;
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
 
 		OptionalRangeField(OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
-			: def(def), scratch(def), value_key(value_key), enable_key(enable_key), label(label)
+			: def(def), scratch(def), edit(scratch), value_key(value_key), enable_key(enable_key), label(label)
 		{
+		}
+
+		OptionalRangeField(const OptionalRangeField& o)
+			: def(o.def), scratch(o.scratch), edit(scratch), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+		{
+		}
+
+		OptionalRangeField(OptionalRangeField&& o)
+			: def(std::move(o.def)), scratch(std::move(o.scratch)), edit(scratch), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+		{
+		}
+
+		OptionalRangeField& operator=(const OptionalRangeField& o)
+		{
+			if (this != &o)
+			{
+				def = o.def;
+				scratch = o.scratch;
+				value_key = o.value_key;
+				enable_key = o.enable_key;
+				label = o.label;
+			}
+
+			return *this;
+		}
+
+		OptionalRangeField& operator=(OptionalRangeField&& o)
+		{
+			if (this != &o)
+			{
+				def = std::move(o.def);
+				scratch = std::move(o.scratch);
+				value_key = o.value_key;
+				enable_key = o.enable_key;
+				label = o.label;
+			}
+
+			return *this;
 		}
 
 		void Draw(DataPath path)
 		{
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def, Min, Max);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def, Min, Max);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 
 		void Load(TOMLNode node)
@@ -656,23 +698,64 @@ namespace oly::editor
 
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> scratch;
-		// TODO v9.1 edit session
+		EditSession<OptionalPrimitive<T>> edit;
 		T nullopt;
 		detail::Key key;
 		const char* label;
 
 		CompactOptionalRangeField(OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
-			: def(def), scratch(def), nullopt(nullopt), key(key), label(label)
+			: def(def), scratch(def), edit(scratch), nullopt(nullopt), key(key), label(label)
 		{
+		}
+
+		CompactOptionalRangeField(const CompactOptionalRangeField& o)
+			: def(o.def), scratch(o.scratch), edit(scratch), nullopt(o.nullopt), key(o.key), label(o.label)
+		{
+		}
+
+		CompactOptionalRangeField(CompactOptionalRangeField&& o) noexcept
+			: def(std::move(o.def)), scratch(std::move(o.scratch)), edit(scratch), nullopt(o.nullopt), key(o.key), label(o.label)
+		{
+		}
+
+		CompactOptionalRangeField& operator=(const CompactOptionalRangeField& o)
+		{
+			if (this != &o)
+			{
+				def = o.def;
+				scratch = o.scratch;
+				nullopt = o.nullopt;
+				key = o.key;
+				label = o.label;
+			}
+
+			return *this;
+		}
+
+		CompactOptionalRangeField& operator=(CompactOptionalRangeField&& o) noexcept
+		{
+			if (this != &o)
+			{
+				std::move(def) = std::move(o.def);
+				std::move(scratch) = std::move(o.scratch);
+				nullopt = o.nullopt;
+				key = o.key;
+				label = o.label;
+			}
+
+			return *this;
 		}
 
 		void Draw(DataPath path)
 		{
-			scratch.has_value = scratch.value != nullopt;
-			const auto initial = scratch;
-			DescIO::Draw(label, scratch, def, Min, Max);
-			if (initial != scratch)
-				PushFieldSetAction(path, initial, scratch);
+			DescIO::Draw(label, edit, def, Min, Max);
+			CheckUndoAction(path);
+		}
+
+		void CheckUndoAction(DataPath path)
+		{
+			if (edit.ConsumeModified())
+				PushFieldSetAction(path, edit.buffer, scratch);
 		}
 
 		void Load(TOMLNode node)
@@ -680,8 +763,15 @@ namespace oly::editor
 			scratch = def;
 			if (key != NullKey())
 			{
-				Serializer<T>{}.Load(scratch.value, node[detail::encode_key(key)]);
-				scratch.has_value = scratch.value != nullopt;
+				T value = def.value;
+				if (Serializer<T>{}.Load(value, node[detail::encode_key(key)]))
+				{
+					scratch.has_value = value != nullopt;
+					if (scratch.has_value)
+						scratch.value = value;
+				}
+				else
+					scratch.has_value = false;
 			}
 		}
 

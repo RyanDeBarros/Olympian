@@ -88,10 +88,10 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("x1", data.buffer.x1);
-		ValueInputData("x2", data.buffer.x2);
-		ValueInputData("y1", data.buffer.y1);
-		ValueInputData("y2", data.buffer.y2);
+		ValueInputData<float>{}("x1", data.buffer.x1);
+		ValueInputData<float>{}("x2", data.buffer.x2);
+		ValueInputData<float>{}("y1", data.buffer.y1);
+		ValueInputData<float>{}("y2", data.buffer.y2);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -108,10 +108,10 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueInputData("y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData<float>{}("x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData<float>{}("x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData<float>{}("y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueInputData<float>{}("y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -128,9 +128,9 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueInputData("left", data.buffer.left);
-		ValueInputData("right", data.buffer.right);
-		ValueInputData("top", data.buffer.top);
+		ValueInputData<float>{}("left", data.buffer.left);
+		ValueInputData<float>{}("right", data.buffer.right);
+		ValueInputData<float>{}("top", data.buffer.top);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());

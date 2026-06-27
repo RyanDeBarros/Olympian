@@ -120,24 +120,6 @@ namespace oly::editor::gui
 		DrawResult operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
-	template<typename T>
-	struct InputData<OptionalPrimitive<T>>
-	{
-		DrawResult operator()(const char* label, OptionalPrimitive<T>& data, OptionalPrimitive<T> min, OptionalPrimitive<T> max) const
-		{
-			DrawResult result;
-			IDScope scope(&data);
-			result |= gui::InputData<bool>{}("", data.has_value);
-			if (auto disabled = DisabledSection(!data.has_value))
-			{
-				ImGui::SameLine();
-				scope.Push(1);
-				result |= gui::InputData<T>{}(label, data.value, min, max);
-			}
-			return result;
-		}
-	};
-
 	template<>
 	struct InputData<std::string>
 	{
