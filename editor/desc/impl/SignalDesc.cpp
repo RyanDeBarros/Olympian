@@ -134,6 +134,11 @@ namespace oly::editor
 	{
 	}
 
+	std::ostream& operator<<(std::ostream& os, const SignalDesc& desc)
+	{
+		return os << "SignalDesc[id=" << desc.id.value << ", binding=" << desc.binding.value << "]";
+	}
+
 	RouteDesc::RouteDesc() :
 		id("", detail::Key::ID, "ID"),
 		signals({}, detail::Key::Signals, "Signals")

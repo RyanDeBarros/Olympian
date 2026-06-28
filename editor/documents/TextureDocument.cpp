@@ -508,10 +508,12 @@ namespace oly::editor
 		DRAW_FIELD(col_type);
 		const char* col_label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
 		DescIO::Draw(col_label, desc.col_value.value, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
+		// TODO v9.1 undo action col_value
 
 		DRAW_FIELD(row_type);
 		const char* row_label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
 		DescIO::Draw(row_label, desc.row_value.value, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
+		// TODO v9.1 undo action row_value
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}

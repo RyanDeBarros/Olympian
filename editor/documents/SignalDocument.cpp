@@ -212,7 +212,8 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		DRAW_FIELD(binding);
+		auto initial_binding = desc.binding.value;
+		DescIO::Draw(desc.binding.label, desc.binding.value, desc.binding.def);
 
 		switch (desc.binding.value)
 		{
@@ -220,7 +221,12 @@ namespace oly::editor
 		case detail::SignalBindingType::T: \
 		{ \
 			if (!desc.variant.TryGet<T##Desc>()) \
+			{ \
+				SignalDesc initial_desc = desc; \
+				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
+				PushFieldSetAction(path, std::move(initial_desc), desc); \
+			} \
 			break; \
 		}
 

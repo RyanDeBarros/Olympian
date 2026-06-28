@@ -648,7 +648,6 @@ namespace oly::editor
 	{
 		using Super = VectorField<std::string>;
 
-		// TODO v9.1 move to vector<EditSession> to avoid storing the entire list in undo actions
 		EditSession<std::vector<std::string>> edit;
 
 		StringVectorField(std::vector<std::string> def, detail::Key key, const char* label) : Super(def, key, label), edit(value) {}
