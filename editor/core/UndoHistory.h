@@ -3,6 +3,7 @@
 #include "util/FunctionalEvent.h"
 
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace oly::editor
@@ -23,6 +24,7 @@ namespace oly::editor
 		std::vector<std::unique_ptr<UndoAction>> _redo;
 		size_t _redo_stack_size = 0;
 		FunctionalEvent<>::Handle _listener;
+		std::optional<size_t> _clean_marker;
 
 	public:
 		UndoHistory();
@@ -34,6 +36,7 @@ namespace oly::editor
 
 		void Undo();
 		void Redo();
+		void MarkClean();
 
 		void Prune();
 		void Clear();

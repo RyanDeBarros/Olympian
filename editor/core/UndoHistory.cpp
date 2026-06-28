@@ -39,6 +39,10 @@ namespace oly::editor
 
 		_undo.push_back(std::move(action));
 		_redo.clear();
+
+		if (_clean_marker && *_clean_marker >= _undo.size())
+			_clean_marker.reset();
+
 		Prune();
 	}
 
@@ -54,9 +58,22 @@ namespace oly::editor
 			_undo.pop_back();
 
 			if (action->Backward())
+			{
 				_redo.push_back(std::move(action));
+
+				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() + 1 == *_clean_marker))
+					ActiveDocument::Get().QueryDirty();
+			}
 			else
 			{
+				if (_clean_marker)
+				{
+					if (*_clean_marker <= _undo.size())
+						_clean_marker.reset();
+					else
+						_clean_marker = *_clean_marker - (_undo.size() + 1);
+				}
+
 				_undo_stack_size = 0;
 				_undo.clear();
 			}
@@ -77,9 +94,17 @@ namespace oly::editor
 			_redo.pop_back();
 
 			if (action->Forward())
+			{
 				_undo.push_back(std::move(action));
+
+				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() == *_clean_marker + 1))
+					ActiveDocument::Get().QueryDirty();
+			}
 			else
 			{
+				if (_clean_marker && *_clean_marker > _undo.size())
+					_clean_marker.reset();
+
 				_redo_stack_size = 0;
 				_redo.clear();
 			}
@@ -88,8 +113,15 @@ namespace oly::editor
 		}
 	}
 
+	void UndoHistory::MarkClean()
+	{
+		_clean_marker = _undo.size();
+	}
+
 	void UndoHistory::Prune()
 	{
+		const size_t initial_undo_count = _undo.size();
+
 		const size_t count_limit = Editor::GetPreferences().edit.undo_history.CountLimit();
 		if (_redo.size() >= count_limit)
 			PruneUndoCount(0);
@@ -101,6 +133,16 @@ namespace oly::editor
 			PruneUndoSize(0);
 		else
 			PruneUndoSize(size_limit - _redo_stack_size);
+
+		if (_clean_marker)
+		{
+			size_t delta = initial_undo_count - _undo.size();
+
+			if (*_clean_marker >= delta)
+				_clean_marker = *_clean_marker - delta;
+			else
+				_clean_marker.reset();
+		}
 	}
 
 	void UndoHistory::Clear()
@@ -110,6 +152,9 @@ namespace oly::editor
 
 		_redo_stack_size = 0;
 		_redo.clear();
+
+		if (_clean_marker && *_clean_marker > 0)
+			_clean_marker.reset();
 	}
 
 	void UndoHistory::PruneUndoCount(size_t count_limit)

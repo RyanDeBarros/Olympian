@@ -75,6 +75,7 @@ namespace oly::editor
 	void IDocument::MarkClean()
 	{
 		_dirty = false;
+		_undo_history->MarkClean();
 	}
 
 	bool IDocument::IsDirty() const

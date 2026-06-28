@@ -1010,7 +1010,7 @@ namespace oly::editor
 			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count);
 			SetEnum();
 			if (initial != value)
-				PushFieldSyncSetAction(path, initial, value, [this]() { SetFlags(); });
+				PushFieldSetAction(path, initial, value);
 		}
 
 		void SetFlags()
