@@ -124,8 +124,14 @@ namespace oly::editor
 				int index = path.Step().v;
 				if (index >= 0 && index < vector.size())
 				{
-					os << index << ".";
-					vector[index].PrintPath(os, path.Next());
+					path = path.Next();
+					if (path.Empty())
+						os << index;
+					else
+					{
+						os << index << ".";
+						vector[index].PrintPath(os, path);
+					}
 				}
 				else
 					os << "<error>";
@@ -281,8 +287,14 @@ namespace oly::editor
 				auto it = map.find(key);
 				if (it != map.end())
 				{
-					os << key << ".";
-					it->second.PrintPath(os, path.Next());
+					path = path.Next();
+					if (path.Empty())
+						os << key;
+					else
+					{
+						os << key << ".";
+						it->second.PrintPath(os, path);
+					}
 				}
 				else
 					os << "<error>";

@@ -38,6 +38,23 @@ namespace oly::editor
 		}
 	}
 
+	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count)
+	{
+		const auto generator = [data, count](PropertyPage& props) {
+			PropertyRow row;
+			for (size_t i = 0; i < count; ++i)
+				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+
+			props.page.push_back(std::move(row));
+			};
+
+		if (auto subform = Subform(label, generator))
+		{
+			for (size_t i = 0; i < count; ++i)
+				RowInputData(sublabels[i], data[i], def[i]);
+		}
+	}
+
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
 	{
 		Draw(label, data, def, sublabels, nullptr, count);

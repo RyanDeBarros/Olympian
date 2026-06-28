@@ -219,13 +219,18 @@ namespace oly::editor
 		};
 
 		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
-		for (const auto& k : desc.kerning.vector)
-			counter.increment(k.pair.value);
+		for (auto& k : desc.kerning.vector)
+		{
+			k.distance.edit.PreEdit();
+			k.pair.edits[0].PreEdit();
+			k.pair.edits[1].PreEdit();
+			counter.increment({ k.pair.edits[0].buffer, k.pair.edits[1].buffer });
+		}
 
 		for (size_t i = 0; i < desc.kerning.Size(); ++i)
 		{
 			auto& k = desc.kerning[i];
-			if (k.distance.value != k.distance.def || k.pair.value != k.pair.def)
+			if (k.distance.edit.buffer != k.distance.def || k.pair.edits[0].buffer != k.pair.def[0] || k.pair.edits[1].buffer != k.pair.def[1])
 				gui::PropertyGrid::Reset::Button(1 + i);
 		}
 
@@ -233,17 +238,19 @@ namespace oly::editor
 			auto& k = desc.kerning[row.Index()];
 			DrawResult result;
 
+			// TODO v9.1 don't use SameLine() in DrawDynamicList() -> use inner table again.
 			ImGui::SameLine();
-			bool dup_warning = counter.count(k.pair.value) > 1;
+			bool dup_warning = counter.count({ k.pair.edits[0].buffer, k.pair.edits[1].buffer }) > 1;
 			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
-				bool bad_codepoint = !stocdpt(k.pair.value[i]).has_value();
+				bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
 				gui::Outline bad_outline;
 				if (bad_codepoint)
 					dup_warning = false;
 
-				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.value[i]);
+				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
+				k.pair.edits[i].PostEdit(codepoint_result);
 				result |= codepoint_result;
 
 				if (dup_warning && codepoint_result.IsHovered())
@@ -266,19 +273,37 @@ namespace oly::editor
 			ImGui::Text(k.pair.label);
 
 			gui::VerticalSeparator();
-			result |= gui::InputData<int>{}(k.distance.label, k.distance.value);
+			DrawResult distance_result = gui::InputData<int>{}(k.distance.label, k.distance.edit.buffer);
+			k.distance.edit.PostEdit(distance_result);
+			result |= distance_result;
 
 			return result;
 		}, desc.kerning_ui_state);
 
+		auto kerning_path = path / desc.subpaths.kerning;
 		for (size_t i = 0; i < desc.kerning.Size(); ++i)
 		{
+			KerningDesc& k = desc.kerning[i];
+			auto kerning_subpath = kerning_path / desc.kerning.Subpath(i);
 			if (gui::PropertyGrid::Reset::Activated(1 + i))
 			{
-				auto& k = desc.kerning[i];
-				k.distance.value = k.distance.def;
-				k.pair.value = k.pair.def;
+				k.distance.edit.PublishReset(k.distance.def);
+				k.pair.edits[0].PublishReset(k.pair.def[0]);
+				k.pair.edits[1].PublishReset(k.pair.def[1]);
 				MarkDirty();
+			}
+
+			bool publish_action = false;
+			publish_action |= k.distance.edit.ConsumeModified();
+			publish_action |= k.pair.edits[0].ConsumeModified();
+			publish_action |= k.pair.edits[1].ConsumeModified();
+			if (publish_action)
+			{
+				KerningDesc original;
+				original.distance.value = std::move(k.distance.edit.original);
+				original.pair.value[0] = std::move(k.pair.edits[0].original);
+				original.pair.value[1] = std::move(k.pair.edits[1].original);
+				PushFieldSetAction(kerning_subpath, std::move(original), k);
 			}
 		}
 	}

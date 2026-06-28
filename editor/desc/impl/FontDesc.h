@@ -14,12 +14,14 @@ namespace oly::editor
 
 	struct KerningDesc
 	{
-		ArrayField<std::string, 2> pair;
+		StringArrayField<2> pair;
 		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
 
 		DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
 
 		KerningDesc();
+
+		friend std::ostream& operator<<(std::ostream& os, const KerningDesc& desc);
 	};
 
 #define FONT_FACE_PARTIAL_GENERATOR(M) \

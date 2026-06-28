@@ -108,7 +108,7 @@ namespace oly::editor
 				ref = initial_value;
 
 				if constexpr (PrintableValue)
-					internal::LogUndoActionSuccess(true, path, initial_value, final_value);
+					internal::LogUndoActionSuccess(true, path, final_value, initial_value);
 				else
 					internal::LogUndoActionSuccess(true, path);
 
@@ -117,7 +117,7 @@ namespace oly::editor
 			else
 			{
 				if constexpr (PrintableValue)
-					internal::LogUndoActionFail(true, path, initial_value, final_value);
+					internal::LogUndoActionFail(true, path, final_value, initial_value);
 				else
 					internal::LogUndoActionFail(true, path);
 
@@ -131,9 +131,9 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T>
+	template<typename T, bool PrintableValue = true>
 	void PushFieldSetAction(DataPath path, T initial_value, T final_value)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T>>(path, std::move(initial_value), std::move(final_value)));
+		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T, PrintableValue>>(path, std::move(initial_value), std::move(final_value)));
 	}
 }

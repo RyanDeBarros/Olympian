@@ -102,6 +102,7 @@ namespace oly::editor
 
 		static void Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names);
 		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count);
+		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count);
 

@@ -412,6 +412,7 @@ namespace oly::editor
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
 					gui::IDScope scope(&desc.texture.value);
 
+					// TODO v9.1 For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession if it exists.
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
 					if (ImGui::BeginDragDropTarget())
@@ -421,7 +422,7 @@ namespace oly::editor
 							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
 							if (path.is_resource())
 							{
-								desc.texture.value = path.get_resource_shorthand();
+								desc.texture.edit.buffer = path.get_resource_shorthand();
 								result.SetDirty(true);
 								OnActiveTextureChanged(grid);
 							}
@@ -432,11 +433,11 @@ namespace oly::editor
 						ImGui::EndDragDropTarget();
 					}
 
+					desc.texture.edit.PostEdit(result);
 					return result;
 				}));
 
 				gui::PropertyGrid::SubmitRow();
-				desc.texture.edit.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
 					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements.
@@ -444,12 +445,8 @@ namespace oly::editor
 					OnActiveTextureChanged(grid);
 				}
 
-				// TODO v9.1 For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession if it exists.
-				if (desc.texture.edit.ConsumeModified())
-				{
-					desc.texture.CheckUndoAction(path / desc.subpaths.texture);
+				if (desc.texture.CheckUndoAction(path / desc.subpaths.texture)) // TODO v9.1 pass callback function to undo action so as to call OnActiveTextureChanged().
 					OnActiveTextureChanged(grid);
-				}
 			}
 
 			DRAW_FIELD(texture_index);

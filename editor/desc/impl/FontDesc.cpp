@@ -5,15 +5,15 @@
 
 namespace oly::editor
 {
-	const char* KERNING_SUBLABELS[2] = {
-		"##1",
-		"##2",
-	};
-
 	KerningDesc::KerningDesc() :
-		pair({ "", "" }, detail::Key::CodepointPair, "Codepoints", KERNING_SUBLABELS),
+		pair({ "", "" }, detail::Key::CodepointPair, "Codepoints"),
 		distance(0, detail::Key::CodepointDistance, "Distance")
 	{
+	}
+
+	std::ostream& operator<<(std::ostream& os, const KerningDesc& desc)
+	{
+		return os << "KerningDesc[pair=(\"" << desc.pair.value[0] << "\",\"" << desc.pair.value[1] << "\"), distance=" << desc.distance.value << "]";
 	}
 
 	const detail::Key FontFaceDesc::kerning_key = detail::Key::Kerning;

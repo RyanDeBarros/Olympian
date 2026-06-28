@@ -192,7 +192,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, this->value);
+				PushFieldSetAction(path, std::move(edit.original), this->value);
 				return true;
 			}
 			else
@@ -266,15 +266,14 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
-			if (edit.ConsumeModified())
-				CheckUndoAction(path);
+			CheckUndoAction(path);
 		}
 
 		bool CheckUndoAction(DataPath path)
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, std::move(edit.buffer), value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -332,7 +331,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -388,7 +387,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -444,7 +443,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -500,7 +499,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -537,14 +536,18 @@ namespace oly::editor
 	using BoolArrayField = ArrayField<bool, N>;
 
 	template<typename T, size_t N>
-	struct AnonArrayField : public PrimitiveField<std::array<T, N>, AnonArrayField<T, N>>
+	struct SessionArrayField : public PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>
 	{
-		using Super = PrimitiveField<std::array<T, N>, AnonArrayField<T, N>>;
+		using Super = PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>;
 
+		const char** sublabels = nullptr;
 		std::array<EditSession<T>, N> edits;
 
-		AnonArrayField(std::array<T, N> def, detail::Key key, const char* label)
+		SessionArrayField(std::array<T, N> def, detail::Key key, const char* label)
 			: Super(def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})) {}
+
+		SessionArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: Super(def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})), sublabels(sublabels) {}
 
 	private:
 		template<size_t... Is>
@@ -554,17 +557,17 @@ namespace oly::editor
 		}
 
 	public:
-		AnonArrayField(const AnonArrayField& o)
+		SessionArrayField(const SessionArrayField& o)
 			: Super(o), edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
 		{
 		}
 
-		AnonArrayField(AnonArrayField&& o) noexcept
+		SessionArrayField(SessionArrayField&& o) noexcept
 			: Super(std::move(o)), edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
 		{
 		}
 
-		AnonArrayField& operator=(const AnonArrayField& o)
+		SessionArrayField& operator=(const SessionArrayField& o)
 		{
 			if (this != &o)
 				Super::operator=(o);
@@ -572,7 +575,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		AnonArrayField& operator=(AnonArrayField&& o) noexcept
+		SessionArrayField& operator=(SessionArrayField&& o) noexcept
 		{
 			if (this != &o)
 				Super::operator=(std::move(o));
@@ -582,7 +585,11 @@ namespace oly::editor
 
 		void Draw(DataPath path)
 		{
-			DescIO::Draw(this->label, edits.data(), this->def.data(), N);
+			if (sublabels)
+				DescIO::Draw(this->label, edits.data(), this->def.data(), sublabels, N);
+			else
+				DescIO::Draw(this->label, edits.data(), this->def.data(), N);
+
 			CheckUndoAction(path);
 		}
 
@@ -594,7 +601,7 @@ namespace oly::editor
 				if (edits[i].ConsumeModified())
 				{
 					modified = true;
-					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].buffer), this->value[i]);
+					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].original), this->value[i]);
 				}
 			}
 			return modified;
@@ -627,7 +634,7 @@ namespace oly::editor
 	};
 
 	template<size_t N>
-	using StringArrayField = AnonArrayField<std::string, N>;
+	using StringArrayField = SessionArrayField<std::string, N>;
 
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>, VectorField<T>>
@@ -784,7 +791,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else
@@ -905,7 +912,7 @@ namespace oly::editor
 		{
 			if (edit.ConsumeModified())
 			{
-				PushFieldSetAction(path, edit.buffer, value);
+				PushFieldSetAction(path, std::move(edit.original), value);
 				return true;
 			}
 			else

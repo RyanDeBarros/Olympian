@@ -11,6 +11,7 @@ namespace oly::editor
 	{
 		T& truth;
 		T buffer = T();
+		T original = T();
 
 		bool editing = false;
 		bool seen_this_frame = false;
@@ -24,7 +25,10 @@ namespace oly::editor
 		void PreEdit()
 		{
 			if (!editing)
+			{
 				buffer = truth;
+				original = buffer;
+			}
 
 			seen_this_frame = true;
 			published = false;
@@ -35,7 +39,7 @@ namespace oly::editor
 			if (result.IsDeactivatedAfterEdit())
 			{
 				editing = false;
-				std::swap(truth, buffer);
+				truth = buffer;
 				published = true;
 			}
 
@@ -48,7 +52,7 @@ namespace oly::editor
 			if (!seen_this_frame && editing)
 			{
 				editing = false;
-				std::swap(truth, buffer);
+				truth = buffer;
 				published = true;
 			}
 
@@ -57,7 +61,7 @@ namespace oly::editor
 
 		bool Modified() const
 		{
-			return published && buffer != truth;
+			return published && buffer != original;
 		}
 
 		bool ConsumeModified()
