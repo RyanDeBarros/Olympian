@@ -422,9 +422,8 @@ namespace oly::editor
 							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
 							if (path.is_resource())
 							{
-								desc.texture.edit.buffer = path.get_resource_shorthand();
+								desc.texture.edit.PublishReset(path.get_resource_shorthand());
 								result.SetDirty(true);
-								OnActiveTextureChanged(grid);
 							}
 							else
 								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
@@ -440,19 +439,14 @@ namespace oly::editor
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
-					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements.
+					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements. Same goes for dynamic lists
 					desc.texture.edit.PublishReset(desc.texture.def);
-					OnActiveTextureChanged(grid);
 				}
 
-				if (desc.texture.CheckUndoAction(path / desc.subpaths.texture)) // TODO v9.1 pass callback function to undo action so as to call OnActiveTextureChanged().
-					OnActiveTextureChanged(grid);
+				desc.texture.CheckUndoAction(path / desc.subpaths.texture);
 			}
 
 			DRAW_FIELD(texture_index);
-			if (gui::PropertyGrid::DirtyRow())
-				OnActiveTextureChanged(grid);
-
 			DRAW_FIELD(uvs);
 			DRAW_FIELD(reflection);
 			DRAW_FIELD(rotation);
@@ -522,21 +516,18 @@ namespace oly::editor
 		return DataPath() / _desc.scratch.subpaths.assignments / _desc.scratch.assignments.subpaths.map / _desc.scratch.assignments.map.Subpath(config);
 	}
 
-	void TilesetDocument::OnActiveTextureChanged(const detail::TileConfigGrid grid)
-	{
-		GetActiveTexture(grid).stale = true;
-	}
-
 	void TilesetDocument::UpdateActiveTextures()
 	{
 		for (auto& [config, active] : _textures)
 		{
-			if (!active.stale)
+			auto& desc = GetAssignment(config);
+			if (active.current_texture_index == desc.texture_index.value && active.current_texture == desc.texture.value)
 				continue;
 
-			active.stale = false;
+			active.current_texture_index = desc.texture_index.value;
+			active.current_texture = desc.texture.value;
+
 			active.error = TextureError::None;
-			auto& desc = GetAssignment(config);
 			if (desc.texture.value.empty())
 				active.texture = {};
 			else

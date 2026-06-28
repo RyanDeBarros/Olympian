@@ -140,7 +140,8 @@ namespace oly::editor
 		{
 			Texture texture;
 			TextureError error = TextureError::None;
-			bool stale = true;
+			std::string current_texture = "";
+			unsigned int current_texture_index = 0;
 		};
 
 		std::unordered_map<detail::TileConfig, ActiveTexture> _textures;
@@ -173,7 +174,6 @@ namespace oly::editor
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
 		DataPathSource GetAssignmentPath(const detail::TileConfigGrid grid);
 		DataPathSource GetAssignmentPath(const detail::TileConfig config);
-		void OnActiveTextureChanged(const detail::TileConfigGrid grid);
 		void UpdateActiveTextures();
 
 		static bool TextureErrorIsWarning(TilesetDocument::TextureError error);
