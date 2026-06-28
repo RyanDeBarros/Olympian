@@ -46,20 +46,22 @@
 * Separation of Tester project into separate repo
 * Texture streaming
 * Shader embedding
-* Multithreading
-
-## v14
-* Networking
-
-## v15
-* Graphics API expansion/separation
+* Thread safety + multi-threading
 
 # Misc
 
 * Check `TODO LATER` for optimization/debt tasks.
 * Check `TODO DEBT` for tech debt / maintenance tasks.
 
-# Tech debt
+## Later
+
+* Build tool that converts some assets to a binary format when copying assets to the output folder. This would be indicated by a meta field in the asset (editable by editor in advanced settings), and would be used to shrink very large text files into more efficient binary files. Would need to adapt any asset loaders that support it in meta to have a text-based loader and a binary loader.
+* Network communication - online/local multiplayer.
+* Graphics API expansion/separation
+	* GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
+	* Separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
+
+## Tech debt
 
 * Add more support methods to classes to avoid chained access operators (e.g. `a.b.c->d.e()` shortened to `a.f()`)
 * Move non-template inline methods to CPP files

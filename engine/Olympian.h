@@ -73,7 +73,5 @@ namespace oly
 	// TODO v12 AI: Navigation, Blackboard Trees, etc.
 	// TODO v12 Lighting engine
 	// TODO v12 UI widgets
-	// TODO v13 thread safety + multi-threading.
-	// TODO v14 network communication - online/local multiplayer.
 	// TODO v10 change license to the same as used in Lexico
 }
