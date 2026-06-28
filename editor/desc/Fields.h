@@ -266,7 +266,8 @@ namespace oly::editor
 		void Draw(DataPath path)
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			if (edit.ConsumeModified())
+				CheckUndoAction(path);
 		}
 
 		bool CheckUndoAction(DataPath path)

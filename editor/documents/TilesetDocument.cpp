@@ -398,22 +398,21 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
+			auto path = GetAssignmentPath(grid);
+
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
 			if (auto scope = gui::IDScope(&desc.texture))
 			{
 				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
-				if (desc.texture.value != desc.texture.def)
+				desc.texture.edit.PreEdit();
+				if (desc.texture.edit.buffer != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
 					gui::IDScope scope(&desc.texture.value);
-					DrawResult result;
 
-					result |= gui::InputData<std::string>{}("", desc.texture.value);
-
-					if (ImGui::IsItemDeactivatedAfterEdit()) // TODO v9.1 this doesn't trigger when closing window or switching tabs, etc. For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession.
-						OnActiveTextureChanged(grid);
+					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
 					if (ImGui::BeginDragDropTarget())
 					{
@@ -437,15 +436,22 @@ namespace oly::editor
 				}));
 
 				gui::PropertyGrid::SubmitRow();
+				desc.texture.edit.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 				if (gui::PropertyGrid::Reset::AnyActivated())
 				{
 					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements.
-					desc.texture.value = desc.texture.def;
+					desc.texture.edit.PublishReset(desc.texture.def);
+					OnActiveTextureChanged(grid);
+				}
+
+				// TODO v9.1 For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession if it exists.
+				if (desc.texture.edit.ConsumeModified())
+				{
+					desc.texture.CheckUndoAction(path / desc.subpaths.texture);
 					OnActiveTextureChanged(grid);
 				}
 			}
 
-			auto path = GetAssignmentPath(grid);
 			DRAW_FIELD(texture_index);
 			if (gui::PropertyGrid::DirtyRow())
 				OnActiveTextureChanged(grid);
