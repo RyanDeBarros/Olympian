@@ -412,7 +412,6 @@ namespace oly::editor
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
 					gui::IDScope scope(&desc.texture.value);
 
-					// TODO v9.1 For every manual gui::InputData outside of DescIO, make sure to use the field's EditSession if it exists.
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
 					if (ImGui::BeginDragDropTarget())

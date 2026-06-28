@@ -2,11 +2,28 @@
 
 #include <array>
 #include <ostream>
+#include <vector>
 
 #include <glm/glm.hpp>
 
 namespace oly::editor
 {
+	template<typename T>
+	std::ostream& operator<<(std::ostream& os, const std::vector<T>& vector)
+	{
+		os << "Vector[ ";
+
+		for (auto it = vector.begin(); it != vector.end(); ++it)
+		{
+			os << *it;
+
+			if (std::next(it) != vector.end())
+				os << ", ";
+		}
+
+		return os << " ]";
+	}
+
 	template<typename T, size_t N>
 	std::ostream& operator<<(std::ostream& os, const std::array<T, N>& array)
 	{

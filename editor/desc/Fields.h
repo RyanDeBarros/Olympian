@@ -644,7 +644,52 @@ namespace oly::editor
 		using PrimitiveField<std::vector<T>, VectorField<T>>::PrimitiveField;
 	};
 
-	using StringVectorField = VectorField<std::string>;
+	struct StringVectorField : public VectorField<std::string>
+	{
+		using Super = VectorField<std::string>;
+
+		// TODO v9.1 move to vector<EditSession> to avoid storing the entire list in undo actions
+		EditSession<std::vector<std::string>> edit;
+
+		StringVectorField(std::vector<std::string> def, detail::Key key, const char* label) : Super(def, key, label), edit(value) {}
+
+		StringVectorField(const StringVectorField& o)
+			: Super(o), edit(value)
+		{
+		}
+
+		StringVectorField(StringVectorField&& o) noexcept
+			: Super(std::move(o)), edit(value)
+		{
+		}
+
+		StringVectorField& operator=(const StringVectorField& o)
+		{
+			if (this != &o)
+				Super::operator=(o);
+
+			return *this;
+		}
+
+		StringVectorField& operator=(StringVectorField&& o) noexcept
+		{
+			if (this != &o)
+				Super::operator=(std::move(o));
+
+			return *this;
+		}
+
+		bool CheckUndoAction(DataPath path)
+		{
+			if (edit.ConsumeModified())
+			{
+				PushFieldSetAction(path, std::move(edit.original), this->value);
+				return true;
+			}
+			else
+				return false;
+		}
+	};
 
 	template<typename E>
 	struct DisjointEnumField

@@ -251,10 +251,11 @@ namespace oly::editor
 			dup_outline.Draw(Color::Error);
 		}
 
-		DescIO::DrawDynamicListRevertButtons(desc.signals.value, desc.signals.def);
+		desc.signals.edit.PreEdit();
+		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(desc.signals.label, desc.signals.value, desc.signals.def, [&](gui::DynamicRow& row) {
-			std::string& element = desc.signals.value[row.Index()];
+		DescIO::DrawDynamicList(desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) {
+			std::string& element = desc.signals.edit.buffer[row.Index()];
 
 			DrawResult result;
 
@@ -282,7 +283,9 @@ namespace oly::editor
 			return result;
 		}, desc.signals.ui_state);
 
-		DescIO::CheckDynamicListRevertButtons(desc.signals.value, desc.signals.def);
+		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
+
+		desc.signals.CheckUndoAction(path / desc.subpaths.signals);
 	}
 
 	void SignalDocument::Draw(DataPath path, KeyDesc& desc)

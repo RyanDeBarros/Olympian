@@ -153,6 +153,48 @@ namespace oly::editor
 		}
 
 		template<typename T>
+		static DrawResult ValueDrawDynamicList(EditSession<std::vector<T>>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		{
+			DrawResult result;
+
+			ui_state.DrawListHeader(data.buffer.size());
+
+			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+				auto row_result = draw_fn(row);
+				result |= row_result;
+				if (row_result.IsLeftClicked() || row_result.IsFocused())
+					row.OnSelect();
+				});
+
+			result |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+				switch (op.type)
+				{
+				case gui::RowOperation::Type::Delete:
+					data.buffer.erase(data.buffer.begin() + op.index);
+					break;
+
+				case gui::RowOperation::Type::Move:
+				{
+					auto moved(std::move(data.buffer[op.src]));
+					data.buffer.erase(data.buffer.begin() + op.src);
+					data.buffer.insert(data.buffer.begin() + op.index, std::move(moved));
+					break;
+				}
+
+				case gui::RowOperation::Type::Resize:
+					data.buffer.resize(op.index);
+					break;
+
+				case gui::RowOperation::Type::PushBack:
+					data.buffer.push_back(T{});
+					break;
+				}
+			});
+
+			return result;
+		}
+
+		template<typename T>
 		static void DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
@@ -163,6 +205,22 @@ namespace oly::editor
 			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
+			if (gui::PropertyGrid::Reset::Activated(0))
+				ui_state.DeferResize(def.size());
+		}
+
+		template<typename T>
+		static void DrawDynamicList(const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		{
+			gui::IDScope scope(&data);
+			gui::PropertyGrid::Key::SetLabel(label);
+			if (data.buffer.size() != def.size())
+				gui::PropertyGrid::Reset::Button(0);
+
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }));
+
+			gui::PropertyGrid::SubmitRow();
+			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
 			if (gui::PropertyGrid::Reset::Activated(0))
 				ui_state.DeferResize(def.size());
 		}
@@ -186,6 +244,24 @@ namespace oly::editor
 		}
 
 		template<typename T>
+		static void DrawDynamicListRevertButtons(const EditSession<std::vector<T>>& data, const std::vector<T>& def)
+		{
+			for (size_t i = 0; i < data.buffer.size(); ++i)
+			{
+				if (i < def.size())
+				{
+					if (data.buffer[i] != def[i])
+						gui::PropertyGrid::Reset::Button(1 + i);
+				}
+				else
+				{
+					if (data.buffer[i] != T{})
+						gui::PropertyGrid::Reset::Button(1 + i);
+				}
+			}
+		}
+
+		template<typename T>
 		static void CheckDynamicListRevertButtons(std::vector<T>& data, const std::vector<T>& def)
 		{
 			for (size_t i = 0; i < data.size(); ++i)
@@ -196,6 +272,21 @@ namespace oly::editor
 						data[i] = def[i];
 					else
 						data[i] = T{};
+				}
+			}
+		}
+
+		template<typename T>
+		static void CheckDynamicListRevertButtons(EditSession<std::vector<T>>& data, const std::vector<T>& def)
+		{
+			for (size_t i = 0; i < data.buffer.size(); ++i)
+			{
+				if (gui::PropertyGrid::Reset::Activated(1 + i))
+				{
+					T def_value = i < def.size() ? def[i] : T{};
+					data.buffer[i] = def_value;
+					data.truth[i] = def_value;
+					data.published = true;
 				}
 			}
 		}
