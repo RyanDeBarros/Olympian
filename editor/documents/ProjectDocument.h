@@ -3,6 +3,7 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/ProjectDesc.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -22,8 +23,8 @@ namespace oly::editor
 		void InitImpl() override;
 		void Draw() override;
 		void DrawMenuBar() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
 		const IDoubleDescriptor& GetDoubleDescriptor() const override;
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 

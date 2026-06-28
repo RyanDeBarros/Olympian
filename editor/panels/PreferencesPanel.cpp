@@ -53,7 +53,7 @@ namespace oly::editor
 		if (window.IsVisible())
 		{
 			if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-				_doc.Dump();
+				_doc.DumpAsset();
 
 			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal))
 				_doc.Undo();
@@ -95,10 +95,10 @@ namespace oly::editor
 		auto result = gui::DrawUnsavedChangesModal(popup, description);
 
 		if (result == gui::UnsavedChangesModalResult::SaveChanges)
-			_doc.Dump();
+			_doc.DumpAsset();
 
 		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
-			_doc.Load();
+			_doc.LoadAsset();
 
 		unsaved_changes_modal = result == gui::UnsavedChangesModalResult::None;
 		return result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges;

@@ -8,12 +8,14 @@
 
 #include "gui/properties/PropertyGrid.h"
 
-#include "desc/DoubleDescriptor.h"
+#include "desc/DataPath.h"
 
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
 {
+	struct IDoubleDescriptor;
+
 	class IDocument
 	{
 	protected:
@@ -22,6 +24,7 @@ namespace oly::editor
 
 	private:
 		bool _dirty = false;
+		bool _initialized = false;
 
 	public:
 		IDocument(detail::ResourcePath&& oly_path);
@@ -31,8 +34,11 @@ namespace oly::editor
 		virtual void InitImpl() = 0;
 		virtual void Draw() = 0;
 		virtual void DrawMenuBar();
-		virtual void Load() = 0;
-		virtual void Dump() = 0;
+
+		void LoadAsset();
+		virtual void LoadImpl() = 0;
+		void DumpAsset();
+		virtual void DumpImpl() = 0;
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 

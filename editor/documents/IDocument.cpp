@@ -1,5 +1,7 @@
 #include "IDocument.h"
 
+#include "desc/DoubleDescriptor.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -13,6 +15,7 @@ namespace oly::editor
 	{
 		_undo_history.emplace();
 		InitImpl();
+		_initialized = true;
 	}
 
 	void IDocument::DrawMenuBar()
@@ -22,16 +25,36 @@ namespace oly::editor
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
+					DumpAsset();
 
 				if (ImGui::MenuItem("Discard Changes"))
-					Load();
+					LoadAsset();
 
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
 		}
+	}
+
+	void IDocument::LoadAsset()
+	{
+		auto original = GetDoubleDescriptor().CopyScratch();
+
+		LoadImpl();
+
+		if (_initialized)
+		{
+			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
+				_undo_history->Push(std::move(action));
+			else
+				_undo_history->Clear();
+		}
+	}
+
+	void IDocument::DumpAsset()
+	{
+		DumpImpl();
 	}
 
 	void* IDocument::PathGet(DataPath path, std::type_index type)

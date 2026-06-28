@@ -25,7 +25,7 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void SignalDocument::Draw()
@@ -56,7 +56,7 @@ namespace oly::editor
 			_listen_mode = ListenMode::None;
 	}
 
-	void SignalDocument::Load()
+	void SignalDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -91,7 +91,7 @@ namespace oly::editor
 		_route_slots.Init(*_desc.scratch.routes.ListAdapter());
 	}
 
-	void SignalDocument::Dump()
+	void SignalDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

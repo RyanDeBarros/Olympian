@@ -259,10 +259,10 @@ namespace oly::editor
 		const auto result = gui::DrawUnsavedChangesModal(popup, description);
 
 		if (result == gui::UnsavedChangesModalResult::SaveChanges)
-			doc->Dump();
+			doc->DumpAsset();
 
 		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
-			doc->Load();
+			doc->LoadAsset();
 
 		return result;
 	}
@@ -365,13 +365,13 @@ namespace oly::editor
 	void AssetEditorPanel::SaveSelectedTab() const
 	{
 		if (_selected_tab)
-			_selected_tab->Dump();
+			_selected_tab->DumpAsset();
 	}
 
 	void AssetEditorPanel::SaveAllTabs() const
 	{
 		for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
-			DocumentManager::Instance().GetDocument(i).Dump();
+			DocumentManager::Instance().GetDocument(i).DumpAsset();
 	}
 
 	void AssetEditorPanel::SelectedTabUndo() const

@@ -34,7 +34,8 @@ namespace oly::editor
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
 		_slots.policy = gui::ListPolicy::MinimumOne;
-		Load();
+
+		LoadAsset();
 	}
 
 	void TextureDocument::Draw()
@@ -55,7 +56,7 @@ namespace oly::editor
 		}
 	}
 
-	void TextureDocument::Load()
+	void TextureDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -96,7 +97,7 @@ namespace oly::editor
 		_stale_preview_texture = true;
 	}
 
-	void TextureDocument::Dump()
+	void TextureDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

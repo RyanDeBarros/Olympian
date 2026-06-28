@@ -1,6 +1,9 @@
 #pragma once
 
 #include "desc/DataPath.h"
+#include "desc/UndoActions.h"
+
+#include "util/TypeErasedBox.h"
 
 namespace oly::editor
 {
@@ -11,6 +14,8 @@ namespace oly::editor
 		virtual void PrintPath(std::ostream& os, DataPath path) const = 0;
 		virtual bool DrawFinalize() = 0;
 		virtual bool QueryDirty() = 0;
+		virtual TypeErasedBox CopyScratch() const = 0;
+		virtual std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const = 0;
 	};
 
 	template<typename Descriptor>
@@ -18,6 +23,9 @@ namespace oly::editor
 	{
 		Descriptor scratch;
 		Descriptor disk;
+
+		DoubleDescriptor() = default;
+		DoubleDescriptor(Descriptor scratch, Descriptor disk) : scratch(std::move(scratch)), disk(std::move(disk)) {}
 
 		void* PathGet(DataPath path, std::type_index type) override
 		{
@@ -37,6 +45,19 @@ namespace oly::editor
 		bool QueryDirty() override
 		{
 			return scratch.QueryDirty(disk);
+		}
+
+		TypeErasedBox CopyScratch() const
+		{
+			return TypeErasedBox(scratch);
+		}
+
+		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
+		{
+			if (auto og = original.consume_unique<Descriptor>())
+				return std::make_unique<FieldSetAction<Descriptor, false>>(DataPath(), std::move(*og), scratch);
+			else
+				return nullptr;
 		}
 
 		void WriteToDisk()

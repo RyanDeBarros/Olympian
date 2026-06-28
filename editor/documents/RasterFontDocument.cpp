@@ -25,7 +25,7 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void RasterFontDocument::Draw()
@@ -36,7 +36,7 @@ namespace oly::editor
 		Draw(DataPath(), _desc.scratch);
 	}
 
-	void RasterFontDocument::Load()
+	void RasterFontDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -75,7 +75,7 @@ namespace oly::editor
 		_glyph_model.Init(*ListAdapter());
 	}
 
-	void RasterFontDocument::Dump()
+	void RasterFontDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

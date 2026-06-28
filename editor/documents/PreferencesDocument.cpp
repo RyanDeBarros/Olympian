@@ -21,7 +21,7 @@ namespace oly::editor
 
 	void PreferencesDocument::InitImpl()
 	{
-		Load();
+		LoadAsset();
 	}
 
 	void PreferencesDocument::Draw()
@@ -44,10 +44,10 @@ namespace oly::editor
 					ApplyEditorPreferences();
 
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
+					DumpAsset();
 
 				if (ImGui::MenuItem("Discard Changes"))
-					Load();
+					LoadAsset();
 
 				ImGui::EndMenu();
 			}
@@ -56,7 +56,7 @@ namespace oly::editor
 		}
 	}
 
-	void PreferencesDocument::Load()
+	void PreferencesDocument::LoadImpl()
 	{
 		std::filesystem::path path = GetOlyPath().get_absolute();
 		toml::table table;
@@ -79,7 +79,7 @@ namespace oly::editor
 		MarkClean();
 	}
 
-	void PreferencesDocument::Dump()
+	void PreferencesDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

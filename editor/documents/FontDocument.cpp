@@ -35,7 +35,7 @@ namespace oly::editor
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
 		_display_text = "Abc 123";
-		Load();
+		LoadAsset();
 	}
 
 	void FontDocument::Draw()
@@ -62,7 +62,7 @@ namespace oly::editor
 		}
 	}
 
-	void FontDocument::Load()
+	void FontDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -97,7 +97,7 @@ namespace oly::editor
 		_atlas_slots.Init(*_desc.scratch.font_atlases.ListAdapter());
 	}
 
-	void FontDocument::Dump()
+	void FontDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

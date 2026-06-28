@@ -147,7 +147,8 @@ namespace oly::editor
 
 		_individual_editor = {};
 		_group_editors = {};
-		Load();
+
+		LoadAsset();
 	}
 
 	void TilesetDocument::Draw()
@@ -180,7 +181,7 @@ namespace oly::editor
 		}
 	}
 
-	void TilesetDocument::Load()
+	void TilesetDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -213,7 +214,7 @@ namespace oly::editor
 		_desc.LoadFromDisk();
 	}
 
-	void TilesetDocument::Dump()
+	void TilesetDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

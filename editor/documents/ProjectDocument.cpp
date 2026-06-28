@@ -24,7 +24,7 @@ namespace oly::editor
 
 	void ProjectDocument::InitImpl()
 	{
-		Load();
+		LoadAsset();
 	}
 
 	void ProjectDocument::Draw()
@@ -42,10 +42,10 @@ namespace oly::editor
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
+					DumpAsset();
 
 				if (ImGui::MenuItem("Discard Changes"))
-					Load();
+					LoadAsset();
 
 				ImGui::EndMenu();
 			}
@@ -56,7 +56,7 @@ namespace oly::editor
 		}
 	}
 
-	void ProjectDocument::Load()
+	void ProjectDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -88,7 +88,7 @@ namespace oly::editor
 		_desc.LoadFromDisk();
 	}
 
-	void ProjectDocument::Dump()
+	void ProjectDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);

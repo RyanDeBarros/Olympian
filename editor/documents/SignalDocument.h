@@ -3,6 +3,7 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/SignalDesc.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "core/InputListener.h"
 
@@ -28,8 +29,8 @@ namespace oly::editor
 
 		void InitImpl() override;
 		void Draw() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
 		const IDoubleDescriptor& GetDoubleDescriptor() const override;
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 

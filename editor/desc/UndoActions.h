@@ -10,6 +10,8 @@
 
 #include "util/CommonOStream.h"
 
+#include <sstream>
+
 namespace oly::editor
 {
 	namespace internal
@@ -25,6 +27,17 @@ namespace oly::editor
 			ss << " action success: [path=" << ActiveDocument::Get().PathString(path) << ", from=" << initial_value << ", to=" << final_value << "]";
 			Logger::Instance().Log(LogLevel::Success, ss.str());
 		}
+		
+		inline void LogUndoActionSuccess(bool undo, DataPath path)
+		{
+			std::stringstream ss;
+			if (undo)
+				ss << "Undo";
+			else
+				ss << "Redo";
+			ss << " action success: [path=" << ActiveDocument::Get().PathString(path) << "]";
+			Logger::Instance().Log(LogLevel::Success, ss.str());
+		}
 
 		template<typename T>
 		void LogUndoActionFail(bool undo, DataPath path, const T& initial_value, const T& final_value)
@@ -37,11 +50,20 @@ namespace oly::editor
 			ss << " action failed: [path=" << ActiveDocument::Get().PathString(path) << ", from=" << initial_value << ", to=" << final_value << "]";
 			Logger::Instance().Log(LogLevel::Warning, ss.str());
 		}
+
+		inline void LogUndoActionFail(bool undo, DataPath path)
+		{
+			std::stringstream ss;
+			if (undo)
+				ss << "Undo";
+			else
+				ss << "Redo";
+			ss << " action failed: [path=" << ActiveDocument::Get().PathString(path) << "]";
+			Logger::Instance().Log(LogLevel::Warning, ss.str());
+		}
 	}
 
-	// TODO v9.1 undo action for reload/revert asset if it changed anything.
-
-	template<typename T>
+	template<typename T, bool PrintableValue = true>
 	struct FieldSetAction : public UndoAction
 	{
 		DataPathSource path;
@@ -60,12 +82,20 @@ namespace oly::editor
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = final_value;
 
-				internal::LogUndoActionSuccess(false, path, initial_value, final_value);
+				if constexpr (PrintableValue)
+					internal::LogUndoActionSuccess(false, path, initial_value, final_value);
+				else
+					internal::LogUndoActionSuccess(false, path);
+
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(false, path, initial_value, final_value);
+				if constexpr (PrintableValue)
+					internal::LogUndoActionFail(false, path, initial_value, final_value);
+				else
+					internal::LogUndoActionFail(false, path);
+
 				return false;
 			}
 		}
@@ -77,12 +107,20 @@ namespace oly::editor
 				T& ref = *reinterpret_cast<T*>(var);
 				ref = initial_value;
 
-				internal::LogUndoActionSuccess(true, path, initial_value, final_value);
+				if constexpr (PrintableValue)
+					internal::LogUndoActionSuccess(true, path, initial_value, final_value);
+				else
+					internal::LogUndoActionSuccess(true, path);
+
 				return true;
 			}
 			else
 			{
-				internal::LogUndoActionFail(true, path, initial_value, final_value);
+				if constexpr (PrintableValue)
+					internal::LogUndoActionFail(true, path, initial_value, final_value);
+				else
+					internal::LogUndoActionFail(true, path);
+
 				return false;
 			}
 		}

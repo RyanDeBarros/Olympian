@@ -24,7 +24,7 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void FontFamilyDocument::Draw()
@@ -42,7 +42,7 @@ namespace oly::editor
 		}
 	}
 
-	void FontFamilyDocument::Load()
+	void FontFamilyDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -75,7 +75,7 @@ namespace oly::editor
 		_desc.LoadFromDisk();
 	}
 
-	void FontFamilyDocument::Dump()
+	void FontFamilyDocument::DumpImpl()
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);
