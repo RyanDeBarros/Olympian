@@ -237,11 +237,6 @@ namespace oly::editor
 		SignalDesc();
 	};
 
-	struct BriefSignalDescPrinter
-	{
-		void operator()(std::ostream& os, const SignalDesc& desc) const;
-	};
-
 #define ROUTE_GENERATOR(M) \
 	M(id) \
 	M(signals)

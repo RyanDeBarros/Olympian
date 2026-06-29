@@ -134,11 +134,6 @@ namespace oly::editor
 	{
 	}
 
-	void BriefSignalDescPrinter::operator()(std::ostream& os, const SignalDesc& desc) const
-	{
-		os << "SignalDesc[id=" << desc.id.value << ", binding=" << desc.binding.value << "]";
-	}
-
 	RouteDesc::RouteDesc() :
 		id("", detail::Key::ID, "ID"),
 		signals({}, detail::Key::Signals, "Signals")

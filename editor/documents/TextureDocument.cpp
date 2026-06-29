@@ -620,10 +620,22 @@ namespace oly::editor
 		_stale_preview_texture = true;
 	}
 
+	struct BriefDescPrinter
+	{
+		void operator()(std::ostream& os, const RasterTextureDesc& desc) const
+		{
+			os << "RasterTextureDesc[...]";
+		}
+
+		void operator()(std::ostream& os, const VectorTextureDesc& desc) const
+		{
+			os << "VectorTextureDesc[...]";
+		}
+	};
+
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
-		// TODO v9.1 printable value
-		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.variant); });
+		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.variant); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)

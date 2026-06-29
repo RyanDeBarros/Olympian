@@ -204,10 +204,17 @@ namespace oly::editor
 		DUMP_FIELDS(GLYPH_GENERATOR);
 	}
 
+	struct BriefGlyphDescPrinter
+	{
+		void operator()(std::ostream& os, const GlyphDesc& desc)
+		{
+			os << "GlyphDesc[codepoint=" << desc.codepoint.value << ", ...]";
+		}
+	};
+
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
-		// TODO v9.1 printable value
-		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.glyphs),
+		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter<BriefGlyphDescPrinter>(DataPath() / _desc.scratch.subpaths.glyphs),
 			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

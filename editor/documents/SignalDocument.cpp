@@ -12,6 +12,19 @@
 
 namespace oly::editor
 {
+	struct BriefDescPrinter
+	{
+		void operator()(std::ostream& os, const SignalDesc& desc) const
+		{
+			os << "SignalDesc[id=" << desc.id.value << ", binding=" << desc.binding.value << ", ...]";
+		}
+
+		void operator()(std::ostream& os, const RouteDesc& desc) const
+		{
+			os << "SignalDesc[id=" << desc.id.value << ", ...]";
+		}
+	};
+
 	const char* SignalDocument::GetVersion()
 	{
 		return "1.0";
@@ -87,10 +100,8 @@ namespace oly::editor
 		}
 
 		_desc.LoadFromDisk();
-		// TODO v9.1 printable value
-		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.signals));
-		// TODO v9.1 printable value
-		_route_slots.Init(*_desc.scratch.routes.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.routes));
+		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.signals));
+		_route_slots.Init(*_desc.scratch.routes.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -116,8 +127,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v9.1 printable value
-			_signal_slots.Update(*desc.ListAdapter<void>(path));
+			_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
 
 			if (auto scope = gui::IDScope("##Signal"))
 			{
@@ -139,8 +149,7 @@ namespace oly::editor
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
-			// TODO v9.1 printable value
-			if (_signal_slots.ConsumeOps(*desc.ListAdapter<void>(path)))
+			if (_signal_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
@@ -151,8 +160,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			// TODO v9.1 printable value
-			_route_slots.Update(*desc.ListAdapter<void>(path));
+			_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
 
 			if (auto scope = gui::IDScope("##Route"))
 			{
@@ -174,8 +182,7 @@ namespace oly::editor
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 
-			// TODO v9.1 printable value
-			if (_route_slots.ConsumeOps(*desc.ListAdapter<void>(path)))
+			if (_route_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();
@@ -235,7 +242,7 @@ namespace oly::editor
 				SignalDesc initial_desc = desc; \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				PushFieldSetAction<SignalDesc, BriefSignalDescPrinter>(path, std::move(initial_desc), desc); \
+				PushFieldSetAction<SignalDesc, BriefDescPrinter>(path, std::move(initial_desc), desc); \
 			} \
 			break; \
 		}

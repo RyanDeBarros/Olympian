@@ -433,9 +433,16 @@ namespace oly::editor
 		DUMP_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 
+	struct BriefDescPrinter
+	{
+		void operator()(std::ostream& os, const FontAtlasDesc& desc) const
+		{
+			os << "FontAtlasDesc[font_size=" << desc.font_size.value << ", ...]";
+		}
+	};
+
 	std::unique_ptr<gui::IListAdapter> FontDocument::FontAtlasListAdapter()
 	{
-		// TODO v9.1 printer
-		return _desc.scratch.font_atlases.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.font_atlases);
+		return _desc.scratch.font_atlases.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.font_atlases);
 	}
 }
