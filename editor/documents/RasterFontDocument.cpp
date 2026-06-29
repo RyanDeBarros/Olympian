@@ -102,6 +102,8 @@ namespace oly::editor
 
 			if (auto subform = Subform("Glyphs"))
 			{
+				_glyph_model.Update(*ListAdapter());
+
 				if (auto scope = gui::IDScope("##Glyph"))
 				{
 					gui::PropertyGrid::Key::SetLabel("Select Glyph");
@@ -204,7 +206,8 @@ namespace oly::editor
 
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
-		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter(),
+		// TODO v9.1 printable value
+		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.glyphs),
 			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

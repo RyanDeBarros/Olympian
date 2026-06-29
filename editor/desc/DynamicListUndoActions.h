@@ -45,7 +45,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", delete@index=" << delete_index;
-			if (PrintableValue)
+			if constexpr (PrintableValue)
 				ss << ", delete@element=" << deleted_element;
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
@@ -68,7 +68,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-insert@index=" << delete_index;
-			if (PrintableValue)
+			if constexpr (PrintableValue)
 				ss << ", re-insert@element=" << deleted_element;
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
@@ -117,7 +117,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", insert@index=" << insert_index;
-			if (PrintableValue)
+			if constexpr (PrintableValue)
 				ss << ", insert@element=" << inserted_element;
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
@@ -141,7 +141,8 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-delete@index=" << insert_index;
-			if (PrintableValue)
+			// TODO v9.1 instead of PrintableValue bool, pass a 'Printer<T>' typename that implements a std::ostream& operator()(std::ostream& os, T&). Default value should be a struct that just calls operator<<, but this allows for customized logging with different reprs of the same class for different contexts. This constexpr check would be for a void-check instead.
+			if constexpr (PrintableValue)
 				ss << ", re-delete@element=" << inserted_element;
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());

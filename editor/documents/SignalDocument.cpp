@@ -87,8 +87,10 @@ namespace oly::editor
 		}
 
 		_desc.LoadFromDisk();
-		_signal_slots.Init(*_desc.scratch.signals.ListAdapter());
-		_route_slots.Init(*_desc.scratch.routes.ListAdapter());
+		// TODO v9.1 printable value
+		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.signals));
+		// TODO v9.1 printable value
+		_route_slots.Init(*_desc.scratch.routes.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -114,6 +116,9 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
+			// TODO v9.1 printable value
+			_signal_slots.Update(*desc.ListAdapter<false>(path));
+
 			if (auto scope = gui::IDScope("##Signal"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Signal");
@@ -134,7 +139,8 @@ namespace oly::editor
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
-			if (_signal_slots.ConsumeOps(*desc.ListAdapter()))
+			// TODO v9.1 printable value
+			if (_signal_slots.ConsumeOps(*desc.ListAdapter<false>(path)))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
@@ -145,6 +151,9 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
+			// TODO v9.1 printable value
+			_route_slots.Update(*desc.ListAdapter<false>(path));
+
 			if (auto scope = gui::IDScope("##Route"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Route");
@@ -165,7 +174,8 @@ namespace oly::editor
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 
-			if (_route_slots.ConsumeOps(*desc.ListAdapter()))
+			// TODO v9.1 printable value
+			if (_route_slots.ConsumeOps(*desc.ListAdapter<false>(path)))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();

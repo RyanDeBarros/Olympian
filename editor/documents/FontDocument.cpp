@@ -94,7 +94,8 @@ namespace oly::editor
 
 		_desc.LoadFromDisk();
 
-		_atlas_slots.Init(*_desc.scratch.font_atlases.ListAdapter());
+		// TODO v9.1 printable value
+		_atlas_slots.Init(*_desc.scratch.font_atlases.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.font_atlases));
 	}
 
 	void FontDocument::DumpImpl()
@@ -149,6 +150,9 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			if (auto form = Form())
 			{
+				// TODO v9.1 printable value
+				_atlas_slots.Update(*_desc.scratch.font_atlases.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.font_atlases)); // TODO v9.1 ListAdapter() method for FontDocument
+
 				if (auto scope = gui::IDScope("##Atlas"))
 				{
 					gui::PropertyGrid::Key::SetLabel("Select Atlas");
@@ -161,7 +165,8 @@ namespace oly::editor
 				if (!_desc.scratch.font_atlases.Empty())
 					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
 
-				if (_atlas_slots.ConsumeOps(*_desc.scratch.font_atlases.ListAdapter()))
+				// TODO v9.1 printable value
+				if (_atlas_slots.ConsumeOps(*_desc.scratch.font_atlases.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.font_atlases)))
 					MarkDirty();
 
 				if (_atlas_slots.active_index.ConsumeModified())

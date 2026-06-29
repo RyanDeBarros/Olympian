@@ -138,7 +138,8 @@ namespace oly::editor
 
 				case gui::RowOperation::Type::Move:
 				{
-					ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
+					if (op.GetSrcIndex() != op.GetDstIndex())
+						ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
 					break;
 				}
 
@@ -187,7 +188,8 @@ namespace oly::editor
 				case gui::RowOperation::Type::Move:
 				{
 					data.CancelEditing();
-					ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
+					if (op.GetSrcIndex() != op.GetDstIndex())
+						ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
 					break;
 				}
 

@@ -98,9 +98,10 @@ namespace oly::editor
 			return vector.end();
 		}
 
-		std::unique_ptr<gui::IListAdapter> ListAdapter()
+		template<bool PrintableValue = true>
+		std::unique_ptr<gui::IListAdapter> ListAdapter(DataPath path)
 		{
-			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
+			return std::make_unique<gui::VectorAdapter<Descriptor, PrintableValue>>(path, vector);
 		}
 
 		void* PathGet(DataPath path, std::type_index type)

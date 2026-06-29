@@ -425,6 +425,8 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
+			_slots.Update(*ListAdapter());
+
 			if (auto scope = gui::IDScope("##Slot"))
 			{
 				gui::PropertyGrid::Key::SetLabel("Select Slot");
@@ -620,7 +622,8 @@ namespace oly::editor
 
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter(); });
+		// TODO v9.1 printable value
+		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.variant); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)
