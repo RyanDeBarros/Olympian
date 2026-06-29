@@ -9,6 +9,7 @@
 #include "desc/DataPath.h"
 
 #include "util/CommonOStream.h"
+#include "util/FixedArray.h"
 
 #include <sstream>
 
@@ -238,13 +239,11 @@ namespace oly::editor
 		DataPathSource list_path;
 		size_t initial_size;
 		size_t final_size;
-		std::vector<ElementType> erased;
+		FixedArray<ElementType> erased;
 
 		DynamicListResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
-			: list_path(list_path), initial_size(initial_size), final_size(final_size)
+			: list_path(list_path), initial_size(initial_size), final_size(final_size), erased(std::max(initial_size, final_size) - std::min(initial_size, final_size))
 		{
-			// TODO v9.1 use HeapArray for fixed-size runtime smart arrays instead of std::vector, for increased efficiency and size guarantee
-			erased.resize(std::max(initial_size, final_size) - std::min(initial_size, final_size));
 		}
 
 		bool Forward() override
@@ -311,7 +310,7 @@ namespace oly::editor
 
 		size_t EmpiricalSize() const override
 		{
-			return sizeof(*this) + erased.size() * sizeof(ElementType);
+			return sizeof(*this) + erased.length() * sizeof(ElementType);
 		}
 	};
 
