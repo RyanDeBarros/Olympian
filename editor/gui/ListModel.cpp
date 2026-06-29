@@ -210,8 +210,11 @@ namespace oly::editor::gui
 			break;
 
 		case ListOpType::Delete:
-			--_size;
-			adapter.Erase(op.GetIndex());
+			if (_size > 0)
+			{
+				--_size;
+				adapter.Erase(op.GetIndex());
+			}
 			break;
 
 		case ListOpType::Resize:

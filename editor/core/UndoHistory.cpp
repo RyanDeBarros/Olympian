@@ -7,6 +7,8 @@
 
 #include <stack>
 
+// TODO LATER popup inside document window to view list of undo actions so you can click on a certain action to rollback/forward to
+
 namespace oly::editor
 {
 	static std::stack<UndoHistory*> UNDO_HISTORY_STACK;

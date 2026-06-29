@@ -26,12 +26,16 @@ namespace oly::editor
 		std::vector<DataPathStep> _path;
 
 	public:
+		DataPathSource() = default;
+		DataPathSource(DataPath path);
+
 		DataPathSource operator/(DataPathStep step) const;
 		DataPathSource& operator/=(DataPathStep step);
 	};
 
 	class DataPath
 	{
+		friend class DataPathSource;
 		std::span<const DataPathStep> _path;
 
 	public:

@@ -1,4 +1,5 @@
 target_sources(OlympianEditor PRIVATE
+	SpecialUndoActions.cpp
 	Errors.cpp
 	InputListener.cpp
 	MemoryUnit.cpp

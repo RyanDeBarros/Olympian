@@ -12,7 +12,8 @@
 #include "external/GL.h"
 #include "external/GLM.h"
 
-#include "desc/UndoActions.h"
+#include "desc/FieldSetAction.h"
+#include "desc/DynamicListUndoActions.h"
 
 #include <string>
 
@@ -126,41 +127,31 @@ namespace oly::editor
 					row.OnSelect();
 			});
 
-			// TODO v9.1 instead of FieldSetAction + snapshots, implement specific UndoAction subclasses for the operations
 			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
 				{
-					std::vector<T> original = data;
-					data.erase(data.begin() + op.GetIndex());
-					PushFieldSetAction(path, std::move(original), data);
+					ExecuteDynamicListDeleteAction<T>(path, op.GetIndex());
 					break;
 				}
 
 				case gui::RowOperation::Type::Move:
 				{
-					std::vector<T> original = data;
-					auto moved(std::move(data[op.GetSrcIndex()]));
-					data.erase(data.begin() + op.GetSrcIndex());
-					data.insert(data.begin() + op.GetDstIndex(), std::move(moved));
-					PushFieldSetAction(path, std::move(original), data);
+					ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
 					break;
 				}
 
 				case gui::RowOperation::Type::Resize:
 				{
-					std::vector<T> original = data;
-					data.resize(op.GetSize());
-					PushFieldSetAction(path, std::move(original), data);
+					if (data.size() != op.GetSize())
+						ExecuteDynamicListResizeAction<T>(path, data.size(), op.GetSize());
 					break;
 				}
 
 				case gui::RowOperation::Type::PushBack:
 				{
-					std::vector<T> original = data;
-					data.push_back(T{});
-					PushFieldSetAction(path, std::move(original), data);
+					ExecuteDynamicListInsertAction<T>(path, data.size());
 					break;
 				}
 				}
@@ -183,50 +174,35 @@ namespace oly::editor
 					row.OnSelect();
 			});
 
-			// TODO v9.1 instead of FieldSetAction + snapshots, implement specific UndoAction subclasses for the operations
 			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
 				{
-					std::vector<T> original = data.truth;
-					data.buffer.erase(data.buffer.begin() + op.GetIndex());
-					data.truth.erase(data.truth.begin() + op.GetIndex());
-					PushFieldSetAction(path, std::move(original), data.buffer);
+					data.CancelEditing();
+					ExecuteDynamicListDeleteAction<T>(path, op.GetIndex());
 					break;
 				}
 
 				case gui::RowOperation::Type::Move:
 				{
-					std::vector<T> original = data.truth;
-
-					auto moved_buffer(std::move(data.buffer[op.GetSrcIndex()]));
-					data.buffer.erase(data.buffer.begin() + op.GetSrcIndex());
-					data.buffer.insert(data.buffer.begin() + op.GetDstIndex(), std::move(moved_buffer));
-
-					auto moved_truth(std::move(data.truth[op.GetSrcIndex()]));
-					data.truth.erase(data.truth.begin() + op.GetSrcIndex());
-					data.truth.insert(data.truth.begin() + op.GetDstIndex(), std::move(moved_truth));
-
-					PushFieldSetAction(path, std::move(original), data.buffer);
+					data.CancelEditing();
+					ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
 					break;
 				}
 
 				case gui::RowOperation::Type::Resize:
 				{
-					std::vector<T> original = data.truth;
-					data.buffer.resize(op.GetSize());
-					data.truth.resize(op.GetSize());
-					PushFieldSetAction(path, std::move(original), data.buffer);
+					data.CancelEditing();
+					if (data.truth.size() != op.GetSize())
+						ExecuteDynamicListResizeAction<T>(path, data.truth.size(), op.GetSize());
 					break;
 				}
 
 				case gui::RowOperation::Type::PushBack:
 				{
-					std::vector<T> original = data.truth;
-					data.buffer.push_back(T{});
-					data.truth.push_back(T{});
-					PushFieldSetAction(path, std::move(original), data.buffer);
+					data.CancelEditing();
+					ExecuteDynamicListInsertAction<T>(path, data.truth.size());
 					break;
 				}
 				}

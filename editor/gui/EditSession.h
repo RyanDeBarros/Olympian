@@ -77,5 +77,13 @@ namespace oly::editor
 			buffer = std::move(to);
 			published = true;
 		}
+
+		void CancelEditing()
+		{
+			buffer = truth;
+			original = buffer;
+			editing = false;
+			published = false;
+		}
 	};
 }

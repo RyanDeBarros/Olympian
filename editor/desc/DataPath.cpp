@@ -4,6 +4,11 @@
 
 namespace oly::editor
 {
+	DataPathSource::DataPathSource(DataPath path)
+		: _path(path._path.begin(), path._path.end())
+	{
+	}
+
 	DataPathSource DataPathSource::operator/(DataPathStep step) const
 	{
 		DataPathSource p = *this;
