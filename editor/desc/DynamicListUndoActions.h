@@ -42,7 +42,12 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", delete@index=" << delete_index;
+			if (PrintableValue)
+				ss << ", delete@element=" << deleted_element;
+			ss << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -60,7 +65,12 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-insert@index=" << delete_index;
+			if (PrintableValue)
+				ss << ", re-insert@element=" << deleted_element;
+			ss << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -104,7 +114,12 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", insert@index=" << insert_index;
+			if (PrintableValue)
+				ss << ", insert@element=" << inserted_element;
+			ss << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -123,7 +138,12 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-delete@index=" << insert_index;
+			if (PrintableValue)
+				ss << ", re-delete@element=" << inserted_element;
+			ss << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -140,7 +160,7 @@ namespace oly::editor
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListInsertAction<ElementType, PrintableValue>>(list_path, insert_index, ElementType{}));
 	}
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType>
 	struct DynamicListMoveAction : public UndoAction
 	{
 		using ListType = std::vector<ElementType>;
@@ -169,7 +189,9 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -189,7 +211,9 @@ namespace oly::editor
 				}
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -200,13 +224,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType>
 	void ExecuteDynamicListMoveAction(DataPath list_path, size_t src_index, size_t dst_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListMoveAction<ElementType, PrintableValue>>(list_path, src_index, dst_index));
+		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListMoveAction<ElementType>>(list_path, src_index, dst_index));
 	}
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType>
 	struct DynamicListResizeAction : public UndoAction
 	{
 		using ListType = std::vector<ElementType>;
@@ -247,7 +271,9 @@ namespace oly::editor
 				success = true;
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -276,7 +302,9 @@ namespace oly::editor
 				success = true;
 			}
 
-			// TODO v9.1 log
+			std::stringstream ss;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -287,9 +315,9 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType>
 	void ExecuteDynamicListResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListResizeAction<ElementType, PrintableValue>>(list_path, initial_size, final_size));
+		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}
 }

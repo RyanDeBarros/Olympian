@@ -37,12 +37,11 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action success: [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
 			if constexpr (PrintableValue)
 				ss << ", from=" << initial_value << ", to=" << final_value;
 			ss << "]";
-
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Warning, ss.str());
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -58,12 +57,11 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action success: [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
 			if constexpr (PrintableValue)
 				ss << ", from=" << final_value << ", to=" << initial_value;
 			ss << "]";
-	
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Warning, ss.str());
+			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
