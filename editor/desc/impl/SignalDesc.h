@@ -235,8 +235,11 @@ namespace oly::editor
 		DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
 
 		SignalDesc();
+	};
 
-		friend std::ostream& operator<<(std::ostream& os, const SignalDesc& desc);
+	struct BriefSignalDescPrinter
+	{
+		void operator()(std::ostream& os, const SignalDesc& desc) const;
 	};
 
 #define ROUTE_GENERATOR(M) \

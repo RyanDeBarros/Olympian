@@ -124,7 +124,7 @@ namespace oly::editor::gui
 		DrawResult DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
 	};
 
-	template<typename T, bool PrintableValue = true>
+	template<typename T, typename Printer = StandardPrinter<T>>
 	struct VectorAdapter : public IListAdapter
 	{
 		DataPathSource list_path;
@@ -139,12 +139,12 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			ExecuteDynamicListInsertAction<T, PrintableValue>(list_path, v.size());
+			ExecuteDynamicListInsertAction<T, Printer>(list_path, v.size());
 		}
 
 		void Erase(size_t i) override
 		{
-			ExecuteDynamicListDeleteAction<T, PrintableValue>(list_path, i);
+			ExecuteDynamicListDeleteAction<T, Printer>(list_path, i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override

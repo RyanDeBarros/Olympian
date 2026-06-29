@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Printer.h"
 #include "core/UndoHistory.h"
 #include "core/editor/Logger.h"
 
@@ -8,14 +9,13 @@
 
 #include "desc/DataPath.h"
 
-#include "util/CommonOStream.h"
 #include "util/FixedArray.h"
 
 #include <sstream>
 
 namespace oly::editor
 {
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	struct DynamicListDeleteAction : public UndoAction
 	{
 		using ListType = std::vector<ElementType>;
@@ -45,8 +45,11 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", delete@index=" << delete_index;
-			if constexpr (PrintableValue)
-				ss << ", delete@element=" << deleted_element;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", delete@element=";
+				Printer{}(ss, deleted_element);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -68,8 +71,11 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-insert@index=" << delete_index;
-			if constexpr (PrintableValue)
-				ss << ", re-insert@element=" << deleted_element;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", re-insert@element=";
+				Printer{}(ss, deleted_element);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -82,13 +88,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicListDeleteAction(DataPath list_path, size_t delete_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListDeleteAction<ElementType, PrintableValue>>(list_path, delete_index, ElementType{}));
+		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	struct DynamicListInsertAction : public UndoAction
 	{
 		using ListType = std::vector<ElementType>;
@@ -117,8 +123,11 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", insert@index=" << insert_index;
-			if constexpr (PrintableValue)
-				ss << ", insert@element=" << inserted_element;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", insert@element=";
+				Printer{}(ss, inserted_element);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -141,9 +150,11 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-delete@index=" << insert_index;
-			// TODO v9.1 instead of PrintableValue bool, pass a 'Printer<T>' typename that implements a std::ostream& operator()(std::ostream& os, T&). Default value should be a struct that just calls operator<<, but this allows for customized logging with different reprs of the same class for different contexts. This constexpr check would be for a void-check instead.
-			if constexpr (PrintableValue)
-				ss << ", re-delete@element=" << inserted_element;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", re-delete@element=";
+				Printer{}(ss, inserted_element);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -156,10 +167,10 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, bool PrintableValue = true>
+	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicListInsertAction(DataPath list_path, size_t insert_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListInsertAction<ElementType, PrintableValue>>(list_path, insert_index, ElementType{}));
+		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
 	}
 
 	template<typename ElementType>

@@ -88,9 +88,9 @@ namespace oly::editor
 
 		_desc.LoadFromDisk();
 		// TODO v9.1 printable value
-		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.signals));
+		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.signals));
 		// TODO v9.1 printable value
-		_route_slots.Init(*_desc.scratch.routes.ListAdapter<false>(DataPath() / _desc.scratch.subpaths.routes));
+		_route_slots.Init(*_desc.scratch.routes.ListAdapter<void>(DataPath() / _desc.scratch.subpaths.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -117,7 +117,7 @@ namespace oly::editor
 		if (auto form = Form())
 		{
 			// TODO v9.1 printable value
-			_signal_slots.Update(*desc.ListAdapter<false>(path));
+			_signal_slots.Update(*desc.ListAdapter<void>(path));
 
 			if (auto scope = gui::IDScope("##Signal"))
 			{
@@ -140,7 +140,7 @@ namespace oly::editor
 				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
 			// TODO v9.1 printable value
-			if (_signal_slots.ConsumeOps(*desc.ListAdapter<false>(path)))
+			if (_signal_slots.ConsumeOps(*desc.ListAdapter<void>(path)))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
@@ -152,7 +152,7 @@ namespace oly::editor
 		if (auto form = Form())
 		{
 			// TODO v9.1 printable value
-			_route_slots.Update(*desc.ListAdapter<false>(path));
+			_route_slots.Update(*desc.ListAdapter<void>(path));
 
 			if (auto scope = gui::IDScope("##Route"))
 			{
@@ -175,7 +175,7 @@ namespace oly::editor
 				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 
 			// TODO v9.1 printable value
-			if (_route_slots.ConsumeOps(*desc.ListAdapter<false>(path)))
+			if (_route_slots.ConsumeOps(*desc.ListAdapter<void>(path)))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();
@@ -235,7 +235,7 @@ namespace oly::editor
 				SignalDesc initial_desc = desc; \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				PushFieldSetAction(path, std::move(initial_desc), desc); \
+				PushFieldSetAction<SignalDesc, BriefSignalDescPrinter>(path, std::move(initial_desc), desc); \
 			} \
 			break; \
 		}

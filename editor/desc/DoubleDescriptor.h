@@ -55,7 +55,7 @@ namespace oly::editor
 		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
 		{
 			if (auto og = original.consume_unique<Descriptor>())
-				return std::make_unique<FieldSetAction<Descriptor, false>>(DataPath(), std::move(*og), scratch);
+				return std::make_unique<FieldSetAction<Descriptor, void>>(DataPath(), std::move(*og), scratch);
 			else
 				return nullptr;
 		}

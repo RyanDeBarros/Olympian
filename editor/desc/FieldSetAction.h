@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Printer.h"
 #include "core/UndoHistory.h"
 #include "core/editor/Logger.h"
 
@@ -8,13 +9,11 @@
 
 #include "desc/DataPath.h"
 
-#include "util/CommonOStream.h"
-
 #include <sstream>
 
 namespace oly::editor
 {
-	template<typename T, bool PrintableValue = true>
+	template<typename T, typename Printer = StandardPrinter<T>>
 	struct FieldSetAction : public UndoAction
 	{
 		DataPathSource path;
@@ -38,8 +37,13 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
-			if constexpr (PrintableValue)
-				ss << ", from=" << initial_value << ", to=" << final_value;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", from=";
+				Printer{}(ss, initial_value);
+				ss << ", to=";
+				Printer{}(ss, final_value);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -58,8 +62,13 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
-			if constexpr (PrintableValue)
-				ss << ", from=" << final_value << ", to=" << initial_value;
+			if constexpr (!std::is_void_v<Printer>)
+			{
+				ss << ", from=";
+				Printer{}(ss, final_value);
+				ss << ", to=";
+				Printer{}(ss, initial_value);
+			}
 			ss << "]";
 			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
@@ -72,9 +81,9 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T, bool PrintableValue = true>
+	template<typename T, typename Printer = StandardPrinter<T>>
 	void PushFieldSetAction(DataPath path, T initial_value, T final_value)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T, PrintableValue>>(path, std::move(initial_value), std::move(final_value)));
+		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}
 }
