@@ -151,6 +151,8 @@ namespace oly::editor::gui
 		active_index = _size > 0 ? _size - 1 : 0;
 	}
 
+	// TODO v9.1 undo actions for ListModel operations
+
 	void ListModel::DeferCreate()
 	{
 		_pending_ops.push_back(ListOp::MakeCreateOp());

@@ -106,7 +106,7 @@ namespace oly::editor
 		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
-				return typeid(decltype(*this)) == type ? reinterpret_cast<void*>(this) : nullptr;
+				return typeid(decltype(vector)) == type ? reinterpret_cast<void*>(&vector) : nullptr;
 
 			int index = path.Step().v;
 			if (index >= 0 && index < vector.size())
@@ -268,7 +268,7 @@ namespace oly::editor
 		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
-				return typeid(decltype(*this)) == type ? reinterpret_cast<void*>(this) : nullptr;
+				return typeid(decltype(map)) == type ? reinterpret_cast<void*>(&map) : nullptr;
 
 			auto it = map.find(static_cast<Key>(path.Step().v));
 			if (it != map.end())

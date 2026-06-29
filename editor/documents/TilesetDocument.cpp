@@ -437,10 +437,7 @@ namespace oly::editor
 
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())
-				{
-					// TODO v9.1 push undo actions for all manual document drawing outside of field system. New undo actions for ListModel operations, that store full snapshots of any removed descriptors/elements. Same goes for dynamic lists
 					desc.texture.edit.PublishReset(desc.texture.def);
-				}
 
 				desc.texture.CheckUndoAction(path / desc.subpaths.texture);
 			}

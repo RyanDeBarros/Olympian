@@ -12,6 +12,8 @@
 #include "external/GL.h"
 #include "external/GLM.h"
 
+#include "desc/UndoActions.h"
+
 #include <string>
 
 namespace oly::editor
@@ -111,7 +113,7 @@ namespace oly::editor
 		static void Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def);
 
 		template<typename T>
-		static DrawResult ValueDrawDynamicList(std::vector<T>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static DrawResult ValueDrawDynamicList(DataPath path, std::vector<T>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
@@ -124,28 +126,43 @@ namespace oly::editor
 					row.OnSelect();
 			});
 
-			result |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+			// TODO v9.1 instead of FieldSetAction + snapshots, implement specific UndoAction subclasses for the operations
+			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-					data.erase(data.begin() + op.index);
+				{
+					std::vector<T> original = data;
+					data.erase(data.begin() + op.GetIndex());
+					PushFieldSetAction(path, std::move(original), data);
 					break;
+				}
 
 				case gui::RowOperation::Type::Move:
 				{
-					auto moved(std::move(data[op.src]));
-					data.erase(data.begin() + op.src);
-					data.insert(data.begin() + op.index, std::move(moved));
+					std::vector<T> original = data;
+					auto moved(std::move(data[op.GetSrcIndex()]));
+					data.erase(data.begin() + op.GetSrcIndex());
+					data.insert(data.begin() + op.GetDstIndex(), std::move(moved));
+					PushFieldSetAction(path, std::move(original), data);
 					break;
 				}
 
 				case gui::RowOperation::Type::Resize:
-					data.resize(op.index);
+				{
+					std::vector<T> original = data;
+					data.resize(op.GetSize());
+					PushFieldSetAction(path, std::move(original), data);
 					break;
+				}
 
 				case gui::RowOperation::Type::PushBack:
+				{
+					std::vector<T> original = data;
 					data.push_back(T{});
+					PushFieldSetAction(path, std::move(original), data);
 					break;
+				}
 				}
 			});
 			
@@ -153,7 +170,7 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static DrawResult ValueDrawDynamicList(EditSession<std::vector<T>>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static DrawResult ValueDrawDynamicList(DataPath path, EditSession<std::vector<T>>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
@@ -164,30 +181,54 @@ namespace oly::editor
 				result |= row_result;
 				if (row_result.IsLeftClicked() || row_result.IsFocused())
 					row.OnSelect();
-				});
+			});
 
-			result |= ui_state.VisitRowOps([&data](const gui::RowOperation& op) {
+			// TODO v9.1 instead of FieldSetAction + snapshots, implement specific UndoAction subclasses for the operations
+			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-					data.buffer.erase(data.buffer.begin() + op.index);
+				{
+					std::vector<T> original = data.truth;
+					data.buffer.erase(data.buffer.begin() + op.GetIndex());
+					data.truth.erase(data.truth.begin() + op.GetIndex());
+					PushFieldSetAction(path, std::move(original), data.buffer);
 					break;
+				}
 
 				case gui::RowOperation::Type::Move:
 				{
-					auto moved(std::move(data.buffer[op.src]));
-					data.buffer.erase(data.buffer.begin() + op.src);
-					data.buffer.insert(data.buffer.begin() + op.index, std::move(moved));
+					std::vector<T> original = data.truth;
+
+					auto moved_buffer(std::move(data.buffer[op.GetSrcIndex()]));
+					data.buffer.erase(data.buffer.begin() + op.GetSrcIndex());
+					data.buffer.insert(data.buffer.begin() + op.GetDstIndex(), std::move(moved_buffer));
+
+					auto moved_truth(std::move(data.truth[op.GetSrcIndex()]));
+					data.truth.erase(data.truth.begin() + op.GetSrcIndex());
+					data.truth.insert(data.truth.begin() + op.GetDstIndex(), std::move(moved_truth));
+
+					PushFieldSetAction(path, std::move(original), data.buffer);
 					break;
 				}
 
 				case gui::RowOperation::Type::Resize:
-					data.buffer.resize(op.index);
+				{
+					std::vector<T> original = data.truth;
+					data.buffer.resize(op.GetSize());
+					data.truth.resize(op.GetSize());
+					PushFieldSetAction(path, std::move(original), data.buffer);
 					break;
+				}
 
 				case gui::RowOperation::Type::PushBack:
+				{
+					std::vector<T> original = data.truth;
 					data.buffer.push_back(T{});
+					data.truth.push_back(T{});
+					PushFieldSetAction(path, std::move(original), data.buffer);
 					break;
+				}
 				}
 			});
 
@@ -195,14 +236,14 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void DrawDynamicList(const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(path, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			if (gui::PropertyGrid::Reset::Activated(0))
@@ -210,14 +251,14 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void DrawDynamicList(const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(DataPath path, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			if (data.buffer.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList(path, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -292,11 +333,11 @@ namespace oly::editor
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
-		static void Draw(const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+		static void Draw(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
-			DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
+			DrawDynamicList(path, label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
 				ImGui::SameLine();
@@ -312,11 +353,11 @@ namespace oly::editor
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static void Draw(const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+		static void Draw(DataPath path, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
-			DrawDynamicList(label, data, def, [&data, &def](gui::DynamicRow& row) {
+			DrawDynamicList(path, label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
 				ImGui::SameLine();

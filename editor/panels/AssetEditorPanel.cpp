@@ -16,7 +16,6 @@
 
 #include "assets/MetaSplitter.h"
 
-#include <imgui.h>
 #include <ImGuiFileDialog.h>
 
 namespace oly::editor

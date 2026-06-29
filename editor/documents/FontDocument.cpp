@@ -234,7 +234,7 @@ namespace oly::editor
 				gui::PropertyGrid::Reset::Button(1 + i);
 		}
 
-		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
+		DescIO::DrawDynamicList(path / desc.subpaths.kerning, "Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
 			auto& k = desc.kerning[row.Index()];
 			DrawResult result;
 

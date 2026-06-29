@@ -21,15 +21,21 @@ namespace oly::editor::gui
 
 		Type type;
 		bool valid = true;
-		size_t index = 0;
-		size_t src = 0;
+		size_t index1 = 0;
+		size_t index2 = 0;
 
 		bool UpdateIndex(size_t& idx) const;
+		void UpdateRowOp(RowOperation& op) const;
 
 		static RowOperation MakeDelete(size_t index);
 		static RowOperation MakeMove(size_t src, size_t dst);
 		static RowOperation MakeResize(size_t size);
 		static RowOperation MakePushBack();
+
+		size_t GetIndex() const;
+		size_t GetSrcIndex() const;
+		size_t GetDstIndex() const;
+		size_t GetSize() const;
 
 		void SetValid(bool valid);
 	};

@@ -260,7 +260,7 @@ namespace oly::editor
 		desc.signals.edit.PreEdit();
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) {
+		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) {
 			std::string& element = desc.signals.edit.buffer[row.Index()];
 
 			DrawResult result;

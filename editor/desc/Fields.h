@@ -610,7 +610,7 @@ namespace oly::editor
 		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
-				return typeid(decltype(*this)) == type ? reinterpret_cast<void*>(this) : nullptr;
+				return typeid(decltype(this->value)) == type ? reinterpret_cast<void*>(&this->value) : nullptr;
 
 			auto index = path.Step().v;
 			if (index >= 0 && index < N)
