@@ -1,7 +1,6 @@
 #include "Form.h"
 
 #include "core/Errors.h"
-#include "gui/InlineWidget.h"
 #include "gui/properties/PropertyGrid.h"
 
 namespace oly::editor
@@ -44,16 +43,12 @@ namespace oly::editor
 		ACTIVE_FORM = this;
 		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
 		_draw_content = gui::PropertyGrid::BeginForm();
-
-		if (_draw_content)
-			gui::InlineWidget::StartLayout(ImGui::GetID("##InlineWidgetID"));
 	}
 
 	void Form::EndTable()
 	{
 		if (_draw_content)
 		{
-			gui::InlineWidget::EndLayout();
 			gui::PropertyGrid::EndForm();
 			_draw_content = false;
 		}

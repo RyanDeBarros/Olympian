@@ -75,20 +75,21 @@ namespace oly::editor
 			}
 		}
 
-		for (size_t i = 0; i < count; ++i)
-		{
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data = data[i], sublabel = sublabels[i], disable = disabled && disabled[i], i, count, inline_checkboxes]() -> DrawResult {
-				if (auto d = DisabledSection(disable))
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, sublabels, disabled, count, inline_checkboxes]() -> DrawResult {
+			DrawResult result;
+			
+			for (size_t i = 0; i < count; ++i)
+			{
+				if (auto d = DisabledSection(disabled && disabled[i]))
 				{
-					auto result = gui::InputData<bool>{}(sublabel, data);
+					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
 					if (inline_checkboxes && i + 1 < count)
 						ImGui::SameLine();
-					return result;
 				}
-				else
-					return {};
-			}, false));
-		}
+			}
+
+			return result;
+		}));
 
 		gui::PropertyGrid::SubmitRow();
 
@@ -108,29 +109,10 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("x1", data.buffer.x1);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("x2", data.buffer.x2);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("y1", data.buffer.y1);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("y2", data.buffer.y2);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
+		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1);
+		ValueLabelInputData<float>{}("x2", "##x2", data.buffer.x2);
+		ValueLabelInputData<float>{}("y1", "##y1", data.buffer.y1);
+		ValueLabelInputData<float>{}("y2", "##y2", data.buffer.y2);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -147,29 +129,10 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
+		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputData<float>{}("x2", "##x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputData<float>{}("y1", "##y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputData<float>{}("y2", "##y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -186,23 +149,9 @@ namespace oly::editor
 		if (data.buffer != def)
 			gui::PropertyGrid::Reset::Button();
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("left", data.buffer.left);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("right", data.buffer.right);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
-
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult {
-			auto result = gui::InputData<float>{}("top", data.buffer.top);
-			gui::InlineWidget::EndColumn();
-			return result;
-		}, true));
+		ValueLabelInputData<float>{}("left", "##left", data.buffer.left);
+		ValueLabelInputData<float>{}("right", "##right", data.buffer.right);
+		ValueLabelInputData<float>{}("top", "##top", data.buffer.top);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());

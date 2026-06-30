@@ -9,7 +9,6 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/graphics/Texture.h"
-#include "gui/InlineWidget.h"
 
 #include "documents/DocumentManager.h"
 
@@ -82,7 +81,6 @@ namespace oly::editor
 			break;
 		}
 
-		gui::InlineWidget::Prune();
 		++FRAME_COUNTER;
 	}
 

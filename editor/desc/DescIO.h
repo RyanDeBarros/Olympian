@@ -32,22 +32,33 @@ namespace oly::editor
 		};
 
 		template<typename T>
+		struct ValueLabelInputData
+		{
+			template<typename... Args>
+			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
+			{
+				gui::PropertyGrid::Value::AddComponent(comp::LabelInputData<T>(label, data_label, data, std::forward<Args>(args)...));
+			}
+		};
+
+		template<typename T>
 		struct ValueInputData<OptionalPrimitive<T>>
 		{
 			template<typename... Args>
 			void operator()(const char* label, OptionalPrimitive<T>& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::InputData<bool>("##", data.has_value));
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
+					DrawResult result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
+
 					gui::IDScope scope(&data.value);
 					if (auto disabled = DisabledSection(!data.has_value))
 					{
 						ImGui::SameLine();
-						return gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
+						result |= gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
 					}
-					else
-						return {};
-				}, !std::is_same_v<T, bool>));
+
+					return result;
+				}));
 			}
 		};
 
@@ -121,7 +132,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }, true));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -258,7 +269,7 @@ namespace oly::editor
 				gui::PropertyGrid::Reset::Button(0);
 
 			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
-				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }, true));
+				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			if (gui::PropertyGrid::Reset::Activated(0))
@@ -275,7 +286,7 @@ namespace oly::editor
 				gui::PropertyGrid::Reset::Button(0);
 
 			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
-				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }, true));
+				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());

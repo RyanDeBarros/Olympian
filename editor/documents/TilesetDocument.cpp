@@ -433,7 +433,7 @@ namespace oly::editor
 
 					desc.texture.edit.PostEdit(result);
 					return result;
-				}, true));
+				}));
 
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())

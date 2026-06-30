@@ -9,7 +9,6 @@ namespace oly::editor::gui
 	struct WidgetComponent
 	{
 		std::function<DrawResult()> draw;
-		bool stretch = false;
 
 		explicit WidgetComponent() = default;
 	};

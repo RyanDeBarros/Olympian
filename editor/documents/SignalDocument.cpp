@@ -145,7 +145,7 @@ namespace oly::editor
 						}
 						return "<Signal #" + std::to_string(i) + ">";
 					}, "New signal", "Delete signal", "Clear signals");
-				}, false));
+				}));
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -178,7 +178,7 @@ namespace oly::editor
 						}
 						return "<Route #" + std::to_string(i) + ">";
 					}, "New route", "Delete route", "Clear routes");
-				}, false));
+				}));
 				gui::PropertyGrid::SubmitRow();
 			}
 
@@ -304,7 +304,7 @@ namespace oly::editor
 					row.OnSelect();
 
 				return result;
-			}, true);
+			});
 
 			return gui::InlineWidget::Draw(std::span<gui::WidgetComponent>(&component, 1));
 		}, desc.signals.ui_state);
@@ -332,7 +332,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		}, false));
+		}));
 		DRAW_FIELD(key);
 
 		if (auto subform = Subform("Keyboard Mods", true))
@@ -370,7 +370,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		}, false));
+		}));
 		DRAW_FIELD(button);
 
 		if (auto subform = Subform("Keyboard Mods", true))
@@ -408,7 +408,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		}, false));
+		}));
 		DRAW_FIELD(button);
 
 		if (auto subform = Subform("Modifiers"))
@@ -433,7 +433,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		}, false));
+		}));
 		DRAW_FIELD(axis);
 
 		DRAW_FIELD(deadzone);
@@ -459,7 +459,7 @@ namespace oly::editor
 					result.SetDirty(false);
 			}
 			return result;
-		}, false));
+		}));
 		DRAW_FIELD(axis);
 
 		DRAW_FIELD(deadzone);

@@ -184,6 +184,7 @@ namespace oly::editor::gui
 
 	bool PropertyGrid::BeginForm()
 	{
+		// TODO v9.1 begin child instead of outer borders -> child will have bkg color / outer border. *Always* call EndForm() from Form, just pass bool -> that way EndChild() is always called, but the bool will determine whether EndTable() should be called.
 		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
