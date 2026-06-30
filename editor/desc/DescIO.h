@@ -114,13 +114,15 @@ namespace oly::editor
 		static void Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def);
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(DataPath path, std::vector<T>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static DrawResult ValueDrawDynamicList(DataPath path, std::vector<T>& data,
+			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
 			ui_state.DrawListHeader(data.size());
 
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+				ImGui::SameLine();
 				auto row_result = draw_fn(row);
 				result |= row_result;
 				if (row_result.IsLeftClicked() || row_result.IsFocused())
@@ -162,13 +164,15 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(DataPath path, EditSession<std::vector<T>>& data, const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static DrawResult ValueDrawDynamicList(DataPath path, EditSession<std::vector<T>>& data,
+			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
 			ui_state.DrawListHeader(data.buffer.size());
 
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+				ImGui::SameLine();
 				auto row_result = draw_fn(row);
 				result |= row_result;
 				if (row_result.IsLeftClicked() || row_result.IsFocused())
@@ -214,7 +218,8 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def,
+			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
@@ -229,7 +234,8 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(DataPath path, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def, std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(DataPath path, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def,
+			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);

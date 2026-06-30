@@ -3,6 +3,7 @@ target_sources(OlympianEditor PRIVATE
 	DynamicList.cpp
 	GUIState.cpp
 	ImGuiWrapper.cpp
+	InlineWidget.cpp
 	ListModel.cpp
 	StyleStack.cpp
 	UnsavedChangesModal.cpp

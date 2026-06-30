@@ -3,15 +3,18 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
+#include "gui/InlineWidget.h"
 #include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
+
 #include "util/Counter.h"
 #include "util/Hash.h"
 #include "util/Parser.h"
+#include "util/DynamicArray.h"
 
 namespace oly::editor
 {
@@ -237,49 +240,53 @@ namespace oly::editor
 		}
 
 		DescIO::DrawDynamicList(path / desc.subpaths.kerning, "Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
+			DynamicArray<gui::WidgetComponent> components;
 			auto& k = desc.kerning[row.Index()];
-			DrawResult result;
 
-			// TODO v9.1 don't use SameLine() in DrawDynamicList() -> use inner table again.
-			ImGui::SameLine();
 			bool dup_warning = counter.count({ k.pair.edits[0].buffer, k.pair.edits[1].buffer }) > 1;
 			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
-				bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
-				gui::Outline bad_outline;
-				if (bad_codepoint)
-					dup_warning = false;
+				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> DrawResult {
+					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
+					gui::Outline bad_outline;
+					if (bad_codepoint)
+						dup_warning = false;
 
-				DrawResult codepoint_result = gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
-				k.pair.edits[i].PostEdit(codepoint_result);
-				result |= codepoint_result;
+					DrawResult result = gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
+					k.pair.edits[i].PostEdit(result);
 
-				if (dup_warning && codepoint_result.IsHovered())
-					ImGui::SetTooltip("Duplicate codepoint pair");
+					if (dup_warning && result.IsHovered())
+						ImGui::SetTooltip("Duplicate codepoint pair");
 
-				if (bad_codepoint)
-				{
-					if (codepoint_result.IsHovered())
-						ImGui::SetTooltip("Bad codepoint format");
+					if (bad_codepoint)
+					{
+						if (result.IsHovered())
+							ImGui::SetTooltip("Bad codepoint format");
 
-					bad_outline.Draw(Color::Error);
-				}
+						bad_outline.Draw(Color::Error);
+					}
 
-				ImGui::SameLine();
+					if (i == 1)
+					{
+						if (dup_warning)
+							dup_outline.Draw(Color::Error);
+					}
+
+					return result;
+				}));
 			}
 
-			if (dup_warning)
-				dup_outline.Draw(Color::Error);
+			components.push_back(comp::Text(k.pair.label));
+			components.push_back(comp::VerticalSeparator());
 
-			ImGui::Text(k.pair.label);
+			components.push_back(comp::Generic([&k]() -> DrawResult {
+				DrawResult result = gui::InputData<int>{}(k.distance.label, k.distance.edit.buffer);
+				k.distance.edit.PostEdit(result);
+				return result;
+			}));
 
-			gui::VerticalSeparator();
-			DrawResult distance_result = gui::InputData<int>{}(k.distance.label, k.distance.edit.buffer);
-			k.distance.edit.PostEdit(distance_result);
-			result |= distance_result;
-
-			return result;
+			return gui::InlineWidget(components);
 		}, desc.kerning_ui_state);
 
 		auto kerning_path = path / desc.subpaths.kerning;

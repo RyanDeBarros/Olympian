@@ -10,6 +10,8 @@
 
 #include "definitions/Keys.h"
 
+#include "util/DynamicArray.h"
+
 namespace oly::editor
 {
 	struct BriefDescPrinter
@@ -277,30 +279,26 @@ namespace oly::editor
 		desc.signals.edit.PreEdit();
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) {
+		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
 			std::string& element = desc.signals.edit.buffer[row.Index()];
 
-			DrawResult result;
-
-			ImGui::SameLine();
 			gui::Outline outline;
-			auto item_result = gui::InputData<std::string>{}("##Item", element);
-			result |= item_result;
+			auto result = gui::InputData<std::string>{}("##Item", element);
 
 			if (!signal_id_counter.contains(element))
 			{
 				outline.Draw(Color::Warning);
-				if (item_result.IsHovered())
+				if (result.IsHovered())
 					ImGui::SetTooltip("Signal id is not present in asset");
 			}
 			else if (local_id_counter.count(element) > 1)
 			{
 				outline.Draw(Color::Warning);
-				if (item_result.IsHovered())
+				if (result.IsHovered())
 					ImGui::SetTooltip("Duplicate signal id listing in route");
 			}
 
-			if (ImGui::IsItemActivated())
+			if (result.IsActivated())
 				row.OnSelect();
 
 			return result;

@@ -1,15 +1,18 @@
 #pragma once
 
+#include <span>
 #include <stdexcept>
 #include <string>
+
+#include "util/DynamicArray.h"
 
 namespace oly
 {
 	template<typename T>
 	class FixedArray
 	{
-		T* _ptr;
-		const size_t _length;
+		const size_t _length = 0;
+		T* _ptr = nullptr;
 
 	public:
 		struct LengthMismatchError : public std::runtime_error
@@ -33,19 +36,56 @@ namespace oly
 		};
 
 		explicit FixedArray(size_t length)
-			: _ptr(new T[length]), _length(length)
+			: _length(length), _ptr(new T[_length])
 		{
 		}
 
+		FixedArray(size_t length, const T& value)
+			: _length(length), _ptr(new T[_length])
+		{
+			for (size_t i = 0; i < length; ++i)
+				_ptr[i] = value;
+		}
+
+		FixedArray(T* raw_array, size_t length)
+			: _length(length), _ptr(raw_array)
+		{
+		}
+
+		template<DynamicArrayResizeStrategy ResizeStrategy>
+		FixedArray(DynamicArray<T, ResizeStrategy>&& array)
+			: _length(array.size())
+		{
+			size_t sz = _length;
+			_ptr = array.release(sz);
+
+			if (_length == 0 || sz != _length)
+			{
+				delete[] _ptr;
+				_ptr = nullptr;
+			}
+
+			if (sz != _length)
+				throw LengthMismatchError(_length, sz);
+		}
+
+		FixedArray(std::initializer_list<T> init)
+			: _length(init.size()), _ptr(new T[_length])
+		{
+			size_t i = 0;
+			for (const T& obj : init)
+				_ptr[i++] = obj;
+		}
+		
 		FixedArray(const FixedArray& o)
-			: _ptr(new T[o._length]), _length(o._length)
+			: _length(o._length), _ptr(new T[o._length])
 		{
 			for (size_t i = 0; i < _length; ++i)
 				_ptr[i] = o._ptr[i];
 		}
 
 		FixedArray(FixedArray&& o) noexcept
-			: _ptr(o._ptr), _length(o._length)
+			: _length(o._length), _ptr(o._ptr)
 		{
 			o._ptr = nullptr;
 		}
@@ -147,6 +187,16 @@ namespace oly
 		const T* cend() const noexcept
 		{
 			return _ptr + _length;
+		}
+
+		operator std::span<T>() noexcept
+		{
+			return std::span<T>(_ptr, _length);
+		}
+
+		operator std::span<const T>() const noexcept
+		{
+			return std::span<const T>(_ptr, _length);
 		}
 	};
 }
