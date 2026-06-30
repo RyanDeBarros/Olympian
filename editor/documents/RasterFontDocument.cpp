@@ -114,7 +114,7 @@ namespace oly::editor
 							else
 								return "Glyph #" + std::to_string(i);
 						}, "New glyph", "Delete glyph", "Clear glyphs");
-					}));
+					}, false));
 					gui::PropertyGrid::SubmitRow();
 				}
 

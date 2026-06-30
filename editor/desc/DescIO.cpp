@@ -81,7 +81,7 @@ namespace oly::editor
 					return gui::InputData<bool>{}(sublabel, data);
 				else
 					return {};
-			}));
+			}, false));
 		}
 
 		gui::PropertyGrid::SubmitRow();

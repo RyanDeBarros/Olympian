@@ -159,7 +159,7 @@ namespace oly::editor
 					gui::PropertyGrid::Key::SetLabel("Select Atlas");
 					gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
 						return _atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
-					}));
+					}, false));
 					gui::PropertyGrid::SubmitRow();
 				}
 
@@ -274,17 +274,19 @@ namespace oly::editor
 					}
 
 					return result;
-				}));
+				}, true));
 			}
 
 			components.push_back(comp::Text(k.pair.label));
 			components.push_back(comp::VerticalSeparator());
 
 			components.push_back(comp::Generic([&k]() -> DrawResult {
-				DrawResult result = gui::InputData<int>{}(k.distance.label, k.distance.edit.buffer);
+				DrawResult result = gui::InputData<int>{}("##Distance", k.distance.edit.buffer);
 				k.distance.edit.PostEdit(result);
 				return result;
-			}));
+			}, true));
+			std::string distance_label = k.distance.label + std::string(" ");
+			components.push_back(comp::Text(distance_label.c_str()));
 
 			return gui::InlineWidget(components);
 		}, desc.kerning_ui_state);
@@ -343,7 +345,7 @@ namespace oly::editor
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
 						return false;
-					}));
+					}, true));
 					gui::PropertyGrid::SubmitRow();
 				}
 			}

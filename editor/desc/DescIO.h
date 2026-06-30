@@ -44,7 +44,7 @@ namespace oly::editor
 						return gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
 					else
 						return {};
-				}));
+				}, !std::is_same_v<T, bool>));
 			}
 		};
 
@@ -118,7 +118,7 @@ namespace oly::editor
 		{
 			gui::IDScope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }, true));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -254,7 +254,8 @@ namespace oly::editor
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }, true));
 
 			gui::PropertyGrid::SubmitRow();
 			if (gui::PropertyGrid::Reset::Activated(0))
@@ -270,7 +271,8 @@ namespace oly::editor
 			if (data.buffer.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult { return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }, true));
 
 			gui::PropertyGrid::SubmitRow();
 			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());

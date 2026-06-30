@@ -17,8 +17,9 @@ namespace oly::editor::comp
 			gui::IDScope scope(&data);
 			return gui::InputData<T>{}(label, data, std::forward<Args>(args)...);
 		};
+		c.stretch = !std::is_same_v<T, bool>;
 		return c;
 	}
 
-	extern gui::WidgetComponent Generic(std::function<DrawResult()> draw);
+	extern gui::WidgetComponent Generic(std::function<DrawResult()> draw, bool stretch);
 }

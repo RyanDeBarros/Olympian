@@ -6,6 +6,7 @@ namespace oly::editor::comp
 	{
 		gui::WidgetComponent c;
 		c.draw = []() -> DrawResult { gui::VerticalSeparator(); return {}; };
+		c.stretch = false;
 		return c;
 	}
 
@@ -13,13 +14,15 @@ namespace oly::editor::comp
 	{
 		gui::WidgetComponent c;
 		c.draw = [label]() -> DrawResult { ImGui::TextUnformatted(label); return {}; };
+		c.stretch = false;
 		return c;
 	}
 
-	gui::WidgetComponent Generic(std::function<DrawResult()> draw)
+	gui::WidgetComponent Generic(std::function<DrawResult()> draw, bool stretch)
 	{
 		gui::WidgetComponent c;
 		c.draw = draw;
+		c.stretch = stretch;
 		return c;
 	}
 }
