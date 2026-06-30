@@ -11,7 +11,21 @@ namespace oly::editor::gui
 		return remaining_count > 0 ? (remaining_width - ImGui::GetStyle().ItemSpacing.x * (remaining_count - 1)) / remaining_count : remaining_width;
 	}
 
-	// TODO v9.1 better implementation -> use inner table since some components like vertical separator ruin the width distribution. To do this, will need to explicitly set ImGuiTableColumnFlags_WidthStretch/Fixed per component, which means WidgetComponent needs a 'bool stretch'
+	// TODO v9.1 ideal layout within property grid value column should be:
+	// 
+	// 1. InputInt
+	// 2. Checkbox+InputInt
+	// 3. 2 InputInts
+	// 
+	// [.....]
+	// [.][..]
+	// [.....][.....]
+	// 
+	// Basically, in each Subform, divide the value column into N subcolumn segments -> use ImGuiTableFlags_SizingStretchSame in InlineWidget. Instead of some components stretching, define each component to take up a subcolumn. That is, a checkbox+inputint would need to be 1 single component.
+	// Can implement in two ways:
+	// 1. generator in Subform that determines the N = max(size(components) for each row in subform) -> expensive
+	// 2. Map ImGuiID to persistent state -> on first runthough, use old 'GetSubItemWidth()' logic (or assume N = 1 ?). While drawing row by row, compute N. On next frame, use the new N and update it for the next frame if needed.
+
 	DrawResult InlineWidget(const std::span<WidgetComponent> components)
 	{
 		DrawResult result;
