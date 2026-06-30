@@ -113,6 +113,34 @@ namespace oly::editor
 		static void Draw(const char* label, EditSession<UVRect>& data, const UVRect& def);
 		static void Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def);
 
+		template<Enum E>
+		static void Draw(const char* label, E& data, const E& def)
+		{
+			gui::IDScope scope(&data);
+			gui::PropertyGrid::Key::SetLabel(label);
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
+			if (data != def)
+				gui::PropertyGrid::Reset::Button();
+			gui::PropertyGrid::SubmitRow();
+			if (gui::PropertyGrid::Reset::AnyActivated())
+				data = def;
+		}
+
+		template<Enum E>
+		static DrawResult DrawCombo(const char* label, E& data);
+
+	private:
+		template<Enum E, size_t N>
+		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
+		{
+			int index = static_cast<int>(data);
+			LabelSpanRegistry::Handle span = LabelSpanRegistry::Intern(std::span<const char* const>(values, N));
+			DrawResult result = gui::InputData<int>{}("##", index, span);
+			data = static_cast<E>(index);
+			return result;
+		}
+
+	public:
 		template<typename T, typename Printer = StandardPrinter<T>>
 		static DrawResult ValueDrawDynamicList(DataPath path, std::vector<T>& data,
 			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
@@ -127,7 +155,7 @@ namespace oly::editor
 				result |= row_result;
 				if (row_result.IsLeftClicked() || row_result.IsFocused())
 					row.OnSelect();
-			});
+				});
 
 			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
@@ -158,8 +186,8 @@ namespace oly::editor
 					break;
 				}
 				}
-			});
-			
+				});
+
 			return result;
 		}
 
@@ -177,7 +205,7 @@ namespace oly::editor
 				result |= row_result;
 				if (row_result.IsLeftClicked() || row_result.IsFocused())
 					row.OnSelect();
-			});
+				});
 
 			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
 				switch (op.type)
@@ -212,7 +240,7 @@ namespace oly::editor
 					break;
 				}
 				}
-			});
+				});
 
 			return result;
 		}
@@ -317,7 +345,7 @@ namespace oly::editor
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
-		static void Draw(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+			static void Draw(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
@@ -331,13 +359,13 @@ namespace oly::editor
 					row.OnSelect();
 
 				return result;
-			}, ui_state);
+				}, ui_state);
 
 			CheckDynamicListRevertButtons(data, def);
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static void Draw(DataPath path, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+			static void Draw(DataPath path, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
@@ -351,36 +379,9 @@ namespace oly::editor
 					row.OnSelect();
 
 				return result;
-			}, ui_state);
+				}, ui_state);
 
 			CheckDynamicListRevertButtons(data, def);
-		}
-
-		template<Enum E>
-		static void Draw(const char* label, E& data, const E& def)
-		{
-			gui::IDScope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
-			if (data != def)
-				gui::PropertyGrid::Reset::Button();
-			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::AnyActivated())
-				data = def;
-		}
-
-		template<Enum E>
-		static DrawResult DrawCombo(const char* label, E& data);
-
-	private:
-		template<Enum E, size_t N>
-		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
-		{
-			int index = static_cast<int>(data);
-			LabelSpanRegistry::Handle span = LabelSpanRegistry::Intern(std::span<const char* const>(values, N));
-			DrawResult result = gui::InputData<int>{}("##", index, span);
-			data = static_cast<E>(index);
-			return result;
 		}
 	};
 }

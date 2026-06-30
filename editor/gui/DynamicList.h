@@ -80,5 +80,6 @@ namespace oly::editor::gui
 
 		void OnSelect();
 		size_t Index() const;
+		ImVec2 Size() const;
 	};
 }

@@ -3,6 +3,7 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
+#include "gui/InlineWidget.h"
 #include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
@@ -280,28 +281,32 @@ namespace oly::editor
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
 		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
-			std::string& element = desc.signals.edit.buffer[row.Index()];
+			auto component = comp::Generic([&]() -> DrawResult {
+				std::string& element = desc.signals.edit.buffer[row.Index()];
 
-			gui::Outline outline;
-			auto result = gui::InputData<std::string>{}("##Item", element);
+				gui::Outline outline;
+				auto result = gui::InputData<std::string>{}("##Item", element);
 
-			if (!signal_id_counter.contains(element))
-			{
-				outline.Draw(Color::Warning);
-				if (result.IsHovered())
-					ImGui::SetTooltip("Signal id is not present in asset");
-			}
-			else if (local_id_counter.count(element) > 1)
-			{
-				outline.Draw(Color::Warning);
-				if (result.IsHovered())
-					ImGui::SetTooltip("Duplicate signal id listing in route");
-			}
+				if (!signal_id_counter.contains(element))
+				{
+					outline.Draw(Color::Warning);
+					if (result.IsHovered())
+						ImGui::SetTooltip("Signal id is not present in asset");
+				}
+				else if (local_id_counter.count(element) > 1)
+				{
+					outline.Draw(Color::Warning);
+					if (result.IsHovered())
+						ImGui::SetTooltip("Duplicate signal id listing in route");
+				}
 
-			if (result.IsActivated())
-				row.OnSelect();
+				if (result.IsActivated())
+					row.OnSelect();
 
-			return result;
+				return result;
+			});
+
+			return gui::InlineWidget(std::span<gui::WidgetComponent>(&component, 1));
 		}, desc.signals.ui_state);
 
 		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);

@@ -3,6 +3,7 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/Errors.h"
 
+#include "gui/InlineWidget.h"
 #include "gui/graphics/Toolbar.h"
 #include "gui/scopes/IDScope.h"
 
@@ -123,29 +124,11 @@ namespace oly::editor::gui
 		KEY_DRAW_RESULT |= PropertyGroup::CheckRow(VALUE_PROPERTIES);
 	}
 
-	static float GetItemWidth(const float remaining_width, const size_t remaining_count)
-	{
-		return remaining_count > 0 ? (remaining_width - ImGui::GetStyle().ItemSpacing.x * (remaining_count - 1)) / remaining_count : remaining_width;
-	}
-
 	static void DrawValueCell()
 	{
 		ImGui::TableSetColumnIndex(1);
-
 		VALUE_DRAW_RESULT = {};
-
-		float remaining_width = ImGui::GetContentRegionAvail().x;
-		for (size_t i = 0; i < VALUE_COMPONENTS.size(); ++i)
-		{
-			const float item_width = GetItemWidth(remaining_width, VALUE_COMPONENTS.size() - i);
-			ImGui::SetNextItemWidth(item_width);
-			
-			const float start_x = ImGui::GetCursorPosX();
-			VALUE_DRAW_RESULT |= VALUE_COMPONENTS[i].draw();
-			if (i + 1 < VALUE_COMPONENTS.size())
-				ImGui::SameLine();
-			remaining_width -= ImGui::GetCursorPosX() - start_x;
-		}
+		VALUE_DRAW_RESULT |= InlineWidget(VALUE_COMPONENTS);
 	}
 
 	static void DrawResetCell()
