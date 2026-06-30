@@ -111,8 +111,6 @@ namespace oly::editor
 		_dirty = GetDoubleDescriptor().QueryDirty();
 	}
 
-	// TODO v9.1 support holding down ctrl+z or ctrl+shift+z to undo/redo multiple actions over time
-
 	void IDocument::Undo()
 	{
 		ActiveDocument active(*this);

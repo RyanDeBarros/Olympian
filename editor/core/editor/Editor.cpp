@@ -21,6 +21,8 @@
 
 namespace oly::editor
 {
+	static size_t FRAME_COUNTER = 0;
+
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
 		_logger(std::make_unique<Logger>()),
@@ -78,6 +80,13 @@ namespace oly::editor
 			_main_window->Draw();
 			break;
 		}
+
+		++FRAME_COUNTER;
+	}
+
+	size_t Editor::GetFrame() const
+	{
+		return FRAME_COUNTER;
 	}
 	
 	void Editor::SetOSWindowSize(int width, int height)

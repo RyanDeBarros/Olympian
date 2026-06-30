@@ -55,6 +55,7 @@ namespace oly::editor
 		void Init(GLFWwindow* window);
 		void Terminate();
 		void Tick();
+		size_t GetFrame() const;
 
 		void SetOSWindowSize(int width, int height);
 		void SetOSWindowMaximized(bool maximized);
