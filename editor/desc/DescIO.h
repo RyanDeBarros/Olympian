@@ -41,7 +41,10 @@ namespace oly::editor
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
 					gui::IDScope scope(&data.value);
 					if (auto disabled = DisabledSection(!data.has_value))
+					{
+						ImGui::SameLine();
 						return gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
+					}
 					else
 						return {};
 				}, !std::is_same_v<T, bool>));
@@ -106,8 +109,8 @@ namespace oly::editor
 		static void Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names);
 		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count);
 		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count);
-		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count);
-		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count);
+		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
+		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
 
 		static void Draw(const char* label, EditSession<Rect>& data, const Rect& def);
 		static void Draw(const char* label, EditSession<UVRect>& data, const UVRect& def);

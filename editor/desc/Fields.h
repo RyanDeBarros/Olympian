@@ -519,14 +519,15 @@ namespace oly::editor
 		using Super = PrimitiveField<std::array<T, N>, ArrayField<T, N>>;
 
 		const char** sublabels;
+		bool inline_checkboxes;
 
-		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: Super(def, key, label), sublabels(sublabels) {}
+		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
+			: Super(def, key, label), sublabels(sublabels), inline_checkboxes(inline_checkboxes) {}
 
 		void Draw(DataPath path)
 		{
 			const auto initial = this->value;
-			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N);
+			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N, inline_checkboxes);
 			if (initial != this->value)
 				PushFieldSetAction(path, initial, this->value);
 		}
@@ -1035,11 +1036,12 @@ namespace oly::editor
 		const char* label;
 		const E* values;
 		const char** names;
+		bool inline_checkboxes;
 
 		static const inline size_t Count = Count;
 
-		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count])
-			: def(def), value(def), key(key), label(label), values(values), names(names)
+		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
+			: def(def), value(def), key(key), label(label), values(values), names(names), inline_checkboxes(inline_checkboxes)
 		{
 			SetFlags();
 		}
@@ -1059,7 +1061,7 @@ namespace oly::editor
 		{
 			const auto initial = value;
 			SetFlags();
-			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count);
+			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count, inline_checkboxes);
 			SetEnum();
 			if (initial != value)
 				PushFieldSetAction(path, initial, value);

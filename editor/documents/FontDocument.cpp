@@ -288,7 +288,7 @@ namespace oly::editor
 			std::string distance_label = k.distance.label + std::string(" ");
 			components.push_back(comp::Text(distance_label.c_str()));
 
-			return gui::InlineWidget(components);
+			return gui::InlineWidget::Draw(components);
 		}, desc.kerning_ui_state);
 
 		auto kerning_path = path / desc.subpaths.kerning;

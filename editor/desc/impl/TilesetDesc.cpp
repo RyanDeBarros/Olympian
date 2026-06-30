@@ -8,7 +8,7 @@ namespace oly::editor
 		texture("", detail::Key::TextureFile, "Texture"),
 		texture_index(0, detail::Key::TextureIndex, "Texture Slot"),
 		uvs({}, detail::Key::UVvec4, "Texture UVs"),
-		reflection(detail::TILE_REFLECTION_BITSET_DEFAULT, detail::Key::Reflection, "Reflection", detail::TILE_REFLECTION_BITSET_VALUES, detail::TILE_REFLECTION_BITSET_NAMES),
+		reflection(detail::TILE_REFLECTION_BITSET_DEFAULT, detail::Key::Reflection, "Reflection", detail::TILE_REFLECTION_BITSET_VALUES, detail::TILE_REFLECTION_BITSET_NAMES, true),
 		rotation(detail::TileRotation::None, detail::Key::Rotation, "Rotation")
 	{
 	}

@@ -306,7 +306,7 @@ namespace oly::editor
 				return result;
 			}, true);
 
-			return gui::InlineWidget(std::span<gui::WidgetComponent>(&component, 1));
+			return gui::InlineWidget::Draw(std::span<gui::WidgetComponent>(&component, 1));
 		}, desc.signals.ui_state);
 
 		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
@@ -320,6 +320,7 @@ namespace oly::editor
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
 			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
+			ImGui::SameLine();
 			if (key)
 			{
 				if (*key != desc.key.Value())
@@ -334,15 +335,18 @@ namespace oly::editor
 		}, false));
 		DRAW_FIELD(key);
 
-		bool disabled_required_mods[desc.required_mods.Count]{};
-		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+		if (auto subform = Subform("Keyboard Mods", true))
+		{
+			bool disabled_required_mods[desc.required_mods.Count]{};
+			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
-		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+		}
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(path / desc.subpaths.modifier, desc.modifier);
@@ -354,6 +358,7 @@ namespace oly::editor
 			_stop_listening = false;
 			std::optional<detail::MouseButton> mb;
 			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
+			ImGui::SameLine();
 			if (mb)
 			{
 				if (*mb != desc.button.Value())
@@ -368,15 +373,18 @@ namespace oly::editor
 		}, false));
 		DRAW_FIELD(button);
 
-		bool disabled_required_mods[desc.required_mods.Count]{};
-		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-		desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+		if (auto subform = Subform("Keyboard Mods", true))
+		{
+			bool disabled_required_mods[desc.required_mods.Count]{};
+			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
 
-		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-		desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+		}
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(path / desc.subpaths.modifier, desc.modifier);
@@ -388,6 +396,7 @@ namespace oly::editor
 			_stop_listening = false;
 			std::optional<GLenum> button;
 			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+			ImGui::SameLine();
 			if (button)
 			{
 				if (*button != desc.button.Value())
@@ -412,6 +421,7 @@ namespace oly::editor
 			_stop_listening = false;
 			std::optional<GLenum> axis;
 			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+			ImGui::SameLine();
 			if (axis)
 			{
 				if (*axis != desc.axis.Value())
@@ -437,6 +447,7 @@ namespace oly::editor
 			_stop_listening = false;
 			std::optional<detail::GamepadAxis2D> axis;
 			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
+			ImGui::SameLine();
 			if (axis)
 			{
 				if (*axis != desc.axis.value)

@@ -1,6 +1,7 @@
 #include "ImGuiWrapper.h"
 
 #include "gui/GUIState.h"
+#include "gui/InlineWidget.h"
 #include "gui/WidgetComponentCommon.h"
 #include "gui/properties/PropertyGrid.h"
 #include "gui/properties/PropertyViews.h"

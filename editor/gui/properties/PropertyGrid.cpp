@@ -128,7 +128,7 @@ namespace oly::editor::gui
 	{
 		ImGui::TableSetColumnIndex(1);
 		VALUE_DRAW_RESULT = {};
-		VALUE_DRAW_RESULT |= InlineWidget(VALUE_COMPONENTS);
+		VALUE_DRAW_RESULT |= InlineWidget::Draw(VALUE_COMPONENTS);
 	}
 
 	static void DrawResetCell()
@@ -182,9 +182,9 @@ namespace oly::editor::gui
 		return DIRTY_GRID;
 	}
 
-	bool PropertyGrid::BeginTable()
+	bool PropertyGrid::BeginForm()
 	{
-		if (ImGui::BeginTable("", 3, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedFit))
+		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit))
 		{
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
@@ -193,5 +193,10 @@ namespace oly::editor::gui
 		}
 		else
 			return false;
+	}
+
+	void PropertyGrid::EndForm()
+	{
+		ImGui::EndTable();
 	}
 }

@@ -13,7 +13,7 @@ namespace oly::editor
 	ModifierBaseDesc::ModifierBaseDesc() :
 		swizzle(detail::Swizzle::None, detail::Key::Swizzle, "Swizzle"),
 		multiplier(glm::vec3(1.f, 1.f, 1.f), detail::Key::Multiplier, "Multiplier"),
-		invert({ false, false, false }, detail::Key::Invert, "Invert", MODIFIER_INVERT_SUBLABELS)
+		invert({ false, false, false }, detail::Key::Invert, "Invert", MODIFIER_INVERT_SUBLABELS, true)
 	{
 	}
 
@@ -37,16 +37,16 @@ namespace oly::editor
 
 	KeyDesc::KeyDesc() :
 		key(detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
-		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES),
-		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES),
+		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
 		modifier()
 	{
 	}
 
 	MouseButtonDesc::MouseButtonDesc() :
 		button(detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
-		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES),
-		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES),
+		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
 		modifier()
 	{
 	}

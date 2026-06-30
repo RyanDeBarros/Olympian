@@ -44,6 +44,7 @@ namespace oly::editor::gui
 
 		static bool DirtyGrid();
 
-		static bool BeginTable();
+		static bool BeginForm();
+		static void EndForm();
 	};
 }

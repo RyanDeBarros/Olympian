@@ -131,35 +131,4 @@ namespace oly::editor::gui
 	{
 		DrawResult operator()(const char* label, Color4& data) const;
 	};
-
-	template<Enum E>
-	struct InputData<E>
-	{
-		DrawResult operator()(E& data, const E* values, LabelSpanRegistry::Handle names)
-		{
-			return (*this)(data, values, names, nullptr);
-		}
-
-		DrawResult operator()(E& data, const E* values, LabelSpanRegistry::Handle names, const bool* disabled)
-		{
-			const size_t count = LabelSpanRegistry::Count(names);
-			DrawResult result;
-			for (size_t i = 0; i < count; ++i)
-			{
-				bool flag = static_cast<bool>(data & values[i]);
-
-				if (auto d = DisabledSection(disabled && disabled[i]))
-					result |= InputData<bool>{}(LabelSpanRegistry::String(names, i), flag);
-
-				if (flag)
-					data |= values[i];
-				else
-					data &= ~values[i];
-
-				if (i + 1 < count)
-					ImGui::SameLine();
-			}
-			return result;
-		}
-	};
 }
