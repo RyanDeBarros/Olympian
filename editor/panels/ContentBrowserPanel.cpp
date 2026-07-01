@@ -1,7 +1,10 @@
 #include "ContentBrowserPanel.h"
 
-#include "core/windows/MainWindow.h"
 #include "core/Errors.h"
+#include "core/editor/Editor.h"
+#include "core/editor/LiveSettings.h"
+#include "core/windows/MainWindow.h"
+
 #include "panels/PanelManager.h"
 
 #include <imgui.h>
@@ -33,6 +36,10 @@ namespace oly::editor
 		{
 			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(), ImGuiChildFlags_Borders))
 			{
+				int rows = *Editor::GetLiveSettings().content_browser->rows;
+				ImGui::InputInt("Rows", &rows);
+				*Editor::GetLiveSettings().content_browser->rows = std::max(rows, 1);
+
 				// TODO v9.2
 			}
 

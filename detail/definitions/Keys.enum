@@ -60,6 +60,7 @@ ColType = ColType
 ColValue = ColValue
 CommonBufferPreset = ComBP
 CommonBuffer = ComB
+ContentBrowser = CntBrwsr
 Context = Context
 ContextDebug = CTXDebug
 Conversion = Conv

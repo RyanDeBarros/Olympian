@@ -3,6 +3,7 @@
 #include "core/windows/ProjectSelectWindow.h"
 #include "core/windows/MainWindow.h"
 
+#include "core/editor/LiveSettings.h"
 #include "core/editor/Logger.h"
 #include "core/editor/ShortcutManager.h"
 #include "core/editor/ProjectInfo.h"
@@ -28,8 +29,7 @@ namespace oly::editor
 		_logger(std::make_unique<Logger>()),
 		_main_window(std::make_unique<MainWindow>()),
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
-		_project_info(std::make_unique<ProjectInfo>()),
-		_preferences_desc(std::make_unique<PreferencesDesc>())
+		_project_info(std::make_unique<ProjectInfo>())
 	{
 	}
 
@@ -151,12 +151,20 @@ namespace oly::editor
 				return;
 		}
 
+		if (_live_settings)
+			_live_settings->Dump();
+
 		glfwSetWindowShouldClose(_os_window, GLFW_TRUE);
 	}
 
 	PreferencesDesc& Editor::GetPreferences()
 	{
 		return *Instance()._preferences_desc;
+	}
+
+	LiveSettingsDesc& Editor::GetLiveSettings()
+	{
+		return Instance()._live_settings->desc;
 	}
 
 	AppState Editor::GetAppState() const
@@ -194,6 +202,10 @@ namespace oly::editor
 		_app_state = AppState::Main;
 		_project_info->Init(path);
 		_main_window->Open();
+
+		_preferences_desc = std::make_unique<PreferencesDesc>();
+		_live_settings = std::make_unique<LiveSettings>();
+		_live_settings->Load();
 	}
 
 	void Editor::OpenFile(const std::filesystem::path& path)

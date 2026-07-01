@@ -1,5 +1,7 @@
 #pragma once
 
+#include "assets/KeyDecl.h"
+
 #include <optional>
 #include <string>
 #include <string_view>
@@ -8,7 +10,6 @@
 namespace oly::detail
 {
 	class ResourcePath;
-	enum class Key : unsigned long long;
 
 	struct MetaMap
 	{

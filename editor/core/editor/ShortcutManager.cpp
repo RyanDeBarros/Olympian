@@ -14,22 +14,26 @@ namespace oly::editor
         return Editor::Instance().GetShortcutManager();
     }
 
-    void ShortcutManager::PollShortcuts()
+    static void PollGeneralShortcuts()
     {
         if (ImGui::Shortcut(ImGuiKey_F11, ImGuiInputFlags_RouteGlobal))
             Editor::Instance().SetOSWindowFullScreen(!Editor::Instance().IsOSWindowFullScreen());
-        
+    }
+
+    static void PollMainAppStateShortcuts()
+    {
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Space, ImGuiInputFlags_RouteGlobal))
-        {
-            auto& panel = ContentBrowserPanel::Instance();
-            if (panel.IsOpen())
-                panel.Close();
-            else
-                panel.Open();
-        }
+            ContentBrowserPanel::Instance().ToggleOpen();
 
         if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_Comma, ImGuiInputFlags_RouteGlobal))
             PreferencesPanel::Instance().Open();
+    }
+
+    void ShortcutManager::PollShortcuts()
+    {
+        PollGeneralShortcuts();
+        if (Editor::Instance().GetAppState() == AppState::Main)
+            PollMainAppStateShortcuts();
     }
 
     void ShortcutManager::HandlePathDrop(int count, const char** paths)

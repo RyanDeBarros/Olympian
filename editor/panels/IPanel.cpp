@@ -50,6 +50,11 @@ namespace oly::editor
 		return _open;
 	}
 
+	void IPanel::ToggleOpen()
+	{
+		_open = !_open;
+	}
+
 	void IPanel::GainFocus()
 	{
 		_gain_next = this;

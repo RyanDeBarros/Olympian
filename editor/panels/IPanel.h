@@ -39,6 +39,7 @@ namespace oly::editor
 		void Open();
 		void Close();
 		bool IsOpen() const;
+		void ToggleOpen();
 		void GainFocus();
 
 	protected:

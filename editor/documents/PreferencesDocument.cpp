@@ -15,7 +15,7 @@ namespace oly::editor
 	}
 
 	PreferencesDocument::PreferencesDocument()
-		: IDocument(ProjectInfo::Instance().EditorRoot() / "preferences.toml")
+		: IDocument(ProjectInfo::Instance().EditorRoot() / "Preferences.toml")
 	{
 	}
 

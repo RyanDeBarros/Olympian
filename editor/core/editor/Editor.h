@@ -15,6 +15,8 @@ namespace oly::editor
 	class ShortcutManager;
 	class ProjectInfo;
 	class PreferencesDesc;
+	class LiveSettings;
+	class LiveSettingsDesc;
 
 	enum class AppState
 	{
@@ -43,6 +45,7 @@ namespace oly::editor
 		std::unique_ptr<ShortcutManager> _shortcut_manager;
 		std::unique_ptr<ProjectInfo> _project_info;
 		std::unique_ptr<PreferencesDesc> _preferences_desc;
+		std::unique_ptr<LiveSettings> _live_settings;
 
 		Editor();
 		Editor(const Editor&) = delete;
@@ -64,6 +67,7 @@ namespace oly::editor
 		void RequestShutdown();
 
 		static PreferencesDesc& GetPreferences();
+		static LiveSettingsDesc& GetLiveSettings();
 
 		AppState GetAppState() const;
 		ProjectSelectWindow& GetProjectSelectWindow();
