@@ -61,7 +61,8 @@ namespace oly::editor
                 0.2f
             ),
             DockNode::MakeLeaf({
-                typeid(LogPanel)
+                typeid(LogPanel),
+                typeid(ContentBrowserPanel)
             }),
             0.75f
         );

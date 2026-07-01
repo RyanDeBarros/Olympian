@@ -8,6 +8,8 @@
 #include "core/Errors.h"
 
 #include "panels/PanelManager.h"
+#include "panels/ContentBrowserPanel.h"
+
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
@@ -168,9 +170,7 @@ namespace oly::editor
 							path = path.get_source_path();
 
 						if (ImGui::MenuItem("Show in Content Browser"))
-						{
-							// TODO v9.2
-						}
+							ContentBrowserPanel::Instance().ShowInContentBrowser(path);
 
 						if (ImGui::MenuItem("Reveal in explorer"))
 							PathInfo::RevealInExplorer(path.get_absolute());

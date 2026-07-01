@@ -42,6 +42,6 @@ namespace oly::editor
 		void GainFocus();
 
 	protected:
-		DrawDockedWindowImpl DrawDockedWindow(ImGuiWindowFlags flags);
+		DrawDockedWindowImpl DrawDockedWindow(ImGuiWindowFlags flags = 0);
 	};
 }

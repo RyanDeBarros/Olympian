@@ -12,6 +12,7 @@
 #include "core/PathInfo.h"
 
 #include "panels/PanelManager.h"
+#include "panels/ContentBrowserPanel.h"
 
 #include "gui/graphics/Toolbar.h"
 
@@ -188,7 +189,7 @@ namespace oly::editor
 
 	void TreeViewPanel::Draw()
 	{
-		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
+		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
 			DrawHeader();
@@ -266,7 +267,11 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Show in Content Browser"))
 			{
-				// TODO v9.2
+				detail::ResourcePath path = node.path;
+				if (path.is_resource())
+					ContentBrowserPanel::Instance().ShowInContentBrowser(path);
+				else
+					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.string() + " is not located in the project resource folder"));
 			}
 
 			if (ImGui::MenuItem("Reveal in Explorer"))

@@ -28,10 +28,20 @@ namespace oly::editor
 
 	void ContentBrowserPanel::Draw()
 	{
-		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
+		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
-			// TODO v9.2
+			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(), ImGuiChildFlags_Borders))
+			{
+				// TODO v9.2
+			}
+
+			ImGui::EndChild();
 		}
+	}
+
+	void ContentBrowserPanel::ShowInContentBrowser(const detail::ResourcePath& path)
+	{
+		// TODO v9.2
 	}
 }
