@@ -78,9 +78,19 @@ namespace oly::editor
 			return vector[i];
 		}
 
+		auto begin() const
+		{
+			return vector.begin();
+		}
+
 		auto begin()
 		{
 			return vector.begin();
+		}
+
+		auto end() const
+		{
+			return vector.end();
 		}
 
 		auto end()
@@ -88,9 +98,72 @@ namespace oly::editor
 			return vector.end();
 		}
 
-		std::unique_ptr<gui::IListAdapter> ListAdapter()
+		template<typename Printer = StandardPrinter<Descriptor>>
+		std::unique_ptr<gui::IListAdapter> ListAdapter(DataPath path)
 		{
-			return std::make_unique<gui::VectorAdapter<Descriptor>>(vector);
+			return std::make_unique<gui::VectorAdapter<Descriptor, Printer>>(path, vector);
+		}
+
+		void* PathGet(DataPath path, std::type_index type)
+		{
+			if (path.Empty())
+				return typeid(decltype(vector)) == type ? reinterpret_cast<void*>(&vector) : nullptr;
+
+			int index = path.Step().v;
+			if (index >= 0 && index < vector.size())
+				return vector[index].PathGet(path.Next(), type);
+			else
+				return nullptr;
+		}
+
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			if (path.Empty())
+				os << "<error>";
+			else
+			{
+				int index = path.Step().v;
+				if (index >= 0 && index < vector.size())
+				{
+					path = path.Next();
+					if (path.Empty())
+						os << index;
+					else
+					{
+						os << index << ".";
+						vector[index].PrintPath(os, path);
+					}
+				}
+				else
+					os << "<error>";
+			}
+		}
+
+		DataPathStep Subpath(size_t index)
+		{
+			return DataPathStep(index);
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			bool dirty = false;
+			for (size_t i = 0; i < vector.size(); ++i)
+				dirty |= vector[i].DrawFinalize(path / Subpath(i));
+			return dirty;
+		}
+
+		bool QueryDirty(const VectorDesc<Descriptor>& disk) const
+		{
+			if (vector.size() != disk.vector.size())
+				return true;
+
+			for (size_t i = 0; i < vector.size(); ++i)
+			{
+				if (vector[i].QueryDirty(disk.vector[i]))
+					return true;
+			}
+
+			return false;
 		}
 	};
 
@@ -138,6 +211,34 @@ namespace oly::editor
 		{
 			return std::get_if<Descriptor>(&variant);
 		}
+
+		void* PathGet(DataPath path, std::type_index type)
+		{
+			return std::visit([path, type](auto& desc) { return desc.PathGet(path, type); }, variant);
+		}
+
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			return std::visit([&os, path](auto& desc) { return desc.PrintPath(os, path); }, variant);
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			return std::visit([path](auto& desc) { return desc.DrawFinalize(path); }, variant);
+		}
+
+		bool QueryDirty(const VariantDesc<Descriptors...>& disk) const
+		{
+			return std::visit([](const auto& lhs, const auto& rhs) {
+				using L = std::decay_t<decltype(lhs)>;
+				using R = std::decay_t<decltype(rhs)>;
+
+				if constexpr (std::is_same_v<L, R>)
+					return lhs.QueryDirty(rhs);
+				else
+					return true;
+			}, variant, disk.variant);
+		}
 	};
 
 	template<typename Key, typename ValueDescriptor>
@@ -155,11 +256,6 @@ namespace oly::editor
 			return map[key];
 		}
 
-		const ValueDescriptor& operator[](Key key) const
-		{
-			return map[key];
-		}
-
 		auto begin()
 		{
 			return map.begin();
@@ -168,6 +264,73 @@ namespace oly::editor
 		auto end()
 		{
 			return map.end();
+		}
+
+		void* PathGet(DataPath path, std::type_index type)
+		{
+			if (path.Empty())
+				return typeid(decltype(map)) == type ? reinterpret_cast<void*>(&map) : nullptr;
+
+			auto it = map.find(static_cast<Key>(path.Step().v));
+			if (it != map.end())
+				return it->second.PathGet(path.Next(), type);
+			else
+				return nullptr;
+		}
+
+		void PrintPath(std::ostream& os, DataPath path) const
+		{
+			if (path.Empty())
+				os << "<error>";
+			else
+			{
+				auto key = static_cast<Key>(path.Step().v);
+				auto it = map.find(key);
+				if (it != map.end())
+				{
+					path = path.Next();
+					if (path.Empty())
+						os << key;
+					else
+					{
+						os << key << ".";
+						it->second.PrintPath(os, path);
+					}
+				}
+				else
+					os << "<error>";
+			}
+		}
+
+		DataPathStep Subpath(Key key)
+		{
+			return DataPathStep(key);
+		}
+
+		bool DrawFinalize(DataPath path)
+		{
+			bool dirty = false;
+			for (auto& [key, desc] : map)
+				dirty |= desc.DrawFinalize(path / Subpath(key));
+			return dirty;
+		}
+
+		bool QueryDirty(const MapDesc<Key, ValueDescriptor>& disk) const
+		{
+			if (map.size() != disk.map.size())
+				return true;
+
+			for (const auto& [key, desc] : map)
+			{
+				auto it = disk.map.find(key);
+				if (it == disk.map.end())
+					return true;
+
+				if (desc.QueryDirty(it->second))
+					return true;
+			}
+
+			return false;
 		}
 	};
 }

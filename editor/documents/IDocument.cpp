@@ -1,5 +1,7 @@
 #include "IDocument.h"
 
+#include "desc/DoubleDescriptor.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -9,6 +11,13 @@ namespace oly::editor
 	{
 	}
 
+	void IDocument::Init()
+	{
+		_undo_history.emplace();
+		InitImpl();
+		_initialized = true;
+	}
+
 	void IDocument::DrawMenuBar()
 	{
 		if (ImGui::BeginMenuBar())
@@ -16,16 +25,59 @@ namespace oly::editor
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
+					DumpAsset();
 
 				if (ImGui::MenuItem("Discard Changes"))
-					Load();
+					LoadAsset();
 
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
 		}
+	}
+
+	void IDocument::LoadAsset()
+	{
+		auto original = GetDoubleDescriptor().CopyScratch();
+
+		LoadImpl();
+
+		if (_initialized)
+		{
+			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
+				_undo_history->Push(std::move(action));
+			else
+				_undo_history->Clear();
+		}
+	}
+
+	void IDocument::DumpAsset()
+	{
+		DumpImpl();
+	}
+
+	void* IDocument::PathGet(DataPath path, std::type_index type)
+	{
+		return GetDoubleDescriptor().PathGet(path, type);
+	}
+
+	void IDocument::PrintPath(std::ostream& os, DataPath path) const
+	{
+		GetDoubleDescriptor().PrintPath(os, path);
+	}
+	
+	std::string IDocument::PathString(DataPath path) const
+	{
+		std::stringstream ss;
+		PrintPath(ss, path);
+		return ss.str();
+	}
+
+	void IDocument::DrawFinalize()
+	{
+		if (GetDoubleDescriptor().DrawFinalize())
+			MarkDirty();
 	}
 
 	const detail::ResourcePath& IDocument::GetOlyPath() const
@@ -46,10 +98,44 @@ namespace oly::editor
 	void IDocument::MarkClean()
 	{
 		_dirty = false;
+		_undo_history->MarkClean();
 	}
 
 	bool IDocument::IsDirty() const
 	{
 		return _dirty;
+	}
+
+	void IDocument::QueryDirty()
+	{
+		_dirty = GetDoubleDescriptor().QueryDirty();
+	}
+
+	void IDocument::Undo()
+	{
+		ActiveDocument active(*this);
+		_undo_history->Undo();
+	}
+
+	void IDocument::Redo()
+	{
+		ActiveDocument active(*this);
+		_undo_history->Redo();
+	}
+
+	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
+		_doc(doc), _uh_scope(*doc._undo_history), _active_instance(doc)
+	{
+	}
+
+	IDocument::PreDrawImpl::~PreDrawImpl()
+	{
+		if (gui::PropertyGrid::DirtyGrid())
+			_doc.MarkDirty();
+	}
+
+	IDocument::PreDrawImpl IDocument::PreDraw()
+	{
+		return PreDrawImpl(*this);
 	}
 }

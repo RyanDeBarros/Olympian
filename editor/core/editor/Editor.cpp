@@ -8,20 +8,28 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/Texture.h"
+#include "gui/graphics/Texture.h"
+
 #include "documents/DocumentManager.h"
+
 #include "panels/AssetEditorPanel.h"
+#include "panels/PreferencesPanel.h"
+
+#include "desc/impl/PreferencesDesc.h"
 
 #include <imgui_impl_glfw.h>
 
 namespace oly::editor
 {
+	static size_t FRAME_COUNTER = 0;
+
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
 		_logger(std::make_unique<Logger>()),
 		_main_window(std::make_unique<MainWindow>()),
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
-		_project_info(std::make_unique<ProjectInfo>())
+		_project_info(std::make_unique<ProjectInfo>()),
+		_preferences_desc(std::make_unique<PreferencesDesc>())
 	{
 	}
 
@@ -34,6 +42,16 @@ namespace oly::editor
 	void Editor::Init(GLFWwindow* window)
 	{
 		_os_window = window;
+
+		glfwSetDropCallback(_os_window, [](GLFWwindow* window, int count, const char** paths) {
+			ShortcutManager::Instance().HandlePathDrop(count, paths);
+		});
+
+		glfwSetWindowCloseCallback(_os_window, [](GLFWwindow* w) {
+			glfwSetWindowShouldClose(w, GLFW_FALSE);
+			Editor::Instance().RequestShutdown();
+		});
+
 		ResourceLoader::LoadAll();
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
@@ -62,6 +80,13 @@ namespace oly::editor
 			_main_window->Draw();
 			break;
 		}
+
+		++FRAME_COUNTER;
+	}
+
+	size_t Editor::GetFrame() const
+	{
+		return FRAME_COUNTER;
 	}
 	
 	void Editor::SetOSWindowSize(int width, int height)
@@ -115,6 +140,25 @@ namespace oly::editor
 		return _os_state.fullscreen;
 	}
 
+	void Editor::RequestShutdown()
+	{
+		if (_app_state == AppState::Main)
+		{
+			if (!PreferencesPanel::Instance().RequestShutdown())
+				return;
+
+			if (!AssetEditorPanel::Instance().RequestShutdown())
+				return;
+		}
+
+		glfwSetWindowShouldClose(_os_window, GLFW_TRUE);
+	}
+
+	PreferencesDesc& Editor::GetPreferences()
+	{
+		return *Instance()._preferences_desc;
+	}
+
 	AppState Editor::GetAppState() const
 	{
 		return _app_state;
@@ -157,6 +201,7 @@ namespace oly::editor
 		OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
 		if (code == OpenAssetCode::Success)
 		{
+			AssetEditorPanel::Instance().Open();
 			AssetEditorPanel::Instance().GainFocus();
 			return;
 		}

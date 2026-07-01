@@ -3,6 +3,7 @@
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "gui/ImGuiWrapper.h"
+#include "gui/properties/PropertyGrid.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
@@ -17,7 +18,7 @@ namespace oly::editor
     {
         Editor::Instance().SetOSWindowSize(920, 690);
 
-        // TODO v9 remove once recent projects group is implemented
+        // TODO v9.3 remove once recent projects group is implemented
         _project_file = "D:/Projects/Visual Studio/Olympian/Tester/OlympianTester.oly";
         CheckProjectFile();
     }
@@ -44,7 +45,10 @@ namespace oly::editor
         ImGui::Begin("Project Select Window", nullptr, window_flags);
         ImGui::PopStyleVar(2);
 
-        DrawOpenExistingGroup();
+        {
+            gui::PropertyGrid grid;
+            DrawOpenExistingGroup();
+        }
 
         ImGui::End();
 	}

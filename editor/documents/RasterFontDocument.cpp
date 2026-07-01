@@ -2,8 +2,10 @@
 
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
+#include "core/Colors.h"
 
-#include "gui/Subform.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
 #include "gui/GUIState.h"
 
 #include "definitions/Keys.h"
@@ -15,7 +17,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void RasterFontDocument::Init()
+	void RasterFontDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -23,16 +25,18 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void RasterFontDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		Draw(DataPath(), _desc.scratch);
 	}
 
-	void RasterFontDocument::Load()
+	void RasterFontDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -41,7 +45,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load raster font - corrupted asset: " + _oly_path.string());
@@ -52,7 +56,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -62,80 +66,98 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 		
 		_codepoint_counter.clear();
-		for (auto& desc : _scratch.glyphs)
-			_codepoint_counter.increment(desc.codepoint.scratch);
+		for (auto& desc : _desc.scratch.glyphs)
+			_codepoint_counter.increment(desc.codepoint.value);
 
 		_glyph_model.Init(*ListAdapter());
 	}
 
-	void RasterFontDocument::Dump()
+	void RasterFontDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void RasterFontDocument::Draw(RasterFontDesc& desc)
+	const IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
+	IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor()
+	{
+		return _desc;
+	}
+
+	void RasterFontDocument::Draw(DataPath path, RasterFontDesc& desc)
 	{
 		if (auto form = Form())
 		{
 			DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-			if (auto subform = Subform(form, "Glyphs"))
+			if (auto subform = Subform("Glyphs"))
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("Select Glyph");
+				if (auto pause = FormPause())
+				{
+					_glyph_model.Update(*ListAdapter());
 
-				ImGui::TableNextColumn();
-				_glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
-					if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.scratch.empty())
-						return desc.glyphs[i].codepoint.scratch;
-					else
-						return "Glyph #" + std::to_string(i);
-				}, "New glyph", "Delete glyph", "Clear glyphs");
+					if (auto scope = gui::IDScope("##Glyph"))
+					{
+						_glyph_model.DrawComboHeader({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" },
+							[&desc](size_t i) -> std::string {
+								if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.value.empty())
+									return desc.glyphs[i].codepoint.value;
+								else
+									return "Glyph #" + std::to_string(i);
+							});
+					}
+				}
 
-				if (!desc.glyphs.Empty())
-					Draw(_scratch.glyphs[_glyph_model.active_index]);
+				if (Form::ValidActiveForm())
+				{
+					if (!desc.glyphs.Empty())
+						Draw(path / desc.subpaths.glyphs / desc.glyphs.Subpath(_glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
+
+					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
+				}
 
 				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
 
 				_glyph_model.active_index.ConsumeModified();
-				// TODO v9 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 			}
 		}
 	}
 
-	void RasterFontDocument::Draw(GlyphDesc& desc)
+	void RasterFontDocument::Draw(DataPath path, GlyphDesc& desc)
 	{
 		GUIState::InputDataStyleStack style_stack;
-		const bool empty_codepoint = desc.codepoint.scratch.empty();
-		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.scratch) > 1;
+		const bool empty_codepoint = desc.codepoint.value.empty();
+		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
 
 		if (empty_codepoint || duplicate_codepoint)
 		{
-			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = IM_COL32(255, 0, 0, 255) });
+			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = Color::Error });
 			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
 		}
 
-		std::string codepoint = desc.codepoint.scratch;
-		auto codepoint_result = desc.codepoint.Draw();
-		if (codepoint_result)
+		std::string previous_codepoint = desc.codepoint.value;
+		DRAW_FIELD(codepoint);
+		desc.codepoint.Draw(path / desc.subpaths.codepoint);
+		if (gui::PropertyGrid::DirtyRow())
 		{
-			_codepoint_counter.increment(desc.codepoint.scratch);
-			_codepoint_counter.decrement(codepoint);
-			MarkDirty();
+			_codepoint_counter.increment(desc.codepoint.value);
+			_codepoint_counter.decrement(previous_codepoint);
 		}
 
 		style_stack.PopStyles();
 
-		if (codepoint_result.IsHovered())
+		if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");
@@ -186,9 +208,17 @@ namespace oly::editor
 		DUMP_FIELDS(GLYPH_GENERATOR);
 	}
 
+	struct BriefGlyphDescPrinter
+	{
+		void operator()(std::ostream& os, const GlyphDesc& desc)
+		{
+			os << "GlyphDesc[codepoint=" << desc.codepoint.value << ", ...]";
+		}
+	};
+
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
-		return std::make_unique<gui::ListCallbackAdapter>(_scratch.glyphs.ListAdapter(),
-			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _scratch.glyphs[i].codepoint.scratch; }));
+		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter<BriefGlyphDescPrinter>(DataPath() / _desc.scratch.subpaths.glyphs),
+			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace oly::detail
 {
 	enum class Swizzle
@@ -13,6 +15,8 @@ namespace oly::detail
 		ZYX
 	};
 
+	extern std::ostream& operator<<(std::ostream& os, Swizzle swizzle);
+
 	enum class Axis0dConversion
 	{
 		None = 0,
@@ -21,6 +25,8 @@ namespace oly::detail
 		To3D
 	};
 
+	extern std::ostream& operator<<(std::ostream& os, Axis0dConversion conversion);
+
 	enum class Axis1dConversion
 	{
 		None = 0,
@@ -28,6 +34,8 @@ namespace oly::detail
 		To2D,
 		To3D
 	};
+
+	extern std::ostream& operator<<(std::ostream& os, Axis1dConversion conversion);
 
 	enum class Axis2dConversion
 	{
@@ -41,4 +49,6 @@ namespace oly::detail
 		To3D_0,
 		To3D_1
 	};
+
+	extern std::ostream& operator<<(std::ostream& os, Axis2dConversion conversion);
 }

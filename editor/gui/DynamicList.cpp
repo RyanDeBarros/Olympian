@@ -3,9 +3,9 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
 
-#include "gui/DisabledSection.h"
-#include "gui/IDScope.h"
-#include "gui/Toolbar.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/graphics/Toolbar.h"
 
 namespace oly::editor::gui
 {
@@ -14,24 +14,24 @@ namespace oly::editor::gui
 		switch (type)
 		{
 		case Type::Delete:
-			if (idx == index)
+			if (idx == GetIndex())
 				return false;
 
-			if (idx > index)
+			if (idx > GetIndex())
 				--idx;
 
 			break;
 
 		case Type::Move:
 		{
-			size_t min = std::min(src, index);
-			size_t max = std::max(src, index);
+			size_t min = std::min(GetSrcIndex(), GetDstIndex());
+			size_t max = std::max(GetSrcIndex(), GetDstIndex());
 
 			if (idx >= min && idx <= max)
 			{
-				if (idx == src)
-					idx = index;
-				else if (src < index)
+				if (idx == GetSrcIndex())
+					idx = GetDstIndex();
+				else if (GetSrcIndex() < GetDstIndex())
 					--idx;
 				else
 					++idx;
@@ -41,7 +41,7 @@ namespace oly::editor::gui
 		}
 
 		case Type::Resize:
-			if (idx >= index)
+			if (idx >= GetSize())
 				return false;
 
 			break;
@@ -53,24 +53,49 @@ namespace oly::editor::gui
 		return true;
 	}
 
+	void RowOperation::UpdateRowOp(RowOperation& op) const
+	{
+		op.SetValid(op.valid && UpdateIndex(op.index1) && UpdateIndex(op.index2));
+	}
+
 	RowOperation RowOperation::MakeDelete(size_t index)
 	{
-		return RowOperation{ .type = Type::Delete, .index = index, .src = index };
+		return RowOperation{ .type = Type::Delete, .index1 = index, .index2 = index };
 	}
 	
 	RowOperation RowOperation::MakeMove(size_t src, size_t dst)
 	{
-		return RowOperation{ .type = Type::Move, .index = dst, .src = src };
+		return RowOperation{ .type = Type::Move, .index1 = src, .index2 = dst };
 	}
 
 	RowOperation RowOperation::MakeResize(size_t size)
 	{
-		return RowOperation{ .type = Type::Resize, .index = size, .src = size };
+		return RowOperation{ .type = Type::Resize, .index1 = size, .index2 = size };
 	}
 
 	RowOperation RowOperation::MakePushBack()
 	{
-		return RowOperation{ .type = Type::PushBack, .index = 0, .src = 0 };
+		return RowOperation{ .type = Type::PushBack, .index1 = 0, .index2 = 0 };
+	}
+
+	size_t RowOperation::GetIndex() const
+	{
+		return index1;
+	}
+
+	size_t RowOperation::GetSrcIndex() const
+	{
+		return index1;
+	}
+
+	size_t RowOperation::GetDstIndex() const
+	{
+		return index2;
+	}
+
+	size_t RowOperation::GetSize() const
+	{
+		return index2;
 	}
 
 	void RowOperation::SetValid(bool valid)
@@ -144,7 +169,7 @@ namespace oly::editor::gui
 				break;
 
 			case RowOperation::Type::Resize:
-				list_size = it->index;
+				list_size = it->GetSize();
 				break;
 
 			case RowOperation::Type::PushBack:
@@ -167,7 +192,7 @@ namespace oly::editor::gui
 			simul_selected = std::move(keep_selected);
 
 			for (auto ut = std::next(it); ut != row_ops.end(); ++ut)
-				ut->SetValid(ut->valid && it->UpdateIndex(ut->index) && it->UpdateIndex(ut->src));
+				it->UpdateRowOp(*ut);
 		}
 
 		row_ops.clear();
@@ -194,7 +219,7 @@ namespace oly::editor::gui
 		}
 	}
 
-	void DynamicListState::DrawBody(std::function<void(DynamicRow& row)> row_draw)
+	void DynamicListState::DrawBody(std::function<void(DynamicRow&)> row_draw)
 	{
 		if (ImGui::BeginChild("List"))
 		{

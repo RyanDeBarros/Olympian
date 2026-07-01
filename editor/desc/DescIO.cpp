@@ -1,84 +1,168 @@
 #include "DescIO.h"
 
-#include "core/editor/ResourceLoader.h"
-#include "gui/DisabledSection.h"
-#include "gui/DynamicList.h"
-#include "gui/ImGuiWrapper.h"
-#include "gui/Subform.h"
-#include "gui/Toolbar.h"
+#include "gui/InlineWidget.h"
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/Subform.h"
+
+#include "core/MemoryUnit.h"
 
 #include "definitions/Keys.h"
 #include "definitions/enums/Include.h"
 
 #include <imgui.h>
 
+#include <span>
+
+// TODO DEBT support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkoboxes or combos enabling/disabling sections.
+
 namespace oly::editor
 {
-	void DescIO::PrepareValue(const char* label)
+	void DescIO::Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names)
 	{
-		ImGui::TableNextRow();
-		ImGui::TableNextColumn();
-		ImGui::Text(label);
-		ImGui::TableNextColumn();
+		RowInputData(label, data, def, names);
 	}
 
-	bool DescIO::DrawRevertButton()
+	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count)
 	{
-		bool dirty = false;
-		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
-			dirty = true;
-		return dirty;
-	}
-
-	DrawResult DescIO::Draw(const char* label, int& data, const int& def, const char** names, size_t count)
-	{
-		DrawResult result;
-		PrepareValue(label);
-		gui::IDScope scope(&data);
-		result |= gui::InputData<int>{}("", data, names, count);
-		result |= CheckRevertButton(data, def);
-		return result;
-	}
-
-	DrawResult DescIO::Draw(const char* label, std::string* data, const std::string* def, size_t count)
-	{
-		std::unique_ptr<Form> temp_form;
-		Form* form = Form::ActiveForm();
-		if (!form)
-		{
-			temp_form = std::make_unique<Form>();
-			form = temp_form.get();
-		}
-
-		if (auto subform = Subform(*form, label))
-		{
-			DrawResult result;
+		const auto generator = [data, count](PropertyPage& props) {
+			PropertyRow row;
 			for (size_t i = 0; i < count; ++i)
-				result |= Draw(std::to_string(i).c_str(), data[i], def[i]);
-			return result;
+				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+
+			props.page.push_back(std::move(row));
+			};
+
+		if (auto subform = Subform(label, generator))
+		{
+			for (size_t i = 0; i < count; ++i)
+				RowInputData(std::to_string(i).c_str(), data[i], def[i]);
 		}
-		else
-			return false;
 	}
 
-	DrawResult DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count)
+	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count)
 	{
-		DrawResult result;
-		PrepareValue(label);
-		gui::IDScope scope(&data);
+		const auto generator = [data, count](PropertyPage& props) {
+			PropertyRow row;
+			for (size_t i = 0; i < count; ++i)
+				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+
+			props.page.push_back(std::move(row));
+			};
+
+		if (auto subform = Subform(label, generator))
+		{
+			for (size_t i = 0; i < count; ++i)
+				RowInputData(sublabels[i], data[i], def[i]);
+		}
+	}
+
+	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes)
+	{
+		Draw(label, data, def, sublabels, nullptr, count, inline_checkboxes);
+	}
+
+	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes)
+	{
+		gui::IDScope scope(data);
+		gui::PropertyGrid::Key::SetLabel(label);
 
 		for (size_t i = 0; i < count; ++i)
 		{
-			result |= gui::InputData<bool>{}(sublabels[i], data[i]);
-			result.Query();
-			result |= CheckRevertButton(data[i], def[i]);
-
-			if (i + 1 < count)
-				ImGui::SameLine();
+			if (data[i] != def[i])
+			{
+				gui::PropertyGrid::Reset::Button();
+				break;
+			}
 		}
 
-		return result;
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, sublabels, disabled, count, inline_checkboxes]() -> DrawResult {
+			DrawResult result;
+			
+			for (size_t i = 0; i < count; ++i)
+			{
+				if (auto d = DisabledSection(disabled && disabled[i]))
+				{
+					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
+					if (inline_checkboxes && i + 1 < count)
+						ImGui::SameLine();
+				}
+			}
+
+			return result;
+		}));
+
+		gui::PropertyGrid::SubmitRow();
+
+		if (gui::PropertyGrid::Reset::AnyActivated())
+		{
+			for (size_t i = 0; i < count; ++i)
+				data[i] = def[i];
+		}
+	}
+
+	void DescIO::Draw(const char* label, EditSession<Rect>& data, const Rect& def)
+	{
+		gui::IDScope scope(&data);
+		gui::PropertyGrid::Key::SetLabel(label);
+
+		data.PreEdit();
+		if (data.buffer != def)
+			gui::PropertyGrid::Reset::Button();
+
+		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1);
+		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer.x2);
+		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer.y1);
+		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer.y2);
+
+		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
+		if (gui::PropertyGrid::Reset::AnyActivated())
+			data.PublishReset(def);
+	}
+	
+	void DescIO::Draw(const char* label, EditSession<UVRect>& data, const UVRect& def)
+	{
+		gui::IDScope scope(&data);
+		gui::PropertyGrid::Key::SetLabel(label);
+
+		data.PreEdit();
+		if (data.buffer != def)
+			gui::PropertyGrid::Reset::Button();
+
+		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
+
+		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
+		if (gui::PropertyGrid::Reset::AnyActivated())
+			data.PublishReset(def);
+	}
+	
+	void DescIO::Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def)
+	{
+		gui::IDScope scope(&data);
+		gui::PropertyGrid::Key::SetLabel(label);
+
+		data.PreEdit();
+		if (data.buffer != def)
+			gui::PropertyGrid::Reset::Button();
+
+		ValueLabelInputData<float>{}("left", "##left", data.buffer.left);
+		ValueLabelInputDataSep<float>{}("right", "##right", data.buffer.right);
+		ValueLabelInputDataSep<float>{}("top", "##top", data.buffer.top);
+
+		gui::PropertyGrid::SubmitRow();
+		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
+		if (gui::PropertyGrid::Reset::AnyActivated())
+			data.PublishReset(def);
+	}
+
+	template<>
+	DrawResult DescIO::DrawCombo(const char* label, MemoryUnit& data)
+	{
+		return DrawEnumCombo(label, data, { "B", "KB", "KiB", "MB", "MiB", "GB", "GiB" });
 	}
 
 	template<>

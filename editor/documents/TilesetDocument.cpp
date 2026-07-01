@@ -3,11 +3,12 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 #include "core/editor/UID.h"
+#include "core/Colors.h"
 #include "core/Errors.h"
 
-#include "gui/IDScope.h"
-#include "gui/Overlays.h"
-#include "gui/Subform.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Overlays.h"
 
 #include "documents/TextureDocument.h"
 
@@ -136,7 +137,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void TilesetDocument::Init()
+	void TilesetDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -146,22 +147,21 @@ namespace oly::editor
 
 		_individual_editor = {};
 		_group_editors = {};
-		Load();
+
+		LoadAsset();
 	}
 
 	void TilesetDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		UpdateActiveTextures();
 		gui::IDScope scope(this);
 
-		if (auto section = CollapsingSection("Advanced"))
-		{
-			if (auto form = Form())
-			{
-				if (_scratch.storage.Draw())
-					MarkDirty();
-			}
-		}
+		DataPathSource path;
+
+		if (auto subform = Subform("Advanced"))
+			_desc.scratch.storage.Draw(path / _desc.scratch.subpaths.storage);
 
 		if (ImGui::BeginTabBar("##Editors"))
 		{
@@ -181,7 +181,7 @@ namespace oly::editor
 		}
 	}
 
-	void TilesetDocument::Load()
+	void TilesetDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -190,7 +190,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load tileset - corrupted asset: " + _oly_path.string());
@@ -201,7 +201,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -211,23 +211,32 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
-	void TilesetDocument::Dump()
+	void TilesetDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
+	}
+
+	const IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
+	IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor()
+	{
+		return _desc;
 	}
 
 	void TilesetDocument::DrawGroupEditor()
 	{
 		int type_index = static_cast<int>(_group_editors.current_type);
-		ImGui::Text("Grid Type"); ImGui::SameLine();
-		if (gui::Combo("##GridType", type_index, { "Standard 4x4", "Standard 5x5" }))
+		if (gui::Combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }))
 			_group_editors.current_type = static_cast<GroupEditorType>(type_index);
 
 		GridEditorStateBase* editor = nullptr;
@@ -287,12 +296,12 @@ namespace oly::editor
 
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
 							TextureErrorTooltip(GetActiveTexture(*grid).error);
 						}
 
 						if (editor->selected_cell == cell)
-							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32(0, 255, 0, 255), 0.f, 0, 4.f);
+							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Green, 0.f, 0, 4.f);
 					}
 				}
 			}
@@ -363,14 +372,14 @@ namespace oly::editor
 	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
 	{
 		if (available)
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? IM_COL32(0, 127, 255, 255) : IM_COL32(64, 64, 64, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? Color::Azure : Color::Grey(64));
 		else
 		{
 			on = false;
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(32, 32, 32, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(32));
 		}
 
-		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, IM_COL32_BLACK, 0.f, 0, 2.f);
+		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Black, 0.f, 0, 2.f);
 
 		ImGui::SetCursorScreenPos(rect_start);
 		if (available)
@@ -379,7 +388,7 @@ namespace oly::editor
 				on = !on;
 
 			if (ImGui::IsItemHovered())
-				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(IM_COL32_WHITE, 0.3f));
+				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
 		}
 		else
 			ImGui::Dummy(rect_end - rect_start);
@@ -389,49 +398,51 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
+			auto path = GetAssignmentPath(grid);
+
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
+			if (auto scope = gui::IDScope(&desc.texture))
 			{
-				DescIO::PrepareValue(desc.texture.label);
-				gui::IDScope scope(&desc.texture.scratch);
-				
-				if (gui::InputData<std::string>{}("", desc.texture.scratch))
-					MarkDirty();
+				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
+				desc.texture.edit.PreEdit();
+				if (desc.texture.edit.buffer != desc.texture.def)
+					gui::PropertyGrid::Reset::Button();
 
-				if (ImGui::IsItemDeactivatedAfterEdit())
-					OnActiveTextureChanged(grid);
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
+					gui::IDScope scope(&desc.texture.value);
 
-				if (ImGui::BeginDragDropTarget())
-				{
-					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
+
+					if (ImGui::BeginDragDropTarget())
 					{
-						detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
-						if (path.is_resource())
+						if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
 						{
-							desc.texture.scratch = path.get_resource_shorthand();
-							MarkDirty();
-							OnActiveTextureChanged(grid);
+							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
+							if (path.is_resource())
+							{
+								desc.texture.edit.PublishReset(path.get_resource_shorthand());
+								result.SetDirty(true);
+							}
+							else
+								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
 						}
-						else
-							MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
+
+						ImGui::EndDragDropTarget();
 					}
 
-					ImGui::EndDragDropTarget();
-				}
+					desc.texture.edit.PostEdit(result);
+					return result;
+				}));
 
-				if (DescIO::CheckRevertButton(desc.texture.scratch, desc.texture.def))
-				{
-					MarkDirty();
-					OnActiveTextureChanged(grid);
-				}
+				gui::PropertyGrid::SubmitRow();
+				if (gui::PropertyGrid::Reset::AnyActivated())
+					desc.texture.edit.PublishReset(desc.texture.def);
+
+				desc.texture.CheckUndoAction(path / desc.subpaths.texture);
 			}
 
-			if (desc.texture_index.Draw())
-			{
-				MarkDirty();
-				OnActiveTextureChanged(grid);
-			}
-
+			DRAW_FIELD(texture_index);
 			DRAW_FIELD(uvs);
 			DRAW_FIELD(reflection);
 			DRAW_FIELD(rotation);
@@ -488,36 +499,43 @@ namespace oly::editor
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
 	{
-		return _scratch.assignments.map[config];
+		return _desc.scratch.assignments.map[config];
 	}
 
-	void TilesetDocument::OnActiveTextureChanged(const detail::TileConfigGrid grid)
+	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfigGrid grid)
 	{
-		GetActiveTexture(grid).stale = true;
+		return GetAssignmentPath(GetResolvedTileConfig(grid));
+	}
+
+	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
+	{
+		return DataPath() / _desc.scratch.subpaths.assignments / _desc.scratch.assignments.subpaths.map / _desc.scratch.assignments.map.Subpath(config);
 	}
 
 	void TilesetDocument::UpdateActiveTextures()
 	{
 		for (auto& [config, active] : _textures)
 		{
-			if (!active.stale)
+			auto& desc = GetAssignment(config);
+			if (active.current_texture_index == desc.texture_index.value && active.current_texture == desc.texture.value)
 				continue;
 
-			active.stale = false;
+			active.current_texture_index = desc.texture_index.value;
+			active.current_texture = desc.texture.value;
+
 			active.error = TextureError::None;
-			auto& desc = GetAssignment(config);
-			if (desc.texture.scratch.empty())
+			if (desc.texture.value.empty())
 				active.texture = {};
 			else
 			{
 				BreakoutError::NotifyScope notify(true);
 				try
 				{
-					std::string filepath = detail::ResourcePath(desc.texture.scratch).string();
+					std::string filepath = detail::ResourcePath(desc.texture.value).string();
 					GLenum min_filter, mag_filter;
 					float scale = 1.f;
 					bool generate_mipmaps = false;
-					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.scratch, min_filter, mag_filter, scale, generate_mipmaps);
+					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
 						active.texture = Texture::LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
 					else
@@ -570,7 +588,7 @@ namespace oly::editor
 			gui::Overlay::QuadWarning(rect_start, rect_end);
 		}
 		else if (active.texture.Empty())
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, IM_COL32(empty_gray_value, empty_gray_value, empty_gray_value, 255));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(empty_gray_value));
 		else
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
 	}
@@ -579,9 +597,9 @@ namespace oly::editor
 	{
 		auto& desc = GetAssignment(grid);
 		auto& active = GetActiveTexture(grid);
-		auto uv_rect = desc.uvs.scratch;
-		detail::TileReflection reflection = desc.reflection.scratch;
-		detail::TileRotation rotation = desc.rotation.scratch;
+		auto uv_rect = desc.uvs.value;
+		detail::TileReflection reflection = desc.reflection.value;
+		detail::TileRotation rotation = desc.rotation.value;
 
 		std::array<ImVec2, 4> uvs;
 		uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);

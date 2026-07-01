@@ -1,9 +1,9 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/Form.h"
 
-#include "desc/FontDesc.h"
+#include "desc/impl/FontDesc.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -11,8 +11,7 @@ namespace oly::editor
 {
 	class FontDocument : public IDocument
 	{
-		FullFontDesc _scratch;
-		FullFontDesc _disk;
+		DoubleDescriptor<FullFontDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _atlas_slots;
 		std::string _display_text;
@@ -24,10 +23,12 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -38,8 +39,9 @@ namespace oly::editor
 		void DrawFontFace();
 		void DrawFontAtlases();
 		void DrawAtlasPreview();
-		void Draw(Form& form, FontFaceDesc& desc);
-		void Draw(Form& form, FontAtlasDesc& desc);
+		
+		void Draw(DataPath path, FontFaceDesc& desc);
+		void Draw(DataPath path, FontAtlasDesc& desc);
 
 		void Load(TOMLNode node, FullFontDesc& desc);
 		void Load(TOMLNode node, FontFaceDesc& desc);
@@ -50,5 +52,7 @@ namespace oly::editor
 		void Dump(toml::table& table, FontFaceDesc& desc);
 		void Dump(toml::table& table, KerningDesc& desc);
 		void Dump(toml::table& table, FontAtlasDesc& desc);
+
+		std::unique_ptr<gui::IListAdapter> FontAtlasListAdapter();
 	};
 }

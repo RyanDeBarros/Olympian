@@ -5,54 +5,59 @@
 
 namespace oly::editor
 {
-	Color::Color()
+	Color4::Color4()
 		: r(0.f), g(0.f), b(0.f), a(1.f)
 	{
 	}
 
-	Color::Color(float r, float g, float b, float a)
+	Color4::Color4(float r, float g, float b, float a)
 		: r(r), g(g), b(b), a(a)
 	{
 	}
 
-	bool Color::operator==(const Color& o) const
+	bool Color4::operator==(const Color4& o) const
 	{
 		return r == o.r && g == o.g && b == o.b && a == o.a;
 	}
 
-	bool Color::operator!=(const Color& o) const
+	bool Color4::operator!=(const Color4& o) const
 	{
 		return r != o.r || g != o.g || b != o.b || a != o.a;
 	}
 
-	float* Color::ValuePtr()
+	float* Color4::ValuePtr()
 	{
 		return v;
 	}
 
-	const float* Color::ValuePtr() const
+	const float* Color4::ValuePtr() const
 	{
 		return v;
 	}
 
-	float& Color::operator[](size_t i)
+	float& Color4::operator[](size_t i)
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
 	}
 
-	float Color::operator[](size_t i) const
+	float Color4::operator[](size_t i) const
 	{
 		if (i < N)
 			return v[i];
 		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color");
+			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
+	}
+
+	std::ostream& operator<<(std::ostream& os, Color4 color)
+	{
+		return os << "Color4(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
 	}
 
 	Rect::Rect()
-		: x1(0.f), x2(1.f), y1(0.f), y2(1.f)
+		: x1(0.f), x2(0.f), y1(0.f), y2(0.f)
 	{
 	}
 
@@ -60,8 +65,6 @@ namespace oly::editor
 		: x1(x1), x2(x2), y1(y1), y2(y2)
 	{
 	}
-
-	const Rect Rect::ZERO = Rect(0.f, 0.f, 0.f, 0.f);
 
 	bool Rect::operator==(const Rect& o) const
 	{
@@ -97,6 +100,62 @@ namespace oly::editor
 			return v[i];
 		else
 			throw std::out_of_range(std::to_string(i) + " is invalid index for Rect");
+	}
+
+	std::ostream& operator<<(std::ostream& os, Rect rect)
+	{
+		return os << "Rect([" << rect.x1 << ", " << rect.y1 << "], [" << rect.x2 << ", " << rect.y2 << "])";
+	}
+
+	UVRect::UVRect()
+		: x1(0.f), x2(1.f), y1(0.f), y2(1.f)
+	{
+	}
+
+	UVRect::UVRect(float x1, float x2, float y1, float y2)
+		: x1(x1), x2(x2), y1(y1), y2(y2)
+	{
+	}
+
+	bool UVRect::operator==(const UVRect& o) const
+	{
+		return x1 == o.x1 && x2 == o.x2 && y1 == o.y1 && y2 == o.y2;
+	}
+
+	bool UVRect::operator!=(const UVRect& o) const
+	{
+		return x1 != o.x1 || x2 != o.x2 || y1 != o.y1 || y2 != o.y2;
+	}
+
+	float* UVRect::ValuePtr()
+	{
+		return v;
+	}
+
+	const float* UVRect::ValuePtr() const
+	{
+		return v;
+	}
+
+	float& UVRect::operator[](size_t i)
+	{
+		if (i < N)
+			return v[i];
+		else
+			throw std::out_of_range(std::to_string(i) + " is invalid index for UVRect");
+	}
+
+	float UVRect::operator[](size_t i) const
+	{
+		if (i < N)
+			return v[i];
+		else
+			throw std::out_of_range(std::to_string(i) + " is invalid index for UVRect");
+	}
+
+	std::ostream& operator<<(std::ostream& os, UVRect uv_rect)
+	{
+		return os << "UVRect([" << uv_rect.x1 << ", " << uv_rect.y1 << "], [" << uv_rect.x2 << ", " << uv_rect.y2 << "])";
 	}
 
 	TopSidePadding::TopSidePadding()
@@ -143,5 +202,10 @@ namespace oly::editor
 			return v[i];
 		else
 			throw std::out_of_range(std::to_string(i) + " is invalid index for TopSidePadding");
+	}
+
+	std::ostream& operator<<(std::ostream& os, TopSidePadding padding)
+	{
+		return os << "TopSidePadding(left=" << padding.left << ", right=" << padding.right << ", top=" << padding.top << ")";
 	}
 }

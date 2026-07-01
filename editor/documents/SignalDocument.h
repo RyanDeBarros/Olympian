@@ -2,19 +2,19 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/SignalDesc.h"
+#include "desc/impl/SignalDesc.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "core/InputListener.h"
-#include "gui/Form.h"
 
 #include "assets/MetaSplitter.h"
+#include "util/Counter.h"
 
 namespace oly::editor
 {
 	class SignalDocument : public IDocument
 	{
-		SignalFullDesc _scratch;
-		SignalFullDesc _disk;
+		DoubleDescriptor<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _signal_slots;
 		gui::ListModel _route_slots;
@@ -27,28 +27,33 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
-		void DrawSignals();
-		void DrawRoutes();
+		void Draw(DataPath path, VectorDesc<SignalDesc>& desc);
+		void Draw(DataPath path, VectorDesc<RouteDesc>& desc);
+		Counter<std::string> GetSignalIDCounter() const;
+		Counter<std::string> GetRouteIDCounter() const;
+		Counter<std::string> GetIDCounter() const;
 
-		void Draw(Form& form, SignalDesc& desc);
-		void Draw(Form& form, RouteDesc& desc);
-		void Draw(Form& form, KeyDesc& desc);
-		void Draw(Form& form, MouseButtonDesc& desc);
-		void Draw(Form& form, GamepadButtonDesc& desc);
-		void Draw(Form& form, GamepadAxis1DDesc& desc);
-		void Draw(Form& form, GamepadAxis2DDesc& desc);
-		void Draw(Form& form, CursorPosDesc& desc);
-		void Draw(Form& form, ScrollDesc& desc);
-		void Draw(Form& form, Modifier0dDesc& desc);
-		void Draw(Form& form, Modifier1dDesc& desc);
-		void Draw(Form& form, Modifier2dDesc& desc);
-		void Draw(Form& form, ModifierBaseDesc& desc);
+		void Draw(DataPath path, SignalDesc& desc);
+		void Draw(DataPath path, RouteDesc& desc);
+		void Draw(DataPath path, KeyDesc& desc);
+		void Draw(DataPath path, MouseButtonDesc& desc);
+		void Draw(DataPath path, GamepadButtonDesc& desc);
+		void Draw(DataPath path, GamepadAxis1DDesc& desc);
+		void Draw(DataPath path, GamepadAxis2DDesc& desc);
+		void Draw(DataPath path, CursorPosDesc& desc);
+		void Draw(DataPath path, ScrollDesc& desc);
+		void Draw(DataPath path, Modifier0dDesc& desc);
+		void Draw(DataPath path, Modifier1dDesc& desc);
+		void Draw(DataPath path, Modifier2dDesc& desc);
+		void Draw(DataPath path, ModifierBaseDesc& desc);
 
 		void Load(TOMLNode node, SignalFullDesc& desc);
 		void Load(TOMLNode node, SignalDesc& desc);

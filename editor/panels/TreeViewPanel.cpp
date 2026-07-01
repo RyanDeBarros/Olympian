@@ -12,11 +12,10 @@
 #include "core/PathInfo.h"
 
 #include "panels/PanelManager.h"
-#include "panels/PreferencesPanel.h"
 
-#include "gui/Toolbar.h"
+#include "gui/graphics/Toolbar.h"
 
-#include <imgui.h>
+#include "desc/impl/PreferencesDesc.h"
 
 #include <algorithm>
 #include <stack>
@@ -37,7 +36,7 @@ namespace oly::editor
 
 	void TreeViewNode::Update()
 	{
-		const float update_interval = PreferencesPanel::Instance().GetSavedDesc().tree_view.advanced.analysis_interval.scratch;
+		const float update_interval = Editor::GetPreferences().tree_view.advanced.AnalysisInterval();
 		timer += ImGui::GetIO().DeltaTime;
 		if (timer >= update_interval)
 		{
@@ -177,7 +176,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of TreeViewPanel");
 	}
 
-	void TreeViewPanel::Init()
+	void TreeViewPanel::InitImpl()
 	{
 		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
 	}
@@ -255,7 +254,7 @@ namespace oly::editor
 		if (ImGui::BeginDragDropSource())
 		{
 			std::string path = node.path.string();
-			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9 make sure to include path drag drop source in content browser panel
+			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9.2 make sure to include path drag drop source in content browser panel
 			ImGui::Text("Drag path");
 			ImGui::EndDragDropSource();
 		}
@@ -267,7 +266,7 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Show in Content Browser"))
 			{
-				// TODO v9
+				// TODO v9.2
 			}
 
 			if (ImGui::MenuItem("Reveal in Explorer"))

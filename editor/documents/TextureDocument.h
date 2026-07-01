@@ -1,10 +1,11 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/Form.h"
-#include "gui/Texture.h"
 
-#include "desc/TextureDesc.h"
+#include "desc/impl/TextureDesc.h"
+#include "desc/DoubleDescriptor.h"
+
+#include "gui/graphics/Texture.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -34,8 +35,7 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		TextureVariantDesc _scratch;
-		TextureVariantDesc _disk;
+		DoubleDescriptor<TextureVariantDesc> _desc;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
@@ -51,10 +51,12 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -66,11 +68,11 @@ namespace oly::editor
 		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
-		void Draw(TextureVariantDesc& desc);
-		void Draw(Form& form, RasterTextureDesc& desc);
-		void Draw(Form& form, VectorTextureDesc& desc);
-		void Draw(Form& form, BaseTextureDesc& desc);
-		void Draw(Form& form, SpritesheetDesc& desc);
+		void Draw(DataPath path, TextureVariantDesc& desc);
+		void Draw(DataPath path, RasterTextureDesc& desc);
+		void Draw(DataPath path, VectorTextureDesc& desc);
+		void Draw(DataPath path, BaseTextureDesc& desc);
+		void Draw(DataPath path, SpritesheetDesc& desc);
 
 		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
 		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);

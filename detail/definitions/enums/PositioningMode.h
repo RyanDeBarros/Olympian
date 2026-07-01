@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace oly::detail
 {
 	enum class PositioningMode
@@ -7,4 +9,6 @@ namespace oly::detail
 		Relative = 0,
 		Absolute
 	};
+
+	extern std::ostream& operator<<(std::ostream& os, PositioningMode mode);
 }

@@ -1,15 +1,14 @@
 target_sources(OlympianEditor PRIVATE
-	CollapsingSection.cpp
-	DisabledSection.cpp
+	DrawResult.cpp
 	DynamicList.cpp
-	Form.cpp
 	GUIState.cpp
-	IDScope.cpp
 	ImGuiWrapper.cpp
+	InlineWidget.cpp
 	ListModel.cpp
-	Overlays.cpp
-	StyleStack.cpp
-	Subform.cpp
-	Texture.cpp
-	Toolbar.cpp
+	UnsavedChangesModal.cpp
+	WidgetComponentCommon.cpp
 )
+
+add_subdirectory(graphics)
+add_subdirectory(properties)
+add_subdirectory(scopes)

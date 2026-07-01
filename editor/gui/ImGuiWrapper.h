@@ -2,11 +2,15 @@
 
 #include "core/Meta.h"
 #include "core/Types.h"
-#include "desc/OptionalPrimitive.h"
 
-#include "gui/DisabledSection.h"
-#include "gui/IDScope.h"
+#include "core/editor/LabelRegistry.h"
+
 #include "gui/DrawResult.h"
+
+#include "gui/scopes/DisabledSection.h"
+#include "gui/scopes/IDScope.h"
+
+#include "desc/OptionalPrimitive.h"
 
 #include "external/GLM.h"
 
@@ -17,6 +21,8 @@
 
 namespace oly::editor::gui
 {
+	extern void VerticalSeparator();
+
 	extern DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items);
 
 	extern DrawResult InputText(const char* label, std::string& string, size_t max_size = 256,
@@ -76,7 +82,7 @@ namespace oly::editor::gui
 	{
 		DrawResult operator()(const char* label, int& data) const;
 		DrawResult operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const;
-		DrawResult operator()(const char* label, int& data, const char** names, size_t count);
+		DrawResult operator()(const char* label, int& data, LabelSpanRegistry::Handle names);
 	};
 
 	template<>
@@ -114,24 +120,6 @@ namespace oly::editor::gui
 		DrawResult operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
-	template<typename T>
-	struct InputData<OptionalPrimitive<T>>
-	{
-		DrawResult operator()(const char* label, OptionalPrimitive<T>& data, OptionalPrimitive<T> min, OptionalPrimitive<T> max) const
-		{
-			DrawResult result;
-			IDScope scope(&data);
-			result |= gui::InputData<bool>{}("", data.has_value);
-			if (auto disabled = DisabledSection(!data.has_value))
-			{
-				ImGui::SameLine();
-				scope.Push(1);
-				result |= gui::InputData<T>{}(label, data.value, min, max);
-			}
-			return result;
-		}
-	};
-
 	template<>
 	struct InputData<std::string>
 	{
@@ -139,57 +127,8 @@ namespace oly::editor::gui
 	};
 
 	template<>
-	struct InputData<Color>
+	struct InputData<Color4>
 	{
-		DrawResult operator()(const char* label, Color& data) const;
-	};
-
-	template<>
-	struct InputData<Rect>
-	{
-		DrawResult operator()(const char* label, Rect& data) const;
-	};
-
-	template<>
-	struct InputData<TopSidePadding>
-	{
-		DrawResult operator()(const char* label, TopSidePadding& data) const;
-	};
-
-	template<>
-	struct InputData<unsigned int>
-	{
-		DrawResult operator()(unsigned int& data, const unsigned int* values, const char** names, const size_t count);
-		DrawResult operator()(unsigned int& data, const unsigned int* values, const char** names, const bool* disabled, const size_t count);
-	};
-
-	template<Enum E>
-	struct InputData<E>
-	{
-		DrawResult operator()(E& data, const E* values, const char** names, const size_t count)
-		{
-			return (*this)(data, values, names, nullptr, count);
-		}
-
-		DrawResult operator()(E& data, const E* values, const char** names, const bool* disabled, const size_t count)
-		{
-			DrawResult result;
-			for (size_t i = 0; i < count; ++i)
-			{
-				bool flag = static_cast<bool>(data & values[i]);
-
-				if (auto d = DisabledSection(disabled && disabled[i]))
-					result |= InputData<bool>{}(names[i], flag);
-
-				if (flag)
-					data |= values[i];
-				else
-					data &= ~values[i];
-
-				if (i + 1 < count)
-					ImGui::SameLine();
-			}
-			return result;
-		}
+		DrawResult operator()(const char* label, Color4& data) const;
 	};
 }

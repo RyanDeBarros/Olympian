@@ -1,14 +1,16 @@
-TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) for each major subfeature
+# Branches
 
-# v9
+## v9.2
 * More editor work
 	* Content Browser Panel
-	* Undo, redo, and context menus on fields/forms to copy/paste properties
+				
+## v9.3
+* More editor work
 	* Project manager
 		* Generate new project files
 		* Recent project manifest
 
-# v10
+## v10
 * Physics updates
 * Utilities
 	* TypewriterEffect
@@ -18,7 +20,7 @@ TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) 
 	* Random class
 * Coroutine system
 
-# v11
+## v11
 * Assets
 	* Rigid body
 	* Material
@@ -30,20 +32,37 @@ TODO v9 from v9 onward, divide into even smaller subbranches (v9.1, v9.2, etc.) 
 	* Lifetime methods
 	* Scene graph
 
-# v12
+## v12
 * Font size caching/rounding + manual mipmap generation
 * UI widget system
 * Lighting/shadow/post-processing module
 * AI: navigation, blackboard trees, etc.
 
-# v13
+## v13
 * Separation of Tester project into separate repo
 * Texture streaming
 * Shader embedding
-* Multithreading
+* Thread safety + multi-threading
 
-# v14
-* Networking
+# Misc
 
-# v15
+* Check `TODO LATER` for optimization/debt tasks.
+* Check `TODO DEBT` for tech debt / maintenance tasks.
+
+## Later
+
+* Build tool that converts some assets to a binary format when copying assets to the output folder. This would be indicated by a meta field in the asset (editable by editor in advanced settings), and would be used to shrink very large text files into more efficient binary files. Would need to adapt any asset loaders that support it in meta to have a text-based loader and a binary loader.
+* Network communication - online/local multiplayer.
 * Graphics API expansion/separation
+	* GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
+	* Separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
+
+## Tech debt
+
+* Add more support methods to classes to avoid chained access operators (e.g. `a.b.c->d.e()` shortened to `a.f()`)
+* Move non-template inline methods to CPP files
+* Use more forward declarations and move as many includes as possible to CPP files
+* Create MKdocs for all public classes/functions
+* Create asset loaders for all assets
+* Create editor tabs for all assets
+* Add more logging in engine and in editor

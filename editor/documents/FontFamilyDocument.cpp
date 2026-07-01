@@ -3,7 +3,8 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/CollapsingSection.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
 #include "util/Parser.h"
@@ -15,7 +16,7 @@ namespace oly::editor
 		return "1.0";
 	}
 
-	void FontFamilyDocument::Init()
+	void FontFamilyDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -23,16 +24,25 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void FontFamilyDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		if (auto form = Form())
+		{
+			DataPath path;
+			Draw(path, _desc.scratch, "Regular", detail::FontStyleMode::Regular);
+			Draw(path, _desc.scratch, "Bold", detail::FontStyleMode::Bold);
+			Draw(path, _desc.scratch, "Italic", detail::FontStyleMode::Italic);
+			Draw(path, _desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+		}
 	}
 
-	void FontFamilyDocument::Load()
+	void FontFamilyDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -41,7 +51,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load font family - corrupted asset: " + _oly_path.string());
@@ -52,7 +62,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -62,39 +72,37 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
-	void FontFamilyDocument::Dump()
+	void FontFamilyDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void FontFamilyDocument::Draw(FontFamilyDesc& desc)
+	const IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor() const
 	{
-		if (auto section = CollapsingSection("Regular"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Regular));
-
-		if (auto section = CollapsingSection("Bold"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Bold));
-
-		if (auto section = CollapsingSection("Italic"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::Italic));
-
-		if (auto section = CollapsingSection("Bold-italic"))
-			Draw(GetFontStyleDesc(detail::FontStyleMode::BoldItalic));
+		return _desc;
 	}
-	
-	void FontFamilyDocument::Draw(FontStyleDesc& desc)
+
+	IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor()
 	{
-		if (auto form = Form())
-		{
-			DRAW_FIELDS(STYLE_GENERATOR);
-		}
+		return _desc;
+	}
+
+	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
+	{
+		if (auto section = Subform(subform_header))
+			Draw(path / desc.subpaths.styles / desc.styles.Subpath(style), desc.styles[style]);
+	}
+
+	void FontFamilyDocument::Draw(DataPath path, FontStyleDesc& desc)
+	{
+		DRAW_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)
@@ -136,10 +144,5 @@ namespace oly::editor
 	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)
 	{
 		DUMP_FIELDS(STYLE_GENERATOR);
-	}
-
-	FontStyleDesc& FontFamilyDocument::GetFontStyleDesc(detail::FontStyleMode style)
-	{
-		return _scratch.styles[style];
 	}
 }

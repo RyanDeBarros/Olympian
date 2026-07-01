@@ -48,6 +48,7 @@ namespace oly::context
 		}
 
 		auto toml = io::load_toml(file);
+		toml.insert_or_assign(detail::encode_key(detail::Key::InjectedSourceFile), file.string());
 		auto tileset = rendering::TileSetRef::load((TOMLNode)toml);
 
 		if (assets::Parser(toml).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)

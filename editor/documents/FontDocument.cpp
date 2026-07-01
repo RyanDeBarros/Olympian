@@ -3,10 +3,18 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
+#include "gui/InlineWidget.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
+
+#include "util/Counter.h"
+#include "util/Hash.h"
+#include "util/Parser.h"
+#include "util/DynamicArray.h"
 
 namespace oly::editor
 {
@@ -20,7 +28,7 @@ namespace oly::editor
 		DestroyFont();
 	}
 
-	void FontDocument::Init()
+	void FontDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
 		{
@@ -30,11 +38,13 @@ namespace oly::editor
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
 		_display_text = "Abc 123";
-		Load();
+		LoadAsset();
 	}
 
 	void FontDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		gui::IDScope scope(this);
 
 		if (ImGui::BeginTabBar(""))
@@ -55,7 +65,7 @@ namespace oly::editor
 		}
 	}
 
-	void FontDocument::Load()
+	void FontDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -64,7 +74,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load font - corrupted asset: " + GetSourcePath().string());
@@ -75,7 +85,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -85,18 +95,28 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 
-		_atlas_slots.Init(*_scratch.font_atlases.ListAdapter());
+		_atlas_slots.Init(*FontAtlasListAdapter());
 	}
 
-	void FontDocument::Dump()
+	void FontDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
+	}
+
+	const IDoubleDescriptor& FontDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
+	IDoubleDescriptor& FontDocument::GetDoubleDescriptor()
+	{
+		return _desc;
 	}
 
 	detail::ResourcePath FontDocument::GetSourcePath() const
@@ -107,7 +127,7 @@ namespace oly::editor
 	void FontDocument::ReloadFont()
 	{
 		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _scratch.font_atlases[_atlas_slots.active_index].font_size.scratch);
+		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.value);
 	}
 
 	void FontDocument::DestroyFont()
@@ -122,7 +142,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
-			Draw(form, _scratch.font_face);
+			Draw(DataPath() / _desc.scratch.subpaths.font_face, _desc.scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -130,19 +150,17 @@ namespace oly::editor
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
+				
+			_atlas_slots.Update(*FontAtlasListAdapter());
+			if (auto scope = gui::IDScope("##Atlas"))
+				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
+				
 			if (auto form = Form())
 			{
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("Select Route");
+				if (!_desc.scratch.font_atlases.Empty())
+					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
 
-				ImGui::TableNextColumn();
-				_atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
-
-				if (!_scratch.font_atlases.Empty())
-					Draw(form, _scratch.font_atlases[_atlas_slots.active_index]);
-
-				if (_atlas_slots.ConsumeOps(*_scratch.font_atlases.ListAdapter()))
+				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
 					MarkDirty();
 
 				if (_atlas_slots.active_index.ConsumeModified())
@@ -176,65 +194,163 @@ namespace oly::editor
 		ImGui::EndChild();
 	}
 
-	void FontDocument::Draw(Form& form, FontFaceDesc& desc)
+	void FontDocument::Draw(DataPath path, FontFaceDesc& desc)
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
-		DescIO::DrawDynamicList("Kerning", desc.kerning.vector, {}, [&desc](gui::DynamicRow& row) {
-			auto& k = desc.kerning[row.Index()];
-			bool dirty = false;
-			
-			ImGui::SameLine();
-			ImGui::Text(k.pair.label); // TODO v9 pair label renders higher for some reason - seems similar to tree view some nodes rendering a few pixels higher
+		struct CodepointHash
+		{
+			size_t operator()(const std::string& str) const
+			{
+				if (auto v = stocdpt(str))
+					return std::hash<int>{}(*v);
+				else
+					return 0;
+			}
+		};
 
+		struct CodepointPairEquality
+		{
+			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
+			{
+				return stocdpt(lhs[0]) == stocdpt(rhs[0]) && stocdpt(lhs[1]) == stocdpt(rhs[1]);
+			}
+		};
+
+		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
+		for (auto& k : desc.kerning.vector)
+		{
+			k.distance.edit.PreEdit();
+			k.pair.edits[0].PreEdit();
+			k.pair.edits[1].PreEdit();
+			counter.increment({ k.pair.edits[0].buffer, k.pair.edits[1].buffer });
+		}
+
+		for (size_t i = 0; i < desc.kerning.Size(); ++i)
+		{
+			auto& k = desc.kerning[i];
+			if (k.distance.edit.buffer != k.distance.def || k.pair.edits[0].buffer != k.pair.def[0] || k.pair.edits[1].buffer != k.pair.def[1])
+				gui::PropertyGrid::Reset::Button(1 + i);
+		}
+
+		DescIO::DrawDynamicList(path / desc.subpaths.kerning, "Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
+			DynamicArray<gui::WidgetComponent> components;
+			auto& k = desc.kerning[row.Index()];
+
+			bool dup_warning = counter.count({ k.pair.edits[0].buffer, k.pair.edits[1].buffer }) > 1;
+			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
+				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> DrawResult {
+					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
+					gui::Outline bad_outline;
+					if (bad_codepoint)
+						dup_warning = false;
+
+					DrawResult result;
+
+					if (i == 0)
+					{
+						ImGui::Text(k.pair.label);
+						ImGui::SameLine();
+						result.Query();
+					}
+
+					result |= gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
+					k.pair.edits[i].PostEdit(result);
+
+					if (dup_warning && result.IsHovered())
+						ImGui::SetTooltip("Duplicate codepoint pair");
+
+					if (bad_codepoint)
+					{
+						if (result.IsHovered())
+							ImGui::SetTooltip("Bad codepoint format");
+
+						bad_outline.Draw(Color::Error);
+					}
+
+					if (i == 1)
+					{
+						if (dup_warning)
+							dup_outline.Draw(Color::Error);
+					}
+
+					return result;
+				}));
+			}
+
+			components.push_back(comp::Generic([&k]() -> DrawResult {
+				DrawResult result;
+				gui::VerticalSeparator();
+				ImGui::Text(k.distance.label);
+				result.Query();
 				ImGui::SameLine();
-				dirty |= gui::InputData<std::string>{}(k.pair.sublabels[i], k.pair.scratch[i]);
-			}
+				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer);
+				k.distance.edit.PostEdit(result);
+				return result;
+			}));
 
-			ImGui::SameLine();
-			ImGui::Text(k.distance.label);
-			ImGui::SameLine();
-			dirty |= gui::InputData<int>{}("##Distance", k.distance.scratch);
-
-			if (k.distance.scratch != k.distance.def || k.pair.scratch != k.pair.def)
-			{
-				if (DescIO::DrawRevertButton())
-				{
-					k.distance.scratch = k.distance.def;
-					k.pair.scratch = k.pair.def;
-					dirty = true;
-				}
-			}
-			
-			return dirty;
+			return gui::InlineWidget::Draw(components);
 		}, desc.kerning_ui_state);
-	}
 
-	void FontDocument::Draw(Form& form, FontAtlasDesc& desc)
-	{
-		if (desc.font_size.Draw())
+		auto kerning_path = path / desc.subpaths.kerning;
+		for (size_t i = 0; i < desc.kerning.Size(); ++i)
 		{
-			MarkDirty();
-			DestroyFont();
+			KerningDesc& k = desc.kerning[i];
+			auto kerning_subpath = kerning_path / desc.kerning.Subpath(i);
+			if (gui::PropertyGrid::Reset::Activated(1 + i))
+			{
+				k.distance.edit.PublishReset(k.distance.def);
+				k.pair.edits[0].PublishReset(k.pair.def[0]);
+				k.pair.edits[1].PublishReset(k.pair.def[1]);
+				MarkDirty();
+			}
+
+			bool publish_action = false;
+			publish_action |= k.distance.edit.ConsumeModified();
+			publish_action |= k.pair.edits[0].ConsumeModified();
+			publish_action |= k.pair.edits[1].ConsumeModified();
+			if (publish_action)
+			{
+				KerningDesc original;
+				original.distance.value = std::move(k.distance.edit.original);
+				original.pair.value[0] = std::move(k.pair.edits[0].original);
+				original.pair.value[1] = std::move(k.pair.edits[1].original);
+				PushFieldSetAction(kerning_subpath, std::move(original), k);
+			}
 		}
+	}
+	
+	void FontDocument::Draw(DataPath path, FontAtlasDesc& desc)
+	{
+		DRAW_FIELD(font_size);
+		if (gui::PropertyGrid::DirtyRow())
+			DestroyFont();
 
 		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
-		if (auto subform = Subform(form, "Common buffer"))
+		if (auto subform = Subform("Common buffer"))
 		{
 			DRAW_FIELD(use_common_buffer_preset);
 
-			bool preset = desc.use_common_buffer_preset.scratch;
+			bool preset = desc.use_common_buffer_preset.value;
 			
 			if (auto disabled = DisabledSection(!preset))
 			{
 				DRAW_FIELD(common_buffer_preset);
 
-				DescIO::PrepareValue("Preview");
-				std::string buf = detail::buffer_of(desc.common_buffer_preset.scratch);
-				ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
+				{
+					scope.Push("##Preview");
+					gui::PropertyGrid::Key::SetLabel("Preview");
+					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
+						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
+						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+						return false;
+					}));
+					gui::PropertyGrid::SubmitRow();
+				}
 			}
 
 			if (auto disabled = DisabledSection(preset))
@@ -327,5 +443,18 @@ namespace oly::editor
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
 	{
 		DUMP_FIELDS(FONT_ATLAS_GENERATOR);
+	}
+
+	struct BriefDescPrinter
+	{
+		void operator()(std::ostream& os, const FontAtlasDesc& desc) const
+		{
+			os << "FontAtlasDesc[font_size=" << desc.font_size.value << ", ...]";
+		}
+	};
+
+	std::unique_ptr<gui::IListAdapter> FontDocument::FontAtlasListAdapter()
+	{
+		return _desc.scratch.font_atlases.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.font_atlases);
 	}
 }

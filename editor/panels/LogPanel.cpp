@@ -15,7 +15,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of LogPanel");
 	}
 
-	void LogPanel::Init()
+	void LogPanel::InitImpl()
 	{
 		// nop
 	}

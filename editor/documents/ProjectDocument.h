@@ -1,9 +1,9 @@
 #pragma once
 
 #include "documents/IDocument.h"
-#include "gui/Form.h"
 
-#include "desc/ProjectDesc.h"
+#include "desc/impl/ProjectDesc.h"
+#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -11,8 +11,7 @@ namespace oly::editor
 {
 	class ProjectDocument : public IDocument
 	{
-		ProjectDesc _scratch;
-		ProjectDesc _disk;
+		DoubleDescriptor<ProjectDesc> _desc;
 		detail::MetaMap _meta;
 
 	public:
@@ -21,25 +20,27 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
 		void DrawMenuBar() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 		std::string TabName() const override;
 
 	private:
-		void Draw(ProjectDesc& desc);
-		void Draw(Form& form, ContextDesc& desc);
-		void Draw(Form& form, PlatformDesc& desc);
-		void Draw(Form& form, WindowDesc& desc);
-		void Draw(Form& form, ViewportDesc& desc);
-		void Draw(Form& form, WindowHintsDesc& desc);
-		void Draw(Form& form, CollisionDesc& desc);
-		void Draw(Form& form, LoggerDesc& desc);
-		void Draw(Form& form, LoggerEnableDesc& desc);
-		void Draw(Form& form, FrameRateDesc& desc);
+		void Draw(DataPath path, ProjectDesc& desc);
+		void Draw(DataPath path, ContextDesc& desc);
+		void Draw(DataPath path, PlatformDesc& desc);
+		void Draw(DataPath path, WindowDesc& desc);
+		void Draw(DataPath path, ViewportDesc& desc);
+		void Draw(DataPath path, WindowHintsDesc& desc);
+		void Draw(DataPath path, CollisionDesc& desc);
+		void Draw(DataPath path, LoggerDesc& desc);
+		void Draw(DataPath path, LoggerEnableDesc& desc);
+		void Draw(DataPath path, FrameRateDesc& desc);
 
 		void Load(TOMLNode node, ProjectDesc& desc);
 		void Load(TOMLNode node, ContextDesc& desc);

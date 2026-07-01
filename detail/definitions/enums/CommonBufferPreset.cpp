@@ -22,4 +22,42 @@ namespace oly::detail
 			return "";
 		}
 	}
+
+	std::ostream& operator<<(std::ostream& os, CommonBufferPreset preset)
+	{
+		os << "CommonBufferPreset(";
+
+		switch (preset)
+		{
+		case CommonBufferPreset::Common:
+			os << "Common";
+			break;
+
+		case CommonBufferPreset::AlphaNumeric:
+			os << "AlphaNumeric";
+			break;
+
+		case CommonBufferPreset::Numeric:
+			os << "Numeric";
+			break;
+
+		case CommonBufferPreset::Alphabet:
+			os << "Alphabet";
+			break;
+
+		case CommonBufferPreset::AlphabetLowercase:
+			os << "AlphabetLowercase";
+			break;
+
+		case CommonBufferPreset::AlphabetUppercase:
+			os << "AlphabetUppercase";
+			break;
+
+		default:
+			os << "unknown";
+			break;
+		}
+
+		return os << ")";
+	}
 }

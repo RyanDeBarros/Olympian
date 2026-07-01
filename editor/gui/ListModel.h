@@ -2,13 +2,16 @@
 
 #include "core/Modifiable.h"
 
+#include "gui/DrawResult.h"
+
+#include "desc/DataPath.h"
+#include "desc/DynamicListUndoActions.h"
+
 #include "util/Counter.h"
 
 #include <array>
-#include <functional>
 #include <memory>
 #include <string>
-#include <vector>
 
 namespace oly::editor::gui
 {
@@ -94,6 +97,7 @@ namespace oly::editor::gui
 		ListPolicy policy = ListPolicy::None;
 
 		void Init(IListAdapter& adapter);
+		void Update(IListAdapter& adapter);
 
 		size_t Size() const;
 
@@ -116,61 +120,25 @@ namespace oly::editor::gui
 	public:
 		void Invoke(const ListOp& op, IListAdapter& adapter);
 
-		void DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
-		void DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+		struct ComboHeader
+		{
+			const char* prompt;
+			const char* create_tooltip;
+			const char* delete_tooltip;
+			const char* clear_tooltip;
+		};
+
+		DrawResult DrawComboHeader(const ComboHeader& header, const char* slot_prefix);
+		DrawResult DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
 	};
 
-	template<size_t N>
-	struct MultiListAdapter : public IListAdapter
-	{
-		static_assert(N > 0);
-
-		std::array<std::unique_ptr<IListAdapter>, N> adapters;
-
-		MultiListAdapter(std::array<std::unique_ptr<IListAdapter>, N> adapters) : adapters(std::move(adapters)) {}
-
-		size_t Size() const override
-		{
-			return adapters.front()->Size();
-		}
-
-		void PushBack() override
-		{
-			for (auto& adapter : adapters)
-				adapter->PushBack();
-		}
-
-		void Erase(size_t i) override
-		{
-			for (auto& adapter : adapters)
-				adapter->Erase(i);
-		}
-
-		void Resize(size_t new_size) override
-		{
-			for (auto& adapter : adapters)
-				adapter->Resize(new_size);
-		}
-
-		void Clear() override
-		{
-			for (auto& adapter : adapters)
-				adapter->Clear();
-		}
-
-		void Move(size_t src, size_t dst) override
-		{
-			for (auto& adapter : adapters)
-				adapter->Move(src, dst);
-		}
-	};
-
-	template<typename T>
+	template<typename T, typename Printer = StandardPrinter<T>>
 	struct VectorAdapter : public IListAdapter
 	{
+		DataPathSource list_path;
 		std::vector<T>& v;
 
-		VectorAdapter(std::vector<T>& vec) : v(vec) {}
+		VectorAdapter(DataPath list_path, std::vector<T>& vec) : list_path(list_path), v(vec) {}
 
 		size_t Size() const override
 		{
@@ -179,29 +147,30 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			v.push_back(T{});
+			ExecuteDynamicListInsertAction<T, Printer>(list_path, v.size());
 		}
 
 		void Erase(size_t i) override
 		{
-			v.erase(v.begin() + i);
+			ExecuteDynamicListDeleteAction<T, Printer>(list_path, i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
-			v.resize(new_size);
+			if (old_size != new_size)
+				ExecuteDynamicListResizeAction<T>(list_path, old_size, new_size);
 		}
 
 		void Clear() override
 		{
-			v.clear();
+			if (!v.empty())
+				ExecuteDynamicListResizeAction<T>(list_path, v.size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
-			auto item = std::move(v[src]);
-			v.erase(v.begin() + src);
-			v.insert(v.begin() + dst, std::move(item));
+			if (src != dst)
+				ExecuteDynamicListMoveAction<T>(list_path, src, dst);
 		}
 	};
 

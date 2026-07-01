@@ -1,5 +1,7 @@
 #pragma once
 
+#include <ostream>
+
 namespace oly::detail
 {
 	enum class CommonBufferPreset
@@ -13,4 +15,6 @@ namespace oly::detail
 	};
 
 	extern const char* buffer_of(CommonBufferPreset preset);
+
+	extern std::ostream& operator<<(std::ostream& os, CommonBufferPreset preset);
 }

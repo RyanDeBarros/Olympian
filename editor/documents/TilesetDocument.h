@@ -2,10 +2,11 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/TilesetDesc.h"
+#include "desc/impl/TilesetDesc.h"
+#include "desc/DoubleDescriptor.h"
 
-#include "gui/Form.h"
-#include "gui/Texture.h"
+#include "gui/scopes/Form.h"
+#include "gui/graphics/Texture.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -118,8 +119,7 @@ namespace oly::editor
 
 	class TilesetDocument : public IDocument
 	{
-		TilesetDesc _scratch;
-		TilesetDesc _disk;
+		DoubleDescriptor<TilesetDesc> _desc;
 		detail::MetaMap _meta;
 		IndividualEditorState _individual_editor;
 		GroupEditorsState _group_editors;
@@ -140,7 +140,8 @@ namespace oly::editor
 		{
 			Texture texture;
 			TextureError error = TextureError::None;
-			bool stale = true;
+			std::string current_texture = "";
+			unsigned int current_texture_index = 0;
 		};
 
 		std::unordered_map<detail::TileConfig, ActiveTexture> _textures;
@@ -150,10 +151,12 @@ namespace oly::editor
 
 		static const char* GetVersion();
 
-		void Init() override;
+		void InitImpl() override;
 		void Draw() override;
-		void Load() override;
-		void Dump() override;
+		void LoadImpl() override;
+		void DumpImpl() override;
+		const IDoubleDescriptor& GetDoubleDescriptor() const override;
+		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
 		void DrawGroupEditor();
@@ -169,7 +172,8 @@ namespace oly::editor
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
-		void OnActiveTextureChanged(const detail::TileConfigGrid grid);
+		DataPathSource GetAssignmentPath(const detail::TileConfigGrid grid);
+		DataPathSource GetAssignmentPath(const detail::TileConfig config);
 		void UpdateActiveTextures();
 
 		static bool TextureErrorIsWarning(TilesetDocument::TextureError error);

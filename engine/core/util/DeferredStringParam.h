@@ -6,7 +6,7 @@
 
 namespace oly
 {
-	// TODO v9 wrap vector instead of simple typedef, to not clash the operator<<s
+	// TODO v10 wrap vector instead of simple typedef, to not clash the operator<<s
 	using DeferredStringList = std::vector<std::string>;
 
 	class DeferredStringParam

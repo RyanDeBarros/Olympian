@@ -3,9 +3,8 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/ImGuiWrapper.h"
-#include "gui/Toolbar.h"
-
-#include <imgui.h>
+#include "gui/graphics/Toolbar.h"
+#include "gui/scopes/StyleStack.h"
 
 #include <string>
 
@@ -131,7 +130,13 @@ namespace oly::editor::gui
 
 	void ListModel::Init(IListAdapter& adapter)
 	{
+		_size = adapter.Size();
 		active_index = 0;
+		EnforcePolicy(adapter);
+	}
+
+	void ListModel::Update(IListAdapter& adapter)
+	{
 		_size = adapter.Size();
 		Clamp();
 		EnforcePolicy(adapter);
@@ -210,8 +215,11 @@ namespace oly::editor::gui
 			break;
 
 		case ListOpType::Delete:
-			--_size;
-			adapter.Erase(op.GetIndex());
+			if (_size > 0)
+			{
+				--_size;
+				adapter.Erase(op.GetIndex());
+			}
 			break;
 
 		case ListOpType::Resize:
@@ -249,32 +257,54 @@ namespace oly::editor::gui
 		Apply(op, adapter);
 	}
 
-	void ListModel::DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
+	DrawResult ListModel::DrawComboHeader(const ComboHeader& header, const char* slot_prefix)
 	{
-		DrawComboHeader([slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); }, create_tooltip, delete_tooltip, clear_tooltip);
+		return DrawComboHeader(header, [slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); });
 	}
 
-	void ListModel::DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip)
+	DrawResult ListModel::DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter)
 	{
-		std::vector<std::string> slot_names;
-		slot_names.reserve(_size);
-		for (int i = 0; i < _size; ++i)
-			slot_names.push_back(combo_getter(i));
+		DrawResult result;
 
-		int slot = active_index;
-		gui::Combo("##SelectSlot", slot, slot_names);
-		active_index = slot;
+		StyleColor sc(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.75f));
 
-		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Plus, create_tooltip, "##+"))
-			DeferCreate();
+		if (ImGui::BeginChild(header.prompt, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
+		{
+			ImGui::Text(header.prompt);
+			ImGui::SameLine();
 
-		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Minus, delete_tooltip, "##-"))
-			DeferDelete();
+			DrawResult subresult;
 
-		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::Close, clear_tooltip, "##x"))
-			DeferClear();
+			std::vector<std::string> slot_names;
+			slot_names.reserve(_size);
+			for (int i = 0; i < _size; ++i)
+				slot_names.push_back(combo_getter(i));
+
+			int slot = active_index;
+			result |= gui::Combo("##SelectSlot", slot, slot_names);
+			active_index = slot;
+
+			ImGui::SameLine();
+			subresult = Toolbar::DrawIconButton(IconResource::Plus, header.create_tooltip, "##+");
+			result |= subresult;
+			if (subresult)
+				DeferCreate();
+
+			ImGui::SameLine();
+			subresult = Toolbar::DrawIconButton(IconResource::Minus, header.delete_tooltip, "##-");
+			result |= subresult;
+			if (subresult)
+				DeferDelete();
+
+			ImGui::SameLine();
+			subresult = Toolbar::DrawIconButton(IconResource::Close, header.clear_tooltip, "##x");
+			result |= subresult;
+			if (subresult)
+				DeferClear();
+		}
+
+		ImGui::EndChild();
+
+		return result;
 	}
 }

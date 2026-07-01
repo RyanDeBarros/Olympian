@@ -28,7 +28,11 @@ namespace oly::editor
 	public:
 		virtual ~IPanel() = default;
 	
-		virtual void Init() = 0;
+		void Init();
+		virtual void InitImpl() = 0;
+		void Terminate();
+		virtual void TerminateImpl() {}
+
 		virtual const char* GetTitle() const = 0;
 		virtual void Draw() = 0;
 

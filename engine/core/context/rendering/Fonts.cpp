@@ -184,7 +184,7 @@ namespace oly::context
 		return font_atlas;
 	}
 
-	// TODO v9 move load logic to RasterFont::Load()
+	// TODO v11 move load logic to RasterFont::Load()
 	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -251,7 +251,7 @@ namespace oly::context
 		return raster_font;
 	}
 
-	// TODO v9 move load logic to RasterFont::Load()
+	// TODO v11 move load logic to RasterFont::Load()
 	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -294,7 +294,7 @@ namespace oly::context
 						if (filepath.empty())
 							continue;
 
-						detail::ResourcePath font_file(filepath, file); // TODO v9 support relative paths in other assets too, like tilesets and raster fonts
+						detail::ResourcePath font_file(filepath, file);
 						rendering::FontFamily::FontRef font;
 						if (font_file.is_import_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute())
 								.has_type(detail::Key::Meta_RasterFont))

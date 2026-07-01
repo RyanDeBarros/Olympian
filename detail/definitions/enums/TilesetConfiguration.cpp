@@ -103,6 +103,32 @@ namespace oly::detail
 			return true;
 	}
 
+	std::ostream& operator<<(std::ostream& os, TileReflection reflection)
+	{
+		os << "TileReflection(";
+
+		switch (reflection)
+		{
+		case TileReflection::None:
+			os << "None";
+			break;
+
+		case TileReflection::X:
+			os << "X";
+			break;
+
+		case TileReflection::Y:
+			os << "Y";
+			break;
+
+		default:
+			os << "unknown";
+			break;
+		}
+
+		return os << ")";
+	}
+
 	TileReflection TILE_REFLECTION_BITSET_DEFAULT = TileReflection::None;
 
 	TileReflection TILE_REFLECTION_BITSET_VALUES[TILE_REFLECTION_BITSET_COUNT] = {
@@ -114,6 +140,36 @@ namespace oly::detail
 		"X",
 		"Y"
 	};
+
+	std::ostream& operator<<(std::ostream& os, TileRotation rotation)
+	{
+		os << "TileRotation(";
+
+		switch (rotation)
+		{
+		case TileRotation::None:
+			os << "None";
+			break;
+
+		case TileRotation::By90:
+			os << "By90";
+			break;
+
+		case TileRotation::By180:
+			os << "By180";
+			break;
+
+		case TileRotation::By270:
+			os << "By270";
+			break;
+
+		default:
+			os << "unknown";
+			break;
+		}
+
+		return os << ")";
+	}
 
 	static TileConfig tile_config_toggle_fillable_corner(TileConfig config, TileConfigIndividual corner)
 	{

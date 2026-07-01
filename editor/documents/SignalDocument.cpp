@@ -3,19 +3,37 @@
 #include "core/windows/MainWindow.h"
 #include "core/editor/Logger.h"
 
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
+#include "gui/InlineWidget.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
+#include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
 
+#include "util/DynamicArray.h"
+
 namespace oly::editor
 {
+	struct BriefDescPrinter
+	{
+		void operator()(std::ostream& os, const SignalDesc& desc) const
+		{
+			os << "SignalDesc[id=" << desc.id.value << ", binding=" << desc.binding.value << ", ...]";
+		}
+
+		void operator()(std::ostream& os, const RouteDesc& desc) const
+		{
+			os << "SignalDesc[id=" << desc.id.value << ", ...]";
+		}
+	};
+
 	const char* SignalDocument::GetVersion()
 	{
 		return "1.0";
 	}
 
-	void SignalDocument::Init()
+	void SignalDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
 		{
@@ -23,11 +41,13 @@ namespace oly::editor
 			MainWindow::Instance().PushNotification(std::move(notif));
 		}
 
-		Load();
+		LoadAsset();
 	}
 
 	void SignalDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		_stop_listening = true;
 		gui::IDScope scope(this);
 
@@ -35,13 +55,13 @@ namespace oly::editor
 		{
 			if (ImGui::BeginTabItem("Signals"))
 			{
-				DrawSignals();
+				Draw(DataPath() / _desc.scratch.subpaths.signals, _desc.scratch.signals);
 				ImGui::EndTabItem();
 			}
 
 			if (ImGui::BeginTabItem("Routes"))
 			{
-				DrawRoutes();
+				Draw(DataPath() / _desc.scratch.subpaths.routes, _desc.scratch.routes);
 				ImGui::EndTabItem();
 			}
 
@@ -52,7 +72,7 @@ namespace oly::editor
 			_listen_mode = ListenMode::None;
 	}
 
-	void SignalDocument::Load()
+	void SignalDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -61,7 +81,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load signal - corrupted asset: " + _oly_path.string());
@@ -72,7 +92,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -82,91 +102,145 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
-		_signal_slots.Init(*_scratch.signals.ListAdapter());
-		_route_slots.Init(*_scratch.routes.ListAdapter());
+		_desc.LoadFromDisk();
+		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.signals));
+		_route_slots.Init(*_desc.scratch.routes.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.routes));
 	}
 
-	void SignalDocument::Dump()
+	void SignalDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
 	}
 
-	void SignalDocument::DrawSignals()
+	const IDoubleDescriptor& SignalDocument::GetDoubleDescriptor() const
 	{
-		if (auto form = Form())
-		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("Select Signal");
+		return _desc;
+	}
 
-			ImGui::TableNextColumn();
-			_signal_slots.DrawComboHeader(
-				[this](size_t i) {
-					if (i < _scratch.signals.Size())
+	IDoubleDescriptor& SignalDocument::GetDoubleDescriptor()
+	{
+		return _desc;
+	}
+
+	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
+	{
+		_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
+
+		if (auto scope = gui::IDScope("##Signal"))
+		{
+			_signal_slots.DrawComboHeader({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" },
+				[&desc](size_t i) {
+					if (i < desc.Size())
 					{
-						std::string id = _scratch.signals[i].id.scratch;
+						std::string id = desc[i].id.value;
 						if (!id.empty())
 							return id;
 					}
 					return "<Signal #" + std::to_string(i) + ">";
-				}, "New signal", "Delete signal", "Clear signals");
+				});
+		}
 
-			if (!_scratch.signals.Empty())
-				Draw(form, _scratch.signals[_signal_slots.active_index]);
+		if (auto form = Form())
+		{
+			if (!desc.Empty())
+				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
-			if (_signal_slots.ConsumeOps(*_scratch.signals.ListAdapter()))
+			if (_signal_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
 		}
 	}
 
-	void SignalDocument::DrawRoutes()
+	void SignalDocument::Draw(DataPath path, VectorDesc<RouteDesc>& desc)
 	{
-		if (auto form = Form())
-		{
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-			ImGui::Text("Select Route");
+		_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
 
-			ImGui::TableNextColumn();
-			_route_slots.DrawComboHeader(
-				[this](size_t i) {
-					if (i < _scratch.routes.Size())
+		if (auto scope = gui::IDScope("##Route"))
+		{
+			_route_slots.DrawComboHeader({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" },
+				[&desc](size_t i) {
+					if (i < desc.Size())
 					{
-						std::string id = _scratch.routes[i].id.scratch;
+						std::string id = desc[i].id.value;
 						if (!id.empty())
 							return id;
 					}
-					return "<Route #" + std::to_string(i) + ">";
-				}, "New route", "Delete route", "Clear routes");
+					return "<Signal #" + std::to_string(i) + ">";
+				});
+		}
 
-			if (!_scratch.routes.Empty())
-				Draw(form, _scratch.routes[_route_slots.active_index]);
+		if (auto form = Form())
+		{
+			if (!desc.Empty())
+				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 
-			if (_route_slots.ConsumeOps(*_scratch.routes.ListAdapter()))
+			if (_route_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();
 		}
 	}
 
-	void SignalDocument::Draw(Form& form, SignalDesc& desc)
+	Counter<std::string> SignalDocument::GetSignalIDCounter() const
 	{
-		DRAW_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+		Counter<std::string> id_counter;
 
-		switch (desc.binding.scratch)
+		for (const auto& subdesc : _desc.scratch.signals)
+			id_counter.increment(subdesc.id.value);
+
+		return id_counter;
+	}
+	
+	Counter<std::string> SignalDocument::GetRouteIDCounter() const
+	{
+		Counter<std::string> id_counter;
+
+		for (const auto& subdesc : _desc.scratch.routes)
+			id_counter.increment(subdesc.id.value);
+
+		return id_counter;
+	}
+
+	Counter<std::string> SignalDocument::GetIDCounter() const
+	{
+		Counter<std::string> id_counter = GetSignalIDCounter();
+		id_counter.accumulate(GetRouteIDCounter());
+		return id_counter;
+	}
+
+	void SignalDocument::Draw(DataPath path, SignalDesc& desc)
+	{
+		gui::Outline dup_outline;
+		
+		DRAW_FIELD(id);
+		if (GetIDCounter().count(desc.id.value) > 1)
+		{
+			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+				ImGui::SetTooltip("Duplicate signal/route id");
+
+			dup_outline.Draw(Color::Error);
+		}
+
+		auto initial_binding = desc.binding.value;
+		DescIO::Draw(desc.binding.label, desc.binding.value, desc.binding.def);
+
+		switch (desc.binding.value)
 		{
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
 		{ \
 			if (!desc.variant.TryGet<T##Desc>()) \
+			{ \
+				SignalDesc initial_desc = desc; \
+				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
+				PushFieldSetAction<SignalDesc, BriefDescPrinter>(path, std::move(initial_desc), desc); \
+			} \
 			break; \
 		}
 
@@ -175,218 +249,251 @@ namespace oly::editor
 #undef SWITCH_CASE
 		}
 
-		desc.variant.Visit([this, &form](auto& desc) { Draw(form, desc); });
+		desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc) { Draw(path, desc); });
 	}
 	
-	void SignalDocument::Draw(Form& form, RouteDesc& desc)
+	void SignalDocument::Draw(DataPath path, RouteDesc& desc)
 	{
-		DRAW_FIELDS(ROUTE_GENERATOR);
-	}
+		auto signal_id_counter = GetSignalIDCounter();
+		auto id_counter = GetIDCounter();
 
-	void SignalDocument::Draw(Form& form, KeyDesc& desc)
-	{
+		Counter<std::string> local_id_counter;
+		local_id_counter.accumulate(desc.signals.value);
+
+		gui::Outline dup_outline;
+
+		DRAW_FIELD(id);
+		if (id_counter.count(desc.id.value) > 1)
 		{
-			DescIO::PrepareValue(desc.key.label);
-			gui::IDScope scope(&desc.key);
+			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+				ImGui::SetTooltip("Duplicate signal/route id");
 
-			_stop_listening = false;
-			if (auto key = InputListener::DrawKeyListener(_listen_mode))
-			{
-				if (*key != desc.key.Scratch())
-				{
-					desc.key.SetScratch(*key);
-					MarkDirty();
-				}
-			}
-
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.key.scratch, desc.key.names, desc.key.count))
-				MarkDirty();
-
-			if (DescIO::CheckRevertButton(desc.key.scratch, desc.key.def_index))
-				MarkDirty();
+			dup_outline.Draw(Color::Error);
 		}
 
-		bool disabled_required_mods[desc.required_mods.Count]{};
-		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
+		desc.signals.edit.PreEdit();
+		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		if (desc.required_mods.Draw(disabled_required_mods))
-			MarkDirty();
+		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
+			auto component = comp::Generic([&]() -> DrawResult {
+				std::string& element = desc.signals.edit.buffer[row.Index()];
 
-		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
+				gui::Outline outline;
+				auto result = gui::InputData<std::string>{}("##Item", element);
 
-		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
-			MarkDirty();
-
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
-	}
-	
-	void SignalDocument::Draw(Form& form, MouseButtonDesc& desc)
-	{
-		{
-			DescIO::PrepareValue(desc.button.label);
-			gui::IDScope scope(&desc.button);
-
-			_stop_listening = false;
-			if (auto mb = InputListener::DrawMouseButtonListener(_listen_mode))
-			{
-				if (*mb != desc.button.Scratch())
+				if (!signal_id_counter.contains(element))
 				{
-					desc.button.SetScratch(*mb);
-					MarkDirty();
+					outline.Draw(Color::Warning);
+					if (result.IsHovered())
+						ImGui::SetTooltip("Signal id is not present in asset");
 				}
-			}
+				else if (local_id_counter.count(element) > 1)
+				{
+					outline.Draw(Color::Warning);
+					if (result.IsHovered())
+						ImGui::SetTooltip("Duplicate signal id listing in route");
+				}
 
+				if (result.IsActivated())
+					row.OnSelect();
+
+				return result;
+			});
+
+			return gui::InlineWidget::Draw(std::span<gui::WidgetComponent>(&component, 1));
+		}, desc.signals.ui_state);
+
+		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
+
+		desc.signals.CheckUndoAction(path / desc.subpaths.signals);
+	}
+
+	void SignalDocument::Draw(DataPath path, KeyDesc& desc)
+	{
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<detail::KeyInput> key;
+			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
 			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-				MarkDirty();
+			if (key)
+			{
+				if (*key != desc.key.Value())
+				{
+					desc.key.SetValue(*key);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		}));
+		DRAW_FIELD(key);
 
-			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-				MarkDirty();
+		if (auto subform = Subform("Keyboard Mods", true))
+		{
+			bool disabled_required_mods[desc.required_mods.Count]{};
+			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+
+			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 		}
 
-		bool disabled_required_mods[desc.required_mods.Count]{};
-		for (size_t i = 0; i < desc.required_mods.Count; ++i)
-			disabled_required_mods[i] = desc.forbidden_mods.scratch & desc.forbidden_mods.values[i];
-
-		if (desc.required_mods.Draw(disabled_required_mods))
-			MarkDirty();
-
-		bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-		for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
-			disabled_forbidden_mods[i] = desc.required_mods.scratch & desc.required_mods.values[i];
-
-		if (desc.forbidden_mods.Draw(disabled_forbidden_mods))
-			MarkDirty();
-		
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
-	}
-	
-	void SignalDocument::Draw(Form& form, GamepadButtonDesc& desc)
-	{
-		{
-			DescIO::PrepareValue(desc.button.label);
-			gui::IDScope scope(&desc.button);
-
-			_stop_listening = false;
-			if (auto button = InputListener::DrawGamepadButtonListener(_listen_mode))
-			{
-				if (*button != desc.button.Scratch())
-				{
-					desc.button.SetScratch(*button);
-					MarkDirty();
-				}
-			}
-
-			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.button.scratch, desc.button.names, desc.button.count))
-				MarkDirty();
-
-			if (DescIO::CheckRevertButton(desc.button.scratch, desc.button.def_index))
-				MarkDirty();
-		}
-
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis1DDesc& desc)
+	void SignalDocument::Draw(DataPath path, MouseButtonDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.axis.label);
-			gui::IDScope scope(&desc.axis);
-
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
-			if (auto axis = InputListener::DrawGamepadAxis1DListener(_listen_mode))
-			{
-				if (*axis != desc.axis.Scratch())
-				{
-					desc.axis.SetScratch(*axis);
-					MarkDirty();
-				}
-			}
-
+			std::optional<detail::MouseButton> mb;
+			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
 			ImGui::SameLine();
-			if (gui::InputData<int>{}("", desc.axis.scratch, desc.axis.names, desc.axis.count))
-				MarkDirty();
+			if (mb)
+			{
+				if (*mb != desc.button.Value())
+				{
+					desc.button.SetValue(*mb);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		}));
+		DRAW_FIELD(button);
 
-			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def_index))
-				MarkDirty();
+		if (auto subform = Subform("Keyboard Mods", true))
+		{
+			bool disabled_required_mods[desc.required_mods.Count]{};
+			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+
+			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
 		}
+
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(DataPath path, GamepadButtonDesc& desc)
+	{
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<GLenum> button;
+			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+			ImGui::SameLine();
+			if (button)
+			{
+				if (*button != desc.button.Value())
+				{
+					desc.button.SetValue(*button);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		}));
+		DRAW_FIELD(button);
+
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
+	}
+	
+	void SignalDocument::Draw(DataPath path, GamepadAxis1DDesc& desc)
+	{
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+			_stop_listening = false;
+			std::optional<GLenum> axis;
+			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+			ImGui::SameLine();
+			if (axis)
+			{
+				if (*axis != desc.axis.Value())
+				{
+					desc.axis.SetValue(*axis);
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		}));
+		DRAW_FIELD(axis);
 
 		DRAW_FIELD(deadzone);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, GamepadAxis2DDesc& desc)
+	void SignalDocument::Draw(DataPath path, GamepadAxis2DDesc& desc)
 	{
-		{
-			DescIO::PrepareValue(desc.axis.label);
-			gui::IDScope scope(&desc.axis);
-
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
-			if (auto axis = InputListener::DrawGamepadAxis2DListener(_listen_mode))
-			{
-				if (*axis != desc.axis.scratch)
-				{
-					desc.axis.scratch = *axis;
-					MarkDirty();
-				}
-			}
-
+			std::optional<detail::GamepadAxis2D> axis;
+			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
 			ImGui::SameLine();
-
-			if (DescIO::DrawCombo("", desc.axis.scratch))
-				MarkDirty();
-
-			if (DescIO::CheckRevertButton(desc.axis.scratch, desc.axis.def))
-				MarkDirty();
-		}
+			if (axis)
+			{
+				if (*axis != desc.axis.value)
+				{
+					desc.axis.value = *axis;
+					result.SetDirty(true);
+				}
+				else
+					result.SetDirty(false);
+			}
+			return result;
+		}));
+		DRAW_FIELD(axis);
 
 		DRAW_FIELD(deadzone);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, CursorPosDesc& desc)
+	void SignalDocument::Draw(DataPath path, CursorPosDesc& desc)
 	{
 		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 	
-	void SignalDocument::Draw(Form& form, ScrollDesc& desc)
+	void SignalDocument::Draw(DataPath path, ScrollDesc& desc)
 	{
 		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Modifiers"))
-			Draw(form, desc.modifier);
+		if (auto subform = Subform("Modifiers"))
+			Draw(path / desc.subpaths.modifier, desc.modifier);
 	}
 
-	void SignalDocument::Draw(Form& form, Modifier0dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier0dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, Modifier1dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier1dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, Modifier2dDesc& desc)
+	void SignalDocument::Draw(DataPath path, Modifier2dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Draw(form, desc.base);
+		Draw(path / desc.subpaths.base, desc.base);
 	}
 	
-	void SignalDocument::Draw(Form& form, ModifierBaseDesc& desc)
+	void SignalDocument::Draw(DataPath path, ModifierBaseDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
@@ -510,11 +617,11 @@ namespace oly::editor
 	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
 	{
 		toml::table subtable;
-		_scratch.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
+		desc.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(subtable));
 
 		subtable.clear();
-		_scratch.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
+		desc.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
 		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(subtable));
 	}
 

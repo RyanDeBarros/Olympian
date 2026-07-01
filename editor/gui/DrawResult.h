@@ -2,8 +2,6 @@
 
 #include "util/Macros.h"
 
-#include <imgui.h>
-
 namespace oly::editor
 {
 	struct DrawResult
@@ -15,85 +13,32 @@ namespace oly::editor
 			Hovered = 1 << 1,
 			LeftClicked = 1 << 2,
 			RightClicked = 1 << 3,
-			LeftDoubleClicked = 1 << 4,
-			RightDoubleClicked = 1 << 5
+			Focused = 1 << 4,
+			Activated = 1 << 5,
+			DeactivatedAfterEdit = 1 << 6
 		};
 
 		OLY_DETAIL_DECLARE_NESTED_BITMASK(Flags);
 
 		Flags flags = Flags::None;
 
-		DrawResult(bool dirty = false)
-		{
-			SetDirty(dirty);
-		}
+		DrawResult(bool dirty = false);
 
-		DrawResult& Query()
-		{
-			if (ImGui::IsItemHovered())
-				flags |= Flags::Hovered;
-			
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-				flags |= Flags::LeftClicked;
-			
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Right))
-				flags |= Flags::RightClicked;
+		DrawResult& Query();
 
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-				flags |= Flags::LeftDoubleClicked;
+		operator bool() const;
+		DrawResult operator|(const DrawResult& o);
+		DrawResult& operator|=(const DrawResult& o);
 
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right))
-				flags |= Flags::RightDoubleClicked;
-
-			return *this;
-		}
-
-		operator bool() const
-		{
-			return flags & Flags::Dirty;
-		}
-
-		DrawResult& operator|=(const DrawResult& result)
-		{
-			flags |= result.flags;
-			return *this;
-		}
-
-		void SetDirty(bool dirty)
-		{
-			if (dirty)
-				flags |= Flags::Dirty;
-		}
-
-		bool IsDirty() const
-		{
-			return flags & Flags::Dirty;
-		}
-
-		bool IsHovered() const
-		{
-			return flags & Flags::Hovered;
-		}
-
-		bool IsLeftClicked() const
-		{
-			return flags & Flags::LeftClicked;
-		}
-
-		bool IsRightClicked() const
-		{
-			return flags & Flags::RightClicked;
-		}
-
-		bool IsLeftDoubleClicked() const
-		{
-			return flags & Flags::LeftDoubleClicked;
-		}
-
-		bool IsRightDoubleClicked() const
-		{
-			return flags & Flags::RightDoubleClicked;
-		}
+		void SetDirty(bool dirty);
+		bool IsDirty() const;
+		bool IsHovered() const;
+		bool IsLeftClicked() const;
+		bool IsRightClicked() const;
+		bool IsClicked() const;
+		bool IsFocused() const;
+		bool IsActivated() const;
+		bool IsDeactivatedAfterEdit() const;
 	};
 
 	OLY_DETAIL_IMPLEMENT_BITMASK(DrawResult::Flags);

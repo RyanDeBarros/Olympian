@@ -1,12 +1,10 @@
 #include "PreferencesPanel.h"
 
-#include "core/windows/MainWindow.h"
 #include "core/Errors.h"
-#include "core/editor/Logger.h"
-#include "core/editor/ProjectInfo.h"
+#include "core/editor/Editor.h"
+#include "core/windows/MainWindow.h"
 #include "panels/PanelManager.h"
-
-#include "gui/Subform.h"
+#include "gui/UnsavedChangesModal.h"
 
 #include "definitions/Keys.h"
 
@@ -14,6 +12,10 @@
 
 namespace oly::editor
 {
+	// TODO DEBT use kPascalCase notation for constants instead of all caps
+	static constexpr const char* kWindowUnsavedChangesPopup = "Unsaved Changes##Window";
+	static constexpr const char* kShutdownUnsavedChangesPopup = "Unsaved Changes##App";
+
 	PreferencesPanel& PreferencesPanel::Instance()
 	{
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<PreferencesPanel>())
@@ -22,9 +24,9 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of PreferencesPanel");
 	}
 
-	void PreferencesPanel::Init()
+	void PreferencesPanel::InitImpl()
 	{
-		Load();
+		_doc.Init();
 	}
 
 	const char* PreferencesPanel::GetTitle() const
@@ -35,157 +37,84 @@ namespace oly::editor
 	void PreferencesPanel::Draw()
 	{
 		ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
-		if (IsDirty())
+		if (_doc.IsDirty())
 			flags |= ImGuiWindowFlags_UnsavedDocument;
 
 		auto window = DrawDockedWindow(flags);
-		if (window.RequestsClose() && IsDirty())
+		if (window.RequestsClose() && _doc.IsDirty())
 		{
 			Open();
 			ImGui::SetWindowFocus();
+
+			_window_unsaved_changes_modal = true;
+			ImGui::OpenPopup(kWindowUnsavedChangesPopup);
 		}
 
 		if (window.IsVisible())
 		{
 			if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-				Dump();
+				_doc.DumpAsset();
 
-			if (ImGui::BeginMenuBar())
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal))
+				_doc.Undo();
+
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal))
+				_doc.Redo();
+
+			_doc.DrawMenuBar();
+			_doc.Draw();
+			_doc.DrawFinalize();
+		}
+
+		if (_window_unsaved_changes_modal)
+		{
+			if (DrawUnsavedChangesModal(_window_unsaved_changes_modal, kWindowUnsavedChangesPopup))
+				Close();
+		}
+
+		if (_shutdown_unsaved_changes_modal)
+		{
+			if (_open_shutdown_modal)
 			{
-				if (ImGui::BeginMenu("File"))
-				{
-					if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-						Dump();
-
-					if (ImGui::MenuItem("Discard Changes"))
-						Load();
-
-					ImGui::EndMenu();
-				}
-
-				ImGui::EndMenuBar();
+				_open_shutdown_modal = false;
+				ImGui::OpenPopup(kShutdownUnsavedChangesPopup);
 			}
 
-			Draw(_scratch);
-		}
-	}
-
-	std::filesystem::path PreferencesPanel::GetPath() const
-	{
-		return ProjectInfo::Instance().EditorRoot() / "preferences.toml";
-	}
-
-	void PreferencesPanel::Load()
-	{
-		std::filesystem::path path = GetPath();
-		toml::table table;
-		if (std::filesystem::is_regular_file(path))
-		{
-			try
+			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
 			{
-				table = toml::parse_file(path.string());
-			}
-			catch (const toml::parse_error& e)
-			{
-				Logger::Instance().Log(LogLevel::Warning, "Cannot load editor preferences: " + std::string(e.what()));
+				Close();
+				Editor::Instance().RequestShutdown();
 			}
 		}
-
-		Load(TOMLNode(table), _disk);
-		_scratch = _disk;
-		MarkClean();
 	}
 
-	void PreferencesPanel::Dump()
+	bool PreferencesPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
 	{
-		toml::table table;
-		Dump(table, _scratch);
-		std::filesystem::path path = GetPath();
-		std::filesystem::create_directories(path.parent_path());
-		std::ofstream file(path);
-		file << table;
-		_disk = _scratch;
-		MarkClean();
+		std::vector<std::string> description;
+		description.push_back("Editor preferences");
+		auto result = gui::DrawUnsavedChangesModal(popup, description);
+
+		if (result == gui::UnsavedChangesModalResult::SaveChanges)
+			_doc.DumpAsset();
+
+		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
+			_doc.LoadAsset();
+
+		unsaved_changes_modal = result == gui::UnsavedChangesModalResult::None;
+		return result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges;
 	}
 
-	void PreferencesPanel::MarkDirty()
+	bool PreferencesPanel::RequestShutdown()
 	{
-		_dirty = true;
-	}
-
-	void PreferencesPanel::MarkClean()
-	{
-		_dirty = false;
-	}
-
-	bool PreferencesPanel::IsDirty() const
-	{
-		return _dirty;
-	}
-
-	const PreferencesDesc& PreferencesPanel::GetSavedDesc() const
-	{
-		return _disk;
-	}
-
-	void PreferencesPanel::Draw(PreferencesDesc& desc)
-	{
-		if (auto form = Form())
+		if (_doc.IsDirty())
 		{
-			if (auto pause = form.Pause())
-				ImGui::SeparatorText("Editor Preferences");
-
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-
-			Draw(form, desc.tree_view);
+			Open();
+			GainFocus();
+			_shutdown_unsaved_changes_modal = true;
+			_open_shutdown_modal = true;
+			return false;
 		}
-	}
-
-	void PreferencesPanel::Draw(Form& form, TreeViewSettingsDesc& desc)
-	{
-		if (auto subform = Subform(form, "Advanced##TreeView"))
-		{
-			Draw(subform.GetForm(), desc.advanced);
-		}
-	}
-
-	void PreferencesPanel::Draw(Form& form, TreeViewAdvancedSettingsDesc& desc)
-	{
-		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
-	}
-
-	void PreferencesPanel::Load(TOMLNode node, PreferencesDesc& desc)
-	{
-		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
-	}
-	
-	void PreferencesPanel::Load(TOMLNode node, TreeViewSettingsDesc& desc)
-	{
-		Load(node[detail::encode_key(desc.advanced_key)], desc.advanced);
-	}
-	
-	void PreferencesPanel::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
-	{
-		LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
-	}
-
-	void PreferencesPanel::Dump(toml::table& table, PreferencesDesc& desc)
-	{
-		toml::table subtable;
-		Dump(subtable, desc.tree_view);
-		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
-	}
-	
-	void PreferencesPanel::Dump(toml::table& table, TreeViewSettingsDesc& desc)
-	{
-		toml::table subtable;
-		Dump(subtable, desc.advanced);
-		table.insert_or_assign(detail::encode_key(desc.advanced_key), std::move(subtable));
-	}
-	
-	void PreferencesPanel::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)
-	{
-		DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		else
+			return true;
 	}
 }

@@ -1,8 +1,9 @@
-#meta version=1.0 import type=texture
-
+#meta version="1.0" import="exists" type="texture" 
 [[Texture]]
+Animated = false
+MagFilt = 9728
+MinFilt = 9728
+Mipmaps = false
 Storage = 0
-MinFilt = 0x2600
-MagFilt = 0x2600
-Mipmaps = 0
-
+WrapS = 33071
+WrapT = 33071

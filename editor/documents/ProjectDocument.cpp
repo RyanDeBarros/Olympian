@@ -4,8 +4,9 @@
 #include "core/editor/Logger.h"
 #include "core/windows/MainWindow.h"
 
-#include "gui/IDScope.h"
-#include "gui/Subform.h"
+#include "gui/scopes/IDScope.h"
+#include "gui/scopes/Form.h"
+#include "gui/scopes/Subform.h"
 
 #include "definitions/Keys.h"
 
@@ -21,15 +22,17 @@ namespace oly::editor
 	{
 	}
 
-	void ProjectDocument::Init()
+	void ProjectDocument::InitImpl()
 	{
-		Load();
+		LoadAsset();
 	}
 
 	void ProjectDocument::Draw()
 	{
+		auto pre_draw = PreDraw();
+
 		gui::IDScope scope(this);
-		Draw(_scratch);
+		Draw(DataPath(), _desc.scratch);
 	}
 
 	void ProjectDocument::DrawMenuBar()
@@ -39,10 +42,10 @@ namespace oly::editor
 			if (ImGui::BeginMenu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
-					Dump();
+					DumpAsset();
 
 				if (ImGui::MenuItem("Discard Changes"))
-					Load();
+					LoadAsset();
 
 				ImGui::EndMenu();
 			}
@@ -53,7 +56,7 @@ namespace oly::editor
 		}
 	}
 
-	void ProjectDocument::Load()
+	void ProjectDocument::LoadImpl()
 	{
 		if (_oly_path.is_file())
 		{
@@ -62,7 +65,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _disk);
+				Load(TOMLNode(table), _desc.disk);
 			else
 			{
 				Notification notif(LogLevel::Error, "cannot load project file - corrupted asset: " + GetOlyPath().string());
@@ -73,7 +76,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _disk);
+			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = "1.0";
@@ -82,16 +85,26 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_scratch = _disk;
+		_desc.LoadFromDisk();
 	}
 
-	void ProjectDocument::Dump()
+	void ProjectDocument::DumpImpl()
 	{
 		toml::table table;
-		Dump(table, _scratch);
+		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_disk = _scratch;
+		_desc.WriteToDisk();
 		MarkClean();
+	}
+
+	const IDoubleDescriptor& ProjectDocument::GetDoubleDescriptor() const
+	{
+		return _desc;
+	}
+
+	IDoubleDescriptor& ProjectDocument::GetDoubleDescriptor()
+	{
+		return _desc;
 	}
 
 	std::string ProjectDocument::TabName() const
@@ -99,74 +112,74 @@ namespace oly::editor
 		return ProjectInfo::Instance().ProjectName();
 	}
 
-	void ProjectDocument::Draw(ProjectDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ProjectDesc& desc)
 	{
 		if (auto form = Form())
-			Draw(form, desc.context);
+			Draw(path / desc.subpaths.context, desc.context);
 	}
 	
-	void ProjectDocument::Draw(Form& form, ContextDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ContextDesc& desc)
 	{
-		if (auto subform = Subform(form, "Platform"))
-			Draw(subform.GetForm(), desc.platform);
+		if (auto subform = Subform("Platform"))
+			Draw(path / desc.subpaths.platform, desc.platform);
 
-		if (auto subform = Subform(form, "Collision"))
-			Draw(subform.GetForm(), desc.collision);
+		if (auto subform = Subform("Collision"))
+			Draw(path / desc.subpaths.collision, desc.collision);
 
-		if (auto subform = Subform(form, "Logger"))
-			Draw(subform.GetForm(), desc.logger);
+		if (auto subform = Subform("Logger"))
+			Draw(path / desc.subpaths.logger, desc.logger);
 
-		if (auto subform = Subform(form, "Frame Rate"))
-			Draw(subform.GetForm(), desc.frame_rate);
+		if (auto subform = Subform("Frame Rate"))
+			Draw(path / desc.subpaths.frame_rate, desc.frame_rate);
 	}
 
-	void ProjectDocument::Draw(Form& form, PlatformDesc& desc)
+	void ProjectDocument::Draw(DataPath path, PlatformDesc& desc)
 	{
-		if (auto subform = Subform(form, "Window"))
-			Draw(subform.GetForm(), desc.window);
+		if (auto subform = Subform("Window"))
+			Draw(path / desc.subpaths.window, desc.window);
 		
 		DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 	}
 	
-	void ProjectDocument::Draw(Form& form, WindowDesc& desc)
+	void ProjectDocument::Draw(DataPath path, WindowDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
-		if (auto subform = Subform(form, "Viewport"))
-			Draw(subform.GetForm(), desc.viewport);
+		if (auto subform = Subform("Viewport"))
+			Draw(path / desc.subpaths.viewport, desc.viewport);
 
-		if (auto subform = Subform(form, "Window hints"))
-			Draw(subform.GetForm(), desc.window_hints);
+		if (auto subform = Subform("Window hints"))
+			Draw(path / desc.subpaths.window_hints, desc.window_hints);
 	}
 
-	void ProjectDocument::Draw(Form& form, ViewportDesc& desc)
+	void ProjectDocument::Draw(DataPath path, ViewportDesc& desc)
 	{
 		DRAW_FIELDS(VIEWPORT_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, WindowHintsDesc& desc)
+	void ProjectDocument::Draw(DataPath path, WindowHintsDesc& desc)
 	{
 		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, CollisionDesc& desc)
+	void ProjectDocument::Draw(DataPath path, CollisionDesc& desc)
 	{
 		DRAW_FIELDS(COLLISION_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, LoggerDesc& desc)
+	void ProjectDocument::Draw(DataPath path, LoggerDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
-		if (auto subform = Subform(form, "Enable Streams"))
-			Draw(subform.GetForm(), desc.enable);
+		if (auto subform = Subform("Enable Streams"))
+			Draw(path / desc.subpaths.enable, desc.enable);
 	}
 	
-	void ProjectDocument::Draw(Form& form, LoggerEnableDesc& desc)
+	void ProjectDocument::Draw(DataPath path, LoggerEnableDesc& desc)
 	{
 		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
-	void ProjectDocument::Draw(Form& form, FrameRateDesc& desc)
+	void ProjectDocument::Draw(DataPath path, FrameRateDesc& desc)
 	{
 		DRAW_FIELDS(FRAME_RATE_GENERATOR);
 	}

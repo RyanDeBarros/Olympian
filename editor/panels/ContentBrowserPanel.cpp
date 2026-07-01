@@ -16,7 +16,7 @@ namespace oly::editor
 			BreakoutError::Throw("No instance of ContentBrowserPanel");
 	}
 
-	void ContentBrowserPanel::Init()
+	void ContentBrowserPanel::InitImpl()
 	{
 		// NOP
 	}
@@ -31,7 +31,7 @@ namespace oly::editor
 		auto window = DrawDockedWindow(ImGuiWindowFlags_None);
 		if (window.IsVisible())
 		{
-			// TODO v9
+			// TODO v9.2
 		}
 	}
 }
