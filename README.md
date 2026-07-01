@@ -38,7 +38,7 @@ The editor uses the following libraries:
 - **marzer/tomlplusplus**
 - **memononen/nanosvg**
 
-The editor also uses the following assets:
+The editor also uses assets from the following databases:
 
 - [Google Icons](https://fonts.google.com/icons)
 

@@ -25,7 +25,7 @@ namespace oly::editor
 #undef RES_FOLDER
 	}
 
-	const Texture& ResourceLoader::GetTexture(IconResource resource)
+	Texture ResourceLoader::GetTexture(IconResource resource)
 	{
 		switch (resource)
 		{

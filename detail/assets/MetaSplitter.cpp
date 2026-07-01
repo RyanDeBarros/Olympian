@@ -11,10 +11,10 @@ namespace oly::detail
 {
     static const std::string meta_prefix = "#meta";
 
-    std::optional<Key> MetaMap::get_type() const
+    Key MetaMap::get_type() const
     {
         auto it = map.find(Key::Meta_Type);
-        return it != map.end() ? std::make_optional(decode_key(it->second)) : std::nullopt;
+        return it != map.end() ? decode_key(it->second) : Key::_;
     }
 
     bool MetaMap::has_type(Key type) const

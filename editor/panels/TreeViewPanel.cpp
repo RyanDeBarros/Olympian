@@ -32,7 +32,8 @@ namespace oly::editor
 
 	void TreeViewNode::Analyse()
 	{
-		is_import = PathInfo::IsImportFile(this->path);
+		is_import = PathInfo::IsImportFile(path);
+		icon = PathInfo::GetIcon(path);
 	}
 
 	void TreeViewNode::Update()
@@ -266,13 +267,7 @@ namespace oly::editor
 				node.Open();
 
 			if (ImGui::MenuItem("Show in Content Browser"))
-			{
-				detail::ResourcePath path = node.path;
-				if (path.is_resource())
-					ContentBrowserPanel::Instance().ShowInContentBrowser(path);
-				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.string() + " is not located in the project resource folder"));
-			}
+				ContentBrowserPanel::Instance().ShowInContentBrowser(node.path);
 
 			if (ImGui::MenuItem("Reveal in Explorer"))
 				PathInfo::RevealInExplorer(node.path);
@@ -309,11 +304,17 @@ namespace oly::editor
 			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
 			ImGui::SameLine();
 		}
+
+		ImVec2 cursor = ImGui::GetCursorScreenPos();
+		ImVec2 size(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+		ImGui::GetWindowDrawList()->AddImage(node.icon.ID(), cursor, cursor + size);
+		ImGui::Dummy(size);
+		ImGui::SameLine();
 	}
 
 	void TreeViewPanel::DrawRowBg(TreeViewNode& node, int& local_file_index)
 	{
-		ImVec2 start = ImGui::GetCursorScreenPos();
+		ImVec2 start = ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight(), 0);
 		ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
 
 		if (node.IsBranching())

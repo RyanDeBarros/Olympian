@@ -15,7 +15,7 @@ namespace oly::detail
 	{
 		std::unordered_map<Key, std::string> map;
 
-		std::optional<Key> get_type() const;
+		Key get_type() const;
 		bool has_type(Key type) const;
 		std::string get_version() const;
 		bool is_import() const;

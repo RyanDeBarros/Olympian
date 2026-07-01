@@ -35,11 +35,7 @@ namespace oly::editor
 		if (oly_file.exists())
 		{
 			const auto meta = detail::MetaSplitter::decode_meta(oly_file);
-			detail::Key type = detail::Key::_;
-			if (auto t = meta.get_type())
-				type = *t;
-
-			switch (type)
+			switch (meta.get_type())
 			{
 #define SWITCH_CASE(AssetKey, DocumentClass) \
 			case detail::Key::AssetKey: \

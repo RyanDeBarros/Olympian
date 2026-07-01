@@ -8,6 +8,8 @@ namespace oly::editor
 {
 	class ContentBrowserPanel : public IPanel
 	{
+		std::filesystem::path _folder;
+
 	public:
 		static ContentBrowserPanel& Instance();
 
@@ -16,5 +18,8 @@ namespace oly::editor
 		void Draw() override;
 
 		void ShowInContentBrowser(const detail::ResourcePath& path);
+
+	private:
+		void DrawFolderView();
 	};
 }
