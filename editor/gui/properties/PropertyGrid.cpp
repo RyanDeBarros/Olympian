@@ -182,22 +182,29 @@ namespace oly::editor::gui
 		return DIRTY_GRID;
 	}
 
-	bool PropertyGrid::BeginForm()
+	bool PropertyGrid::BeginForm(ImGuiID id)
 	{
-		// TODO v9.1 begin child instead of outer borders -> child will have bkg color / outer border. *Always* call EndForm() from Form, just pass bool -> that way EndChild() is always called, but the bool will determine whether EndTable() should be called.
-		if (ImGui::BeginTable("", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_SizingFixedFit))
+		if (ImGui::BeginChild(id, ImVec2(0.f, 0.f), ImGuiChildFlags_AutoResizeY))
 		{
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
-			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight());
-			return true;
+			if (ImGui::BeginTable("", 3, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedFit))
+			{
+				ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed);
+				ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthStretch);
+				ImGui::TableSetupColumn("", ImGuiTableColumnFlags_WidthFixed, ImGui::GetFrameHeight());
+				return true;
+			}
+			else
+				return false;
 		}
 		else
 			return false;
 	}
 
-	void PropertyGrid::EndForm()
+	void PropertyGrid::EndForm(bool table_visible)
 	{
-		ImGui::EndTable();
+		if (table_visible)
+			ImGui::EndTable();
+
+		ImGui::EndChild();
 	}
 }

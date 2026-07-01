@@ -4,8 +4,6 @@
 
 namespace oly::editor
 {
-	// TODO v9.1 color background of collapsing section, even when closed
-
 	// TODO DEBT use generators for as many headers as possible
 	Subform::Subform(const char* label, const std::function<void(PropertyPage&)>& property_page_generator, bool start_open)
 		: _pause(), _section(label, start_open)
@@ -27,6 +25,6 @@ namespace oly::editor
 
 	Subform::operator bool() const
 	{
-		return _pause && _section && _subform;
+		return _pause && _section && _subform && *_subform;
 	}
 }

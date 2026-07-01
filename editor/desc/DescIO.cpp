@@ -110,9 +110,9 @@ namespace oly::editor
 			gui::PropertyGrid::Reset::Button();
 
 		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1);
-		ValueLabelInputData<float>{}("x2", "##x2", data.buffer.x2);
-		ValueLabelInputData<float>{}("y1", "##y1", data.buffer.y1);
-		ValueLabelInputData<float>{}("y2", "##y2", data.buffer.y2);
+		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer.x2);
+		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer.y1);
+		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer.y2);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -130,9 +130,9 @@ namespace oly::editor
 			gui::PropertyGrid::Reset::Button();
 
 		ValueLabelInputData<float>{}("x1", "##x1", data.buffer.x1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputData<float>{}("x2", "##x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputData<float>{}("y1", "##y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputData<float>{}("y2", "##y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer.x2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer.y1, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer.y2, MakeOpt(0.f), MakeOpt(1.f));
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -150,8 +150,8 @@ namespace oly::editor
 			gui::PropertyGrid::Reset::Button();
 
 		ValueLabelInputData<float>{}("left", "##left", data.buffer.left);
-		ValueLabelInputData<float>{}("right", "##right", data.buffer.right);
-		ValueLabelInputData<float>{}("top", "##top", data.buffer.top);
+		ValueLabelInputDataSep<float>{}("right", "##right", data.buffer.right);
+		ValueLabelInputDataSep<float>{}("top", "##top", data.buffer.top);
 
 		gui::PropertyGrid::SubmitRow();
 		data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());

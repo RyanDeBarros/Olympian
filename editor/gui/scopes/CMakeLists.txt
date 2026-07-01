@@ -3,5 +3,6 @@ target_sources(OlympianEditor PRIVATE
 	DisabledSection.cpp
 	Form.cpp
 	IDScope.cpp
+	StyleStack.cpp
 	Subform.cpp
 )

@@ -10,6 +10,7 @@ namespace oly::editor
 {
 	class Form
 	{
+		bool _valid = true;
 		bool _draw_content = false;
 		int _id_counter = 0;
 		gui::IDScope _scope;

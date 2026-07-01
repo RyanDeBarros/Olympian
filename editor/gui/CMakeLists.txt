@@ -5,7 +5,6 @@ target_sources(OlympianEditor PRIVATE
 	ImGuiWrapper.cpp
 	InlineWidget.cpp
 	ListModel.cpp
-	StyleStack.cpp
 	UnsavedChangesModal.cpp
 	WidgetComponentCommon.cpp
 )

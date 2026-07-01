@@ -1,6 +1,6 @@
 #pragma once
 
-#include "gui/StyleStack.h"
+#include "gui/scopes/StyleStack.h"
 
 namespace oly::editor
 {

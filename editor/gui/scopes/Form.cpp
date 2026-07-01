@@ -17,6 +17,7 @@ namespace oly::editor
 	{
 		other._draw_content = false;
 		other._id_counter = 0;
+		other._valid = false;
 
 		if (&other == ACTIVE_FORM)
 			ACTIVE_FORM = this;
@@ -24,7 +25,7 @@ namespace oly::editor
 
 	Form::~Form()
 	{
-		if (_draw_content)
+		if (_valid)
 			EndTable();
 	}
 
@@ -42,16 +43,13 @@ namespace oly::editor
 	{
 		ACTIVE_FORM = this;
 		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
-		_draw_content = gui::PropertyGrid::BeginForm();
+		_draw_content = gui::PropertyGrid::BeginForm(ImGui::GetID("##FormID"));
 	}
 
 	void Form::EndTable()
 	{
-		if (_draw_content)
-		{
-			gui::PropertyGrid::EndForm();
-			_draw_content = false;
-		}
+		gui::PropertyGrid::EndForm(_draw_content);
+		_draw_content = false;
 
 		_scope.PopAll();
 		ACTIVE_FORM = nullptr;

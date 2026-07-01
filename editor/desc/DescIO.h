@@ -42,6 +42,16 @@ namespace oly::editor
 		};
 
 		template<typename T>
+		struct ValueLabelInputDataSep
+		{
+			template<typename... Args>
+			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
+			{
+				gui::PropertyGrid::Value::AddComponent(comp::LabelInputDataSep<T>(label, data_label, data, std::forward<Args>(args)...));
+			}
+		};
+
+		template<typename T>
 		struct ValueInputData<OptionalPrimitive<T>>
 		{
 			template<typename... Args>

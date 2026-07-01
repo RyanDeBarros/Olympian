@@ -4,6 +4,7 @@ namespace oly::editor
 {
 	class CollapsingSection
 	{
+		bool _valid = true;
 		bool _visible = false;
 
 	public:
