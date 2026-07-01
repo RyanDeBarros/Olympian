@@ -102,30 +102,34 @@ namespace oly::editor
 
 			if (auto subform = Subform("Glyphs"))
 			{
-				_glyph_model.Update(*ListAdapter());
-
-				if (auto scope = gui::IDScope("##Glyph"))
+				if (auto pause = FormPause())
 				{
-					gui::PropertyGrid::Key::SetLabel("Select Glyph");
-					gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
-						return _glyph_model.DrawComboHeader([&desc](size_t i) -> std::string {
-							if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.value.empty())
-								return desc.glyphs[i].codepoint.value;
-							else
-								return "Glyph #" + std::to_string(i);
-						}, "New glyph", "Delete glyph", "Clear glyphs");
-					}));
-					gui::PropertyGrid::SubmitRow();
+					_glyph_model.Update(*ListAdapter());
+
+					if (auto scope = gui::IDScope("##Glyph"))
+					{
+						_glyph_model.DrawComboHeader({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" },
+							[&desc](size_t i) -> std::string {
+								if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.value.empty())
+									return desc.glyphs[i].codepoint.value;
+								else
+									return "Glyph #" + std::to_string(i);
+							});
+					}
 				}
 
-				if (!desc.glyphs.Empty())
-					Draw(path / desc.subpaths.glyphs / desc.glyphs.Subpath(_glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
+				if (Form::ValidActiveForm())
+				{
+					if (!desc.glyphs.Empty())
+						Draw(path / desc.subpaths.glyphs / desc.glyphs.Subpath(_glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
+
+					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
+				}
 
 				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
 
 				_glyph_model.active_index.ConsumeModified();
-				// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 			}
 		}
 	}

@@ -128,27 +128,24 @@ namespace oly::editor
 
 	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
 	{
+		_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
+
+		if (auto scope = gui::IDScope("##Signal"))
+		{
+			_signal_slots.DrawComboHeader({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" },
+				[&desc](size_t i) {
+					if (i < desc.Size())
+					{
+						std::string id = desc[i].id.value;
+						if (!id.empty())
+							return id;
+					}
+					return "<Signal #" + std::to_string(i) + ">";
+				});
+		}
+
 		if (auto form = Form())
 		{
-			_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
-
-			if (auto scope = gui::IDScope("##Signal"))
-			{
-				gui::PropertyGrid::Key::SetLabel("Select Signal");
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
-					return _signal_slots.DrawComboHeader([&desc](size_t i) {
-						if (i < desc.Size())
-						{
-							std::string id = desc[i].id.value;
-							if (!id.empty())
-								return id;
-						}
-						return "<Signal #" + std::to_string(i) + ">";
-					}, "New signal", "Delete signal", "Clear signals");
-				}));
-				gui::PropertyGrid::SubmitRow();
-			}
-
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
 
@@ -161,27 +158,24 @@ namespace oly::editor
 
 	void SignalDocument::Draw(DataPath path, VectorDesc<RouteDesc>& desc)
 	{
+		_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
+
+		if (auto scope = gui::IDScope("##Route"))
+		{
+			_route_slots.DrawComboHeader({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" },
+				[&desc](size_t i) {
+					if (i < desc.Size())
+					{
+						std::string id = desc[i].id.value;
+						if (!id.empty())
+							return id;
+					}
+					return "<Signal #" + std::to_string(i) + ">";
+				});
+		}
+
 		if (auto form = Form())
 		{
-			_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
-
-			if (auto scope = gui::IDScope("##Route"))
-			{
-				gui::PropertyGrid::Key::SetLabel("Select Route");
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
-					return _route_slots.DrawComboHeader([&desc](size_t i) {
-						if (i < desc.Size())
-						{
-							std::string id = desc[i].id.value;
-							if (!id.empty())
-								return id;
-						}
-						return "<Route #" + std::to_string(i) + ">";
-					}, "New route", "Delete route", "Clear routes");
-				}));
-				gui::PropertyGrid::SubmitRow();
-			}
-
 			if (!desc.Empty())
 				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
 

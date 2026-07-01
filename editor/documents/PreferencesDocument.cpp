@@ -126,14 +126,14 @@ namespace oly::editor
 			if (auto pause = FormPause())
 				ImGui::SeparatorText("Editor Preferences");
 
-			ImGui::TableNextRow();
-			ImGui::TableNextColumn();
-
-			if (auto subform = Subform("Edit"))
-				Draw(path / desc.subpaths.edit, desc.edit);
+			if (Form::ValidActiveForm())
+			{
+				if (auto subform = Subform("Edit"))
+					Draw(path / desc.subpaths.edit, desc.edit);
 		
-			if (auto subform = Subform("Tree View"))
-				Draw(path / desc.subpaths.tree_view, desc.tree_view);
+				if (auto subform = Subform("Tree View"))
+					Draw(path / desc.subpaths.tree_view, desc.tree_view);
+			}
 		}
 	}
 

@@ -33,10 +33,15 @@ namespace oly::editor
 	{
 		return ACTIVE_FORM;
 	}
+	
+	bool Form::ValidActiveForm()
+	{
+		return ACTIVE_FORM && *ACTIVE_FORM;
+	}
 
 	Form::operator bool() const
 	{
-		return _draw_content;
+		return _valid && _draw_content;
 	}
 
 	void Form::BeginTable()
@@ -59,6 +64,9 @@ namespace oly::editor
 		: _form(ACTIVE_FORM)
 	{
 		if (_form)
+			_was_drawing_content = _form->_draw_content;
+
+		if (_form)
 			_form->EndTable();
 	}
 
@@ -70,6 +78,6 @@ namespace oly::editor
 
 	FormPause::operator bool() const
 	{
-		return true;
+		return _form && _form->_valid && _was_drawing_content;
 	}
 }

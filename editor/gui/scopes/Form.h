@@ -23,6 +23,7 @@ namespace oly::editor
 		Form& operator=(Form&&) noexcept = delete;
 
 		static Form* ActiveForm();
+		static bool ValidActiveForm();
 
 		operator bool() const;
 
@@ -32,9 +33,11 @@ namespace oly::editor
 		void EndTable();
 	};
 
+	// NOTE: After pausing a form, make sure to check ValidActiveForm() before continuing to draw properties
 	class FormPause
 	{
 		Form* _form = nullptr;
+		bool _was_drawing_content = false;
 
 	public:
 		FormPause();

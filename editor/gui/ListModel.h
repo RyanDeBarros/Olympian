@@ -120,8 +120,16 @@ namespace oly::editor::gui
 	public:
 		void Invoke(const ListOp& op, IListAdapter& adapter);
 
-		DrawResult DrawComboHeader(const char* slot_prefix, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
-		DrawResult DrawComboHeader(std::function<std::string(size_t)> combo_getter, const char* create_tooltip, const char* delete_tooltip, const char* clear_tooltip);
+		struct ComboHeader
+		{
+			const char* prompt;
+			const char* create_tooltip;
+			const char* delete_tooltip;
+			const char* clear_tooltip;
+		};
+
+		DrawResult DrawComboHeader(const ComboHeader& header, const char* slot_prefix);
+		DrawResult DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
 	};
 
 	template<typename T, typename Printer = StandardPrinter<T>>

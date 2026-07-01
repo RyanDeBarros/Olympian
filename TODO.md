@@ -1,9 +1,5 @@
 # Branches
 
-## v9.1
-* More editor work
-	* Local per-document undo/redo stacks
-
 ## v9.2
 * More editor work
 	* Content Browser Panel

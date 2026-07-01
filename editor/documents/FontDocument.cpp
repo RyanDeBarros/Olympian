@@ -150,19 +150,13 @@ namespace oly::editor
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
+				
+			_atlas_slots.Update(*FontAtlasListAdapter());
+			if (auto scope = gui::IDScope("##Atlas"))
+				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
+				
 			if (auto form = Form())
 			{
-				_atlas_slots.Update(*FontAtlasListAdapter());
-				
-				if (auto scope = gui::IDScope("##Atlas"))
-				{
-					gui::PropertyGrid::Key::SetLabel("Select Atlas");
-					gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
-						return _atlas_slots.DrawComboHeader("Atlas", "New atlas", "Delete atlas", "Clear atlas");
-					}));
-					gui::PropertyGrid::SubmitRow();
-				}
-
 				if (!_desc.scratch.font_atlases.Empty())
 					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
 

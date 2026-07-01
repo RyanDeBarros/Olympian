@@ -45,6 +45,6 @@ namespace oly::editor
 
 	CollapsingSection::operator bool() const
 	{
-		return _visible;
+		return _valid && _visible;
 	}
 }

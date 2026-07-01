@@ -423,19 +423,13 @@ namespace oly::editor
 
 	void TextureDocument::Draw(DataPath path, TextureVariantDesc& desc)
 	{
+		_slots.Update(*ListAdapter());
+		
+		if (auto scope = gui::IDScope("##Slot"))
+			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
+
 		if (auto form = Form())
 		{
-			_slots.Update(*ListAdapter());
-
-			if (auto scope = gui::IDScope("##Slot"))
-			{
-				gui::PropertyGrid::Key::SetLabel("Select Slot");
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this]() -> DrawResult {
-					return _slots.DrawComboHeader("Slot", "New texture slot", "Delete texture slot", "Clear texture slots");
-				}));
-				gui::PropertyGrid::SubmitRow();
-			}
-
 			desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc_list) {
 				size_t index = _slots.active_index;
 				Draw(path / desc_list.Subpath(index), desc_list[index]);
