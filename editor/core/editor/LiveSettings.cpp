@@ -9,6 +9,7 @@ namespace oly::editor
 {
 	ContentBrowserLiveSettingsDesc::ContentBrowserLiveSettingsDesc() :
 		columns(20u, detail::Key::Columns),
+		favorites({ detail::ResourcePath(ProjectInfo::Instance().ResourceRoot()).get_resource_shorthand() }, detail::Key::Favorites),
 		font_scale(1.f, detail::Key::FontScale)
 	{
 	}

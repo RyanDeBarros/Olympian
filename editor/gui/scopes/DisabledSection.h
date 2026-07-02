@@ -5,6 +5,7 @@ namespace oly::editor
 	class DisabledSection
 	{
 		bool _alive = true;
+		bool _disabled = false;
 
 	public:
 		DisabledSection(bool disabled);
@@ -14,5 +15,6 @@ namespace oly::editor
 		DisabledSection& operator=(DisabledSection&&) = delete;
 
 		operator bool() const;
+		bool Disabled() const;
 	};
 }

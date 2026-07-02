@@ -5,6 +5,7 @@
 namespace oly::editor
 {
 	DisabledSection::DisabledSection(bool disabled)
+		: _disabled(disabled)
 	{
 		ImGui::BeginDisabled(disabled);
 	}
@@ -23,6 +24,11 @@ namespace oly::editor
 
 	DisabledSection::operator bool() const
 	{
-		return true;
+		return _alive;
+	}
+
+	bool DisabledSection::Disabled() const
+	{
+		return _disabled;
 	}
 }

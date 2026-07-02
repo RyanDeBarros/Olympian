@@ -9,6 +9,8 @@ namespace oly::editor
 	class ContentBrowserPanel : public IPanel
 	{
 		std::filesystem::path _folder;
+		bool _favorited = false;
+		bool _on_res_root = true;
 		std::optional<std::filesystem::path> _selected_path;
 
 	public:
@@ -22,6 +24,13 @@ namespace oly::editor
 		void ShowInContentBrowser(const std::filesystem::path& path);
 
 	private:
+		void SetFolder(std::filesystem::path folder);
+
+		std::vector<std::string>& GetFavoritesList() const;
+		bool ShouldBeFavorited() const;
+		void SyncFavoritesList() const;
+		void DrawFavoritesList();
+
 		void DrawFolderView();
 		void DrawPathTable();
 		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size);

@@ -24,7 +24,7 @@ namespace oly::editor
 
 	static void _HandleIconHovered(ImVec2 pos, ImVec2 size, const char* tooltip)
 	{
-		if (ImGui::IsItemHovered())
+		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 		{
 			ImGui::GetWindowDrawList()->AddRectFilled(pos, pos + size, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.9f), 6.0f);
 			ImGui::SetTooltip(tooltip);

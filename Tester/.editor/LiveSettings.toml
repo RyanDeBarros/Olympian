@@ -1,3 +1,4 @@
 [CntBrwsr]
 Cols = 21
+Favs = [ '@/.', '@/assets/archetypes', '@/fonts', '@/assets' ]
 Scale = 1.0

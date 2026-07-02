@@ -356,6 +356,7 @@ namespace oly::editor
 		{
 			if (auto arr = node.as_array())
 			{
+				obj.clear();
 				bool fully_loaded = true;
 				for (size_t i = 0; i < arr->size(); ++i)
 				{

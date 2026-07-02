@@ -10,9 +10,11 @@ namespace oly::editor
 	{
 #define CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR(M) \
 		M(columns) \
+		M(favorites) \
 		M(font_scale)
 
 		SimpleField<unsigned int> columns;
+		SimpleField<std::vector<std::string>> favorites;
 		SimpleField<float> font_scale;
 
 		LOAD_DUMP_SIMPLE_FIELDS_IMPL(CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR);

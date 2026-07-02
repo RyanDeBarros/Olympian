@@ -20,6 +20,8 @@ namespace oly::editor
 	M(Revert) \
 	M(Refresh) \
 	M(Settings) \
+	M(StarFilled) \
+	M(StarOutline) \
 	M(Stop)
 
 

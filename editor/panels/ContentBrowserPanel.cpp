@@ -7,6 +7,7 @@
 #include "core/editor/LiveSettings.h"
 #include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
+#include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
 
 #include "core/windows/MainWindow.h"
@@ -15,6 +16,7 @@
 
 #include "gui/Controls.h"
 #include "gui/ImGuiWrapper.h"
+#include "gui/graphics/Toolbar.h"
 
 #include <imgui.h>
 
@@ -30,8 +32,8 @@ namespace oly::editor
 
 	void ContentBrowserPanel::InitImpl()
 	{
-		_folder = ProjectInfo::Instance().ResourceRoot();
-		_selected_path.reset();
+		// TODO v9.2 if GetFavoritesList() does not include root, add it at beginning
+		SetFolder(ProjectInfo::Instance().ResourceRoot());
 	}
 
 	const char* ContentBrowserPanel::GetTitle() const
@@ -55,12 +57,35 @@ namespace oly::editor
 
 				gui::FloatControl("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 120.f, 0.1f, 10.f, "%.1f", true);
 
+				gui::VerticalSeparator();
+				
+				// TODO v9.2 button to show folder in tree view panel
+
+				if (auto disabled = DisabledSection(_on_res_root))
+				{
+					if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited, "Favorite"))
+					{
+						if (!disabled.Disabled())
+							SyncFavoritesList();
+					}
+				}
+				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), favorites button (pop out modal with list of favorites / star button to toggle favorite status of current folder / etc.), etc.
+
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
-				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), favorites button (pop out modal with list of favorites / star button to toggle favorite status of current folder / etc.), etc.
+				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp))
+				{
+					ImGui::TableNextRow();
 
-				DrawFolderView();
+					ImGui::TableSetColumnIndex(0);
+					DrawFavoritesList();
+
+					ImGui::TableSetColumnIndex(1);
+					DrawFolderView();
+					
+					ImGui::EndTable();
+				}
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 			}
@@ -74,11 +99,9 @@ namespace oly::editor
 		if (path.is_resource())
 		{
 			if (path.is_directory())
-				_folder = path.get_absolute();
+				SetFolder(path.get_absolute());
 			else
-				_folder = path.get_absolute().parent_path();
-
-			_selected_path.reset();
+				SetFolder(path.get_absolute().parent_path());
 		}
 		else
 			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.string() + " is not located in the project resource folder"));
@@ -89,14 +112,71 @@ namespace oly::editor
 		if (detail::ResourcePath(path).is_resource())
 		{
 			if (std::filesystem::is_directory(path))
-				_folder = path;
+				SetFolder(path);
 			else
-				_folder = path.parent_path();
-
-			_selected_path.reset();
+				SetFolder(path.parent_path());
 		}
 		else
 			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.generic_string() + " is not located in the project resource folder"));
+	}
+
+	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
+	{
+		_folder = std::move(folder);
+		_favorited = ShouldBeFavorited();
+		_on_res_root = std::filesystem::equivalent(_folder, ProjectInfo::Instance().ResourceRoot());
+		_selected_path.reset();
+	}
+
+	std::vector<std::string>& ContentBrowserPanel::GetFavoritesList() const
+	{
+		return *Editor::GetLiveSettings().content_browser->favorites;
+	}
+
+	bool ContentBrowserPanel::ShouldBeFavorited() const
+	{
+		const auto& favorites = GetFavoritesList();
+		for (const auto& favorite : favorites)
+		{
+			// TODO v9.2 favorites list should be a SimpleDesc<OrderedSet<ResourcePath>> with custom comparator
+			if (std::filesystem::equivalent(detail::ResourcePath(favorite).get_absolute(), _folder))
+				return true;
+		}
+
+		return false;
+	}
+
+
+	void ContentBrowserPanel::SyncFavoritesList() const
+	{
+		if (_favorited)
+			GetFavoritesList().push_back(detail::ResourcePath(_folder).get_resource_shorthand());
+		else
+		{
+			auto& favorites = GetFavoritesList();;
+			for (auto it = favorites.begin(); it != favorites.end(); ++it)
+			{
+				if (std::filesystem::equivalent(detail::ResourcePath(*it).get_absolute(), _folder))
+				{
+					favorites.erase(it);
+					break;
+				}
+			}
+		}
+	}
+
+	void ContentBrowserPanel::DrawFavoritesList()
+	{
+		std::optional<std::string> open_folder;
+		for (const auto& favorite : GetFavoritesList())
+		{
+			// TODO v9.2 ellipses for overflow
+			if (ImGui::Selectable(favorite.c_str()))
+				open_folder = favorite;
+		}
+
+		if (open_folder)
+			ShowInContentBrowser(detail::ResourcePath(*open_folder));
 	}
 
 	void ContentBrowserPanel::DrawFolderView()
@@ -136,7 +216,7 @@ namespace oly::editor
 
 			const std::filesystem::path folder = _folder;
 
-			if (!std::filesystem::equivalent(folder, ProjectInfo::Instance().ResourceRoot()))
+			if (!_on_res_root)
 			{
 				ImGui::TableNextColumn();
 				DrawPathEntry(folder.parent_path(), true, path_entry_size);
@@ -179,7 +259,10 @@ namespace oly::editor
 
 			if (ImGui::BeginPopupContextWindow())
 			{
-				if (ImGui::MenuItem("Rename"))
+				if (ImGui::MenuItem("Open"))
+					OpenPath(path);
+
+				if (ImGui::MenuItem("Rename", "F2"))
 					open_rename_popup = true;
 
 				// TODO v9.2 context menu

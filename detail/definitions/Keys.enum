@@ -85,6 +85,7 @@ Error = Error
 Expand = Expand
 
 Fatal = Fatal
+Favorites = Favs
 File = File
 FillColorsArray = FillClrs
 FillExponent = FillExp
