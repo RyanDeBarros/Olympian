@@ -178,7 +178,7 @@ namespace oly::editor
 	{
 		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
-			ImGui::Text("Preview");
+			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
 			gui::InputText("Display text", _display_text);
@@ -187,7 +187,7 @@ namespace oly::editor
 				ReloadFont();
 
 			ImGui::PushFont(_preview_font);
-			ImGui::Text(_display_text.c_str());
+			ImGui::TextUnformatted(_display_text.c_str());
 			ImGui::PopFont();
 		}
 
@@ -251,7 +251,7 @@ namespace oly::editor
 
 					if (i == 0)
 					{
-						ImGui::Text(k.pair.label);
+						ImGui::TextUnformatted(k.pair.label);
 						ImGui::SameLine();
 						result.Query();
 					}
@@ -283,7 +283,7 @@ namespace oly::editor
 			components.push_back(comp::Generic([&k]() -> DrawResult {
 				DrawResult result;
 				gui::VerticalSeparator();
-				ImGui::Text(k.distance.label);
+				ImGui::TextUnformatted(k.distance.label);
 				result.Query();
 				ImGui::SameLine();
 				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer);

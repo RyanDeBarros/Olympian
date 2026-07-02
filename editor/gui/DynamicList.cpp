@@ -260,7 +260,7 @@ namespace oly::editor::gui
 					.index = _index
 				};
 				ImGui::SetDragDropPayload(StringID(UID::DynamicRowReorder), &payload, sizeof(DynamicListStatePayload));
-				ImGui::Text("Move row");
+				ImGui::TextUnformatted("Move row");
 				ImGui::EndDragDropSource();
 			}
 

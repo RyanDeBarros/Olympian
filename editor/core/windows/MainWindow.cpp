@@ -40,7 +40,7 @@ namespace oly::editor
     void MainWindow::Init()
     {
         _panel_manager->Add<AssetEditorPanel>().Open();
-        _panel_manager->Add<ContentBrowserPanel>().Close();
+        _panel_manager->Add<ContentBrowserPanel>().Open();
         _panel_manager->Add<LogPanel>().Open();
         _panel_manager->Add<PreferencesPanel>().Close();
         _panel_manager->Add<TreeViewPanel>().Open();

@@ -9,9 +9,9 @@ namespace oly::editor
 	struct ContentBrowserLiveSettingsDesc
 	{
 #define CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR(M) \
-		M(rows)
+		M(columns)
 
-		SimpleField<unsigned int> rows;
+		SimpleField<unsigned int> columns;
 
 		LOAD_DUMP_SIMPLE_FIELDS_IMPL(CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR);
 

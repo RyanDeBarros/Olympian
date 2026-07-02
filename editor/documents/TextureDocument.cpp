@@ -149,7 +149,7 @@ namespace oly::editor
 	{
 		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
-			ImGui::Text("Preview");
+			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", "##Recenter"))
 			{

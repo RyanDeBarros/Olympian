@@ -270,7 +270,7 @@ namespace oly::editor::gui
 
 		if (ImGui::BeginChild(header.prompt, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
 		{
-			ImGui::Text(header.prompt);
+			ImGui::TextUnformatted(header.prompt);
 			ImGui::SameLine();
 
 			DrawResult subresult;

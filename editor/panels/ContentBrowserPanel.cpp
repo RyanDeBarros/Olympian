@@ -1,6 +1,7 @@
 #include "ContentBrowserPanel.h"
 
 #include "core/Errors.h"
+#include "core/PathInfo.h"
 
 #include "core/editor/Editor.h"
 #include "core/editor/LiveSettings.h"
@@ -26,6 +27,7 @@ namespace oly::editor
 	void ContentBrowserPanel::InitImpl()
 	{
 		_folder = ProjectInfo::Instance().ResourceRoot();
+		_selected_path.reset();
 	}
 
 	const char* ContentBrowserPanel::GetTitle() const
@@ -40,9 +42,10 @@ namespace oly::editor
 		{
 			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
-				int rows = *Editor::GetLiveSettings().content_browser->rows;
-				ImGui::InputInt("Rows", &rows);
-				*Editor::GetLiveSettings().content_browser->rows = std::max(rows, 1);
+				int columns = *Editor::GetLiveSettings().content_browser->columns;
+				ImGui::SetNextItemWidth(100.f);
+				ImGui::InputInt("Columns", &columns);
+				*Editor::GetLiveSettings().content_browser->columns = std::max(columns, 1);
 
 				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), favorites button (pop out modal with list of favorites / star button to toggle favorite status of current folder / etc.), etc.
 
@@ -56,23 +59,121 @@ namespace oly::editor
 	void ContentBrowserPanel::ShowInContentBrowser(const detail::ResourcePath& path)
 	{
 		if (path.is_resource())
-			_folder = path.get_absolute();
+		{
+			if (path.is_directory())
+				_folder = path.get_absolute();
+			else
+				_folder = path.get_absolute().parent_path();
+
+			_selected_path.reset();
+		}
 		else
 			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.string() + " is not located in the project resource folder"));
+	}
+
+	void ContentBrowserPanel::ShowInContentBrowser(const std::filesystem::path& path)
+	{
+		if (detail::ResourcePath(path).is_resource())
+		{
+			if (std::filesystem::is_directory(path))
+				_folder = path;
+			else
+				_folder = path.parent_path();
+
+			_selected_path.reset();
+		}
+		else
+			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.generic_string() + " is not located in the project resource folder"));
 	}
 
 	void ContentBrowserPanel::DrawFolderView()
 	{
 		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
-			const unsigned int rows = *Editor::GetLiveSettings().content_browser->rows;
-			if (ImGui::BeginTable("##PathEntryTable", rows))
+			// TODO v9.2 handle scrolling input inside window to increase/decrease column count
+
+			const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
+			if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
 			{
+				const float full_width = ImGui::GetContentRegionAvail().x - columns * 2 * ImGui::GetStyle().CellPadding.x;
+				const float width = full_width / columns;
+				const ImVec2 path_entry_size(width, width);
+
 				ImGui::TableNextRow();
 
-				// TODO v9.2 draw _folder content. Use ImGui::TableNextColumn() *only*, don't worry about row/col indexes.
+				const std::filesystem::path folder = _folder;
+
+				if (!std::filesystem::equivalent(folder, ProjectInfo::Instance().ResourceRoot()))
+				{
+					ImGui::TableNextColumn();
+					DrawPathEntry(folder.parent_path(), "..", path_entry_size);
+				}
+
+				std::error_code ec;
+				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+				{
+					ImGui::TableNextColumn();
+					DrawPathEntry(entry.path(), nullptr, path_entry_size);
+				}
 
 				ImGui::EndTable();
+			}
+		}
+
+		ImGui::EndChild();
+	}
+
+	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, const char* label_override, const ImVec2 size)
+	{
+		if (ImGui::BeginChild(path.generic_string().c_str(), size, ImGuiChildFlags_Borders))
+		{
+			// TODO v9.2 context menu
+
+			std::string label = label_override ? label_override : path.filename().generic_string();
+			
+			const ImVec2 padding_offset = ImGui::GetStyle().CellPadding + ImGui::GetStyle().WindowPadding;
+			const ImVec2 cursor = ImGui::GetCursorScreenPos();
+			const ImVec2 child_size = ImGui::GetContentRegionAvail();
+			const ImVec2 label_size = ImGui::CalcTextSize(label.c_str());
+			const ImVec2 label_offset = (child_size - label_size) * ImVec2(0.5f, 1.f);
+			const ImVec2 icon_size = child_size - 2.f * ImVec2(label_size.y, label_size.y);
+			const ImVec2 icon_start = cursor + ImVec2(0.5f * (child_size.x - icon_size.x), 0.f);
+
+			if (_selected_path == path)
+			{
+				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgActive));
+				ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 0.f, 0, 3.f);
+			}
+
+			ImGui::SetCursorScreenPos(cursor + label_offset);
+			ImGui::TextUnformatted(label.c_str());
+
+			if (ImGui::IsWindowHovered())
+			{
+				ImGui::SetTooltip(detail::ResourcePath(path).get_resource_shorthand().c_str());
+
+				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+					_selected_path = path;
+
+				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
+
+				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				{
+					if (std::filesystem::is_directory(path))
+						ShowInContentBrowser(path);
+					else
+						Editor::Instance().OpenFile(path);
+				}
+			}
+
+			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(path).ID(), icon_start, icon_start + icon_size);
+
+			if (ImGui::IsWindowFocused())
+			{
+				if (_selected_path == path && ImGui::Shortcut(ImGuiKey_F2))
+				{
+					// TODO v9.2 rename popup
+				}
 			}
 		}
 

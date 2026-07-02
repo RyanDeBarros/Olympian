@@ -8,7 +8,7 @@
 namespace oly::editor
 {
 	ContentBrowserLiveSettingsDesc::ContentBrowserLiveSettingsDesc() :
-		rows(10u, detail::Key::Rows)
+		columns(20u, detail::Key::Columns)
 	{
 	}
 

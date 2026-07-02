@@ -181,6 +181,7 @@ namespace oly::editor
 	void TreeViewPanel::InitImpl()
 	{
 		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
+		_root->Open();
 	}
 
 	const char* TreeViewPanel::GetTitle() const
@@ -257,7 +258,7 @@ namespace oly::editor
 		{
 			std::string path = node.path.string();
 			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size()); // TODO v9.2 make sure to include path drag drop source in content browser panel
-			ImGui::Text("Drag path");
+			ImGui::TextUnformatted("Drag path");
 			ImGui::EndDragDropSource();
 		}
 

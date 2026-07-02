@@ -56,9 +56,9 @@ namespace oly::editor
     void ProjectSelectWindow::DrawOpenExistingGroup()
     {
         ImGui::BeginGroup();
-        ImGui::Text("Open Existing Project");
+        ImGui::TextUnformatted("Open Existing Project");
 
-        ImGui::Text("Project File");
+        ImGui::TextUnformatted("Project File");
 
         ImGui::SameLine();
         if (gui::InputText("##ProjectFile", _project_file))
