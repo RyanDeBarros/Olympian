@@ -1,4 +1,5 @@
 target_sources(OlympianEditor PRIVATE
+	Controls.cpp
 	DrawResult.cpp
 	DynamicList.cpp
 	GUIState.cpp

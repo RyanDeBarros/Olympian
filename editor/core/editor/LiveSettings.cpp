@@ -8,7 +8,8 @@
 namespace oly::editor
 {
 	ContentBrowserLiveSettingsDesc::ContentBrowserLiveSettingsDesc() :
-		columns(20u, detail::Key::Columns)
+		columns(20u, detail::Key::Columns),
+		font_scale(1.f, detail::Key::FontScale)
 	{
 	}
 

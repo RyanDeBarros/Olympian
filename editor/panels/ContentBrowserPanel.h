@@ -24,5 +24,7 @@ namespace oly::editor
 	private:
 		void DrawFolderView();
 		void DrawPathEntry(const std::filesystem::path& path, const char* label_override, const ImVec2 size);
+		ImVec2 FitPathLabel(std::string& label, const ImVec2 child_size);
+		void OpenPath(const std::filesystem::path& path);
 	};
 }

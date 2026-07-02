@@ -56,6 +56,16 @@ namespace oly::editor
 		{
 			return &value;
 		}
+
+		const T* ValuePtr() const
+		{
+			return &value;
+		}
+
+		T* ValuePtr()
+		{
+			return &value;
+		}
 	};
 
 	template<typename Desc>
@@ -97,6 +107,16 @@ namespace oly::editor
 		}
 
 		Desc* operator->()
+		{
+			return &desc;
+		}
+
+		const Desc* ValuePtr() const
+		{
+			return &desc;
+		}
+
+		Desc* ValuePtr()
 		{
 			return &desc;
 		}
