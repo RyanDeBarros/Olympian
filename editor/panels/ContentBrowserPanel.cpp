@@ -134,9 +134,35 @@ namespace oly::editor
 			const ImVec2 padding_offset = ImGui::GetStyle().CellPadding + ImGui::GetStyle().WindowPadding;
 			const ImVec2 cursor = ImGui::GetCursorScreenPos();
 			const ImVec2 child_size = ImGui::GetContentRegionAvail();
-			const ImVec2 label_size = ImGui::CalcTextSize(label.c_str());
+			
+			// TODO v9.1 UI control next to column count for path label font size
+			ImVec2 label_size = ImGui::CalcTextSize(label.c_str());
+			if (child_size.x > 0.f && label_size.x > child_size.x)
+			{
+				static constexpr const char* ellipses = "...";
+				const ImVec2 ellipses_size = ImGui::CalcTextSize(ellipses);
+
+				while (label_size.x + ellipses_size.x > child_size.x)
+				{
+					label.pop_back();
+					if (label.empty())
+					{
+						label = ellipses;
+						label_size = ellipses_size;
+						break;
+					}
+
+					label_size = ImGui::CalcTextSize(label.c_str());
+				}
+
+				label += ellipses;
+				label_size.x += ellipses_size.x;
+				label_size.y = std::max(label_size.y, ellipses_size.y);
+			}
+			
 			const ImVec2 label_offset = (child_size - label_size) * ImVec2(0.5f, 1.f);
-			const ImVec2 icon_size = child_size - 2.f * ImVec2(label_size.y, label_size.y);
+			
+			const ImVec2 icon_size = child_size - ImVec2(label_size.y, label_size.y);
 			const ImVec2 icon_start = cursor + ImVec2(0.5f * (child_size.x - icon_size.x), 0.f);
 
 			if (_selected_path == path)
@@ -146,6 +172,8 @@ namespace oly::editor
 			}
 
 			ImGui::SetCursorScreenPos(cursor + label_offset);
+
+
 			ImGui::TextUnformatted(label.c_str());
 
 			if (ImGui::IsWindowHovered())
