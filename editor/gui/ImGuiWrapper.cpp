@@ -41,20 +41,23 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	DrawResult InputText(const char* label, std::string& string, size_t max_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
+	bool InputText(const char* label, std::string& string, size_t max_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
 	{
 		std::string buf;
 		buf.resize(max_size);
 		string.copy(buf.data(), buf.size());
 		auto styles = ApplyStyles(GUIState::input_data_styles);
-		DrawResult result = ImGui::InputText(label, buf.data(), buf.size(), flags, callback, user_data);
-		string = std::move(buf);
-		size_t n = string.find('\0');
-		if (n != std::string::npos)
-			string.resize(n);
-		result.Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<std::string>>(string));
-		return result;
+		if (ImGui::InputText(label, buf.data(), buf.size(), flags, callback, user_data))
+		{
+			string = std::move(buf);
+			size_t n = string.find('\0');
+			if (n != std::string::npos)
+				string.resize(n);
+
+			return true;
+		}
+		else
+			return false;
 	}
 
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
@@ -153,7 +156,10 @@ namespace oly::editor::gui
 
 	DrawResult InputData<std::string>::operator()(const char* label, std::string& data) const
 	{
-		return InputText(label, data);
+		DrawResult result = InputText(label, data);
+		result.Query();
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<std::string>>(data));
+		return result;
 	}
 
 	DrawResult InputData<Color4>::operator()(const char* label, Color4& data) const

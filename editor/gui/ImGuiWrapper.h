@@ -25,7 +25,7 @@ namespace oly::editor::gui
 
 	extern DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items);
 
-	extern DrawResult InputText(const char* label, std::string& string, size_t max_size = 256,
+	extern bool InputText(const char* label, std::string& string, size_t max_size = 256,
 		ImGuiInputTextFlags flags = 0, ImGuiInputTextCallback callback = nullptr, void* user_data = nullptr);
 
 	template<typename T>

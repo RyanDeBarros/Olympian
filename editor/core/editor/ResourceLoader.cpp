@@ -17,7 +17,7 @@ namespace oly::editor
 #define RES_FOLDER "res/"
 #define ICONS_FOLDER RES_FOLDER "icons/"
 
-#define LOAD_ICON(Icon) Icon##Icon = { Texture::LoadGeneric(ICONS_FOLDER #Icon ".png") };
+#define LOAD_ICON(Icon) Icon##Icon = { Texture::LoadGeneric(ICONS_FOLDER #Icon ".png", GL_LINEAR, GL_LINEAR) };
 		ICON_RESOURCE_GENERATOR(LOAD_ICON)
 #undef LOAD_ICON
 

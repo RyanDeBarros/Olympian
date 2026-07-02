@@ -123,11 +123,14 @@ namespace oly::editor
 		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
 			SaveAllTabs();
 
-		if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-			SelectedTabUndo();
+		if (ImGui::IsWindowFocused())
+		{
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+				SelectedTabUndo();
 
-		if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-			SelectedTabRedo();
+			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+				SelectedTabRedo();
+		}
 	}
 
 	void AssetEditorPanel::DrawTabBar()

@@ -181,7 +181,7 @@ namespace oly::editor
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
-			gui::InputText("Display text", _display_text);
+			gui::InputData<std::string>{}("Display text", _display_text);
 
 			if (!_preview_font)
 				ReloadFont();

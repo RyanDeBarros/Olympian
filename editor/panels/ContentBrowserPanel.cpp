@@ -7,13 +7,14 @@
 #include "core/editor/LiveSettings.h"
 #include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
+#include "core/editor/UID.h"
 
 #include "core/windows/MainWindow.h"
 
 #include "panels/PanelManager.h"
 
-#include "gui/ImGuiWrapper.h"
 #include "gui/Controls.h"
+#include "gui/ImGuiWrapper.h"
 
 #include <imgui.h>
 
@@ -102,69 +103,96 @@ namespace oly::editor
 	{
 		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
-			// TODO v9.2 context menu
-
-			const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
-			if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
+			auto payload = ImGui::GetDragDropPayload();
+			if (payload && payload->IsDataType(StringID(UID::PathDrag)))
 			{
-				const float full_width = ImGui::GetContentRegionAvail().x - columns * 2 * ImGui::GetStyle().CellPadding.x;
-				const float width = full_width / columns;
-				const ImVec2 path_entry_size(width, width);
+				ImGui::Button("Show in content browser", ImGui::GetContentRegionAvail());
 
-				ImGui::TableNextRow();
-
-				const std::filesystem::path folder = _folder;
-
-				if (!std::filesystem::equivalent(folder, ProjectInfo::Instance().ResourceRoot()))
+				if (ImGui::BeginDragDropTarget())
 				{
-					ImGui::TableNextColumn();
-					DrawPathEntry(folder.parent_path(), "..", path_entry_size);
-				}
+					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+						ShowInContentBrowser(std::filesystem::path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize)));
 
-				std::error_code ec;
-				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
-				{
-					ImGui::TableNextColumn();
-					DrawPathEntry(entry.path(), nullptr, path_entry_size);
-				}
-
-				ImGui::EndTable();
-			}
-
-			if (ImGui::IsWindowHovered())
-			{
-				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-					_selected_path.reset();
-			}
-
-			if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
-			{
-				const float scroll = ImGui::GetIO().MouseWheel;
-				if (scroll != 0.f)
-				{
-					int columns = *Editor::GetLiveSettings().content_browser->columns;
-					columns = std::max(columns - static_cast<int>(scroll), 1);
-					*Editor::GetLiveSettings().content_browser->columns = columns;
+					ImGui::EndDragDropTarget();
 				}
 			}
+			else
+				DrawPathTable();
 		}
 
 		ImGui::EndChild();
 	}
 
-	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, const char* label_override, const ImVec2 size)
+	void ContentBrowserPanel::DrawPathTable()
+	{
+		const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
+		if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
+		{
+			const float full_width = ImGui::GetContentRegionAvail().x - columns * 2 * ImGui::GetStyle().CellPadding.x;
+			const float width = full_width / columns;
+			const ImVec2 path_entry_size(width, width);
+
+			ImGui::TableNextRow();
+
+			const std::filesystem::path folder = _folder;
+
+			if (!std::filesystem::equivalent(folder, ProjectInfo::Instance().ResourceRoot()))
+			{
+				ImGui::TableNextColumn();
+				DrawPathEntry(folder.parent_path(), true, path_entry_size);
+			}
+
+			std::error_code ec;
+			for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+			{
+				ImGui::TableNextColumn();
+				DrawPathEntry(entry.path(), false, path_entry_size);
+			}
+
+			ImGui::EndTable();
+		}
+
+		if (ImGui::IsWindowHovered())
+		{
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+				_selected_path.reset();
+		}
+
+		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
+		{
+			const float scroll = ImGui::GetIO().MouseWheel;
+			if (scroll != 0.f)
+			{
+				int columns = *Editor::GetLiveSettings().content_browser->columns;
+				columns = std::max(columns - static_cast<int>(scroll), 1);
+				*Editor::GetLiveSettings().content_browser->columns = columns;
+			}
+		}
+	}
+
+	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size)
 	{
 		if (ImGui::BeginChild(path.generic_string().c_str(), size, ImGuiChildFlags_Borders))
 		{
-			// TODO v9.2 context menu
+			static constexpr const char* RENAME_POPUP = "Rename path";
+			bool open_rename_popup = false;
 
-			std::string label = label_override ? label_override : path.filename().generic_string();
+			if (ImGui::BeginPopupContextWindow())
+			{
+				if (ImGui::MenuItem("Rename"))
+					open_rename_popup = true;
+
+				// TODO v9.2 context menu
+
+				ImGui::EndPopup();
+			}
+
+			std::string label = dotdot ? ".." : path.filename().generic_string();
 			
 			const ImVec2 padding_offset = ImGui::GetStyle().CellPadding + ImGui::GetStyle().WindowPadding;
 			const ImVec2 cursor = ImGui::GetCursorScreenPos();
 			const ImVec2 child_size = ImGui::GetContentRegionAvail();
 			
-			// TODO v9.1 UI control next to column count for path label font size
 			const ImVec2 label_size = FitPathLabel(label, child_size);
 			const ImVec2 label_offset = (child_size - label_size) * ImVec2(0.5f, 1.f);
 			
@@ -178,8 +206,6 @@ namespace oly::editor
 			}
 
 			ImGui::SetCursorScreenPos(cursor + label_offset);
-
-
 			ImGui::TextUnformatted(label.c_str());
 
 			if (ImGui::IsWindowHovered())
@@ -197,17 +223,36 @@ namespace oly::editor
 
 			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(path).ID(), icon_start, icon_start + icon_size);
 
-			if (ImGui::IsWindowFocused() && _selected_path == path)
+			if (ImGui::IsWindowFocused() && _selected_path == path && !dotdot)
 			{
 				if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteGlobal))
 					OpenPath(path);
 
 				if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
+					open_rename_popup = true;
+
+				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
+			}
+
+			if (open_rename_popup)
+				ImGui::OpenPopup(RENAME_POPUP);
+
+			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			if (ImGui::BeginPopupModal(RENAME_POPUP, 0, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				std::string filename = path.filename().generic_string();
+				if (gui::InputText("Filename", filename))
 				{
-					// TODO v9.2 rename popup
+					// TODO v9.2 publish FIO operation to rename file -> defer until after DrawFolderView() loop. FIO operations should support undo/redo stack that's local to content browser panel.
 				}
 
-				// TODO v9.2 ctrl+c, ctrl+x, ctrl+v, etc.
+				if (ImGui::IsItemDeactivatedAfterEdit())
+					ImGui::CloseCurrentPopup();
+
+				if (ImGui::Shortcut(ImGuiKey_Escape) || ImGui::Shortcut(ImGuiKey_Enter))
+					ImGui::CloseCurrentPopup();
+
+				ImGui::EndPopup();
 			}
 		}
 
