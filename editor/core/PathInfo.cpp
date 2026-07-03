@@ -57,7 +57,7 @@ namespace oly::editor
             ILFree(pidl);
         }
         else
-            Logger::Instance().Log(LogLevel::Error, ("Failed to reveal path " + path.generic_string()).c_str());
+            Logger::LogError("Failed to reveal path " + path.generic_string());
 #elif OLY_OS_APPLE
         std::string cmd = "open -R \"" + path.string() + "\"";
         std::system(cmd.c_str());

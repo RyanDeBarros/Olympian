@@ -114,7 +114,7 @@ namespace oly::editor
 		{
 			if (ec)
 			{
-				Logger::Instance().Log(LogLevel::Error, ("TreeViewNode::RefreshSubnodes(): " + ec.message()).c_str());
+				Logger::LogError("TreeViewNode::RefreshSubnodes(): " + ec.message());
 				subnodes.clear();
 				return;
 			}

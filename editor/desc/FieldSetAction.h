@@ -45,7 +45,7 @@ namespace oly::editor
 				Printer{}(ss, final_value);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -70,7 +70,7 @@ namespace oly::editor
 				Printer{}(ss, initial_value);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}

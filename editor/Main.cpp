@@ -11,7 +11,7 @@ static void glfw_error_callback(int error, const char* description)
 {
     std::stringstream ss;
     ss << "GLFW code " << error << ": " << description;
-    oly::editor::Logger::Instance().Log(oly::editor::LogLevel::Error, ss.str().c_str());
+    oly::editor::Logger::LogError(ss.str());
 }
 
 int main()

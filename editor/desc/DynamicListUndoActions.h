@@ -51,7 +51,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -77,7 +77,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -129,7 +129,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -156,7 +156,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -204,7 +204,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -226,7 +226,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -284,7 +284,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}
@@ -315,7 +315,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
-			Logger::Instance().Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
 
 			return success;
 		}

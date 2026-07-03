@@ -44,19 +44,29 @@ namespace oly::editor
         return Editor::Instance().GetLogger();
     }
 
-    void Logger::Log(LogLevel level, const char* msg)
+    void Logger::Log(LogLevel level, std::string msg)
     {
-        Log(level, std::string(msg));
+        Instance()._lines.push_back({ level, std::move(msg) });
     }
 
-    void Logger::Log(LogLevel level, const std::string& msg)
+    void Logger::LogInfo(std::string msg)
     {
-        Log(level, std::string(msg));
+        Log(LogLevel::Info, std::move(msg));
     }
-
-    void Logger::Log(LogLevel level, std::string&& msg)
+    
+    void Logger::LogSuccess(std::string msg)
     {
-        _lines.push_back({ level, std::move(msg) });
+        Log(LogLevel::Success, std::move(msg));
+    }
+    
+    void Logger::LogWarning(std::string msg)
+    {
+        Log(LogLevel::Warning, std::move(msg));
+    }
+    
+    void Logger::LogError(std::string msg)
+    {
+        Log(LogLevel::Error, std::move(msg));
     }
 
     void Logger::ClearLog()

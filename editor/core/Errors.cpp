@@ -19,7 +19,7 @@ namespace oly::editor
 		if (!NOTIFY_STACK.empty() && NOTIFY_STACK.top())
 			Notifier::NotifyError(message);
 		else
-			Logger::Instance().Log(LogLevel::Error, message);
+			Logger::LogError(message);
 
 		throw BreakoutError(message);
 	}

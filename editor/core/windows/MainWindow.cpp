@@ -128,7 +128,7 @@ namespace oly::editor
 
     void MainWindow::PushNotification(Notification notif)
     {
-        Logger::Instance().Log(notif.level, notif.message.c_str());
+        Logger::Log(notif.level, notif.message);
         _notifications.push_back(std::move(notif));
     }
 

@@ -68,7 +68,7 @@ namespace oly::editor
 			}
 			catch (const toml::parse_error& e)
 			{
-				Logger::Instance().Log(LogLevel::Warning, "Cannot load editor preferences: " + std::string(e.what()));
+				Logger::LogWarning("Cannot load editor preferences: " + std::string(e.what()));
 			}
 		}
 

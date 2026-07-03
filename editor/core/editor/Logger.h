@@ -31,9 +31,11 @@ namespace oly::editor
 	public:
 		static Logger& Instance();
 
-		void Log(LogLevel level, const char* msg);
-		void Log(LogLevel level, const std::string& msg);
-		void Log(LogLevel level, std::string&& msg);
+		static void Log(LogLevel level, std::string msg);
+		static void LogInfo(std::string msg);
+		static void LogSuccess(std::string msg);
+		static void LogWarning(std::string msg);
+		static void LogError(std::string msg);
 		
 		void ClearLog();
 		const std::vector<LogEntry>& Lines() const;
