@@ -4,6 +4,8 @@
 
 #include "assets/ResourcePath.h"
 
+#include <set>
+
 namespace oly::editor
 {
 	class ContentBrowserPanel : public IPanel
@@ -27,7 +29,7 @@ namespace oly::editor
 	private:
 		void SetFolder(std::filesystem::path folder);
 
-		std::vector<std::string>& GetFavoritesList() const;
+		std::set<detail::ResourcePath>& GetFavoritesList() const;
 		bool ShouldBeFavorited() const;
 		void SyncFavoritesList() const;
 		void DrawFavoritesList();

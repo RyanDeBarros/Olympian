@@ -14,24 +14,24 @@ namespace oly::detail
 
 	void ResourcePath::set_resource_root(const std::filesystem::path& root)
 	{
-		resource_root = std::filesystem::absolute(root);
+		resource_root = std::filesystem::weakly_canonical(root);
 	}
 
-	void ResourcePath::set(std::filesystem::path&& path, const ResourcePath& relative_to)
+	void ResourcePath::set(const std::filesystem::path& path, const ResourcePath& relative_to)
 	{
 		if (path.is_absolute())
-			absolute = std::move(path);
+			absolute = std::filesystem::weakly_canonical(path);
 		else
 		{
 			std::string s = std::move(path.generic_string());
 			if (s.starts_with("@/"))
-				absolute = resource_root / s.substr(2);
+				absolute = std::filesystem::weakly_canonical(resource_root / s.substr(2));
 			else
 			{
 				if (relative_to.empty())
-					absolute = resource_root / s;
+					absolute = std::filesystem::weakly_canonical(resource_root / s);
 				else
-					absolute = (std::filesystem::is_directory(relative_to.absolute) ? relative_to.absolute : relative_to.absolute.parent_path()) / s;
+					absolute = std::filesystem::weakly_canonical((std::filesystem::is_directory(relative_to.absolute) ? relative_to.absolute : relative_to.absolute.parent_path()) / s);
 			}
 		}
 	}
@@ -183,5 +183,15 @@ namespace oly::detail
 		ss << MetaSplitter::encode_meta(meta);
 		ss << table;
 		get_ofstream() << ss.str();
+	}
+
+	bool ResourcePath::operator==(const ResourcePath& o) const
+	{
+		return absolute == o.absolute;
+	}
+
+	bool ResourcePath::operator<(const ResourcePath& o) const
+	{
+		return absolute < o.absolute;
 	}
 }

@@ -33,8 +33,9 @@ namespace oly::editor
 
 	void ContentBrowserPanel::InitImpl()
 	{
-		// TODO v9.2 if GetFavoritesList() does not include root, add it at beginning
-		SetFolder(ProjectInfo::Instance().ResourceRoot());
+		const auto res_root = ProjectInfo::Instance().ResourceRoot();
+		GetFavoritesList().insert(res_root);
+		SetFolder(res_root);
 	}
 
 	const char* ContentBrowserPanel::GetTitle() const
@@ -141,50 +142,31 @@ namespace oly::editor
 		_selected_path.reset();
 	}
 
-	std::vector<std::string>& ContentBrowserPanel::GetFavoritesList() const
+	std::set<detail::ResourcePath>& ContentBrowserPanel::GetFavoritesList() const
 	{
 		return *Editor::GetLiveSettings().content_browser->favorites;
 	}
 
 	bool ContentBrowserPanel::ShouldBeFavorited() const
 	{
-		const auto& favorites = GetFavoritesList();
-		for (const auto& favorite : favorites)
-		{
-			// TODO v9.2 favorites list should be a SimpleDesc<OrderedSet<ResourcePath>> with custom comparator
-			if (std::filesystem::equivalent(detail::ResourcePath(favorite).get_absolute(), _folder))
-				return true;
-		}
-
-		return false;
+		return GetFavoritesList().contains(_folder);
 	}
-
 
 	void ContentBrowserPanel::SyncFavoritesList() const
 	{
 		if (_favorited)
-			GetFavoritesList().push_back(detail::ResourcePath(_folder).get_resource_shorthand());
+			GetFavoritesList().insert(_folder);
 		else
-		{
-			auto& favorites = GetFavoritesList();;
-			for (auto it = favorites.begin(); it != favorites.end(); ++it)
-			{
-				if (std::filesystem::equivalent(detail::ResourcePath(*it).get_absolute(), _folder))
-				{
-					favorites.erase(it);
-					break;
-				}
-			}
-		}
+			GetFavoritesList().erase(_folder);
 	}
 
 	void ContentBrowserPanel::DrawFavoritesList()
 	{
 		const float label_max_width = ImGui::GetContentRegionAvail().x;
-		std::optional<std::string> open_folder;
+		std::optional<detail::ResourcePath> open_folder;
 		for (const auto& favorite : GetFavoritesList())
 		{
-			std::string label = favorite.substr(2); // remove '@/'
+			std::string label = favorite.get_resource_shorthand().substr(2); // remove '@/'
 			if (label == ".")
 				label = "@";
 
@@ -194,7 +176,7 @@ namespace oly::editor
 		}
 
 		if (open_folder)
-			ShowInContentBrowser(detail::ResourcePath(*open_folder));
+			ShowInContentBrowser(*open_folder);
 	}
 
 	void ContentBrowserPanel::DrawFolderView()

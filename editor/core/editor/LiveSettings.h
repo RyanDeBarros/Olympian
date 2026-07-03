@@ -14,7 +14,7 @@ namespace oly::editor
 		M(font_scale)
 
 		SimpleField<unsigned int> columns;
-		SimpleField<std::vector<std::string>> favorites;
+		SimpleField<std::set<detail::ResourcePath>> favorites;
 		SimpleField<float> font_scale;
 
 		LOAD_DUMP_SIMPLE_FIELDS_IMPL(CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR);

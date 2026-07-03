@@ -8,6 +8,10 @@
 #include "external/TOML.h"
 #include "external/GLM.h"
 
+#include "assets/ResourcePath.h"
+
+#include <set>
+
 namespace oly::editor
 {
 	template<typename T>
@@ -379,6 +383,60 @@ namespace oly::editor
 			for (const T& el : obj)
 				arr.push_back(Serializer<T>{}.Dump(el));
 			return arr;
+		}
+	};
+
+	template<typename T>
+	struct Serializer<std::set<T>>
+	{
+		bool Load(std::set<T>& obj, TOMLNode node) const
+		{
+			if (auto arr = node.as_array())
+			{
+				obj.clear();
+				bool fully_loaded = true;
+				for (size_t i = 0; i < arr->size(); ++i)
+				{
+					T el{};
+					if (Serializer<T>{}.Load(el, TOMLNode(*arr->get(i))))
+						obj.insert(std::move(el));
+					else
+						fully_loaded = false;
+				}
+				return fully_loaded;
+			}
+			else
+				return false;
+		}
+
+		toml::array Dump(const std::set<T>& obj) const
+		{
+			toml::array arr;
+			arr.reserve(obj.size());
+			for (const T& el : obj)
+				arr.push_back(Serializer<T>{}.Dump(el));
+			return arr;
+		}
+	};
+
+	template<>
+	struct Serializer<detail::ResourcePath>
+	{
+		bool Load(detail::ResourcePath& obj, TOMLNode node) const
+		{
+			std::string path;
+			if (Serializer<std::string>{}.Load(path, node))
+			{
+				obj = std::move(path);
+				return true;
+			}
+			else
+				return false;
+		}
+
+		auto Dump(const detail::ResourcePath& obj) const
+		{
+			return Serializer<std::string>{}.Dump(obj.get_resource_shorthand());
 		}
 	};
 }
