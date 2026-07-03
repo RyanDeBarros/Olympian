@@ -3,6 +3,8 @@
 namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
+	M(ChevronDown) \
+	M(ChevronRight) \
 	M(CircleLeft) \
 	M(CirclePlus) \
 	M(CircleRight) \

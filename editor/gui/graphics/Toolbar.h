@@ -14,7 +14,7 @@ namespace oly::editor
 	{
 		struct IconSettings
 		{
-			float shrink = 0.2f;
+			float shrink = 0.f;
 			float tint_alpha = 1.f;
 		};
 

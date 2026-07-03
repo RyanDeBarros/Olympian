@@ -27,7 +27,8 @@ namespace oly::editor
 		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
 		{
 			ImGui::GetWindowDrawList()->AddRectFilled(pos, pos + size, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.9f), 6.0f);
-			ImGui::SetTooltip(tooltip);
+			if (tooltip)
+				ImGui::SetTooltip(tooltip);
 		}
 	}
 
