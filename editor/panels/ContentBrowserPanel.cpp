@@ -19,6 +19,8 @@
 #include "gui/ImGuiWrapper.h"
 #include "gui/graphics/Toolbar.h"
 
+#include "fio/FIOOperation.h"
+
 #include <imgui.h>
 
 namespace oly::editor
@@ -48,6 +50,15 @@ namespace oly::editor
 		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
+			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+			{
+				if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+					_undo_history.Undo();
+
+				if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+					_undo_history.Redo();
+			}
+
 			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				int columns = *Editor::GetLiveSettings().content_browser->columns;
@@ -80,6 +91,8 @@ namespace oly::editor
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
+				std::vector<std::unique_ptr<UndoAction>> fio_operations;
+
 				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp))
 				{
 					ImGui::TableNextRow();
@@ -88,10 +101,13 @@ namespace oly::editor
 					DrawFavoritesList();
 
 					ImGui::TableSetColumnIndex(1);
-					DrawFolderView();
+					DrawFolderView(fio_operations);
 					
 					ImGui::EndTable();
 				}
+
+				for (auto& action : fio_operations)
+					_undo_history.Execute(std::move(action));
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 			}
@@ -179,7 +195,7 @@ namespace oly::editor
 			ShowInContentBrowser(*open_folder);
 	}
 
-	void ContentBrowserPanel::DrawFolderView()
+	void ContentBrowserPanel::DrawFolderView(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
 		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
@@ -197,13 +213,13 @@ namespace oly::editor
 				}
 			}
 			else
-				DrawPathTable();
+				DrawPathTable(fio_operations);
 		}
 
 		ImGui::EndChild();
 	}
 
-	void ContentBrowserPanel::DrawPathTable()
+	void ContentBrowserPanel::DrawPathTable(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
 		const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
 		if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
@@ -219,14 +235,14 @@ namespace oly::editor
 			if (!_on_res_root)
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(folder.parent_path(), true, path_entry_size);
+				DrawPathEntry(folder.parent_path(), true, path_entry_size, fio_operations);
 			}
 
 			std::error_code ec;
 			for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(entry.path(), false, path_entry_size);
+				DrawPathEntry(entry.path(), false, path_entry_size, fio_operations);
 			}
 
 			ImGui::EndTable();
@@ -250,7 +266,7 @@ namespace oly::editor
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size)
+	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
 		if (ImGui::BeginChild(path.generic_string().c_str(), size, ImGuiChildFlags_Borders))
 		{
@@ -320,22 +336,28 @@ namespace oly::editor
 			}
 
 			if (open_rename_popup)
+			{
+				_rename_buffer = path.filename().generic_string();
 				ImGui::OpenPopup(RENAME_POPUP);
+			}
 
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			if (ImGui::BeginPopupModal(RENAME_POPUP, 0, ImGuiWindowFlags_AlwaysAutoResize))
 			{
-				std::string filename = path.filename().generic_string();
-				if (gui::InputText("Filename", filename))
+				gui::InputText("Filename", _rename_buffer);
+
+				if (ImGui::Shortcut(ImGuiKey_Escape))
+					ImGui::CloseCurrentPopup();
+
+				if (ImGui::Shortcut(ImGuiKey_Enter))
 				{
-					// TODO v9.2 publish FIO operation to rename file -> defer until after DrawFolderView() loop. FIO operations should support undo/redo stack that's local to content browser panel.
+					ImGui::CloseCurrentPopup();
+
+					auto action = std::make_unique<fio::RenamePathAction>();
+					action->old_path = path;
+					action->new_path = path.parent_path() / _rename_buffer;
+					fio_operations.push_back(std::move(action));
 				}
-
-				if (ImGui::IsItemDeactivatedAfterEdit())
-					ImGui::CloseCurrentPopup();
-
-				if (ImGui::Shortcut(ImGuiKey_Escape) || ImGui::Shortcut(ImGuiKey_Enter))
-					ImGui::CloseCurrentPopup();
 
 				ImGui::EndPopup();
 			}
