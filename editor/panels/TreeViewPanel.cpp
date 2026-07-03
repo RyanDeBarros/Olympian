@@ -345,12 +345,12 @@ namespace oly::editor
 			gui::IDScope scope(&node);
 			if (node.dropdown_open)
 			{
-				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down))
+				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Down)) // TODO v9.2 use icon
 					node.CloseBranch();
 			}
 			else
 			{
-				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right))
+				if (ImGui::ArrowButton("##Dropdown", ImGuiDir_Right)) // TODO v9.2 use icon
 					node.OpenBranch();
 			}
 			ImGui::SameLine();

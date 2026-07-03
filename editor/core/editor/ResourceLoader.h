@@ -3,6 +3,9 @@
 namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
+	M(CircleLeft) \
+	M(CirclePlus) \
+	M(CircleRight) \
 	M(Close) \
 	M(CollapseAll) \
 	M(Controller) \

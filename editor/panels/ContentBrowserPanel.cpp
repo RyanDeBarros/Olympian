@@ -26,6 +26,11 @@
 
 namespace oly::editor
 {
+	ContentBrowserPanel::ContentBrowserPanel()
+		: _folder_history(20) // TODO v9.2 editor preference for this -> call .set_limit() on preferences changed
+	{
+	}
+
 	ContentBrowserPanel& ContentBrowserPanel::Instance()
 	{
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<ContentBrowserPanel>())
@@ -36,6 +41,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::InitImpl()
 	{
+		_folder_history.clear();
 		const auto res_root = ProjectInfo::Instance().ResourceRoot();
 		GetFavoritesList().insert(res_root);
 		SetFolder(res_root);
@@ -51,6 +57,8 @@ namespace oly::editor
 		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
+			gui::IDScope scope(this);
+
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
 			{
 				if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
@@ -62,39 +70,27 @@ namespace oly::editor
 
 			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
-				int columns = *Editor::GetLiveSettings().content_browser->columns;
-				ImGui::SetNextItemWidth(100.f);
-				ImGui::InputInt("Columns", &columns);
-				*Editor::GetLiveSettings().content_browser->columns = std::max(columns, 1);
-
-				gui::VerticalSeparator();
-
-				gui::FloatControl("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 120.f, 0.1f, 10.f, "%.1f", true);
-
-				gui::VerticalSeparator();
-				
-				if (auto disabled = DisabledSection(_on_res_root))
+				if (ImGui::BeginTable("##ContentBrowserToolbar", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 				{
-					if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited,
-						disabled.Disabled() ? "Favorite (disabled for root folder)" : "Favorite"))
-					{
-						if (!disabled.Disabled())
-							SyncFavoritesList();
-					}
+					ImGui::TableNextRow();
+
+					ImGui::TableSetColumnIndex(0);
+					std::string preview = detail::ResourcePath(_folder).get_resource_shorthand();
+					ImGui::SetNextItemWidth(ImGui::CalcTextSize(preview.c_str()).x + 10.f);
+					ImGui::InputText("##Folder", preview.data(), preview.size() + 1, ImGuiInputTextFlags_ReadOnly);
+
+					ImGui::TableSetColumnIndex(1);
+					DrawMainToolbar();
+
+					ImGui::EndTable();
 				}
-
-				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Open in tree view", "##OpenInTreeView"))
-					TreeViewPanel::ShowResourceFolderInTreeView(_folder);
-
-				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), etc.
 
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
 				std::vector<std::unique_ptr<UndoAction>> fio_operations;
 
-				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp))
+				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
 				{
 					ImGui::TableNextRow();
 
@@ -151,7 +147,76 @@ namespace oly::editor
 			Notifier::NotifyError("\"" + path.generic_string() + "\" is not located in the project resource folder");
 	}
 
+	void ContentBrowserPanel::DrawMainToolbar()
+	{
+		if (auto disabled = DisabledSection(_on_res_root))
+		{
+			if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited,
+				disabled.Disabled() ? "Favorite (disabled for root folder)" : "Favorite"))
+			{
+				if (!disabled.Disabled())
+					SyncFavoritesList();
+			}
+		}
+
+		ImGui::SameLine();
+		if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Open in tree view", "##OpenInTreeView"))
+			TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+
+		ImGui::SameLine();
+		static const char* NEW_ASSET_POPUP = "New asset";
+		if (Toolbar::DrawIconButton(IconResource::CirclePlus, "New asset", "##NewAsset"))
+			ImGui::OpenPopup(NEW_ASSET_POPUP);
+
+		if (ImGui::BeginPopup(NEW_ASSET_POPUP))
+		{
+			NewAssetMenu();
+			ImGui::EndPopup();
+		}
+
+		gui::VerticalSeparator();
+
+		if (auto d = DisabledSection(_folder_history.empty_backwards()))
+		{
+			if (Toolbar::DrawIconButton(IconResource::CircleLeft, "Back", "##FolderHistoryBack"))
+			{
+				_folder_history.move_backward();
+				if (auto f = _folder_history.get_present())
+					SwitchFolder(*f);
+			}
+		}
+
+		ImGui::SameLine();
+
+		if (auto d = DisabledSection(_folder_history.empty_forwards()))
+		{
+			if (Toolbar::DrawIconButton(IconResource::CircleRight, "Forward", "##FolderHistoryForward"))
+			{
+				_folder_history.move_forward();
+				if (auto f = _folder_history.get_present())
+					SwitchFolder(*f);
+			}
+		}
+
+		gui::VerticalSeparator();
+
+		int columns = *Editor::GetLiveSettings().content_browser->columns;
+		ImGui::SetNextItemWidth(100.f);
+		ImGui::InputInt("Columns", &columns);
+		*Editor::GetLiveSettings().content_browser->columns = std::max(columns, 1);
+
+		gui::VerticalSeparator();
+
+		gui::FloatControl("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 120.f, 0.1f, 10.f, "%.1f", true);
+	}
+
 	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
+	{
+		SwitchFolder(std::move(folder));
+		_folder_history.push(_folder);
+	}
+
+	void ContentBrowserPanel::SwitchFolder(std::filesystem::path folder)
 	{
 		_folder = std::move(folder);
 		_favorited = ShouldBeFavorited();
@@ -214,7 +279,19 @@ namespace oly::editor
 				}
 			}
 			else
+			{
+				if (ImGui::BeginPopupContextWindow())
+				{
+					if (ImGui::BeginMenu("New asset"))
+					{
+						NewAssetMenu();
+						ImGui::EndMenu();
+					}
+					ImGui::EndPopup();
+				}
+
 				DrawPathTable(fio_operations);
+			}
 		}
 
 		ImGui::EndChild();
@@ -282,7 +359,7 @@ namespace oly::editor
 				if (ImGui::MenuItem("Rename", "F2"))
 					open_rename_popup = true;
 
-				// TODO v9.2 context menu
+				// TODO v9.2 check if path is an importable asset or a folder -> context menu to import.
 
 				ImGui::EndPopup();
 			}
@@ -401,5 +478,13 @@ namespace oly::editor
 			ShowInContentBrowser(path);
 		else
 			Editor::Instance().OpenFile(path);
+	}
+
+	void ContentBrowserPanel::NewAssetMenu()
+	{
+		if (Toolbar::IconMenuItem("Signal", IconResource::Controller))
+			; // TODO v9.2 create signal asset
+
+		// TODO v9.2 other assets
 	}
 }

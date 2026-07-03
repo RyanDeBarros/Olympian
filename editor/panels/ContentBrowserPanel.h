@@ -5,6 +5,7 @@
 #include "core/UndoHistory.h"
 
 #include "assets/ResourcePath.h"
+#include "util/TimelineQueue.h"
 
 #include <set>
 
@@ -16,10 +17,12 @@ namespace oly::editor
 		bool _favorited = false;
 		bool _on_res_root = true;
 		std::optional<std::filesystem::path> _selected_path;
+		TimelineQueue<std::filesystem::path> _folder_history;
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
 
 	public:
+		ContentBrowserPanel();
 		static ContentBrowserPanel& Instance();
 
 		void InitImpl() override;
@@ -31,7 +34,10 @@ namespace oly::editor
 		static void ShowInContentBrowser(const std::filesystem::path& path);
 
 	private:
+		void DrawMainToolbar();
+
 		void SetFolder(std::filesystem::path folder);
+		void SwitchFolder(std::filesystem::path folder);
 
 		std::set<detail::ResourcePath>& GetFavoritesList() const;
 		bool ShouldBeFavorited() const;
@@ -43,5 +49,7 @@ namespace oly::editor
 		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size, std::vector<std::unique_ptr<UndoAction>>& fio_operations);
 		ImVec2 FitPathLabel(std::string& label, const float width);
 		void OpenPath(const std::filesystem::path& path);
+
+		void NewAssetMenu();
 	};
 }
