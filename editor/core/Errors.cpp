@@ -1,7 +1,7 @@
 #include "Errors.h"
 
 #include "core/editor/Logger.h"
-#include "core/windows/MainWindow.h"
+#include "core/editor/Notifier.h"
 
 #include <stack>
 
@@ -17,7 +17,7 @@ namespace oly::editor
 	void BreakoutError::Throw(const char* message)
 	{
 		if (!NOTIFY_STACK.empty() && NOTIFY_STACK.top())
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, message));
+			Notifier::NotifyError(message);
 		else
 			Logger::Instance().Log(LogLevel::Error, message);
 

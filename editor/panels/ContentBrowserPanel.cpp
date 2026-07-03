@@ -6,6 +6,7 @@
 #include "core/editor/Editor.h"
 #include "core/editor/LiveSettings.h"
 #include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
@@ -134,7 +135,7 @@ namespace oly::editor
 				FocusInstance().SetFolder(path.get_absolute().parent_path());
 		}
 		else
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + path.string() + "\" is not located in the project resource folder"));
+			Notifier::NotifyError("\"" + path.string() + "\" is not located in the project resource folder");
 	}
 
 	void ContentBrowserPanel::ShowInContentBrowser(const std::filesystem::path& path)
@@ -147,7 +148,7 @@ namespace oly::editor
 				FocusInstance().SetFolder(path.parent_path());
 		}
 		else
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + path.generic_string() + "\" is not located in the project resource folder"));
+			Notifier::NotifyError("\"" + path.generic_string() + "\" is not located in the project resource folder");
 	}
 
 	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)

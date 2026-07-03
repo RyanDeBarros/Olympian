@@ -5,9 +5,10 @@
 
 #include "core/editor/LiveSettings.h"
 #include "core/editor/Logger.h"
-#include "core/editor/ShortcutManager.h"
+#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
+#include "core/editor/ShortcutManager.h"
 
 #include "gui/graphics/Texture.h"
 
@@ -218,23 +219,23 @@ namespace oly::editor
 			return;
 		}
 
-		Notification notif(LogLevel::Error, "cannot open " + path.generic_string() + ": ");
+		std::string message = "cannot open " + path.generic_string() + ": ";
 		switch (code)
 		{
 		case OpenAssetCode::UnsupportedAssetType:
-			notif.message += "asset type not supported";
+			message += "asset type not supported";
 			break;
 		case OpenAssetCode::UnsupportedAssetVersion:
-			notif.message += "asset meta version not supported"; // TODO v10 version mismatch handling
+			message += "asset meta version not supported"; // TODO v10 version mismatch handling
 			break;
 		case OpenAssetCode::UnsupportedExtension:
-			notif.message += "asset has unsupported file extension";
+			message += "asset has unsupported file extension";
 			break;
 		case OpenAssetCode::DoesNotExist:
-			notif.message += "file does not exist";
+			message += "file does not exist";
 			break;
 		}
 
-		_main_window->PushNotification(std::move(notif));
+		Notifier::NotifyError(std::move(message));
 	}
 }

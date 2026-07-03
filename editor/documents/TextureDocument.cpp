@@ -1,7 +1,6 @@
 #include "TextureDocument.h"
 
-#include "core/windows/MainWindow.h"
-#include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/Colors.h"
 
@@ -26,10 +25,7 @@ namespace oly::editor
 	void TextureDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-		{
-			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
-			MainWindow::Instance().PushNotification(std::move(notif));
-		}
+			Notifier::NotifyWarning("Asset is not located in resource folder");
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
@@ -67,10 +63,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(TOMLNode(table), _desc.disk, _svg, _gif);
 			else
-			{
-				Notification notif(LogLevel::Error, "cannot load texture - corrupted asset: " + GetSourcePath().string());
-				MainWindow::Instance().PushNotification(std::move(notif));
-			}
+				Notifier::NotifyError("cannot load texture - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}

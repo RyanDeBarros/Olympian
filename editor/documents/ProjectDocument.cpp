@@ -1,8 +1,7 @@
 #include "ProjectDocument.h"
 
 #include "core/editor/ProjectInfo.h"
-#include "core/editor/Logger.h"
-#include "core/windows/MainWindow.h"
+#include "core/editor/Notifier.h"
 
 #include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
@@ -67,10 +66,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(TOMLNode(table), _desc.disk);
 			else
-			{
-				Notification notif(LogLevel::Error, "cannot load project file - corrupted asset: " + GetOlyPath().string());
-				MainWindow::Instance().PushNotification(std::move(notif));
-			}
+				Notifier::NotifyError("cannot load project file - corrupted asset: " + GetOlyPath().string());
 
 			MarkClean();
 		}

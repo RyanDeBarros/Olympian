@@ -2,6 +2,7 @@
 
 #include "core/editor/Editor.h"
 #include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
@@ -234,14 +235,14 @@ namespace oly::editor
 	{
 		if (!folder.is_directory())
 		{
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + folder.string() + "\" is not a folder"));
+			Notifier::NotifyError("\"" + folder.string() + "\" is not a folder");
 			return;
 		}
 
 		std::vector<std::string> parts;
 		if (!folder.resource_parents(parts))
 		{
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + folder.string() + "\" is not located in the project resource folder"));
+			Notifier::NotifyError("\"" + folder.string() + "\" is not located in the project resource folder");
 			return;
 		}
 		parts.push_back(folder.filename());
@@ -267,7 +268,7 @@ namespace oly::editor
 
 			if (!found)
 			{
-				MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Could not locate \"" + folder.string() + "\" in tree view"));
+				Notifier::NotifyError("Could not locate \"" + folder.string() + "\" in tree view");
 				return;
 			}
 		}

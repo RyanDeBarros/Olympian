@@ -1,7 +1,6 @@
 #include "FontDocument.h"
 
-#include "core/windows/MainWindow.h"
-#include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 
 #include "gui/InlineWidget.h"
 #include "gui/scopes/IDScope.h"
@@ -31,10 +30,7 @@ namespace oly::editor
 	void FontDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-		{
-			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
-			MainWindow::Instance().PushNotification(std::move(notif));
-		}
+			Notifier::NotifyWarning("Asset is not located in resource folder");
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
 		_display_text = "Abc 123";
@@ -76,10 +72,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(TOMLNode(table), _desc.disk);
 			else
-			{
-				Notification notif(LogLevel::Error, "cannot load font - corrupted asset: " + GetSourcePath().string());
-				MainWindow::Instance().PushNotification(std::move(notif));
-			}
+				Notifier::NotifyError("cannot load font - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}

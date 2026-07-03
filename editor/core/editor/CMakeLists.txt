@@ -3,6 +3,7 @@ target_sources(OlympianEditor PRIVATE
 	LabelRegistry.cpp
 	LiveSettings.cpp
 	Logger.cpp
+	Notifier.cpp
 	ProjectInfo.cpp
 	ResourceLoader.cpp
 	ShortcutManager.cpp

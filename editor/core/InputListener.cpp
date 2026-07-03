@@ -1,7 +1,6 @@
 #include "InputListener.h"
 
-#include "core/windows/MainWindow.h"
-#include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 
 namespace oly::editor
 {
@@ -358,7 +357,7 @@ namespace oly::editor
 				if (auto k = ConvertKey(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+					Notifier::NotifyError("Unrecognized input");
 
 				break;
 			}
@@ -376,7 +375,7 @@ namespace oly::editor
 				if (auto b = ConvertMouseButton(mb))
 					return *b;
 				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+					Notifier::NotifyError("Unrecognized input");
 
 				break;
 			}
@@ -394,7 +393,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadButton(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+					Notifier::NotifyError("Unrecognized input");
 
 				break;
 			}
@@ -412,7 +411,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis1D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+					Notifier::NotifyError("Unrecognized input");
 
 				break;
 			}
@@ -430,7 +429,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis2D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Unrecognized input"));
+					Notifier::NotifyError("Unrecognized input");
 
 				break;
 			}

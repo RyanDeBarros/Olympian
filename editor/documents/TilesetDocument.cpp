@@ -1,7 +1,6 @@
 #include "TilesetDocument.h"
 
-#include "core/windows/MainWindow.h"
-#include "core/editor/Logger.h"
+#include "core/editor/Notifier.h"
 #include "core/editor/UID.h"
 #include "core/Colors.h"
 #include "core/Errors.h"
@@ -140,10 +139,7 @@ namespace oly::editor
 	void TilesetDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
-		{
-			Notification notif(LogLevel::Warning, "Asset is not located in resource folder");
-			MainWindow::Instance().PushNotification(std::move(notif));
-		}
+			Notifier::NotifyWarning("Asset is not located in resource folder");
 
 		_individual_editor = {};
 		_group_editors = {};
@@ -192,10 +188,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(TOMLNode(table), _desc.disk);
 			else
-			{
-				Notification notif(LogLevel::Error, "cannot load tileset - corrupted asset: " + _oly_path.string());
-				MainWindow::Instance().PushNotification(std::move(notif));
-			}
+				Notifier::NotifyError("cannot load tileset - corrupted asset: " + _oly_path.string());
 
 			MarkClean();
 		}
@@ -425,7 +418,7 @@ namespace oly::editor
 								result.SetDirty(true);
 							}
 							else
-								MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Path is not located in resource folder"));
+								Notifier::NotifyError("Path is not located in resource folder");
 						}
 
 						ImGui::EndDragDropTarget();

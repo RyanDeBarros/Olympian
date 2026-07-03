@@ -1,9 +1,10 @@
 #pragma once
 
+#include "core/editor/Notifier.h"
+
 #include <imgui.h>
 
 #include <memory>
-#include <string>
 #include <vector>
 
 namespace oly::editor
@@ -14,16 +15,6 @@ namespace oly::editor
 	class MainMenuBar;
 
 	enum class LogLevel : int;
-
-	struct Notification
-	{
-		LogLevel level;
-		std::string message;
-		float timer;
-		float age = 0.f;
-
-		Notification(LogLevel level, std::string&& message, float timer = 3.f);
-	};
 
 	class MainWindow
 	{
@@ -55,7 +46,7 @@ namespace oly::editor
 
 		MainMenuBar& GetMainMenuBar();
 
-		void PushNotification(Notification&& notif);
+		void PushNotification(Notification notif);
 
 	private:
 		void DrawNotifications();

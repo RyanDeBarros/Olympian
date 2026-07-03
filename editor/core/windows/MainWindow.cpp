@@ -18,11 +18,6 @@
 
 namespace oly::editor
 {
-    Notification::Notification(LogLevel level, std::string&& message, float timer)
-        : level(level), message(std::move(message)), timer(timer)
-    {
-    }
-
     MainWindow::MainWindow()
         : _panel_manager(std::make_unique<PanelManager>()),
         _document_manager(std::make_unique<DocumentManager>()),
@@ -131,7 +126,7 @@ namespace oly::editor
         return *_main_menu_bar;
     }
 
-    void MainWindow::PushNotification(Notification&& notif)
+    void MainWindow::PushNotification(Notification notif)
     {
         Logger::Instance().Log(notif.level, notif.message.c_str());
         _notifications.push_back(std::move(notif));
