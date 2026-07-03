@@ -4,7 +4,7 @@
 
 #include "gui/graphics/Texture.h"
 
-#include <filesystem>
+#include "assets/ResourcePath.h"
 
 namespace oly::editor
 {
@@ -49,6 +49,9 @@ namespace oly::editor
 		void InitImpl() override;
 		const char* GetTitle() const override;
 		void Draw() override;
+
+		static TreeViewPanel& FocusInstance();
+		static void ShowResourceFolderInTreeView(const detail::ResourcePath& folder);
 
 	private:
 		bool PassesFilter(TreeViewNode& node) const;

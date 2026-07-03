@@ -13,6 +13,7 @@
 #include "core/windows/MainWindow.h"
 
 #include "panels/PanelManager.h"
+#include "panels/TreeViewPanel.h"
 
 #include "gui/Controls.h"
 #include "gui/ImGuiWrapper.h"
@@ -59,17 +60,21 @@ namespace oly::editor
 
 				gui::VerticalSeparator();
 				
-				// TODO v9.2 button to show folder in tree view panel
-
 				if (auto disabled = DisabledSection(_on_res_root))
 				{
-					if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited, "Favorite"))
+					if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited,
+						disabled.Disabled() ? "Favorite (disabled for root folder)" : "Favorite"))
 					{
 						if (!disabled.Disabled())
 							SyncFavoritesList();
 					}
 				}
-				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), favorites button (pop out modal with list of favorites / star button to toggle favorite status of current folder / etc.), etc.
+
+				ImGui::SameLine();
+				if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Open in tree view", "##OpenInTreeView"))
+					TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+
+				// TODO v9.2 toolbar for '<'/'>' (keep stack of folder history so as to go back and forth between folders), etc.
 
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
@@ -94,17 +99,25 @@ namespace oly::editor
 		}
 	}
 
+	ContentBrowserPanel& ContentBrowserPanel::FocusInstance()
+	{
+		ContentBrowserPanel& panel = Instance();
+		panel.Open();
+		panel.GainFocus();
+		return panel;
+	}
+
 	void ContentBrowserPanel::ShowInContentBrowser(const detail::ResourcePath& path)
 	{
 		if (path.is_resource())
 		{
 			if (path.is_directory())
-				SetFolder(path.get_absolute());
+				FocusInstance().SetFolder(path.get_absolute());
 			else
-				SetFolder(path.get_absolute().parent_path());
+				FocusInstance().SetFolder(path.get_absolute().parent_path());
 		}
 		else
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.string() + " is not located in the project resource folder"));
+			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + path.string() + "\" is not located in the project resource folder"));
 	}
 
 	void ContentBrowserPanel::ShowInContentBrowser(const std::filesystem::path& path)
@@ -112,12 +125,12 @@ namespace oly::editor
 		if (detail::ResourcePath(path).is_resource())
 		{
 			if (std::filesystem::is_directory(path))
-				SetFolder(path);
+				FocusInstance().SetFolder(path);
 			else
-				SetFolder(path.parent_path());
+				FocusInstance().SetFolder(path.parent_path());
 		}
 		else
-			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, path.generic_string() + " is not located in the project resource folder"));
+			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + path.generic_string() + "\" is not located in the project resource folder"));
 	}
 
 	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
@@ -167,11 +180,16 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DrawFavoritesList()
 	{
+		const float label_max_width = ImGui::GetContentRegionAvail().x;
 		std::optional<std::string> open_folder;
 		for (const auto& favorite : GetFavoritesList())
 		{
-			// TODO v9.2 ellipses for overflow
-			if (ImGui::Selectable(favorite.c_str()))
+			std::string label = favorite.substr(2); // remove '@/'
+			if (label == ".")
+				label = "@";
+
+			FitPathLabel(label, label_max_width);
+			if (ImGui::Selectable(label.c_str()))
 				open_folder = favorite;
 		}
 
@@ -276,7 +294,7 @@ namespace oly::editor
 			const ImVec2 cursor = ImGui::GetCursorScreenPos();
 			const ImVec2 child_size = ImGui::GetContentRegionAvail();
 			
-			const ImVec2 label_size = FitPathLabel(label, child_size);
+			const ImVec2 label_size = FitPathLabel(label, child_size.x); // TODO v9.2 do max 2 lines wrap before ellipses? Most files are too long
 			const ImVec2 label_offset = (child_size - label_size) * ImVec2(0.5f, 1.f);
 			
 			const ImVec2 icon_size = child_size - ImVec2(label_size.y, label_size.y);
@@ -284,8 +302,10 @@ namespace oly::editor
 
 			if (_selected_path == path)
 			{
-				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgActive));
-				ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 0.f, 0, 3.f);
+				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset,
+					ImGui::GetColorU32(ImGuiCol_FrameBgActive));
+				ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + 2 * padding_offset,
+					ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 0.f, 0, 3.f);
 			}
 
 			ImGui::SetCursorScreenPos(cursor + label_offset);
@@ -342,15 +362,15 @@ namespace oly::editor
 		ImGui::EndChild();
 	}
 
-	ImVec2 ContentBrowserPanel::FitPathLabel(std::string& label, const ImVec2 child_size)
+	ImVec2 ContentBrowserPanel::FitPathLabel(std::string& label, const float width)
 	{
 		ImVec2 label_size = ImGui::CalcTextSize(label.c_str());
-		if (child_size.x > 0.f && label_size.x > child_size.x)
+		if (width > 0.f && label_size.x > width)
 		{
 			static constexpr const char* ellipses = "...";
 			const ImVec2 ellipses_size = ImGui::CalcTextSize(ellipses);
 
-			while (label_size.x + ellipses_size.x > child_size.x)
+			while (label_size.x + ellipses_size.x > width)
 			{
 				label.pop_back();
 				if (label.empty())

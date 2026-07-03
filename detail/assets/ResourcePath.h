@@ -66,6 +66,8 @@ namespace oly::detail
 		bool is_resource() const;
 		bool is_relative_to(const ResourcePath& base) const;
 		std::string tabname() const;
+		bool resource_parents(std::vector<std::string>& parents) const;
+		std::string filename() const;
 
 		std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const { return std::ifstream(absolute, mode); }
 		std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const { return std::ofstream(absolute, mode); }

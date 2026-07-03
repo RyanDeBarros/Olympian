@@ -173,7 +173,7 @@ namespace oly::editor
 							path = path.get_source_path();
 
 						if (ImGui::MenuItem("Show in Content Browser"))
-							ContentBrowserPanel::Instance().ShowInContentBrowser(path);
+							ContentBrowserPanel::ShowInContentBrowser(path);
 
 						if (ImGui::MenuItem("Reveal in explorer"))
 							PathInfo::RevealInExplorer(path.get_absolute());

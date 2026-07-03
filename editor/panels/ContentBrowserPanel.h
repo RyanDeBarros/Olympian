@@ -20,8 +20,9 @@ namespace oly::editor
 		const char* GetTitle() const override;
 		void Draw() override;
 
-		void ShowInContentBrowser(const detail::ResourcePath& path);
-		void ShowInContentBrowser(const std::filesystem::path& path);
+		static ContentBrowserPanel& FocusInstance();
+		static void ShowInContentBrowser(const detail::ResourcePath& path);
+		static void ShowInContentBrowser(const std::filesystem::path& path);
 
 	private:
 		void SetFolder(std::filesystem::path folder);
@@ -34,7 +35,7 @@ namespace oly::editor
 		void DrawFolderView();
 		void DrawPathTable();
 		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size);
-		ImVec2 FitPathLabel(std::string& label, const ImVec2 child_size);
+		ImVec2 FitPathLabel(std::string& label, const float width);
 		void OpenPath(const std::filesystem::path& path);
 	};
 }

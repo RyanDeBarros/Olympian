@@ -141,6 +141,29 @@ namespace oly::detail
 			return absolute.filename().generic_string();
 	}
 
+	bool ResourcePath::resource_parents(std::vector<std::string>& parents) const
+	{
+		if (!is_resource())
+			return false;
+
+		auto relative = std::filesystem::relative(absolute, resource_root);
+		for (const auto& part : relative.parent_path())
+			parents.push_back(part.generic_string());
+
+		return true;
+	}
+
+	std::string ResourcePath::filename() const
+	{
+		if (absolute.empty() || absolute == absolute.root_path() || absolute.filename() == ".")
+			return absolute.filename().generic_string();
+		
+		if (absolute.filename().empty())
+			return absolute.parent_path().filename().generic_string();
+
+		return absolute.filename().generic_string();
+	}
+
 	std::string ResourcePath::load_toml(toml::table& table) const
 	{
 		try

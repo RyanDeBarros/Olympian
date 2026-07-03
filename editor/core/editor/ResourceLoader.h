@@ -10,6 +10,7 @@ namespace oly::editor
 	M(FilterOff) \
 	M(FilterOn) \
 	M(Folder) \
+	M(FolderOpen) \
 	M(Handle) \
 	M(Minus) \
 	M(Pause) \

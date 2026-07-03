@@ -222,6 +222,60 @@ namespace oly::editor
 		}
 	}
 
+	TreeViewPanel& TreeViewPanel::FocusInstance()
+	{
+		TreeViewPanel& panel = Instance();
+		panel.Open();
+		panel.GainFocus();
+		return panel;
+	}
+
+	void TreeViewPanel::ShowResourceFolderInTreeView(const detail::ResourcePath& folder)
+	{
+		if (!folder.is_directory())
+		{
+			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + folder.string() + "\" is not a folder"));
+			return;
+		}
+
+		std::vector<std::string> parts;
+		if (!folder.resource_parents(parts))
+		{
+			MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "\"" + folder.string() + "\" is not located in the project resource folder"));
+			return;
+		}
+		parts.push_back(folder.filename());
+		parts.insert(parts.begin(), "res");
+
+		std::vector<TreeViewNode*> open_nodes;
+		TreeViewNode* node = FocusInstance()._root.get();
+		open_nodes.push_back(node);
+		for (const auto& parent : parts)
+		{
+			bool found = false;
+			for (auto& subnode : node->subnodes)
+			{
+				if (detail::ResourcePath(subnode->path).filename() == parent)
+				{
+					node = subnode.get();
+					node->RefreshSubnodes();
+					open_nodes.push_back(node);
+					found = true;
+					break;
+				}
+			}
+
+			if (!found)
+			{
+				MainWindow::Instance().PushNotification(Notification(LogLevel::Error, "Could not locate \"" + folder.string() + "\" in tree view"));
+				return;
+			}
+		}
+
+		for (TreeViewNode* node : open_nodes)
+			node->OpenBranch();
+	}
+
 	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
 	{
 		if (_config.ignore_imports && node.is_import)
@@ -268,7 +322,7 @@ namespace oly::editor
 				node.Open();
 
 			if (ImGui::MenuItem("Show in Content Browser"))
-				ContentBrowserPanel::Instance().ShowInContentBrowser(node.path);
+				ContentBrowserPanel::ShowInContentBrowser(node.path);
 
 			if (ImGui::MenuItem("Reveal in Explorer"))
 				PathInfo::RevealInExplorer(node.path);
