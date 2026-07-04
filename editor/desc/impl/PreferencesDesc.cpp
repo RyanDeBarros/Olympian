@@ -23,6 +23,11 @@ namespace oly::editor
 
 	const detail::Key EditSettingsDesc::undo_history_key = detail::Key::UndoHistory;
 
+	ContentBrowserSettingsDesc::ContentBrowserSettingsDesc() :
+		folder_history_limit(30, detail::Key::FolderHistoryLimit, "Folder history limit")
+	{
+	}
+
 	TreeViewAdvancedSettingsDesc::TreeViewAdvancedSettingsDesc() :
 		analysis_interval(10.f, detail::Key::AnalysisInterval, "Analysis interval")
 	{
@@ -36,5 +41,6 @@ namespace oly::editor
 	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;
 
 	const detail::Key PreferencesDesc::edit_key = detail::Key::Edit;
+	const detail::Key PreferencesDesc::content_browser_key = detail::Key::ContentBrowser;
 	const detail::Key PreferencesDesc::tree_view_key = detail::Key::TreeView;
 }

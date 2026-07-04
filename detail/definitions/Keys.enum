@@ -94,6 +94,7 @@ FillOuterColor = FOClr
 Floating = Floating
 Focused = Focused
 FocusOnShow = FocusOnS
+FolderHistoryLimit = FolHLm
 FontFace = Face
 FontAtlasArray = Atlas
 Font = Font

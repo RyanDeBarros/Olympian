@@ -130,7 +130,10 @@ namespace oly::editor
 			{
 				if (auto subform = Subform("Edit"))
 					Draw(path / desc.subpaths.edit, desc.edit);
-		
+
+				if (auto subform = Subform("Content Browser"))
+					Draw(path / desc.subpaths.content_browser, desc.content_browser);
+
 				if (auto subform = Subform("Tree View"))
 					Draw(path / desc.subpaths.tree_view, desc.tree_view);
 			}
@@ -148,6 +151,11 @@ namespace oly::editor
 		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
+	void PreferencesDocument::Draw(DataPath path, ContentBrowserSettingsDesc& desc)
+	{
+		DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+	}
+
 	void PreferencesDocument::Draw(DataPath path, TreeViewSettingsDesc& desc)
 	{
 		if (auto subform = Subform("Advanced##TreeView"))
@@ -162,6 +170,7 @@ namespace oly::editor
 	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
+		Load(node[detail::encode_key(desc.content_browser_key)], desc.content_browser);
 		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
 	}
 
@@ -173,6 +182,11 @@ namespace oly::editor
 	void PreferencesDocument::Load(TOMLNode node, UndoHistorySettingsDesc& desc)
 	{
 		LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+	}
+
+	void PreferencesDocument::Load(TOMLNode node, ContentBrowserSettingsDesc& desc)
+	{
+		LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, TreeViewSettingsDesc& desc)
@@ -194,6 +208,10 @@ namespace oly::editor
 		table.insert_or_assign(detail::encode_key(desc.edit_key), std::move(subtable));
 
 		subtable.clear();
+		Dump(subtable, desc.content_browser);
+		table.insert_or_assign(detail::encode_key(desc.content_browser_key), std::move(subtable));
+
+		subtable.clear();
 		Dump(subtable, desc.tree_view);
 		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
 	}
@@ -208,6 +226,11 @@ namespace oly::editor
 	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
 	{
 		DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+	}
+
+	void PreferencesDocument::Dump(toml::table& table, ContentBrowserSettingsDesc& desc)
+	{
+		DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)

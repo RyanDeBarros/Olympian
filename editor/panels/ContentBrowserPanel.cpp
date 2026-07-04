@@ -22,13 +22,18 @@
 
 #include "fio/FIOOperation.h"
 
+#include "desc/impl/PreferencesDesc.h"
+
 #include <imgui.h>
 
 namespace oly::editor
 {
 	ContentBrowserPanel::ContentBrowserPanel()
-		: _folder_history(20) // TODO v9.2 editor preference for this -> call .set_limit() on preferences changed
+		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
 	{
+		Editor::Instance().OnPreferencesChanged.subscribe([this]() { _folder_history.set_limit(
+			Editor::GetPreferences().content_browser.folder_history_limit.value
+		); });
 	}
 
 	ContentBrowserPanel& ContentBrowserPanel::Instance()
@@ -92,6 +97,8 @@ namespace oly::editor
 
 				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
 				{
+					ImGui::TableSetupColumn("##Favorites", ImGuiTableColumnFlags_WidthStretch, 0.25f);
+
 					ImGui::TableNextRow();
 
 					ImGui::TableSetColumnIndex(0);

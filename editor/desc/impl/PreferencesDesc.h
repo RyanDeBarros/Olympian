@@ -36,6 +36,18 @@ namespace oly::editor
 		DESCRIPTOR_BODY(EditSettingsDesc, EDIT_SETTINGS_GENERATOR);
 	};
 
+#define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
+		M(folder_history_limit)
+
+	struct ContentBrowserSettingsDesc
+	{
+		IntField<MakeOpt(1), MakeOpt<int>()> folder_history_limit;
+
+		DESCRIPTOR_BODY(ContentBrowserSettingsDesc, CONTENT_BROWSER_SETTINGS_GENERATOR);
+
+		ContentBrowserSettingsDesc();
+	};
+
 #define TREE_VIEW_ADVANCED_SETTINGS_GENERATOR(M) \
 		M(analysis_interval)
 
@@ -63,12 +75,15 @@ namespace oly::editor
 
 #define PREFERENCES_GENERATOR(M) \
 		M(edit) \
+		M(content_browser) \
 		M(tree_view)
 
 	struct PreferencesDesc
 	{
 		EditSettingsDesc edit;
 		static const detail::Key edit_key;
+		ContentBrowserSettingsDesc content_browser;
+		static const detail::Key content_browser_key;
 		TreeViewSettingsDesc tree_view;
 		static const detail::Key tree_view_key;
 
