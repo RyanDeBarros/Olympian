@@ -21,6 +21,12 @@ namespace oly::editor
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
 
+		struct
+		{
+			bool new_signal = false;
+			std::string new_signal_name = "";
+		} _asset_popups;
+
 	public:
 		ContentBrowserPanel();
 		static ContentBrowserPanel& Instance();
@@ -51,5 +57,6 @@ namespace oly::editor
 		void OpenPath(const std::filesystem::path& path);
 
 		void NewAssetMenu();
+		void DrawNewAssetPopups();
 	};
 }

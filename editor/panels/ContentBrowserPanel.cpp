@@ -24,8 +24,6 @@
 
 #include "desc/impl/PreferencesDesc.h"
 
-#include <imgui.h>
-
 namespace oly::editor
 {
 	ContentBrowserPanel::ContentBrowserPanel()
@@ -114,6 +112,8 @@ namespace oly::editor
 					_undo_history.Execute(std::move(action));
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
+
+				DrawNewAssetPopups();
 			}
 
 			ImGui::EndChild();
@@ -366,7 +366,7 @@ namespace oly::editor
 				if (ImGui::MenuItem("Rename", "F2"))
 					open_rename_popup = true;
 
-				// TODO v9.2 check if path is an importable asset or a folder -> context menu to import.
+				// TODO v9.2 check if path is an importable asset or a folder -> context menu to import. Also options to prune (remove unused import files)
 
 				ImGui::EndPopup();
 			}
@@ -490,8 +490,40 @@ namespace oly::editor
 	void ContentBrowserPanel::NewAssetMenu()
 	{
 		if (Toolbar::IconMenuItem("Signal", IconResource::Controller))
-			; // TODO v9.2 create signal asset
+		{
+			_asset_popups.new_signal = true;
+			_asset_popups.new_signal_name = "New signal";
+			ImGui::CloseCurrentPopup();
+		}
 
 		// TODO v9.2 other assets
+	}
+	void ContentBrowserPanel::DrawNewAssetPopups()
+	{
+		static const char* kNewSignalPopup = "New signal";
+
+		if (_asset_popups.new_signal)
+		{
+			ImGui::OpenPopup(kNewSignalPopup);
+			_asset_popups.new_signal = false;
+		}
+
+		if (ImGui::BeginPopupModal(kNewSignalPopup, 0, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			gui::InputText("Filename", _asset_popups.new_signal_name);
+
+			if (ImGui::Button("Create"))
+			{
+				// TODO v9.2 fio operation to create new file -> load with initial data using SignalDocument. If filename exists, use (1)/(2)/etc. Only then push fio operation to undo stack.
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::SameLine();
+
+			if (ImGui::Button("Cancel"))
+				ImGui::CloseCurrentPopup();
+			
+			ImGui::EndPopup();
+		}
 	}
 }
