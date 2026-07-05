@@ -90,7 +90,6 @@ namespace oly::editor
 	{
 		DrawResult result = ImGui::MenuItem(("   " + label).c_str());
 		result.Query();
-		ImGui::SameLine();
 		Toolbar::DrawIconImage(ImGui::GetItemRectMin() + ImVec2(2.f, 0.f), icon, settings);
 		return result;
 	}

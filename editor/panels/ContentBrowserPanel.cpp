@@ -24,8 +24,15 @@
 
 #include "desc/impl/PreferencesDesc.h"
 
+#include "definitions/Keys.h"
+
 namespace oly::editor
 {
+	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup)
+		: type(type), name(std::move(name)), popup(popup)
+	{
+	}
+
 	ContentBrowserPanel::ContentBrowserPanel()
 		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
 	{
@@ -377,7 +384,7 @@ namespace oly::editor
 			const ImVec2 cursor = ImGui::GetCursorScreenPos();
 			const ImVec2 child_size = ImGui::GetContentRegionAvail();
 			
-			const ImVec2 label_size = FitPathLabel(label, child_size.x); // TODO v9.2 do max 2 lines wrap before ellipses? Most files are too long
+			const ImVec2 label_size = FitPathLabel(label, child_size.x);
 			const ImVec2 label_offset = (child_size - label_size) * ImVec2(0.5f, 1.f);
 			
 			const ImVec2 icon_size = child_size - ImVec2(label_size.y, label_size.y);
@@ -489,39 +496,74 @@ namespace oly::editor
 
 	void ContentBrowserPanel::NewAssetMenu()
 	{
-		if (Toolbar::IconMenuItem("Signal", IconResource::Controller))
+		// TODO v9.2 icons for all assets
+
+		if (Toolbar::IconMenuItem("Tileset", IconResource::File))
 		{
-			_asset_popups.new_signal = true;
-			_asset_popups.new_signal_name = "New signal";
+			_new_asset = NewAssetInfo(detail::Key::Meta_Tileset, "New Tileset", "New tileset");
 			ImGui::CloseCurrentPopup();
 		}
 
-		// TODO v9.2 other assets
-	}
-	void ContentBrowserPanel::DrawNewAssetPopups()
-	{
-		static const char* kNewSignalPopup = "New signal";
-
-		if (_asset_popups.new_signal)
+		if (Toolbar::IconMenuItem("Signal", IconResource::Controller))
 		{
-			ImGui::OpenPopup(kNewSignalPopup);
-			_asset_popups.new_signal = false;
+			_new_asset = NewAssetInfo(detail::Key::Meta_Signal, "New Signal", "New signal");
+			ImGui::CloseCurrentPopup();
 		}
 
-		if (ImGui::BeginPopupModal(kNewSignalPopup, 0, ImGuiWindowFlags_AlwaysAutoResize))
+		if (ImGui::BeginMenu("Fonts"))
 		{
-			gui::InputText("Filename", _asset_popups.new_signal_name);
+			if (Toolbar::IconMenuItem("Font family", IconResource::File))
+			{
+				_new_asset = NewAssetInfo(detail::Key::Meta_FontFamily, "New Font Family", "New font family");
+				ImGui::CloseCurrentPopup();
+			}
+
+			if (Toolbar::IconMenuItem("Raster font", IconResource::File))
+			{
+				_new_asset = NewAssetInfo(detail::Key::Meta_RasterFont, "New Raster Font", "New raster font");
+				ImGui::CloseCurrentPopup();
+			}
+
+			ImGui::EndMenu();
+		}
+	}
+
+	void ContentBrowserPanel::DrawNewAssetPopups()
+	{
+		if (!_new_asset)
+			return;
+
+		if (_new_asset->pending_popup)
+		{
+			ImGui::OpenPopup(_new_asset->popup);
+			_new_asset->pending_popup = false;
+		}
+
+		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+		if (ImGui::BeginPopupModal(_new_asset->popup, 0, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			gui::InputText("Filename", _new_asset->name);
 
 			if (ImGui::Button("Create"))
 			{
-				// TODO v9.2 fio operation to create new file -> load with initial data using SignalDocument. If filename exists, use (1)/(2)/etc. Only then push fio operation to undo stack.
+				// TODO v9.2 fio operation to create new file -> load with initial data using Document. If filename exists, use (1)/(2)/etc. Only then push fio operation to undo stack.
+				_new_asset.reset();
 				ImGui::CloseCurrentPopup();
 			}
 
 			ImGui::SameLine();
 
 			if (ImGui::Button("Cancel"))
+			{
+				_new_asset.reset();
 				ImGui::CloseCurrentPopup();
+			}
+
+			if (ImGui::Shortcut(ImGuiKey_Escape))
+			{
+				_new_asset.reset();
+				ImGui::CloseCurrentPopup();
+			}
 			
 			ImGui::EndPopup();
 		}

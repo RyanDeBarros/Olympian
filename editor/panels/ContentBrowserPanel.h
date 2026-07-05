@@ -5,6 +5,7 @@
 #include "core/UndoHistory.h"
 
 #include "assets/ResourcePath.h"
+#include "assets/KeyDecl.h"
 #include "util/TimelineQueue.h"
 
 #include <set>
@@ -21,11 +22,17 @@ namespace oly::editor
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
 
-		struct
+		struct NewAssetInfo
 		{
-			bool new_signal = false;
-			std::string new_signal_name = "";
-		} _asset_popups;
+			bool pending_popup = true;
+			detail::Key type;
+			std::string name = "";
+			const char* popup;
+
+			NewAssetInfo(detail::Key type, std::string name, const char* popup);
+		};
+
+		std::optional<NewAssetInfo> _new_asset;
 
 	public:
 		ContentBrowserPanel();
