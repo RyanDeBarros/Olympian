@@ -141,6 +141,17 @@ namespace oly::detail
 			return absolute.filename().generic_string();
 	}
 
+	bool ResourcePath::resource_relative_path(std::filesystem::path& out) const
+	{
+		if (is_resource())
+		{
+			out = std::filesystem::relative(absolute, resource_root);
+			return true;
+		}
+		else
+			return false;
+	}
+
 	bool ResourcePath::resource_parents(std::vector<std::string>& parents) const
 	{
 		if (!is_resource())

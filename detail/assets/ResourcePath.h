@@ -5,6 +5,8 @@
 
 #include <toml++/toml.h>
 
+// TODO v9.2 put all method implementations in ResourcePath.cpp
+
 namespace oly::detail
 {
 	class MetaMap;
@@ -62,6 +64,7 @@ namespace oly::detail
 		bool is_resource() const;
 		bool is_relative_to(const ResourcePath& base) const;
 		std::string tabname() const;
+		bool resource_relative_path(std::filesystem::path& out) const;
 		bool resource_parents(std::vector<std::string>& parents) const;
 		std::string filename() const;
 

@@ -66,4 +66,15 @@ namespace oly::editor
         std::system(cmd.c_str());
 #endif
 	}
+
+    std::string PathInfo::NameOf(const std::filesystem::path& path)
+    {
+        if (path.empty() || path == path.root_path() || path.filename() == ".")
+            return path.filename().generic_string();
+
+        if (path.filename().empty())
+            return path.parent_path().filename().generic_string();
+
+        return path.filename().generic_string();
+    }
 }

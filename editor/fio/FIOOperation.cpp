@@ -1,6 +1,7 @@
 #include "FIOOperation.h"
 
 #include "core/editor/Logger.h"
+#include "fio/Trashcan.h"
 
 namespace oly::editor::fio
 {
