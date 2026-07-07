@@ -121,4 +121,79 @@ namespace oly::editor
 			return &desc;
 		}
 	};
+
+	template<typename Desc>
+	struct SimpleArrayDesc
+	{
+		std::vector<Desc> descs;
+		detail::Key key;
+
+		SimpleArrayDesc(detail::Key key)
+			: key(key)
+		{
+		}
+
+		void Load(TOMLNode node)
+		{
+			descs.clear();
+			if (auto array = node[detail::encode_key(key)].as_array())
+			{
+				descs.resize(array->size());
+				for (size_t i = 0; i < descs.size(); ++i)
+					descs[i].Load(TOMLNode(*array->get(i)));
+			}
+		}
+
+		void Dump(toml::table& table)
+		{
+			toml::array array;
+			for (size_t i = 0; i < descs.size(); ++i)
+			{
+				toml::table subtable;
+				descs[i].Dump(subtable);
+				array.push_back(std::move(subtable));
+			}
+			table.insert_or_assign(detail::encode_key(key), std::move(array));
+		}
+
+		const Desc& operator[](size_t i) const
+		{
+			return descs[i];
+		}
+
+		Desc& operator[](size_t i)
+		{
+			return descs[i];
+		}
+
+		auto begin() const noexcept
+		{
+			return descs.begin();
+		}
+
+		auto end() const noexcept
+		{
+			return descs.end();
+		}
+
+		auto begin() noexcept
+		{
+			return descs.begin();
+		}
+
+		auto end() noexcept
+		{
+			return descs.end();
+		}
+
+		auto cbegin() const noexcept
+		{
+			return descs.cbegin();
+		}
+
+		auto cend() const noexcept
+		{
+			return descs.cend();
+		}
+	};
 }

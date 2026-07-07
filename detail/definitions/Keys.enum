@@ -81,6 +81,7 @@ Element = Element
 Enable = Enable
 EnableMaxPriorLogBytes = EnMxPBs
 EnableMaxPriorLogFiles = EnMxPFs
+Entry = Entry
 Error = Error
 Expand = Expand
 
@@ -166,6 +167,7 @@ OriginOffsetMode = OrigOffM
 OriginOffset = OrigOff
 
 Padding = Padding
+Path = Path
 Pivot = Pivot
 Platform = Platform
 PointsArray = Points
@@ -228,6 +230,7 @@ TextWrap = TextWrap
 TileArray = Tiles
 TileSet = TileSet
 Tilt = Tilt
+Time = Time
 TimeOffset = TmOff
 TimeScale = TmScale
 Title = Title
@@ -248,6 +251,7 @@ UVvec4 = UVs
 
 Value = Value
 VectorScale = VecScale
+Version = Version
 VerticalAlignment = VAlign
 Viewport = Viewport
 Visible = Visible

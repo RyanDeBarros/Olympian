@@ -58,6 +58,26 @@ namespace oly::editor
 	};
 
 	template<>
+	struct Serializer<int64_t>
+	{
+		bool Load(int64_t& obj, TOMLNode node) const
+		{
+			if (auto v = node.value<int64_t>())
+			{
+				obj = *v;
+				return true;
+			}
+			else
+				return false;
+		}
+
+		int64_t Dump(const int64_t obj) const
+		{
+			return obj;
+		}
+	};
+
+	template<>
 	struct Serializer<unsigned int>
 	{
 		bool Load(unsigned int& obj, TOMLNode node) const
