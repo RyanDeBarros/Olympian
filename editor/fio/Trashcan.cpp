@@ -18,7 +18,7 @@ namespace oly::editor::fio
 
 	static std::filesystem::path TrashManifest()
 	{
-		return TrashRoot() / "_manifest.json";
+		return TrashRoot() / "_manifest.toml";
 	}
 
 	static bool TrashFolder(const detail::ResourcePath& resource, std::filesystem::path& out)
@@ -37,12 +37,20 @@ namespace oly::editor::fio
 		for (const auto& entry : std::filesystem::directory_iterator(trash_folder))
 		{
 			std::string name = PathInfo::NameOf(entry.path());
-			size_t v;
-			auto result = std::from_chars(name.c_str(), name.c_str() + name.size(), v);
-			if (result.ec == std::errc{} && version < v)
-				version = v;
+			if (name.starts_with('_'))
+			{
+				size_t v;
+				auto result = std::from_chars(name.c_str() + 1, name.c_str() + name.size(), v);
+				if (result.ec == std::errc{} && version < v)
+					version = v;
+			}
 		}
 		return version;
+	}
+
+	static std::string VersionSubfolder(const size_t version)
+	{
+		return "_" + std::to_string(version);
 	}
 
 	static void PruneTrashFolder(std::filesystem::path trash_folder)
@@ -149,10 +157,20 @@ namespace oly::editor::fio
 
 		void Prune(size_t size_limit)
 		{
-			for (auto& entry : entries)
+			for (auto it = entries.begin(); it != entries.end(); )
 			{
-				*entry.last_write_time = std::filesystem::last_write_time(TrashRoot() / *entry.trash_path)
-						.time_since_epoch().count();
+				auto path = TrashRoot() / *it->trash_path;
+				if (!std::filesystem::exists(path))
+					it = entries.descs.erase(it);
+				else
+				{
+					std::error_code ec;
+					auto last_time = std::filesystem::last_write_time(path, ec);
+					if (!ec)
+						*it->last_write_time = last_time.time_since_epoch().count();
+
+					++it;
+				}
 			}
 
 			std::sort(entries.descs.begin(), entries.descs.end(), [](const Entry& a, const Entry& b) { return *a.last_write_time < *b.last_write_time; });
@@ -230,7 +248,7 @@ namespace oly::editor::fio
 			return false;
 
 		const size_t version = LatestVersion(trash_folder) + 1;
-		std::filesystem::path version_path = trash_folder / std::to_string(version);
+		std::filesystem::path version_path = trash_folder / VersionSubfolder(version);
 
 		std::filesystem::rename(resource.get_absolute(), version_path, ec);
 		if (ec)
@@ -254,7 +272,7 @@ namespace oly::editor::fio
 			return false;
 
 		const size_t version = LatestVersion(trash_folder);
-		std::filesystem::path version_path = trash_folder / std::to_string(version);
+		std::filesystem::path version_path = trash_folder / VersionSubfolder(version);
 
 		if (!std::filesystem::exists(version_path))
 			return false;

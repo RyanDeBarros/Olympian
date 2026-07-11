@@ -235,7 +235,7 @@ namespace oly::editor
 		_folder = std::move(folder);
 		_favorited = ShouldBeFavorited();
 		_on_res_root = std::filesystem::equivalent(_folder, ProjectInfo::Instance().ResourceRoot());
-		_selected_path.reset();
+		_selected_path.reset(); // TODO v9.2 store vector of selected paths: multi-select
 	}
 
 	std::set<detail::ResourcePath>& ContentBrowserPanel::GetFavoritesList() const
@@ -367,17 +367,23 @@ namespace oly::editor
 			static constexpr const char* RENAME_POPUP = "Rename path";
 			bool open_rename_popup = false;
 
-			if (ImGui::BeginPopupContextWindow())
+			if (!dotdot)
 			{
-				if (ImGui::MenuItem("Open"))
-					OpenPath(path);
+				if (ImGui::BeginPopupContextWindow())
+				{
+					if (ImGui::MenuItem("Open"))
+						OpenPath(path);
 
-				if (ImGui::MenuItem("Rename", "F2"))
-					open_rename_popup = true;
+					if (ImGui::MenuItem("Rename", "F2"))
+						open_rename_popup = true;
 
-				// TODO v9.2 check if path is an importable asset or a folder -> context menu to import. Also options to prune (remove unused import files)
+					if (ImGui::MenuItem("Delete"))
+						DeletePath(path, fio_operations);
 
-				ImGui::EndPopup();
+					// TODO v9.2 check if path is an importable asset or a folder -> context menu to import. Also options to prune (remove unused import files)
+
+					ImGui::EndPopup();
+				}
 			}
 
 			std::string label = dotdot ? ".." : path.filename().generic_string();
@@ -425,6 +431,9 @@ namespace oly::editor
 
 				if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
 					open_rename_popup = true;
+
+				if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteGlobal))
+					DeletePath(path, fio_operations);
 
 				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
@@ -569,5 +578,22 @@ namespace oly::editor
 			
 			ImGui::EndPopup();
 		}
+	}
+
+	void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const
+	{
+		detail::ResourcePath resource = path;
+
+		auto action = std::make_unique<fio::DeletePathAction>();
+		action->del_path = resource;
+
+		if (!resource.is_import_path())
+		{
+			detail::ResourcePath import = resource.get_import_path();
+			if (PathInfo::IsImportFile(import.get_absolute()))
+				action->aux_path = import;
+		}
+
+		fio_operations.push_back(std::move(action));
 	}
 }

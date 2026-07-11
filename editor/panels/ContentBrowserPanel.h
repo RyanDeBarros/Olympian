@@ -67,5 +67,7 @@ namespace oly::editor
 
 		void NewAssetMenu();
 		void DrawNewAssetPopups();
+
+		void DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const;
 	};
 }
