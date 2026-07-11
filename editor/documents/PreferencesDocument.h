@@ -36,6 +36,7 @@ namespace oly::editor
 		void Draw(DataPath path, ContentBrowserSettingsDesc& desc);
 		void Draw(DataPath path, TreeViewSettingsDesc& desc);
 		void Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc);
+		void Draw(DataPath path, FilesystemSettingsDesc& desc);
 
 		void Load(TOMLNode node, PreferencesDesc& desc);
 		void Load(TOMLNode node, EditSettingsDesc& desc);
@@ -43,6 +44,7 @@ namespace oly::editor
 		void Load(TOMLNode node, ContentBrowserSettingsDesc& desc);
 		void Load(TOMLNode node, TreeViewSettingsDesc& desc);
 		void Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc);
+		void Load(TOMLNode node, FilesystemSettingsDesc& desc);
 
 		void Dump(toml::table& table, PreferencesDesc& desc);
 		void Dump(toml::table& table, EditSettingsDesc& desc);
@@ -50,5 +52,6 @@ namespace oly::editor
 		void Dump(toml::table& table, ContentBrowserSettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewSettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc);
+		void Dump(toml::table& table, FilesystemSettingsDesc& desc);
 	};
 }

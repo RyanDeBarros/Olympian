@@ -7,6 +7,7 @@
 #include "assets/ResourcePath.h"
 #include "assets/KeyDecl.h"
 #include "util/TimelineQueue.h"
+#include "util/FunctionalEvent.h"
 
 #include <set>
 
@@ -21,6 +22,7 @@ namespace oly::editor
 		TimelineQueue<std::filesystem::path> _folder_history;
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
+		FunctionalEvent<>::Handle _listener;
 
 		struct NewAssetInfo
 		{

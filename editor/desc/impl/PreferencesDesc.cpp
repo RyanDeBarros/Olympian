@@ -38,9 +38,21 @@ namespace oly::editor
 		return analysis_interval.value;
 	}
 
+	FilesystemSettingsDesc::FilesystemSettingsDesc() :
+		trash_limit(5, detail::Key::TrashLimit, "Trash limit"),
+		trash_limit_unit(MemoryUnit::GiB, detail::Key::TrashLimitUnit, "Trash limit unit")
+	{
+	}
+
+	size_t FilesystemSettingsDesc::TrashLimit() const
+	{
+		return MemorySize(trash_limit.value, trash_limit_unit.value);
+	}
+
 	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;
 
 	const detail::Key PreferencesDesc::edit_key = detail::Key::Edit;
 	const detail::Key PreferencesDesc::content_browser_key = detail::Key::ContentBrowser;
 	const detail::Key PreferencesDesc::tree_view_key = detail::Key::TreeView;
+	const detail::Key PreferencesDesc::filesystem_key = detail::Key::Filesystem;
 }

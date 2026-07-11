@@ -38,7 +38,7 @@ The editor uses the following libraries:
 - **marzer/tomlplusplus**
 - **memononen/nanosvg**
 
-TODO v9.2 use containing folders for licenses instead of writing the library name in the filename itself
+TODO v9.4 use containing folders for licenses instead of writing the library name in the filename itself
 
 The editor also uses assets from the following databases:
 

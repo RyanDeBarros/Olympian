@@ -88,6 +88,7 @@ Expand = Expand
 Fatal = Fatal
 Favorites = Favs
 File = File
+Filesystem = FileSys
 FillColorsArray = FillClrs
 FillExponent = FillExp
 FillInnerColor = FIClr
@@ -237,6 +238,8 @@ Title = Title
 Top = Top
 Transformer = Trfmer
 TransparentFramebuffer = TrFrmbuf
+TrashLimit = TrashLm
+TrashLimitUnit = TrashLmU
 TreeView = TreeView
 
 UseCommonBufferPreset = UseComBP

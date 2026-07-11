@@ -73,10 +73,27 @@ namespace oly::editor
 		DESCRIPTOR_BODY(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
 	};
 
+#define FILESYSTEM_SETTINGS_GENERATOR(M) \
+		M(trash_limit) \
+		M(trash_limit_unit)
+
+	struct FilesystemSettingsDesc
+	{
+		IntField<MakeOpt(1), MakeOpt<int>()> trash_limit;
+		EnumField<MemoryUnit> trash_limit_unit;
+
+		FilesystemSettingsDesc();
+
+		DESCRIPTOR_BODY(FilesystemSettingsDesc, FILESYSTEM_SETTINGS_GENERATOR);
+
+		size_t TrashLimit() const;
+	};
+
 #define PREFERENCES_GENERATOR(M) \
 		M(edit) \
 		M(content_browser) \
-		M(tree_view)
+		M(tree_view) \
+		M(filesystem)
 
 	struct PreferencesDesc
 	{
@@ -86,6 +103,8 @@ namespace oly::editor
 		static const detail::Key content_browser_key;
 		TreeViewSettingsDesc tree_view;
 		static const detail::Key tree_view_key;
+		FilesystemSettingsDesc filesystem;
+		static const detail::Key filesystem_key;
 
 		DESCRIPTOR_BODY(PreferencesDesc, PREFERENCES_GENERATOR);
 	};

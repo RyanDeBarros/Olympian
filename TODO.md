@@ -3,8 +3,23 @@
 ## v9.2
 * More editor work
 	* Content Browser Panel
-				
+
 ## v9.3
+* Create new repo 'imgui-toolkit' (namespace 'imtk') for C++ OOP/modernization wrapper for ImGui:
+	* Features:
+		* Wrap push/pop into RAII
+		* Undo/redo
+		* Copy/paste
+		* DrawResult: persistent classes for widgets with methods that return `bool hovered()`, `bool clicked()`, etc. after calling `bool draw()`.
+		* DockTree
+		* IDScope
+		* `std::string` combos or other widgets that need adapting to C++
+		* More...
+	* Move stuff from Olympian editor into that repo
+	* Don't expose ImGui: can build library so that imgui is internal and only included in CPP files, not headers.
+	* Use STL naming conventions (`snake_case`, even for classes/enums, for example `imtk::id_scope`).
+
+## v9.4
 * More editor work
 	* Project manager
 		* Generate new project files

@@ -1,9 +1,11 @@
 #include "Trashcan.h"
 
+#include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"
 
 #include "desc/SimpleField.h"
+#include "desc/impl/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
 
@@ -153,7 +155,23 @@ namespace oly::editor::fio
 						.time_since_epoch().count();
 			}
 
-			// TODO v9.2 sort by last_write_time and enforce size_limit
+			std::sort(entries.descs.begin(), entries.descs.end(), [](const Entry& a, const Entry& b) { return *a.last_write_time < *b.last_write_time; });
+
+			for (auto it = entries.begin(); it != entries.end() && total_size > size_limit; )
+			{
+				auto trash_path = TrashRoot() / *it->trash_path;
+
+				std::error_code ec;
+				std::filesystem::remove_all(trash_path, ec);
+
+				if (!ec)
+				{
+					total_size -= *it->size;
+					it = entries.descs.erase(it);
+				}
+				else
+					++it;
+			}
 		}
 	};
 
@@ -218,7 +236,10 @@ namespace oly::editor::fio
 		if (ec)
 			return false;
 
-		// TODO v9.2 enfore trash size limit: by default 5GB/10GB (can range from 1GB (low) to 20GB (high)) in preferences
+		ManifestIO manifest;
+		manifest->Add(trash_folder);
+
+		manifest->Prune(Editor::GetPreferences().filesystem.TrashLimit());
 
 		return true;
 	}
@@ -246,6 +267,9 @@ namespace oly::editor::fio
 		std::filesystem::rename(version_path, resource.get_absolute(), ec);
 		if (ec)
 			return false;
+
+		ManifestIO manifest;
+		manifest->Remove(trash_folder);
 
 		PruneTrashFolder(trash_folder);
 

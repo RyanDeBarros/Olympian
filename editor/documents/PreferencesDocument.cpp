@@ -136,6 +136,9 @@ namespace oly::editor
 
 				if (auto subform = Subform("Tree View"))
 					Draw(path / desc.subpaths.tree_view, desc.tree_view);
+
+				if (auto subform = Subform("Filesystem"))
+					Draw(path / desc.subpaths.filesystem, desc.filesystem);
 			}
 		}
 	}
@@ -167,11 +170,17 @@ namespace oly::editor
 		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
+	void PreferencesDocument::Draw(DataPath path, FilesystemSettingsDesc& desc)
+	{
+		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+	}
+
 	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
 		Load(node[detail::encode_key(desc.content_browser_key)], desc.content_browser);
 		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
+		Load(node[detail::encode_key(desc.filesystem_key)], desc.filesystem);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, EditSettingsDesc& desc)
@@ -199,6 +208,11 @@ namespace oly::editor
 		LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
+	void PreferencesDocument::Load(TOMLNode node, FilesystemSettingsDesc& desc)
+	{
+		LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+	}
+
 	void PreferencesDocument::Dump(toml::table& table, PreferencesDesc& desc)
 	{
 		toml::table subtable;
@@ -214,6 +228,10 @@ namespace oly::editor
 		subtable.clear();
 		Dump(subtable, desc.tree_view);
 		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
+
+		subtable.clear();
+		Dump(subtable, desc.filesystem);
+		table.insert_or_assign(detail::encode_key(desc.filesystem_key), std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, EditSettingsDesc& desc)
@@ -243,5 +261,10 @@ namespace oly::editor
 	void PreferencesDocument::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)
 	{
 		DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+	}
+
+	void PreferencesDocument::Dump(toml::table& table, FilesystemSettingsDesc& desc)
+	{
+		DUMP_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}
 }

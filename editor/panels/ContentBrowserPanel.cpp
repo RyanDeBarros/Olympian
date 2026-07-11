@@ -36,7 +36,7 @@ namespace oly::editor
 	ContentBrowserPanel::ContentBrowserPanel()
 		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
 	{
-		Editor::Instance().OnPreferencesChanged.subscribe([this]() { _folder_history.set_limit(
+		_listener = Editor::Instance().OnPreferencesChanged.subscribe([this]() { _folder_history.set_limit(
 			Editor::GetPreferences().content_browser.folder_history_limit.value
 		); });
 	}
@@ -360,6 +360,8 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
+		// TODO v9.2 drag-n-drop into documents, just like TreeView
+
 		if (ImGui::BeginChild(path.generic_string().c_str(), size, ImGuiChildFlags_Borders))
 		{
 			static constexpr const char* RENAME_POPUP = "Rename path";
