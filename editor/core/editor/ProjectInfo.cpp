@@ -8,7 +8,7 @@ namespace oly::editor
 {
 	ProjectInfo& ProjectInfo::Instance()
 	{
-		return Editor::Instance().GetProjectInfo();
+		return Editor::GetProjectInfo();
 	}
 
 	const char* ProjectInfo::GetVersion()

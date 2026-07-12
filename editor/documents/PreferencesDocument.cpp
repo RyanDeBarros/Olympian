@@ -116,7 +116,7 @@ namespace oly::editor
 
 	void PreferencesDocument::ActiveDescChanged()
 	{
-		Editor::Instance().OnPreferencesChanged.invoke();
+		Editor::OnPreferencesChanged().invoke();
 	}
 
 	void PreferencesDocument::Draw(DataPath path, PreferencesDesc& desc)

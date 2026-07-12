@@ -5,7 +5,6 @@
 #include "util/FunctionalEvent.h"
 
 #include <imtk.hpp>
-#include <imtk/os_window.hpp>
 
 #include <filesystem>
 #include <memory>
@@ -27,10 +26,10 @@ namespace oly::editor
 		Main
 	};
 
-	class Editor
+	class Editor : public imtk::instance_guard<Editor>
 	{
 		// TODO v9.3 own os_window. Make Editor an active instance singleton instead of this static singleton
-		imtk::os_window* _os_window = nullptr;
+		std::unique_ptr<imtk::os_window> _os_window;
 		AppState _app_state = AppState::ProjectSelect;
 
 		std::unique_ptr<ProjectSelectWindow> _project_select_window;
@@ -41,37 +40,35 @@ namespace oly::editor
 		std::unique_ptr<ProjectInfo> _project_info;
 		std::unique_ptr<PreferencesDesc> _preferences_desc;
 		std::unique_ptr<LiveSettings> _live_settings;
-
-		Editor();
-		Editor(const Editor&) = delete;
-		Editor(Editor&&) = delete;
+		FunctionalEvent<> _on_preferences_changed;
 
 	public:
-		FunctionalEvent<> OnPreferencesChanged;
+		Editor();
+		~Editor();
 
-		static Editor& Instance();
-		void Init(imtk::os_window* window);
-		void Terminate();
+		static FunctionalEvent<>& OnPreferencesChanged();
+
+		bool ShouldClose() const;
 		void Tick();
 		size_t GetFrame() const;
 
-		void SetOSWindowSize(int width, int height);
-		void SetOSWindowMaximized(bool maximized);
-		void SetOSWindowFullScreen(bool fullscreen);
-		bool IsOSWindowFullScreen() const;
-		void RequestShutdown();
+		static void SetOSWindowSize(int width, int height);
+		static void SetOSWindowMaximized(bool maximized);
+		static void SetOSWindowFullScreen(bool fullscreen);
+		static bool IsOSWindowFullScreen();
+		static void RequestShutdown();
 
 		static PreferencesDesc& GetPreferences();
 		static LiveSettingsDesc& GetLiveSettings();
 
-		AppState GetAppState() const;
-		ProjectSelectWindow& GetProjectSelectWindow();
-		Logger& GetLogger();
-		MainWindow& GetMainWindow();
-		ShortcutManager& GetShortcutManager();
-		ProjectInfo& GetProjectInfo();
+		static AppState GetAppState();
+		static ProjectSelectWindow& GetProjectSelectWindow();
+		static Logger& GetLogger();
+		static MainWindow& GetMainWindow();
+		static ShortcutManager& GetShortcutManager();
+		static ProjectInfo& GetProjectInfo();
 
-		void OpenProject(const std::filesystem::path& path);
-		void OpenFile(const std::filesystem::path& path);
+		static void OpenProject(const std::filesystem::path& path);
+		static void OpenFile(const std::filesystem::path& path);
 	};
 }

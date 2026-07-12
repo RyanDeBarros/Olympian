@@ -36,7 +36,7 @@ namespace oly::editor
 	ContentBrowserPanel::ContentBrowserPanel()
 		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
 	{
-		_listener = Editor::Instance().OnPreferencesChanged.subscribe([this]() { _folder_history.set_limit(
+		_listener = Editor::OnPreferencesChanged().subscribe([this]() { _folder_history.set_limit(
 			Editor::GetPreferences().content_browser.folder_history_limit.value
 		); });
 	}
@@ -502,7 +502,7 @@ namespace oly::editor
 		if (std::filesystem::is_directory(path))
 			ShowInContentBrowser(path);
 		else
-			Editor::Instance().OpenFile(path);
+			Editor::OpenFile(path);
 	}
 
 	void ContentBrowserPanel::NewAssetMenu()

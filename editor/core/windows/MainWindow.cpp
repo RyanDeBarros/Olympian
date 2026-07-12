@@ -29,7 +29,7 @@ namespace oly::editor
 
     MainWindow& MainWindow::Instance()
     {
-        return Editor::Instance().GetMainWindow();
+        return Editor::GetMainWindow();
     }
 
     void MainWindow::Init()
@@ -70,7 +70,7 @@ namespace oly::editor
 
     void MainWindow::Open()
     {
-        Editor::Instance().SetOSWindowMaximized(true);
+        Editor::SetOSWindowMaximized(true);
     }
 
     void MainWindow::Draw()

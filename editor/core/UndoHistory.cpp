@@ -15,7 +15,7 @@ namespace oly::editor
 
 	UndoHistory::UndoHistory()
 	{
-		_listener = Editor::Instance().OnPreferencesChanged.subscribe([this]() { Prune(); });
+		_listener = Editor::OnPreferencesChanged().subscribe([this]() { Prune(); });
 	}
 
 	UndoHistory& UndoHistory::ActiveInstance()

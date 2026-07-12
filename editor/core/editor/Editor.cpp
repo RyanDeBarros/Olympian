@@ -30,17 +30,7 @@ namespace oly::editor
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
 		_project_info(std::make_unique<ProjectInfo>())
 	{
-	}
-
-	Editor& Editor::Instance()
-	{
-		static Editor editor;
-		return editor;
-	}
-
-	void Editor::Init(imtk::os_window* window)
-	{
-		_os_window = window;
+		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
 			ShortcutManager::Instance().HandlePathDrop(count, paths);
@@ -48,7 +38,7 @@ namespace oly::editor
 
 		glfwSetWindowCloseCallback(_os_window->get(), [](GLFWwindow* w) {
 			glfwSetWindowShouldClose(w, GLFW_FALSE);
-			Editor::Instance().RequestShutdown();
+			Editor::instance().RequestShutdown();
 		});
 
 		ResourceLoader::LoadAll();
@@ -56,17 +46,22 @@ namespace oly::editor
 		_project_select_window->Open();
 	}
 
-	void Editor::Terminate()
+	Editor::~Editor() = default;
+
+	FunctionalEvent<>& Editor::OnPreferencesChanged()
 	{
-		_project_select_window.reset();
-		_logger.reset();
-		_main_window.reset();
-		_shortcut_manager.reset();
-		_project_info.reset();
+		return instance()._on_preferences_changed;
+	}
+
+	bool Editor::ShouldClose() const
+	{
+		return _os_window->should_close();
 	}
 
 	void Editor::Tick()
 	{
+		_os_window->begin_frame();
+
 		_shortcut_manager->PollShortcuts();
 		Texture::Update();
 
@@ -81,6 +76,8 @@ namespace oly::editor
 		}
 
 		++FRAME_COUNTER;
+
+		_os_window->end_frame();
 	}
 
 	size_t Editor::GetFrame() const
@@ -90,27 +87,27 @@ namespace oly::editor
 	
 	void Editor::SetOSWindowSize(int width, int height)
 	{
-		_os_window->set_size(width, height);
+		instance()._os_window->set_size(width, height);
 	}
 
 	void Editor::SetOSWindowMaximized(bool maximized)
 	{
-		_os_window->set_maximized(maximized);
+		instance()._os_window->set_maximized(maximized);
 	}
 
 	void Editor::SetOSWindowFullScreen(bool fullscreen)
 	{
-		_os_window->set_fullscreen(fullscreen);
+		instance()._os_window->set_fullscreen(fullscreen);
 	}
 
-	bool Editor::IsOSWindowFullScreen() const
+	bool Editor::IsOSWindowFullScreen()
 	{
-		return _os_window->is_fullscreen();
+		return instance()._os_window->is_fullscreen();
 	}
 
 	void Editor::RequestShutdown()
 	{
-		if (_app_state == AppState::Main)
+		if (instance()._app_state == AppState::Main)
 		{
 			if (!PreferencesPanel::Instance().RequestShutdown())
 				return;
@@ -119,61 +116,61 @@ namespace oly::editor
 				return;
 		}
 
-		if (_live_settings)
-			_live_settings->Dump();
+		if (instance()._live_settings)
+			instance()._live_settings->Dump();
 
-		glfwSetWindowShouldClose(_os_window->get(), GLFW_TRUE);
+		glfwSetWindowShouldClose(instance()._os_window->get(), GLFW_TRUE);
 	}
 
 	PreferencesDesc& Editor::GetPreferences()
 	{
-		return *Instance()._preferences_desc;
+		return *instance()._preferences_desc;
 	}
 
 	LiveSettingsDesc& Editor::GetLiveSettings()
 	{
-		return Instance()._live_settings->desc;
+		return instance()._live_settings->desc;
 	}
 
-	AppState Editor::GetAppState() const
+	AppState Editor::GetAppState()
 	{
-		return _app_state;
+		return instance()._app_state;
 	}
 
 	ProjectSelectWindow& Editor::GetProjectSelectWindow()
 	{
-		return *_project_select_window;
+		return *instance()._project_select_window;
 	}
 
 	Logger& Editor::GetLogger()
 	{
-		return *_logger;
+		return *instance()._logger;
 	}
 
 	MainWindow& Editor::GetMainWindow()
 	{
-		return *_main_window;
+		return *instance()._main_window;
 	}
 
 	ShortcutManager& Editor::GetShortcutManager()
 	{
-		return *_shortcut_manager;
+		return *instance()._shortcut_manager;
 	}
 
 	ProjectInfo& Editor::GetProjectInfo()
 	{
-		return *_project_info;
+		return *instance()._project_info;
 	}
 
 	void Editor::OpenProject(const std::filesystem::path& path)
 	{
-		_app_state = AppState::Main;
-		_project_info->Init(path);
-		_main_window->Open();
+		instance()._app_state = AppState::Main;
+		instance()._project_info->Init(path);
+		instance()._main_window->Open();
 
-		_preferences_desc = std::make_unique<PreferencesDesc>();
-		_live_settings = std::make_unique<LiveSettings>();
-		_live_settings->Load();
+		instance()._preferences_desc = std::make_unique<PreferencesDesc>();
+		instance()._live_settings = std::make_unique<LiveSettings>();
+		instance()._live_settings->Load();
 	}
 
 	void Editor::OpenFile(const std::filesystem::path& path)

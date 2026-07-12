@@ -41,7 +41,7 @@ namespace oly::editor
 
     Logger& Logger::Instance()
     {
-        return Editor::Instance().GetLogger();
+        return Editor::GetLogger();
     }
 
     void Logger::Log(LogLevel level, std::string msg)

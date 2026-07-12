@@ -83,7 +83,7 @@ namespace oly::editor
 				{
 					std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
 					open_file_parent = path.parent_path().string();
-					Editor::Instance().OpenFile(path);
+					Editor::OpenFile(path);
 				}
 
 				ImGuiFileDialog::Instance()->Close();
@@ -107,7 +107,7 @@ namespace oly::editor
 			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
 			{
 				Close();
-				Editor::Instance().RequestShutdown();
+				Editor::RequestShutdown();
 			}
 		}
 	}

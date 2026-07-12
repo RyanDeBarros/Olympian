@@ -83,7 +83,7 @@ namespace oly::editor
 			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
 			{
 				Close();
-				Editor::Instance().RequestShutdown();
+				Editor::RequestShutdown();
 			}
 		}
 	}

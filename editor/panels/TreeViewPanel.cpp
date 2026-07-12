@@ -82,7 +82,7 @@ namespace oly::editor
 	void TreeViewNode::Open()
 	{
 		if (std::filesystem::is_regular_file(path))
-			Editor::Instance().OpenFile(path);
+			Editor::OpenFile(path);
 		else if (std::filesystem::is_directory(path))
 			OpenBranch();
 	}

@@ -16,7 +16,7 @@ namespace oly::editor
 
     void ProjectSelectWindow::Open()
     {
-        Editor::Instance().SetOSWindowSize(920, 690);
+        Editor::SetOSWindowSize(920, 690);
 
         // TODO v9.4 remove once recent projects group is implemented
         _project_file = "D:/Projects/Visual Studio/Olympian/Tester/OlympianTester.oly";
@@ -108,6 +108,6 @@ namespace oly::editor
 
     void ProjectSelectWindow::OpenProject()
     {
-        Editor::Instance().OpenProject(_project_file);
+        Editor::OpenProject(_project_file);
     }
 }
