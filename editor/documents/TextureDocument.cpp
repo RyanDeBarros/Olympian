@@ -5,7 +5,6 @@
 #include "core/Colors.h"
 
 #include "gui/scopes/DisabledSection.h"
-#include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Toolbar.h"
@@ -40,7 +39,7 @@ namespace oly::editor
 
 		UpdatePreviewTexture();
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 		if (ImGui::BeginTable("", 2))
 		{
 			ImGui::TableNextColumn();
@@ -418,7 +417,7 @@ namespace oly::editor
 	{
 		_slots.Update(*ListAdapter());
 		
-		if (auto scope = gui::IDScope("##Slot"))
+		if (auto scope = imtk::id_scope("##Slot"))
 			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
 
 		if (auto form = Form())

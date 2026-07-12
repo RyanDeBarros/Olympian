@@ -1,8 +1,6 @@
 #pragma once
 
-#include "gui/scopes/IDScope.h"
-
-#include <imgui.h>
+#include <imtk.hpp>
 
 #include <memory>
 
@@ -13,7 +11,7 @@ namespace oly::editor
 		bool _valid = true;
 		bool _draw_content = false;
 		int _id_counter = 0;
-		gui::IDScope _scope;
+		imtk::id_scope _scope;
 
 	public:
 		Form();

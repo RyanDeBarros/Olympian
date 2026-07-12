@@ -47,7 +47,7 @@ namespace oly::editor
 	void Form::BeginTable()
 	{
 		ACTIVE_FORM = this;
-		_scope.Push(&ACTIVE_FORM).Push(_id_counter++);
+		_scope.push(&ACTIVE_FORM).push(_id_counter++);
 		_draw_content = gui::PropertyGrid::BeginForm(ImGui::GetID("##FormID"));
 	}
 
@@ -56,7 +56,7 @@ namespace oly::editor
 		gui::PropertyGrid::EndForm(_draw_content);
 		_draw_content = false;
 
-		_scope.PopAll();
+		_scope.pop_all();
 		ACTIVE_FORM = nullptr;
 	}
 

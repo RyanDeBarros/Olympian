@@ -5,7 +5,6 @@
 #include "core/Colors.h"
 #include "core/Errors.h"
 
-#include "gui/scopes/IDScope.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Overlays.h"
 
@@ -152,7 +151,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		UpdateActiveTextures();
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 
 		DataPathSource path;
 
@@ -268,9 +267,8 @@ namespace oly::editor
 						if (!grid)
 							continue;
 
-						gui::IDScope scope;
-						scope.Push(y);
-						scope.Push(x);
+						imtk::id_scope scope;
+						scope.push(y).push(x);
 						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
 						const ImVec2 rect_end = rect_start + cell_size;
 
@@ -332,9 +330,8 @@ namespace oly::editor
 				{
 					for (detail::GridCoordinate x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
 					{
-						gui::IDScope scope;
-						scope.Push(y);
-						scope.Push(x);
+						imtk::id_scope scope;
+						scope.push(y).push(x);
 						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
 						const ImVec2 rect_end = rect_start + cell_size;
 
@@ -395,7 +392,7 @@ namespace oly::editor
 
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
-			if (auto scope = gui::IDScope(&desc.texture))
+			if (auto scope = imtk::id_scope(&desc.texture))
 			{
 				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
 				desc.texture.edit.PreEdit();
@@ -403,7 +400,7 @@ namespace oly::editor
 					gui::PropertyGrid::Reset::Button();
 
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
-					gui::IDScope scope(&desc.texture.value);
+					imtk::id_scope scope(&desc.texture.value);
 
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 

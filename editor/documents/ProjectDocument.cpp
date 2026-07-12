@@ -3,7 +3,6 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/Notifier.h"
 
-#include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 
@@ -30,7 +29,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 		Draw(DataPath(), _desc.scratch);
 	}
 

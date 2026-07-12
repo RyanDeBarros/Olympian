@@ -3,7 +3,6 @@
 #include "core/editor/Notifier.h"
 
 #include "gui/InlineWidget.h"
-#include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
@@ -41,7 +40,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 
 		if (ImGui::BeginTabBar(""))
 		{
@@ -145,7 +144,7 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 				
 			_atlas_slots.Update(*FontAtlasListAdapter());
-			if (auto scope = gui::IDScope("##Atlas"))
+			if (auto scope = imtk::id_scope("##Atlas"))
 				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
 				
 			if (auto form = Form())
@@ -333,10 +332,8 @@ namespace oly::editor
 			{
 				DRAW_FIELD(common_buffer_preset);
 
-				if (auto scope = gui::IDScope(&desc.common_buffer_preset))
+				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					scope.Push("##Preview");
-					gui::PropertyGrid::Key::SetLabel("Preview");
 					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);

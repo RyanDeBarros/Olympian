@@ -28,7 +28,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 		Draw(DataPath(), _desc.scratch);
 	}
 
@@ -99,7 +99,7 @@ namespace oly::editor
 				{
 					_glyph_model.Update(*ListAdapter());
 
-					if (auto scope = gui::IDScope("##Glyph"))
+					if (auto scope = imtk::id_scope("##Glyph"))
 					{
 						_glyph_model.DrawComboHeader({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" },
 							[&desc](size_t i) -> std::string {

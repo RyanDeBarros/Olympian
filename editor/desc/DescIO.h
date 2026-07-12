@@ -60,7 +60,7 @@ namespace oly::editor
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
 					DrawResult result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
 
-					gui::IDScope scope(&data.value);
+					imtk::id_scope scope(&data.value);
 					if (auto disabled = DisabledSection(!data.has_value))
 					{
 						ImGui::SameLine();
@@ -75,7 +75,7 @@ namespace oly::editor
 		template<typename T, typename... Args>
 		static void RowInputData(const char* label, T& data, const T& def, Args&&... args)
 		{
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			ValueInputData<T>{}("##", data, std::forward<Args>(args)...);
 			if (data != def)
@@ -88,7 +88,7 @@ namespace oly::editor
 		template<typename T, typename... Args>
 		static void RowInputData(const char* label, EditSession<T>& data, const T& def, Args&&... args)
 		{
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 
 			data.PreEdit();
@@ -140,7 +140,7 @@ namespace oly::editor
 		template<Enum E>
 		static void Draw(const char* label, E& data, const E& def)
 		{
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
 			if (data != def)
@@ -273,7 +273,7 @@ namespace oly::editor
 		static void DrawDynamicList(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def,
 			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
@@ -290,7 +290,7 @@ namespace oly::editor
 		static void DrawDynamicList(DataPath path, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def,
 			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			if (data.buffer.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);

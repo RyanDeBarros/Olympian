@@ -67,7 +67,7 @@ namespace oly::editor
 		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
-			gui::IDScope scope(this);
+			imtk::id_scope scope(this);
 
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
 			{

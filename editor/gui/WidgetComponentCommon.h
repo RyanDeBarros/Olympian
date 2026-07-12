@@ -13,7 +13,7 @@ namespace oly::editor::comp
 	{
 		gui::WidgetComponent c;
 		c.draw = [label, &data, ... args = std::forward<Args>(args)]() mutable  -> DrawResult {
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			return gui::InputData<T>{}(label, data, std::forward<Args>(args)...);
 		};
 		return c;
@@ -24,7 +24,7 @@ namespace oly::editor::comp
 	{
 		gui::WidgetComponent c;
 		c.draw = [label, data_label, &data, ... args = std::forward<Args>(args)]() mutable  -> DrawResult {
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			ImGui::TextUnformatted(label);
 			DrawResult result = DrawResult().Query();
 			ImGui::SameLine();
@@ -38,7 +38,7 @@ namespace oly::editor::comp
 	{
 		gui::WidgetComponent c;
 		c.draw = [label, data_label, &data, ... args = std::forward<Args>(args)]() mutable  -> DrawResult {
-			gui::IDScope scope(&data);
+			imtk::id_scope scope(&data);
 			gui::VerticalSeparator();
 			ImGui::TextUnformatted(label);
 			DrawResult result = DrawResult().Query();

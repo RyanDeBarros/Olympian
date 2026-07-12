@@ -3,7 +3,6 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/graphics/Texture.h"
-#include "gui/scopes/IDScope.h"
 
 #include <string>
 
@@ -12,7 +11,7 @@ namespace oly::editor
 	static DrawResult _DrawIconButton(bool& selected, ImVec2 size)
 	{
 		DrawResult result;
-		gui::IDScope scope(&selected);
+		imtk::id_scope scope(&selected);
 		if (ImGui::InvisibleButton("##IconButton", size))
 		{
 			selected = !selected;

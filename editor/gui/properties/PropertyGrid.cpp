@@ -5,7 +5,6 @@
 
 #include "gui/InlineWidget.h"
 #include "gui/graphics/Toolbar.h"
-#include "gui/scopes/IDScope.h"
 
 #include <array>
 #include <unordered_set>
@@ -144,8 +143,7 @@ namespace oly::editor::gui
 			{
 				SUBROWS_TO_RESET.erase(it);
 
-				IDScope scope;
-				scope.Push(subrow);
+				imtk::id_scope scope(subrow);
 				if (Toolbar::DrawIconButton(IconResource::Revert, "Reset to default", "##Revert"))
 					ACTIVATED_RESET_SUBROWS.insert(subrow);
 			}

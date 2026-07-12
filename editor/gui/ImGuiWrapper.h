@@ -8,7 +8,6 @@
 #include "gui/DrawResult.h"
 
 #include "gui/scopes/DisabledSection.h"
-#include "gui/scopes/IDScope.h"
 
 #include "desc/OptionalPrimitive.h"
 
@@ -17,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor::gui
 {

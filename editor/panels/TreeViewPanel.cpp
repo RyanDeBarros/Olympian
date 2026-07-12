@@ -306,7 +306,7 @@ namespace oly::editor
 		DrawRowBg(node, local_file_index);
 		DrawNodePrefix(node);
 
-		gui::IDScope scope(&node);
+		imtk::id_scope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
 		if (ImGui::BeginDragDropSource())
@@ -342,7 +342,7 @@ namespace oly::editor
 	{
 		if (node.IsBranching())
 		{
-			gui::IDScope scope(&node);
+			imtk::id_scope scope(&node);
 			if (node.dropdown_open)
 			{
 				if (Toolbar::DrawIconButton(IconResource::ChevronDown, nullptr, "##Dropdown-Down"))

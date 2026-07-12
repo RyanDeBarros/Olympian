@@ -63,7 +63,7 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes)
 	{
-		gui::IDScope scope(data);
+		imtk::id_scope scope(data);
 		gui::PropertyGrid::Key::SetLabel(label);
 
 		for (size_t i = 0; i < count; ++i)
@@ -102,7 +102,7 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, EditSession<Rect>& data, const Rect& def)
 	{
-		gui::IDScope scope(&data);
+		imtk::id_scope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
 
 		data.PreEdit();
@@ -122,7 +122,7 @@ namespace oly::editor
 	
 	void DescIO::Draw(const char* label, EditSession<UVRect>& data, const UVRect& def)
 	{
-		gui::IDScope scope(&data);
+		imtk::id_scope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
 
 		data.PreEdit();
@@ -142,7 +142,7 @@ namespace oly::editor
 	
 	void DescIO::Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def)
 	{
-		gui::IDScope scope(&data);
+		imtk::id_scope scope(&data);
 		gui::PropertyGrid::Key::SetLabel(label);
 
 		data.PreEdit();

@@ -12,13 +12,9 @@
 		* Copy/paste
 		* DrawResult: persistent classes for widgets with methods that return `bool hovered()`, `bool clicked()`, etc. after calling `bool draw()`.
 		* DockTree
-		* IDScope
 		* `std::string` combos or other widgets that need adapting to C++
-		* Handle GLFW/OpenGL3 init
 		* More...
 	* Move stuff from Olympian editor into that repo
-	* Don't expose ImGui: can build library so that imgui is internal and only included in CPP files, not headers.
-	* Use STL naming conventions (`snake_case`, even for classes/enums, for example `imtk::id_scope`).
 
 ## v9.4
 * More editor work

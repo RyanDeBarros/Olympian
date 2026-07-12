@@ -13,7 +13,6 @@
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
-#include "gui/scopes/IDScope.h"
 #include "gui/UnsavedChangesModal.h"
 
 #include "assets/MetaSplitter.h"
@@ -140,7 +139,7 @@ namespace oly::editor
 			ImGuiTabBarFlags_DrawSelectedOverline |
 			ImGuiTabBarFlags_Reorderable;
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 		if (ImGui::BeginTabBar("##AssetTabs", tab_bar_flags))
 		{
 			std::vector<size_t> closed;
@@ -152,7 +151,7 @@ namespace oly::editor
 			bool unsaved_changes_popup = false;
 			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
 			{
-				scope.Push(i);
+				scope.push(i);
 				IDocument& doc = DocumentManager::Instance().GetDocument(i);
 				seen_documents.insert(&doc);
 				bool open = true;

@@ -3,7 +3,6 @@
 #include "core/editor/Notifier.h"
 
 #include "gui/InlineWidget.h"
-#include "gui/scopes/IDScope.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
@@ -45,7 +44,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		_stop_listening = true;
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 
 		if (ImGui::BeginTabBar(""))
 		{
@@ -123,7 +122,7 @@ namespace oly::editor
 	{
 		_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
 
-		if (auto scope = gui::IDScope("##Signal"))
+		if (auto scope = imtk::id_scope("##Signal"))
 		{
 			_signal_slots.DrawComboHeader({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" },
 				[&desc](size_t i) {
@@ -153,7 +152,7 @@ namespace oly::editor
 	{
 		_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
 
-		if (auto scope = gui::IDScope("##Route"))
+		if (auto scope = imtk::id_scope("##Route"))
 		{
 			_route_slots.DrawComboHeader({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" },
 				[&desc](size_t i) {

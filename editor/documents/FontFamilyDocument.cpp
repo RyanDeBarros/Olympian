@@ -27,7 +27,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		gui::IDScope scope(this);
+		imtk::id_scope scope(this);
 		if (auto form = Form())
 		{
 			DataPath path;

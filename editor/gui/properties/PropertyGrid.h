@@ -3,7 +3,7 @@
 #include "gui/WidgetComponent.h"
 #include "gui/properties/PropertyGroup.h"
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 #include <string_view>
 

@@ -1,7 +1,6 @@
 #include "PropertyGroup.h"
 
 #include "core/Errors.h"
-#include "gui/scopes/IDScope.h"
 
 #include <imgui.h>
 

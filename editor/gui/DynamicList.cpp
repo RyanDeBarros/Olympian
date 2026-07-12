@@ -4,8 +4,9 @@
 #include "core/editor/UID.h"
 
 #include "gui/scopes/DisabledSection.h"
-#include "gui/scopes/IDScope.h"
 #include "gui/graphics/Toolbar.h"
+
+#include <imtk.hpp>
 
 namespace oly::editor::gui
 {
@@ -225,7 +226,7 @@ namespace oly::editor::gui
 		{
 			for (size_t i = 0; i < list_size; ++i)
 			{
-				IDScope scope(i);
+				imtk::id_scope scope(i);
 
 				if (auto row = gui::DynamicRow(i, "Row", *this))
 					row_draw(row);
