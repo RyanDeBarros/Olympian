@@ -19,8 +19,6 @@
 
 #include "desc/impl/PreferencesDesc.h"
 
-#include <imgui_impl_glfw.h>
-
 namespace oly::editor
 {
 	static size_t FRAME_COUNTER = 0;
@@ -40,15 +38,15 @@ namespace oly::editor
 		return editor;
 	}
 
-	void Editor::Init(GLFWwindow* window)
+	void Editor::Init(imtk::os_window* window)
 	{
 		_os_window = window;
 
-		glfwSetDropCallback(_os_window, [](GLFWwindow* window, int count, const char** paths) {
+		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
 			ShortcutManager::Instance().HandlePathDrop(count, paths);
 		});
 
-		glfwSetWindowCloseCallback(_os_window, [](GLFWwindow* w) {
+		glfwSetWindowCloseCallback(_os_window->get(), [](GLFWwindow* w) {
 			glfwSetWindowShouldClose(w, GLFW_FALSE);
 			Editor::Instance().RequestShutdown();
 		});
@@ -92,53 +90,22 @@ namespace oly::editor
 	
 	void Editor::SetOSWindowSize(int width, int height)
 	{
-		int x, y;
-		int w, h;
-		glfwGetWindowPos(_os_window, &x, &y);
-		glfwGetWindowSize(_os_window, &w, &h);
-
-		const float scale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor());
-		const int nw = static_cast<int>(width * scale);
-		const int nh = static_cast<int>(height * scale);
-		glfwSetWindowSize(_os_window, nw, nh);
-
-		const int nx = x + (w - nw) / 2;
-		const int ny = y + (h - nh) / 2;
-		glfwSetWindowPos(_os_window, nx, ny);
+		_os_window->set_size(width, height);
 	}
 
 	void Editor::SetOSWindowMaximized(bool maximized)
 	{
-		if (maximized)
-			glfwMaximizeWindow(_os_window);
-		else
-			glfwRestoreWindow(_os_window);
+		_os_window->set_maximized(maximized);
 	}
 
 	void Editor::SetOSWindowFullScreen(bool fullscreen)
 	{
-		if (fullscreen == _os_state.fullscreen)
-			return;
-
-		_os_state.fullscreen = fullscreen;
-		if (fullscreen)
-		{
-			glfwGetWindowPos(_os_window, &_os_state.x, &_os_state.y);
-			glfwGetWindowSize(_os_window, &_os_state.w, &_os_state.h);
-
-			GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-			const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-			glfwSetWindowMonitor(_os_window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-		}
-		else
-		{
-			glfwSetWindowMonitor(_os_window, nullptr, _os_state.x, _os_state.y, _os_state.w, _os_state.h, 0);
-		}
+		_os_window->set_fullscreen(fullscreen);
 	}
 
 	bool Editor::IsOSWindowFullScreen() const
 	{
-		return _os_state.fullscreen;
+		return _os_window->is_fullscreen();
 	}
 
 	void Editor::RequestShutdown()
@@ -155,7 +122,7 @@ namespace oly::editor
 		if (_live_settings)
 			_live_settings->Dump();
 
-		glfwSetWindowShouldClose(_os_window, GLFW_TRUE);
+		glfwSetWindowShouldClose(_os_window->get(), GLFW_TRUE);
 	}
 
 	PreferencesDesc& Editor::GetPreferences()

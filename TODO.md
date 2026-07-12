@@ -14,6 +14,7 @@
 		* DockTree
 		* IDScope
 		* `std::string` combos or other widgets that need adapting to C++
+		* Handle GLFW/OpenGL3 init
 		* More...
 	* Move stuff from Olympian editor into that repo
 	* Don't expose ImGui: can build library so that imgui is internal and only included in CPP files, not headers.

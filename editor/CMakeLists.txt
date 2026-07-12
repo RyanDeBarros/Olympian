@@ -11,6 +11,20 @@ endif()
 
 
 # ====================
+#    imgui-toolkit
+# ====================
+
+FetchContent_Declare(
+    imtk
+    GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
+    GIT_TAG        main
+    # TODO v9.3 use specific tag
+)
+
+FetchContent_MakeAvailable(imtk)
+
+
+# ====================
 #       OpenGL
 # ====================
 
@@ -48,29 +62,6 @@ FetchContent_MakeAvailable(glew)
 
 
 # ====================
-#        ImGui
-# ====================
-FetchContent_Declare(
-	imgui
-	GIT_REPOSITORY https://github.com/ocornut/imgui.git
-	GIT_TAG        v1.92.7-docking
-)
-
-FetchContent_MakeAvailable(imgui)
-
-add_library(imgui STATIC
-	${imgui_SOURCE_DIR}/imgui.cpp
-	${imgui_SOURCE_DIR}/imgui_draw.cpp
-	${imgui_SOURCE_DIR}/imgui_tables.cpp
-	${imgui_SOURCE_DIR}/imgui_widgets.cpp
-)
-
-target_include_directories(imgui PUBLIC
-	${imgui_SOURCE_DIR}
-)
-
-
-# ====================
 #  ImGui File Dialog
 # ====================
 
@@ -92,26 +83,6 @@ target_include_directories(imgui_file_dialog PUBLIC
 
 target_link_libraries(imgui_file_dialog PUBLIC
     imgui
-)
-
-
-# ====================
-#    ImGui backends
-# ====================
-add_library(imgui_backend STATIC
-	${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-	${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-)
-
-target_include_directories(imgui_backend PUBLIC
-	${imgui_SOURCE_DIR}
-	${imgui_SOURCE_DIR}/backends
-)
-
-target_link_libraries(imgui_backend PUBLIC
-	imgui
-	glfw
-	OpenGL::GL
 )
 
 
@@ -189,8 +160,7 @@ target_compile_definitions(OlympianEditor PUBLIC
 )
 
 target_link_libraries(OlympianEditor PRIVATE
-    imgui
-    imgui_backend
+    imgui-toolkit
     imgui_file_dialog
     glm::glm
 	libglew_static

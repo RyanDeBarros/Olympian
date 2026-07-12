@@ -21,7 +21,7 @@ set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 #    Build Project
 # ====================
 
-add_executable (OlympianTester)
+add_executable(OlympianTester)
 
 # Project context macros
 # TODO v9.4 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.

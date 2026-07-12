@@ -4,6 +4,9 @@
 
 #include "util/FunctionalEvent.h"
 
+#include <imtk.hpp>
+#include <imtk/os_window.hpp>
+
 #include <filesystem>
 #include <memory>
 
@@ -24,19 +27,11 @@ namespace oly::editor
 		Main
 	};
 
-	struct WindowState
-	{
-		int x = 0, y = 0;
-		int w = 1, h = 1;
-		bool fullscreen = false;
-	};
-
 	class Editor
 	{
-		GLFWwindow* _os_window = nullptr;
+		// TODO v9.3 own os_window. Make Editor an active instance singleton instead of this static singleton
+		imtk::os_window* _os_window = nullptr;
 		AppState _app_state = AppState::ProjectSelect;
-
-		WindowState _os_state = {};
 
 		std::unique_ptr<ProjectSelectWindow> _project_select_window;
 
@@ -55,7 +50,7 @@ namespace oly::editor
 		FunctionalEvent<> OnPreferencesChanged;
 
 		static Editor& Instance();
-		void Init(GLFWwindow* window);
+		void Init(imtk::os_window* window);
 		void Terminate();
 		void Tick();
 		size_t GetFrame() const;

@@ -16,48 +16,10 @@ static void glfw_error_callback(int error, const char* description)
 
 int main()
 {
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
-        return 1;
+    imtk::os_window w(1, 1, "Olympian Editor");
+    oly::editor::Editor::Instance().Init(&w);
 
-    const char* glsl_version = "#version 150";
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-
-    GLFWwindow* window = glfwCreateWindow(1, 1, "Olympian Editor", nullptr, nullptr);
-    glfwMakeContextCurrent(window);
-
-    if (glewInit() != GLEW_OK)
-        return 1;
-
-    glfwSwapInterval(1);
-
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-    int monitor_x, monitor_y;
-    glfwGetMonitorPos(monitor, &monitor_x, &monitor_y);
-    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
-    glfwSetWindowPos(window, monitor_x + mode->width / 2, monitor_y + mode->height / 2);
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-
-    float monitor_scale = ImGui_ImplGlfw_GetContentScaleForMonitor(monitor);
-    ImGui::StyleColorsDark();
-    ImGui::GetStyle().ScaleAllSizes(monitor_scale);
-
-    ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(glsl_version);
-
-    ImGuiIO& io = ImGui::GetIO();
-    io.FontGlobalScale = monitor_scale;
-    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-
-    oly::editor::Editor::Instance().Init(window);
-
-    while (!glfwWindowShouldClose(window))
+    while (!glfwWindowShouldClose(w.get()))
     {
         glfwPollEvents();
 
@@ -71,15 +33,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(w.get());
     }
 
     oly::editor::Editor::Instance().Terminate();
-
-    ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
-    ImGui::DestroyContext();
-
-    glfwDestroyWindow(window);
-    glfwTerminate();
 }
