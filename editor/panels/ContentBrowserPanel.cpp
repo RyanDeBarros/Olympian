@@ -2,6 +2,7 @@
 
 #include "core/Errors.h"
 #include "core/PathInfo.h"
+#include "core/SpecialUndoActions.h"
 
 #include "core/editor/Editor.h"
 #include "core/editor/LiveSettings.h"
@@ -115,8 +116,7 @@ namespace oly::editor
 					ImGui::EndTable();
 				}
 
-				for (auto& action : fio_operations)
-					_undo_history.Execute(std::move(action));
+				ExecuteFIO(fio_operations);
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 
@@ -235,7 +235,7 @@ namespace oly::editor
 		_folder = std::move(folder);
 		_favorited = ShouldBeFavorited();
 		_on_res_root = std::filesystem::equivalent(_folder, ProjectInfo::Instance().ResourceRoot());
-		_selected_path.reset(); // TODO v9.2 store vector of selected paths: multi-select
+		ClearSelection();
 	}
 
 	std::set<detail::ResourcePath>& ContentBrowserPanel::GetFavoritesList() const
@@ -311,14 +311,29 @@ namespace oly::editor
 		ImGui::EndChild();
 	}
 
+	struct ContentBrowserPanel::EntryTableState
+	{
+		bool focused = false;
+		ImVec2 entry_size;
+		bool delete_consumed = false;
+		bool enter_consumed = false;
+	};
+
 	void ContentBrowserPanel::DrawPathTable(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
+		PruneSelection();
+
 		const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
 		if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
 		{
+			EntryTableState entry_table_state;
+			entry_table_state.focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
+			entry_table_state.delete_consumed = ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteGlobal);
+			entry_table_state.enter_consumed = ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteGlobal);
+
 			const float full_width = ImGui::GetContentRegionAvail().x - columns * 2 * ImGui::GetStyle().CellPadding.x;
 			const float width = full_width / columns;
-			const ImVec2 path_entry_size(width, width);
+			entry_table_state.entry_size = ImVec2(width, width);
 
 			ImGui::TableNextRow();
 
@@ -327,14 +342,14 @@ namespace oly::editor
 			if (!_on_res_root)
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(folder.parent_path(), true, path_entry_size, fio_operations);
+				DrawPathEntry(folder.parent_path(), true, entry_table_state, fio_operations);
 			}
 
 			std::error_code ec;
-			for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+			for (const auto& path : _selectable_entry_paths)
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(entry.path(), false, path_entry_size, fio_operations);
+				DrawPathEntry(path, false, entry_table_state, fio_operations);
 			}
 
 			ImGui::EndTable();
@@ -342,8 +357,10 @@ namespace oly::editor
 
 		if (ImGui::IsWindowHovered())
 		{
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-				_selected_path.reset();
+			// TODO v9.3 shorten these calls with `imtk::nav::lmb_clicked() && !imtk::nav::shift_down() && !imtk::nav::ctrl_down()`
+			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
+					&& !(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)))
+				ClearSelection();
 		}
 
 		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_ChildWindows))
@@ -358,11 +375,11 @@ namespace oly::editor
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
 		// TODO v9.2 drag-n-drop into documents, just like TreeView
 
-		if (ImGui::BeginChild(path.generic_string().c_str(), size, ImGuiChildFlags_Borders))
+		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders))
 		{
 			static constexpr const char* RENAME_POPUP = "Rename path";
 			bool open_rename_popup = false;
@@ -374,8 +391,11 @@ namespace oly::editor
 					if (ImGui::MenuItem("Open"))
 						OpenPath(path);
 
-					if (ImGui::MenuItem("Rename", "F2"))
-						open_rename_popup = true;
+					if (IsOnlySelected(path))
+					{
+						if (ImGui::MenuItem("Rename", "F2"))
+							open_rename_popup = true;
+					}
 
 					if (ImGui::MenuItem("Delete"))
 						DeletePath(path, fio_operations);
@@ -388,7 +408,7 @@ namespace oly::editor
 
 			std::string label = dotdot ? ".." : path.filename().generic_string();
 			
-			const ImVec2 padding_offset = ImGui::GetStyle().CellPadding + ImGui::GetStyle().WindowPadding;
+			const ImVec2 padding_offset = ImGui::GetStyle().WindowPadding;
 			const ImVec2 cursor = ImGui::GetCursorScreenPos();
 			const ImVec2 child_size = ImGui::GetContentRegionAvail();
 			
@@ -398,12 +418,16 @@ namespace oly::editor
 			const ImVec2 icon_size = child_size - ImVec2(label_size.y, label_size.y);
 			const ImVec2 icon_start = cursor + ImVec2(0.5f * (child_size.x - icon_size.x), 0.f);
 
-			if (_selected_path == path)
+			if (IsSelected(path)) // TODO v9.2 different highlight for active selection
 			{
-				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset,
+				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset,
 					ImGui::GetColorU32(ImGuiCol_FrameBgActive));
-				ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + 2 * padding_offset,
-					ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 0.f, 0, 3.f);
+
+				if (path == _active_selected_path)
+				{
+					ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + padding_offset,
+						ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 24.f, 0, 12.f);
+				}
 			}
 
 			ImGui::SetCursorScreenPos(cursor + label_offset);
@@ -414,9 +438,9 @@ namespace oly::editor
 				ImGui::SetTooltip(detail::ResourcePath(path).get_resource_shorthand().c_str());
 
 				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-					_selected_path = path;
+					ClickSelect(path);
 
-				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + 2 * padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
+				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
 
 				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
 					OpenPath(path);
@@ -424,15 +448,18 @@ namespace oly::editor
 
 			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(path).ID(), icon_start, icon_start + icon_size);
 
-			if (ImGui::IsWindowFocused() && _selected_path == path && !dotdot)
+			if (entry_table_state.focused && IsSelected(path) && !dotdot)
 			{
-				if (ImGui::Shortcut(ImGuiKey_Enter, ImGuiInputFlags_RouteGlobal))
+				if (entry_table_state.enter_consumed)
 					OpenPath(path);
 
-				if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
-					open_rename_popup = true;
+				if (IsOnlySelected(path))
+				{
+					if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
+						open_rename_popup = true;
+				}
 
-				if (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_RouteGlobal))
+				if (entry_table_state.delete_consumed)
 					DeletePath(path, fio_operations);
 
 				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
@@ -580,6 +607,113 @@ namespace oly::editor
 		}
 	}
 
+	void ContentBrowserPanel::ClearSelection()
+	{
+		_selected_paths.clear();
+		_active_selected_path.reset();
+	}
+
+	void ContentBrowserPanel::PruneSelection()
+	{
+		std::vector<std::filesystem::path> folders;
+		std::vector<std::filesystem::path> files;
+		_selectable_entry_paths.clear();
+		std::error_code ec;
+		for (const auto& entry : std::filesystem::directory_iterator(_folder, std::filesystem::directory_options::skip_permission_denied, ec))
+		{
+			const auto& path = entry.path();
+			if (!PathInfo::IsImportFile(path))
+			{
+				if (std::filesystem::is_directory(path))
+					folders.push_back(path);
+				else if (std::filesystem::is_regular_file(path))
+					files.push_back(path);
+			}
+		}
+
+		for (auto& folder : folders)
+			_selectable_entry_paths.push_back(std::move(folder));
+		
+		for (auto& file : files)
+			_selectable_entry_paths.push_back(std::move(file));
+
+		for (auto it = _selected_paths.begin(); it != _selected_paths.end(); )
+		{
+			if (std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *it) == _selectable_entry_paths.end())
+				it = _selected_paths.erase(it);
+			else
+				++it;
+		}
+
+		if (_active_selected_path && std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *_active_selected_path) == _selectable_entry_paths.end())
+			_active_selected_path.reset();
+
+		if (!_active_selected_path && !_selected_paths.empty())
+			_active_selected_path = _selected_paths.back();
+	}
+
+	void ContentBrowserPanel::ClickSelect(const std::filesystem::path& path)
+	{
+		if ((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) && _active_selected_path) // TODO v9.3 use imtk::nav::shift_down()
+		{
+			const auto active_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *_active_selected_path);
+			const auto current_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), path);
+			const auto min_it = std::min(active_it, current_it);
+			const auto max_it = std::max(active_it, current_it);
+
+			for (auto it = min_it; it != std::next(max_it); ++it)
+			{
+				if (!IsSelected(*it))
+					_selected_paths.push_back(*it);
+			}
+
+			_active_selected_path = path;
+		}
+		else if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) // TODO v9.3 use imtk::nav::ctrl_down()
+		{
+			for (auto it = _selected_paths.begin(); it != _selected_paths.end(); ++it)
+			{
+				if (*it == path)
+				{
+					_selected_paths.erase(it);
+					if (_active_selected_path == path)
+					{
+						if (_selected_paths.empty())
+							_active_selected_path.reset();
+						else
+							_active_selected_path = _selected_paths.back();
+					}
+
+					return;
+				}
+			}
+
+			_selected_paths.push_back(path);
+			_active_selected_path = path;
+		}
+		else
+		{
+			_selected_paths = { path };
+			_active_selected_path = path;
+		}
+	}
+	
+	bool ContentBrowserPanel::IsSelected(const std::filesystem::path& path) const
+	{
+		for (auto it = _selected_paths.begin(); it != _selected_paths.end(); ++it)
+		{
+			if (*it == path)
+				return true;
+		}
+
+		return false;
+	}
+
+	bool ContentBrowserPanel::IsOnlySelected(const std::filesystem::path& path) const
+	{
+		return _selected_paths.size() == 1 && _selected_paths[0] == path;
+	}
+
 	void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const
 	{
 		detail::ResourcePath resource = path;
@@ -587,7 +721,7 @@ namespace oly::editor
 		auto action = std::make_unique<fio::DeletePathAction>();
 		action->del_path = resource;
 
-		if (!resource.is_import_path())
+		if (!resource.is_oly_path())
 		{
 			detail::ResourcePath import = resource.get_import_path();
 			if (PathInfo::IsImportFile(import.get_absolute()))
@@ -596,4 +730,16 @@ namespace oly::editor
 
 		fio_operations.push_back(std::move(action));
 	}
+
+	void ContentBrowserPanel::ExecuteFIO(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	{
+		if (!fio_operations.empty())
+		{
+			auto batch = std::make_unique<CompoundUndoAction>();
+			batch->forward_queue = std::move(fio_operations);
+			_undo_history.Execute(std::move(batch));
+		}
+	}
 }
+
+// TODO v9.2 deleting paths should remove them from asset editor panel. renaming paths should update the paths in asset editor panel.

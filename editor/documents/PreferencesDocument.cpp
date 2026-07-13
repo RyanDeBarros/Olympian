@@ -173,6 +173,8 @@ namespace oly::editor
 	void PreferencesDocument::Draw(DataPath path, FilesystemSettingsDesc& desc)
 	{
 		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+
+		// TODO v9.2 button to clear trash -> use modal to confirm
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)

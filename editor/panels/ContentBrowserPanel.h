@@ -18,7 +18,9 @@ namespace oly::editor
 		std::filesystem::path _folder;
 		bool _favorited = false;
 		bool _on_res_root = true;
-		std::optional<std::filesystem::path> _selected_path;
+		std::vector<std::filesystem::path> _selectable_entry_paths;
+		std::vector<std::filesystem::path> _selected_paths;
+		std::optional<std::filesystem::path> _active_selected_path;
 		TimelineQueue<std::filesystem::path> _folder_history;
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
@@ -61,13 +63,23 @@ namespace oly::editor
 
 		void DrawFolderView(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
 		void DrawPathTable(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
-		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const ImVec2 size, std::vector<std::unique_ptr<UndoAction>>& fio_operations);
+
+		struct EntryTableState;
+
+		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, std::vector<std::unique_ptr<UndoAction>>& fio_operations);
 		ImVec2 FitPathLabel(std::string& label, const float width);
 		void OpenPath(const std::filesystem::path& path);
 
 		void NewAssetMenu();
 		void DrawNewAssetPopups();
 
+		void ClearSelection();
+		void PruneSelection();
+		void ClickSelect(const std::filesystem::path& path);
+		bool IsSelected(const std::filesystem::path& path) const;
+		bool IsOnlySelected(const std::filesystem::path& path) const;
+
 		void DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const;
+		void ExecuteFIO(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
 	};
 }

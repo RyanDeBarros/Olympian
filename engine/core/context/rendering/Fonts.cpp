@@ -296,8 +296,7 @@ namespace oly::context
 
 						detail::ResourcePath font_file(filepath, file);
 						rendering::FontFamily::FontRef font;
-						if (font_file.is_import_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute())
-								.has_type(detail::Key::Meta_RasterFont))
+						if (font_file.is_oly_path() && detail::MetaSplitter::decode_meta(font_file.get_absolute()).has_type(detail::Key::Meta_RasterFont))
 							font = context::load_raster_font(font_file);
 						else
 							font = context::load_font_atlas(font_file, parser.defaulted(detail::Key::AtlasIndex)(0u));
@@ -351,7 +350,7 @@ namespace oly::context
 
 	rendering::Font load_font(const detail::ResourcePath& file, unsigned int index)
 	{
-		if (file.is_import_path())
+		if (file.is_oly_path())
 		{
 			auto meta = detail::MetaSplitter::decode_meta(file.get_absolute());
 			if (meta.has_type(detail::Key::Meta_RasterFont))
