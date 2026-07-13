@@ -293,4 +293,14 @@ namespace oly::editor::fio
 
 		return true;
 	}
+
+	size_t Trashcan::EstimatedSize()
+	{
+		return ManifestIO()->total_size;
+	}
+
+	void Trashcan::ForceClear()
+	{
+		std::filesystem::remove_all(TrashRoot());
+	}
 }

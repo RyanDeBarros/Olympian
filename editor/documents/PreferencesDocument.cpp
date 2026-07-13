@@ -7,6 +7,8 @@
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 
+#include "fio/Trashcan.h"
+
 namespace oly::editor
 {
 	const char* PreferencesDocument::GetVersion()
@@ -174,7 +176,44 @@ namespace oly::editor
 	{
 		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 
-		// TODO v9.2 button to clear trash -> use modal to confirm
+		if (auto subform = Subform("Advanced"))
+		{
+			gui::PropertyGrid::Key::SetLabel("Estimated trash folder size");
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([]() -> DrawResult {
+				std::string buf = std::to_string(fio::Trashcan::EstimatedSize()) + " bytes";
+				ImGui::InputText("##", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
+				return DrawResult().Query();
+			}));
+			gui::PropertyGrid::SubmitRow();
+
+			bool open_clear_trash = false;
+			if (auto pause = FormPause())
+				open_clear_trash = ImGui::Button("Clear trash folder");
+
+			constexpr const char* kClearTrash = "Clear trash folder";
+
+			if (open_clear_trash)
+				ImGui::OpenPopup(kClearTrash);
+
+			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			if (ImGui::BeginPopupModal(kClearTrash, 0, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::TextUnformatted("Are you sure? This action is irreversible.");
+
+				if (ImGui::Button("Confirm"))
+				{
+					fio::Trashcan::ForceClear();
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::SameLine();
+
+				if (ImGui::Button("Cancel"))
+					ImGui::CloseCurrentPopup();
+
+				ImGui::EndPopup();
+			}
+		}
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)

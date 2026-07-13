@@ -8,5 +8,7 @@ namespace oly::editor::fio
 	{
 		static bool Delete(const detail::ResourcePath& resource);
 		static bool Restore(const detail::ResourcePath& resource);
+		static size_t EstimatedSize();
+		static void ForceClear();
 	};
 }

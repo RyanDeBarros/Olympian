@@ -173,6 +173,8 @@ namespace oly::editor
 			}
 		}
 
+		// TODO v9.2 reveal in explorer -> use FolderOpen icon. Use different icon for 'open in tree view'
+
 		ImGui::SameLine();
 		if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Open in tree view", "##OpenInTreeView"))
 			TreeViewPanel::ShowResourceFolderInTreeView(_folder);
@@ -381,8 +383,8 @@ namespace oly::editor
 
 		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders))
 		{
-			static constexpr const char* RENAME_POPUP = "Rename path";
-			bool open_rename_popup = false;
+			static constexpr const char* kRenamePopup = "Rename path";
+			bool open_kRenamePopup = false;
 
 			if (!dotdot)
 			{
@@ -394,7 +396,7 @@ namespace oly::editor
 					if (IsOnlySelected(path))
 					{
 						if (ImGui::MenuItem("Rename", "F2"))
-							open_rename_popup = true;
+							open_kRenamePopup = true;
 					}
 
 					if (ImGui::MenuItem("Delete"))
@@ -418,7 +420,7 @@ namespace oly::editor
 			const ImVec2 icon_size = child_size - ImVec2(label_size.y, label_size.y);
 			const ImVec2 icon_start = cursor + ImVec2(0.5f * (child_size.x - icon_size.x), 0.f);
 
-			if (IsSelected(path)) // TODO v9.2 different highlight for active selection
+			if (IsSelected(path))
 			{
 				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset,
 					ImGui::GetColorU32(ImGuiCol_FrameBgActive));
@@ -456,7 +458,7 @@ namespace oly::editor
 				if (IsOnlySelected(path))
 				{
 					if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
-						open_rename_popup = true;
+						open_kRenamePopup = true;
 				}
 
 				if (entry_table_state.delete_consumed)
@@ -465,14 +467,14 @@ namespace oly::editor
 				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
 
-			if (open_rename_popup)
+			if (open_kRenamePopup)
 			{
 				_rename_buffer = path.filename().generic_string();
-				ImGui::OpenPopup(RENAME_POPUP);
+				ImGui::OpenPopup(kRenamePopup);
 			}
 
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-			if (ImGui::BeginPopupModal(RENAME_POPUP, 0, ImGuiWindowFlags_AlwaysAutoResize))
+			if (ImGui::BeginPopupModal(kRenamePopup, 0, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				gui::InputText("Filename", _rename_buffer);
 
