@@ -36,12 +36,13 @@ namespace oly::detail
 		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }
 		ResourcePath& operator=(const std::filesystem::path& path) { set(path, {}); return *this; }
 
-		static void set_resource_root(const std::filesystem::path& root);
-
 	private:
 		void set(const std::filesystem::path& path, const ResourcePath& relative_to);
 
 	public:
+		static void set_resource_root(const std::filesystem::path& root);
+		bool is_resource_root() const;
+
 		std::string string() const;
 		std::string get_resource_shorthand() const;
 		std::filesystem::path get_absolute() const;

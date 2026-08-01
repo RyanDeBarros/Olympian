@@ -12,11 +12,6 @@ namespace oly::detail
 		absolute = resource_root;
 	}
 
-	void ResourcePath::set_resource_root(const std::filesystem::path& root)
-	{
-		resource_root = std::filesystem::weakly_canonical(root);
-	}
-
 	void ResourcePath::set(const std::filesystem::path& path, const ResourcePath& relative_to)
 	{
 		if (path.is_absolute())
@@ -34,6 +29,16 @@ namespace oly::detail
 					absolute = std::filesystem::weakly_canonical((std::filesystem::is_directory(relative_to.absolute) ? relative_to.absolute : relative_to.absolute.parent_path()) / s);
 			}
 		}
+	}
+
+	void ResourcePath::set_resource_root(const std::filesystem::path& root)
+	{
+		resource_root = std::filesystem::weakly_canonical(root);
+	}
+
+	bool ResourcePath::is_resource_root() const
+	{
+		return absolute == resource_root;
 	}
 
 	std::string ResourcePath::string() const

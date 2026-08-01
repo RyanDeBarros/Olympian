@@ -67,13 +67,18 @@ namespace oly::editor
         }
     }
 
-	void PathInfo::RevealInExplorer(const std::filesystem::path& path)
+	void PathInfo::RevealInExplorer(const std::filesystem::path& path, bool open_folder_contents)
 	{
 #ifdef OLY_OS_WINDOWS
         std::filesystem::path abs = std::filesystem::absolute(path);
-        std::wstring wpath = abs.wstring();
 
-        PIDLIST_ABSOLUTE pidl = ILCreateFromPathW(wpath.c_str());
+        if (open_folder_contents && std::filesystem::is_directory(abs))
+        {
+            ShellExecute(nullptr, "open", abs.string().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+            return;
+        }
+
+        PIDLIST_ABSOLUTE pidl = ILCreateFromPath(abs.string().c_str());
         if (pidl)
         {
             SHOpenFolderAndSelectItems(pidl, 0, nullptr, 0);
@@ -81,11 +86,25 @@ namespace oly::editor
         }
         else
             Logger::LogError("Failed to reveal path " + path.generic_string());
+
 #elif OLY_OS_APPLE
-        std::string cmd = "open -R \"" + path.string() + "\"";
+        std::string cmd;
+
+        if (open_folder_contents && std::filesystem::is_directory(path))
+            cmd = "open \"" + path.string() + "\"";
+        else
+            cmd = "open -R \"" + path.string() + "\"";
+
         std::system(cmd.c_str());
+
 #elif OLY_OS_LINUX
-        std::string cmd = "xdg-open \"" + path.parent_path().string() + "\"";
+        std::string cmd;
+
+        if (open_folder_contents && std::filesystem::is_directory(path))
+            cmd = "xdg-open \"" + path.string() + "\"";
+        else
+            cmd = "xdg-open \"" + path.parent_path().string() + "\"";
+
         std::system(cmd.c_str());
 #endif
 	}

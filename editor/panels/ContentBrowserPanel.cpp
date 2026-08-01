@@ -174,11 +174,13 @@ namespace oly::editor
 			}
 		}
 
-		// TODO v9.2 reveal in explorer -> use FolderOpen icon. Use different icon for 'open in tree view'
+		ImGui::SameLine();
+		if (Toolbar::DrawIconButton(IconResource::OpenInTreeView, "Open in tree view", "##OpenInTreeView"))
+			TreeViewPanel::ShowResourceFolderInTreeView(_folder);
 
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Open in tree view", "##OpenInTreeView"))
-			TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+		if (Toolbar::DrawIconButton(IconResource::FolderOpen, "Reveal in explorer", "##RevealInExplorer"))
+			PathInfo::RevealInExplorer(_folder, true);
 
 		ImGui::SameLine();
 		static const char* NEW_ASSET_POPUP = "New asset";

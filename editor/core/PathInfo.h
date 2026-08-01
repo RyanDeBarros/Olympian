@@ -15,7 +15,7 @@ namespace oly::editor
 		static bool IsImportFile(const std::filesystem::path& path);
 		static Texture GetIcon(const std::filesystem::path& path);
 		static IconResource GetAssetIcon(detail::Key meta_type);
-		static void RevealInExplorer(const std::filesystem::path& path);
+		static void RevealInExplorer(const std::filesystem::path& path, bool open_folder_contents);
 		static std::string NameOf(const std::filesystem::path& path);
 	};
 }

@@ -175,7 +175,7 @@ namespace oly::editor
 							ContentBrowserPanel::ShowInContentBrowser(path);
 
 						if (ImGui::MenuItem("Reveal in explorer"))
-							PathInfo::RevealInExplorer(path.get_absolute());
+							PathInfo::RevealInExplorer(path.get_absolute(), false);
 
 						ImGui::EndPopup();
 					}

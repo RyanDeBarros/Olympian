@@ -20,6 +20,7 @@ namespace oly::editor
 	M(Font) \
 	M(Handle) \
 	M(Minus) \
+	M(OpenInTreeView) \
 	M(Pause) \
 	M(Play) \
 	M(Plus) \

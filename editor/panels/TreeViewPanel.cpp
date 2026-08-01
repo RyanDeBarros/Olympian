@@ -238,20 +238,27 @@ namespace oly::editor
 
 	void TreeViewPanel::ShowResourceFolderInTreeView(const detail::ResourcePath& folder)
 	{
-		if (!folder.is_directory())
-		{
-			Notifier::NotifyError("\"" + folder.string() + "\" is not a folder");
-			return;
-		}
-
 		std::vector<std::string> parts;
-		if (!folder.resource_parents(parts))
+
+		if (folder.is_resource_root())
+			parts = { "res" };
+		else
 		{
-			Notifier::NotifyError("\"" + folder.string() + "\" is not located in the project resource folder");
-			return;
+			if (!folder.is_directory())
+			{
+				Notifier::NotifyError("\"" + folder.string() + "\" is not a folder");
+				return;
+			}
+
+			if (!folder.resource_parents(parts))
+			{
+				Notifier::NotifyError("\"" + folder.string() + "\" is not located in the project resource folder");
+				return;
+			}
+
+			parts.push_back(folder.filename());
+			parts.insert(parts.begin(), "res");
 		}
-		parts.push_back(folder.filename());
-		parts.insert(parts.begin(), "res");
 
 		std::vector<TreeViewNode*> open_nodes;
 		TreeViewNode* node = FocusInstance()._root.get();
@@ -331,7 +338,7 @@ namespace oly::editor
 				ContentBrowserPanel::ShowInContentBrowser(node.path);
 
 			if (ImGui::MenuItem("Reveal in Explorer"))
-				PathInfo::RevealInExplorer(node.path);
+				PathInfo::RevealInExplorer(node.path, false);
 
 			ImGui::EndPopup();
 		}
