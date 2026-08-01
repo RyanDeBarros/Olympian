@@ -404,9 +404,22 @@ namespace oly::editor
 
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
+					// TODO v9.4 support dropping files directly on grid cells
 					if (ImGui::BeginDragDropTarget())
 					{
-						if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+						const ImGuiPayload* payload = nullptr;
+
+						// TODO v9.3 imtk utilities for drag-drop, especially for receiving different payloads like this
+						if (auto test = ImGui::GetDragDropPayload())
+						{
+							if (test->IsDataType(StringID(UID::PathDragFromTV)))
+								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV));
+
+							if (test->IsDataType(StringID(UID::PathDragFromCB)))
+								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromCB));
+						}
+
+						if (payload)
 						{
 							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
 							if (path.is_resource())

@@ -1,5 +1,6 @@
 #include "ContentBrowserPanel.h"
 
+#include "core/Colors.h"
 #include "core/Errors.h"
 #include "core/PathInfo.h"
 #include "core/SpecialUndoActions.h"
@@ -282,13 +283,13 @@ namespace oly::editor
 		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			auto payload = ImGui::GetDragDropPayload();
-			if (payload && payload->IsDataType(StringID(UID::PathDrag)))
+			if (payload && payload->IsDataType(StringID(UID::PathDragFromTV)))
 			{
 				ImGui::Button("Show in content browser", ImGui::GetContentRegionAvail());
 
 				if (ImGui::BeginDragDropTarget())
 				{
-					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDrag)))
+					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV)))
 						ShowInContentBrowser(std::filesystem::path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize)));
 
 					ImGui::EndDragDropTarget();
@@ -379,9 +380,8 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
-		// TODO v9.2 drag-n-drop into documents, just like TreeView
-
-		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders))
+		imtk::id_scope id(path.string().c_str());
+		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
 		{
 			static constexpr const char* kRenamePopup = "Rename path";
 			bool open_kRenamePopup = false;
@@ -432,8 +432,7 @@ namespace oly::editor
 				}
 			}
 
-			ImGui::SetCursorScreenPos(cursor + label_offset);
-			ImGui::TextUnformatted(label.c_str());
+			ImGui::GetWindowDrawList()->AddText(cursor + label_offset, Color::White, label.c_str());
 
 			detail::ResourcePath res = path;
 
@@ -468,6 +467,16 @@ namespace oly::editor
 					DeletePath(path, fio_operations);
 
 				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
+			}
+
+			ImGui::InvisibleButton("##DragDropItem", entry_table_state.entry_size);
+
+			if (ImGui::BeginDragDropSource())
+			{
+				std::string p = path.string();
+				ImGui::SetDragDropPayload(StringID(UID::PathDragFromCB), p.c_str(), p.size());
+				ImGui::TextUnformatted("Drag path");
+				ImGui::EndDragDropSource();
 			}
 
 			if (open_kRenamePopup)

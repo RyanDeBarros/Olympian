@@ -317,7 +317,7 @@ namespace oly::editor
 		if (ImGui::BeginDragDropSource())
 		{
 			std::string path = node.path.string();
-			ImGui::SetDragDropPayload(StringID(UID::PathDrag), path.c_str(), path.size());
+			ImGui::SetDragDropPayload(StringID(UID::PathDragFromTV), path.c_str(), path.size());
 			ImGui::TextUnformatted("Drag path");
 			ImGui::EndDragDropSource();
 		}

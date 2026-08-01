@@ -4,7 +4,8 @@ namespace oly::editor
 {
 #define UID_GENERATOR(M) \
 	M(DynamicRowReorder) \
-	M(PathDrag)
+	M(PathDragFromTV) \
+	M(PathDragFromCB)
 
 #define ENUM_ENTRY(E) E,
 
