@@ -71,7 +71,7 @@ namespace oly::editor
 		void OpenPath(const std::filesystem::path& path);
 
 		void NewAssetMenu();
-		void DrawNewAssetPopups();
+		void DrawNewAssetPopups(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
 
 		void ClearSelection();
 		void PruneSelection();
@@ -81,5 +81,7 @@ namespace oly::editor
 
 		void DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const;
 		void ExecuteFIO(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
+
+		bool InitNewAsset(const std::filesystem::path& path, detail::Key meta_type);
 	};
 }

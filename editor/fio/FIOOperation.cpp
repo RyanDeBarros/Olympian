@@ -108,4 +108,43 @@ namespace oly::editor::fio
 	{
 		return sizeof(*this);
 	}
+
+	bool CreateAssetAction::Forward()
+	{
+		if (Trashcan::Restore(asset_path))
+		{
+			std::stringstream ss;
+			ss << "fio::CreateAssetAction::Forward() success: restored \"" << asset_path.get_resource_shorthand() << "\"";
+			Logger::LogSuccess(ss.str());
+
+			return true;
+		}
+
+		std::stringstream ss;
+		ss << "fio::CreateAssetAction::Forward() failed to restore \"" << asset_path.get_resource_shorthand() << "\"";
+		Logger::LogError(ss.str());
+		return false;
+	}
+
+	bool CreateAssetAction::Backward()
+	{
+		if (Trashcan::Delete(asset_path))
+		{
+			std::stringstream ss;
+			ss << "fio::CreateAssetAction::Backward() success: deleted \"" << asset_path.get_resource_shorthand() << "\"";
+			Logger::LogSuccess(ss.str());
+
+			return true;
+		}
+
+		std::stringstream ss;
+		ss << "fio::CreateAssetAction::Backward() failed to delete \"" << asset_path.get_resource_shorthand() << "\"";
+		Logger::LogError(ss.str());
+		return false;
+	}
+
+	size_t CreateAssetAction::EmpiricalSize() const
+	{
+		return sizeof(*this);
+	}
 }

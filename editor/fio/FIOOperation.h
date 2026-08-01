@@ -25,4 +25,13 @@ namespace oly::editor::fio
 		bool Backward() override;
 		size_t EmpiricalSize() const override;
 	};
+
+	struct CreateAssetAction : public UndoAction
+	{
+		detail::ResourcePath asset_path;
+
+		bool Forward() override;
+		bool Backward() override;
+		size_t EmpiricalSize() const override;
+	};
 }

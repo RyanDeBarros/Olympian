@@ -117,11 +117,11 @@ namespace oly::editor
 					ImGui::EndTable();
 				}
 
-				ExecuteFIO(fio_operations);
-
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 
-				DrawNewAssetPopups();
+				DrawNewAssetPopups(fio_operations);
+
+				ExecuteFIO(fio_operations);
 			}
 
 			ImGui::EndChild();
@@ -580,7 +580,7 @@ namespace oly::editor
 		}
 	}
 
-	void ContentBrowserPanel::DrawNewAssetPopups()
+	void ContentBrowserPanel::DrawNewAssetPopups(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
 	{
 		if (!_new_asset)
 			return;
@@ -598,7 +598,26 @@ namespace oly::editor
 
 			if (ImGui::Button("Create"))
 			{
-				// TODO v9.2 fio operation to create new file -> load with initial data using Document. If filename exists, use (1)/(2)/etc. Only then push fio operation to undo stack.
+				std::filesystem::path asset_path = _folder / (_new_asset->name + ".oly");
+
+				if (std::filesystem::exists(asset_path))
+				{
+					size_t counter = 0;
+					while (std::filesystem::exists(asset_path))
+					{
+						std::stringstream ss;
+						ss << _folder / _new_asset->name << " (" << counter++ << ")" << ".oly";
+						asset_path = ss.str();
+					}
+				}
+
+				if (InitNewAsset(asset_path, _new_asset->type))
+				{
+					auto action = std::make_unique<fio::CreateAssetAction>();
+					action->asset_path = asset_path;
+					fio_operations.push_back(std::move(action));
+				}
+
 				_new_asset.reset();
 				ImGui::CloseCurrentPopup();
 			}
@@ -753,6 +772,13 @@ namespace oly::editor
 			batch->forward_queue = std::move(fio_operations);
 			_undo_history.Execute(std::move(batch));
 		}
+	}
+
+	bool ContentBrowserPanel::InitNewAsset(const std::filesystem::path& path, detail::Key meta_type)
+	{
+		// TODO v9.2
+
+		return false;
 	}
 }
 
