@@ -16,19 +16,24 @@ namespace oly::editor
 	M(FilterOn) \
 	M(Folder) \
 	M(FolderOpen) \
+	M(FontFamily) \
+	M(Font) \
 	M(Handle) \
 	M(Minus) \
 	M(Pause) \
 	M(Play) \
 	M(Plus) \
 	M(Preview) \
+	M(RasterFont) \
 	M(Recenter) \
 	M(Revert) \
 	M(Refresh) \
 	M(Settings) \
 	M(StarFilled) \
 	M(StarOutline) \
-	M(Stop)
+	M(Stop) \
+	M(Texture) \
+	M(Tileset)
 
 
 #define ICON_RESOURCE_ENUM(Icon) Icon,

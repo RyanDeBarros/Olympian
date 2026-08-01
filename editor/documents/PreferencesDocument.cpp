@@ -9,6 +9,8 @@
 
 #include "fio/Trashcan.h"
 
+// TODO v9.2 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
+
 namespace oly::editor
 {
 	const char* PreferencesDocument::GetVersion()

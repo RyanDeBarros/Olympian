@@ -428,16 +428,18 @@ namespace oly::editor
 				if (path == _active_selected_path)
 				{
 					ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + padding_offset,
-						ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 24.f, 0, 12.f);
+						ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 16.f, 0, 12.f);
 				}
 			}
 
 			ImGui::SetCursorScreenPos(cursor + label_offset);
 			ImGui::TextUnformatted(label.c_str());
 
+			detail::ResourcePath res = path;
+
 			if (ImGui::IsWindowHovered())
 			{
-				ImGui::SetTooltip(detail::ResourcePath(path).get_resource_shorthand().c_str());
+				ImGui::SetTooltip(res.get_resource_shorthand().c_str());
 
 				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
 					ClickSelect(path);
@@ -448,7 +450,8 @@ namespace oly::editor
 					OpenPath(path);
 			}
 
-			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(path).ID(), icon_start, icon_start + icon_size);
+			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(std::filesystem::is_directory(path) ? path : res.get_import_path().get_absolute()).ID(),
+				icon_start, icon_start + icon_size);
 
 			if (entry_table_state.focused && IsSelected(path) && !dotdot)
 			{
@@ -536,15 +539,13 @@ namespace oly::editor
 
 	void ContentBrowserPanel::NewAssetMenu()
 	{
-		// TODO v9.2 icons for all assets
-
-		if (Toolbar::IconMenuItem("Tileset", IconResource::File))
+		if (Toolbar::IconMenuItem("Tileset", PathInfo::GetAssetIcon(detail::Key::Meta_Tileset)))
 		{
 			_new_asset = NewAssetInfo(detail::Key::Meta_Tileset, "New Tileset", "New tileset");
 			ImGui::CloseCurrentPopup();
 		}
 
-		if (Toolbar::IconMenuItem("Signal", IconResource::Controller))
+		if (Toolbar::IconMenuItem("Signal", PathInfo::GetAssetIcon(detail::Key::Meta_Signal)))
 		{
 			_new_asset = NewAssetInfo(detail::Key::Meta_Signal, "New Signal", "New signal");
 			ImGui::CloseCurrentPopup();
@@ -552,13 +553,13 @@ namespace oly::editor
 
 		if (ImGui::BeginMenu("Fonts"))
 		{
-			if (Toolbar::IconMenuItem("Font family", IconResource::File))
+			if (Toolbar::IconMenuItem("Font family", PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)))
 			{
 				_new_asset = NewAssetInfo(detail::Key::Meta_FontFamily, "New Font Family", "New font family");
 				ImGui::CloseCurrentPopup();
 			}
 
-			if (Toolbar::IconMenuItem("Raster font", IconResource::File))
+			if (Toolbar::IconMenuItem("Raster font", PathInfo::GetAssetIcon(detail::Key::Meta_RasterFont)))
 			{
 				_new_asset = NewAssetInfo(detail::Key::Meta_RasterFont, "New Raster Font", "New raster font");
 				ImGui::CloseCurrentPopup();

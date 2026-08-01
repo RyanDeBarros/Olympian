@@ -34,7 +34,12 @@ namespace oly::editor
 	void TreeViewNode::Analyse()
 	{
 		is_import = PathInfo::IsImportFile(path);
-		icon = PathInfo::GetIcon(path);
+
+		detail::ResourcePath res(path);
+		if (res.is_resource() && !std::filesystem::is_directory(path))
+			icon = PathInfo::GetIcon(res.get_import_path().get_absolute());
+		else
+			icon = PathInfo::GetIcon(path);
 	}
 
 	void TreeViewNode::Update()

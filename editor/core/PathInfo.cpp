@@ -29,19 +29,42 @@ namespace oly::editor
         if (std::filesystem::is_directory(path))
             return IconResource::Folder;
 
-        switch (detail::MetaSplitter::decode_meta(path.string().c_str()).get_type())
-        {
-        case detail::Key::Meta_Signal:
-            return IconResource::Controller;
-
-        default:
-            return IconResource::File;
-        }
+        return PathInfo::GetAssetIcon(detail::MetaSplitter::decode_meta(path.string().c_str()).get_type());
     }
 
     Texture PathInfo::GetIcon(const std::filesystem::path& path)
     {
         return ResourceLoader::GetTexture(GetIconResource(path));
+    }
+
+    IconResource PathInfo::GetAssetIcon(detail::Key meta_type)
+    {
+        switch (meta_type)
+        {
+        case detail::Key::Meta_Font:
+            return IconResource::Font;
+
+        case detail::Key::Meta_FontFamily:
+            return IconResource::FontFamily;
+
+        case detail::Key::Meta_Project:
+            return IconResource::Settings;
+
+        case detail::Key::Meta_RasterFont:
+            return IconResource::RasterFont;
+
+        case detail::Key::Meta_Signal:
+            return IconResource::Controller;
+
+        case detail::Key::Meta_Texture:
+            return IconResource::Texture;
+
+        case detail::Key::Meta_Tileset:
+            return IconResource::Tileset;
+
+        default:
+            return IconResource::File;
+        }
     }
 
 	void PathInfo::RevealInExplorer(const std::filesystem::path& path)
