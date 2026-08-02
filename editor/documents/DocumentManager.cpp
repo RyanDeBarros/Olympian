@@ -106,6 +106,9 @@ namespace oly::editor
 
 #undef SWITCH_CASE
 
+		case detail::Key::Meta_Folder:
+			return std::filesystem::create_directory(path.get_absolute());
+
 		default:
 			return false;
 		}

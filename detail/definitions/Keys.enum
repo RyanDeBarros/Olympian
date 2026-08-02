@@ -6,6 +6,7 @@ Meta_Type = type
 Meta_Exists = exists
 
 Meta_Archetype = arch
+Meta_Folder = folder
 Meta_Font = font
 Meta_FontFamily = fontfam
 Meta_ParticleSystem = psystem

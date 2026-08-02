@@ -182,17 +182,23 @@ namespace oly::editor
 			PathInfo::RevealInExplorer(_folder, true);
 
 		ImGui::SameLine();
-		static const char* NEW_ASSET_POPUP = "New asset";
-		if (Toolbar::DrawIconButton(IconResource::CirclePlus, "New asset", "##NewAsset"))
+		static const char* NEW_ASSET_POPUP = "New";
+		if (Toolbar::DrawIconButton(IconResource::CirclePlus, "New", "##New"))
 			ImGui::OpenPopup(NEW_ASSET_POPUP);
 
 		if (ImGui::BeginPopup(NEW_ASSET_POPUP))
 		{
-			NewAssetMenu();
+			NewFolderMenu();
+			ImGui::Separator();
+
+			if (ImGui::BeginMenu("New asset"))
+			{
+				NewAssetMenu();
+				ImGui::EndMenu();
+			}
+			
 			ImGui::EndPopup();
 		}
-
-		// TODO v9.2 new folder button
 
 		gui::VerticalSeparator();
 
@@ -302,13 +308,14 @@ namespace oly::editor
 			{
 				if (ImGui::BeginPopupContextWindow())
 				{
+					NewFolderMenu();
+					ImGui::Separator();
+
 					if (ImGui::BeginMenu("New asset"))
 					{
 						NewAssetMenu();
 						ImGui::EndMenu();
 					}
-
-					// TODO v9.2 new folder menu
 
 					ImGui::EndPopup();
 				}
@@ -584,6 +591,15 @@ namespace oly::editor
 		}
 	}
 
+	void ContentBrowserPanel::NewFolderMenu()
+	{
+		if (Toolbar::IconMenuItem("New folder", PathInfo::GetAssetIcon(detail::Key::Meta_Folder)))
+		{
+			_new_asset = NewAssetInfo(detail::Key::Meta_Folder, "New Folder", "New folder");
+			ImGui::CloseCurrentPopup();
+		}
+	}
+
 	void ContentBrowserPanel::DrawNewAssetPopups(CompoundUndoActionQueue& fio_queue)
 	{
 		if (!_new_asset)
@@ -598,20 +614,22 @@ namespace oly::editor
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		if (ImGui::BeginPopupModal(_new_asset->popup, 0, ImGuiWindowFlags_AlwaysAutoResize))
 		{
-			gui::InputText("Filename", _new_asset->name);
+			gui::InputText("Name", _new_asset->name);
 
 			if (ImGui::Button("Create"))
 			{
-				std::filesystem::path asset_path = _folder / (_new_asset->name + ".oly");
+				std::string ext = _new_asset->type != detail::Key::Meta_Folder ? ".oly" : "";
+
+				std::filesystem::path asset_path = _folder / (_new_asset->name + ext);
 
 				if (std::filesystem::exists(asset_path))
 				{
-					size_t counter = 0;
+					size_t counter = 1;
 					while (std::filesystem::exists(asset_path))
 					{
 						std::stringstream ss;
-						ss << _folder / _new_asset->name << " (" << counter++ << ")" << ".oly";
-						asset_path = ss.str();
+						ss << _new_asset->name << " (" << counter++ << ")" << ext;
+						asset_path = _folder / ss.str();
 					}
 				}
 

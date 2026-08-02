@@ -72,6 +72,7 @@ namespace oly::editor
 		void OpenPath(const std::filesystem::path& path);
 
 		void NewAssetMenu();
+		void NewFolderMenu();
 		void DrawNewAssetPopups(CompoundUndoActionQueue& fio_queue);
 
 		void ClearSelection();

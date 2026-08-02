@@ -41,6 +41,9 @@ namespace oly::editor
     {
         switch (meta_type)
         {
+        case detail::Key::Meta_Folder:
+            return IconResource::Folder;
+
         case detail::Key::Meta_Font:
             return IconResource::Font;
 
