@@ -26,4 +26,19 @@ namespace oly::editor
 		bool Backward() override;
 		size_t EmpiricalSize() const override;
 	};
+
+	class CompoundUndoActionQueue
+	{
+		struct Entry
+		{
+			std::unique_ptr<UndoAction> _action;
+			bool _execute_on_push;
+		};
+
+		std::vector<Entry> _entries;
+
+	public:
+		void Append(std::unique_ptr<UndoAction>&& action, bool execute_on_push);
+		void PushAll(UndoHistory& undo_history);
+	};
 }

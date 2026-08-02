@@ -3,6 +3,7 @@
 #include "panels/IPanel.h"
 
 #include "core/UndoHistory.h"
+#include "core/SpecialUndoActions.h"
 
 #include "assets/ResourcePath.h"
 #include "assets/KeyDecl.h"
@@ -61,17 +62,17 @@ namespace oly::editor
 		void SyncFavoritesList() const;
 		void DrawFavoritesList();
 
-		void DrawFolderView(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
-		void DrawPathTable(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
+		void DrawFolderView(CompoundUndoActionQueue& fio_queue);
+		void DrawPathTable(CompoundUndoActionQueue& fio_queue);
 
 		struct EntryTableState;
 
-		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, std::vector<std::unique_ptr<UndoAction>>& fio_operations);
+		void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, CompoundUndoActionQueue& fio_queue);
 		ImVec2 FitPathLabel(std::string& label, const float width);
 		void OpenPath(const std::filesystem::path& path);
 
 		void NewAssetMenu();
-		void DrawNewAssetPopups(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
+		void DrawNewAssetPopups(CompoundUndoActionQueue& fio_queue);
 
 		void ClearSelection();
 		void PruneSelection();
@@ -79,9 +80,6 @@ namespace oly::editor
 		bool IsSelected(const std::filesystem::path& path) const;
 		bool IsOnlySelected(const std::filesystem::path& path) const;
 
-		void DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const;
-		void ExecuteFIO(std::vector<std::unique_ptr<UndoAction>>& fio_operations);
-
-		bool InitNewAsset(const std::filesystem::path& path, detail::Key meta_type);
+		void DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const;
 	};
 }

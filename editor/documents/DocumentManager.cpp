@@ -2,11 +2,9 @@
 
 #include "documents/IDocument.h"
 
+#include "core/Errors.h"
 #include "core/windows/MainWindow.h"
 #include "panels/AssetEditorPanel.h"
-
-#include "assets/MetaSplitter.h"
-#include "definitions/Keys.h"
 
 #include "documents/FontDocument.h"
 #include "documents/FontFamilyDocument.h"
@@ -15,6 +13,18 @@
 #include "documents/SignalDocument.h"
 #include "documents/TextureDocument.h"
 #include "documents/TilesetDocument.h"
+
+#include "assets/MetaSplitter.h"
+#include "definitions/Keys.h"
+
+#define DOCUMENT_GENERATOR(M) \
+		M(Font) \
+		M(FontFamily) \
+		M(Project) \
+		M(RasterFont) \
+		M(Signal) \
+		M(Texture) \
+		M(Tileset)
 
 namespace oly::editor
 {
@@ -37,21 +47,15 @@ namespace oly::editor
 			const auto meta = detail::MetaSplitter::decode_meta(oly_file);
 			switch (meta.get_type())
 			{
-#define SWITCH_CASE(AssetKey, DocumentClass) \
-			case detail::Key::AssetKey: \
-				if (meta.get_version() == DocumentClass::GetVersion()) \
-					Add<DocumentClass>(std::move(oly_file)); \
+#define SWITCH_CASE(Doc) \
+			case detail::Key::Meta_##Doc: \
+				if (meta.get_version() == Doc##Document::GetVersion()) \
+					Add<Doc##Document>(std::move(oly_file)); \
 				else \
 					return OpenAssetCode::UnsupportedAssetVersion; \
 				break;
 
-				SWITCH_CASE(Meta_Font, FontDocument);
-				SWITCH_CASE(Meta_FontFamily, FontFamilyDocument);
-				SWITCH_CASE(Meta_Project, ProjectDocument);
-				SWITCH_CASE(Meta_RasterFont, RasterFontDocument);
-				SWITCH_CASE(Meta_Signal, SignalDocument);
-				SWITCH_CASE(Meta_Texture, TextureDocument);
-				SWITCH_CASE(Meta_Tileset, TilesetDocument);
+				DOCUMENT_GENERATOR(SWITCH_CASE);
 
 #undef SWITCH_CASE
 
@@ -76,6 +80,35 @@ namespace oly::editor
 			return OpenAssetCode::DoesNotExist;
 
 		return OpenAssetCode::Success;
+	}
+
+	bool DocumentManager::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)
+	{
+		switch (meta_type)
+		{
+#define SWITCH_CASE(Doc) \
+		case detail::Key::Meta_##Doc: \
+		{ \
+			try \
+			{ \
+				Doc##Document doc(std::move(path)); \
+				doc.Init(); \
+				doc.DumpAsset(); \
+				return true; \
+			} \
+			catch (const BreakoutError& e) \
+			{ \
+				return false; \
+			} \
+		}
+
+			DOCUMENT_GENERATOR(SWITCH_CASE);
+
+#undef SWITCH_CASE
+
+		default:
+			return false;
+		}
 	}
 
 	size_t DocumentManager::DocumentCount() const

@@ -4,6 +4,9 @@
 
 #include "util/FunctionalEvent.h"
 
+#include "assets/KeyDecl.h"
+#include "assets/ResourcePath.h"
+
 #include <imtk.hpp>
 
 #include <filesystem>
@@ -70,5 +73,6 @@ namespace oly::editor
 
 		static void OpenProject(const std::filesystem::path& path);
 		static void OpenFile(const std::filesystem::path& path);
+		static bool InitNewAsset(detail::ResourcePath path, detail::Key meta_type);
 	};
 }

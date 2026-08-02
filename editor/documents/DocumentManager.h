@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "assets/KeyDecl.h"
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
@@ -28,6 +29,7 @@ namespace oly::editor
 		void Draw();
 
 		OpenAssetCode OpenAsset(const detail::ResourcePath& path);
+		bool InitNewAsset(detail::ResourcePath path, detail::Key meta_type);
 
 		size_t DocumentCount() const;
 		const IDocument& GetDocument(size_t i) const;

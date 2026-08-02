@@ -31,7 +31,8 @@ namespace oly::detail
 
     bool MetaMap::is_import() const
     {
-        return map.count(Key::Meta_Import);
+        auto it = map.find(Key::Meta_Import);
+        return it != map.end() && (it->second.empty() || it->second != "0");
     }
 
     MetaMap MetaSplitter::decode_meta(const ResourcePath& file)

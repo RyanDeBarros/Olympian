@@ -14,10 +14,17 @@
 
 #include "documents/DocumentManager.h"
 
+#include "documents/FontFamilyDocument.h"
+#include "documents/RasterFontDocument.h"
+#include "documents/SignalDocument.h"
+#include "documents/TilesetDocument.h"
+
 #include "panels/AssetEditorPanel.h"
 #include "panels/PreferencesPanel.h"
 
 #include "desc/impl/PreferencesDesc.h"
+
+#include "definitions/Keys.h"
 
 namespace oly::editor
 {
@@ -189,17 +196,25 @@ namespace oly::editor
 		case OpenAssetCode::UnsupportedAssetType:
 			message += "asset type not supported";
 			break;
+
 		case OpenAssetCode::UnsupportedAssetVersion:
 			message += "asset meta version not supported"; // TODO v10 version mismatch handling
 			break;
+
 		case OpenAssetCode::UnsupportedExtension:
 			message += "asset has unsupported file extension";
 			break;
+
 		case OpenAssetCode::DoesNotExist:
 			message += "file does not exist";
 			break;
 		}
 
 		Notifier::NotifyError(std::move(message));
+	}
+
+	bool Editor::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)
+	{
+		return DocumentManager::Instance().InitNewAsset(path, meta_type);
 	}
 }

@@ -3,7 +3,6 @@
 #include "core/Colors.h"
 #include "core/Errors.h"
 #include "core/PathInfo.h"
-#include "core/SpecialUndoActions.h"
 
 #include "core/editor/Editor.h"
 #include "core/editor/LiveSettings.h"
@@ -100,7 +99,7 @@ namespace oly::editor
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
-				std::vector<std::unique_ptr<UndoAction>> fio_operations;
+				CompoundUndoActionQueue fio_queue;
 
 				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
 				{
@@ -112,16 +111,16 @@ namespace oly::editor
 					DrawFavoritesList();
 
 					ImGui::TableSetColumnIndex(1);
-					DrawFolderView(fio_operations);
+					DrawFolderView(fio_queue);
 					
 					ImGui::EndTable();
 				}
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 
-				DrawNewAssetPopups(fio_operations);
+				DrawNewAssetPopups(fio_queue);
 
-				ExecuteFIO(fio_operations);
+				fio_queue.PushAll(_undo_history);
 			}
 
 			ImGui::EndChild();
@@ -192,6 +191,8 @@ namespace oly::editor
 			NewAssetMenu();
 			ImGui::EndPopup();
 		}
+
+		// TODO v9.2 new folder button
 
 		gui::VerticalSeparator();
 
@@ -280,7 +281,7 @@ namespace oly::editor
 			ShowInContentBrowser(*open_folder);
 	}
 
-	void ContentBrowserPanel::DrawFolderView(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	void ContentBrowserPanel::DrawFolderView(CompoundUndoActionQueue& fio_queue)
 	{
 		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
@@ -306,10 +307,13 @@ namespace oly::editor
 						NewAssetMenu();
 						ImGui::EndMenu();
 					}
+
+					// TODO v9.2 new folder menu
+
 					ImGui::EndPopup();
 				}
 
-				DrawPathTable(fio_operations);
+				DrawPathTable(fio_queue);
 			}
 		}
 
@@ -324,7 +328,7 @@ namespace oly::editor
 		bool enter_consumed = false;
 	};
 
-	void ContentBrowserPanel::DrawPathTable(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	void ContentBrowserPanel::DrawPathTable(CompoundUndoActionQueue& fio_queue)
 	{
 		PruneSelection();
 
@@ -347,14 +351,14 @@ namespace oly::editor
 			if (!_on_res_root)
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(folder.parent_path(), true, entry_table_state, fio_operations);
+				DrawPathEntry(folder.parent_path(), true, entry_table_state, fio_queue);
 			}
 
 			std::error_code ec;
 			for (const auto& path : _selectable_entry_paths)
 			{
 				ImGui::TableNextColumn();
-				DrawPathEntry(path, false, entry_table_state, fio_operations);
+				DrawPathEntry(path, false, entry_table_state, fio_queue);
 			}
 
 			ImGui::EndTable();
@@ -380,7 +384,7 @@ namespace oly::editor
 		}
 	}
 
-	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, CompoundUndoActionQueue& fio_queue)
 	{
 		imtk::id_scope id(path.string().c_str());
 		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
@@ -402,7 +406,7 @@ namespace oly::editor
 					}
 
 					if (ImGui::MenuItem("Delete"))
-						DeletePath(path, fio_operations);
+						DeletePath(path, fio_queue);
 
 					// TODO v9.2 check if path is an importable asset or a folder -> context menu to import. Also options to prune (remove unused import files)
 
@@ -466,7 +470,7 @@ namespace oly::editor
 				}
 
 				if (entry_table_state.delete_consumed)
-					DeletePath(path, fio_operations);
+					DeletePath(path, fio_queue);
 
 				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
@@ -502,7 +506,7 @@ namespace oly::editor
 					auto action = std::make_unique<fio::RenamePathAction>();
 					action->old_path = path;
 					action->new_path = path.parent_path() / _rename_buffer;
-					fio_operations.push_back(std::move(action));
+					fio_queue.Append(std::move(action), true);
 				}
 
 				ImGui::EndPopup();
@@ -580,7 +584,7 @@ namespace oly::editor
 		}
 	}
 
-	void ContentBrowserPanel::DrawNewAssetPopups(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
+	void ContentBrowserPanel::DrawNewAssetPopups(CompoundUndoActionQueue& fio_queue)
 	{
 		if (!_new_asset)
 			return;
@@ -611,11 +615,11 @@ namespace oly::editor
 					}
 				}
 
-				if (InitNewAsset(asset_path, _new_asset->type))
+				if (Editor::InitNewAsset(asset_path, _new_asset->type))
 				{
 					auto action = std::make_unique<fio::CreateAssetAction>();
 					action->asset_path = asset_path;
-					fio_operations.push_back(std::move(action));
+					fio_queue.Append(std::move(action), false);
 				}
 
 				_new_asset.reset();
@@ -747,7 +751,7 @@ namespace oly::editor
 		return _selected_paths.size() == 1 && _selected_paths[0] == path;
 	}
 
-	void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, std::vector<std::unique_ptr<UndoAction>>& fio_operations) const
+	void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const
 	{
 		detail::ResourcePath resource = path;
 
@@ -761,24 +765,7 @@ namespace oly::editor
 				action->aux_path = import;
 		}
 
-		fio_operations.push_back(std::move(action));
-	}
-
-	void ContentBrowserPanel::ExecuteFIO(std::vector<std::unique_ptr<UndoAction>>& fio_operations)
-	{
-		if (!fio_operations.empty())
-		{
-			auto batch = std::make_unique<CompoundUndoAction>();
-			batch->forward_queue = std::move(fio_operations);
-			_undo_history.Execute(std::move(batch));
-		}
-	}
-
-	bool ContentBrowserPanel::InitNewAsset(const std::filesystem::path& path, detail::Key meta_type)
-	{
-		// TODO v9.2
-
-		return false;
+		fio_queue.Append(std::move(action), true);
 	}
 }
 
