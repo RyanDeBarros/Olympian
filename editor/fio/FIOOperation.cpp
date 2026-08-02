@@ -1,38 +1,104 @@
 #include "FIOOperation.h"
 
+#include "core/PathInfo.h"
 #include "core/editor/Logger.h"
 #include "fio/Trashcan.h"
+#include "documents/DocumentManager.h"
 
 namespace oly::editor::fio
 {
+	static std::optional<detail::ResourcePath> GetAuxPath(const detail::ResourcePath& path)
+	{
+		if (!path.is_oly_path())
+		{
+			detail::ResourcePath import = path.get_import_path();
+			if (PathInfo::IsImportFile(import.get_absolute()))
+				return import;
+		}
+
+		return std::nullopt;
+	}
+
 	bool RenamePathAction::Forward()
 	{
 		std::error_code ec;
+		auto aux_old_path = GetAuxPath(old_path);
 		std::filesystem::rename(old_path, new_path, ec);
 
 		std::stringstream ss;
 		ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << old_path.generic_string() << "\" to \"" << new_path.generic_string() << "\"";
 
 		if (ec)
+		{
 			ss << ": " << ec.message();
+			Logger::LogError(ss.str());
+			return false;
+		}
 
-		Logger::Log(ec ? LogLevel::Error : LogLevel::Success, ss.str());
-		return !ec;
+		DocumentManager::Instance().NotifyRename(old_path, new_path);
+
+		if (aux_old_path)
+		{
+			auto aux_new_path = detail::ResourcePath(new_path).get_import_path();
+			std::error_code ec;
+			std::filesystem::rename(aux_old_path->get_absolute(), aux_new_path.get_absolute(), ec);
+
+			std::stringstream ss;
+			ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << aux_old_path->string() << "\" to \"" << aux_new_path.string() << "\"";
+
+			if (ec)
+			{
+				ss << ": " << ec.message();
+				Logger::LogError(ss.str());
+				return false;
+			}
+
+			DocumentManager::Instance().NotifyRename(*aux_old_path, aux_new_path);
+		}
+
+		Logger::LogSuccess(ss.str());
+		return true;
 	}
 
 	bool RenamePathAction::Backward()
 	{
 		std::error_code ec;
+		auto aux_new_path = GetAuxPath(new_path);
 		std::filesystem::rename(new_path, old_path, ec);
 
 		std::stringstream ss;
 		ss << "fio::RenameFile::Backward() " << (ec ? "fail" : "success") << ": \"" << new_path.generic_string() << "\" to \"" << old_path.generic_string() << "\"";
 
 		if (ec)
+		{
 			ss << ": " << ec.message();
+			Logger::LogError(ss.str());
+			return false;
+		}
 
-		Logger::Log(ec ? LogLevel::Error : LogLevel::Success, ss.str());
-		return !ec;
+		DocumentManager::Instance().NotifyRename(new_path, old_path);
+
+		if (aux_new_path)
+		{
+			auto aux_old_path = detail::ResourcePath(old_path).get_import_path();
+			std::error_code ec;
+			std::filesystem::rename(aux_new_path->get_absolute(), aux_old_path.get_absolute(), ec);
+
+			std::stringstream ss;
+			ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << aux_new_path->string() << "\" to \"" << aux_old_path.string() << "\"";
+
+			if (ec)
+			{
+				ss << ": " << ec.message();
+				Logger::LogError(ss.str());
+				return false;
+			}
+
+			DocumentManager::Instance().NotifyRename(*aux_new_path, aux_old_path);
+		}
+
+		Logger::LogSuccess(ss.str());
+		return true;
 	}
 
 	size_t RenamePathAction::EmpiricalSize() const
@@ -54,7 +120,7 @@ namespace oly::editor::fio
 		ss << "fio::DeletePathAction::Forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
 		Logger::LogSuccess(ss.str());
 
-		if (aux_path)
+		if (auto aux_path = GetAuxPath(del_path))
 		{
 			if (!Trashcan::Delete(*aux_path))
 			{
@@ -74,7 +140,7 @@ namespace oly::editor::fio
 
 	bool DeletePathAction::Backward()
 	{
-		if (aux_path)
+		if (auto aux_path = GetAuxPath(del_path))
 		{
 			if (!Trashcan::Restore(*aux_path))
 			{

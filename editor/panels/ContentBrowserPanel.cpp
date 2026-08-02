@@ -776,13 +776,6 @@ namespace oly::editor
 		auto action = std::make_unique<fio::DeletePathAction>();
 		action->del_path = resource;
 
-		if (!resource.is_oly_path())
-		{
-			detail::ResourcePath import = resource.get_import_path();
-			if (PathInfo::IsImportFile(import.get_absolute()))
-				action->aux_path = import;
-		}
-
 		fio_queue.Append(std::move(action), true);
 	}
 }

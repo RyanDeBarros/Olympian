@@ -57,6 +57,11 @@ namespace oly::editor
 		DumpImpl();
 	}
 
+	bool IDocument::Exists()
+	{
+		return _oly_path.exists();
+	}
+
 	void* IDocument::PathGet(DataPath path, std::type_index type)
 	{
 		return GetDoubleDescriptor().PathGet(path, type);
@@ -83,6 +88,11 @@ namespace oly::editor
 	const detail::ResourcePath& IDocument::GetOlyPath() const
 	{
 		return _oly_path;
+	}
+
+	void IDocument::Rename(const detail::ResourcePath& new_path)
+	{
+		_oly_path = new_path;
 	}
 
 	std::string IDocument::TabName() const

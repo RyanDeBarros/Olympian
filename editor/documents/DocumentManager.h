@@ -38,6 +38,8 @@ namespace oly::editor
 		size_t GetDocumentIndex(const IDocument* doc) const;
 		bool DocumentExists(const detail::ResourcePath& oly_path) const;
 
+		void NotifyRename(const detail::ResourcePath& old_path, const detail::ResourcePath& new_path);
+
 		template<typename T, typename... Args>
 		void Add(Args&&... args)
 		{

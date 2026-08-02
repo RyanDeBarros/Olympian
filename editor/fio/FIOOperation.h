@@ -19,7 +19,6 @@ namespace oly::editor::fio
 	struct DeletePathAction : public UndoAction
 	{
 		detail::ResourcePath del_path;
-		std::optional<detail::ResourcePath> aux_path;
 
 		bool Forward() override;
 		bool Backward() override;

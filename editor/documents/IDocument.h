@@ -39,6 +39,8 @@ namespace oly::editor
 		virtual void LoadImpl() = 0;
 		void DumpAsset();
 		virtual void DumpImpl() = 0;
+		bool Exists();
+
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 
@@ -48,6 +50,7 @@ namespace oly::editor
 		void DrawFinalize();
 
 		const detail::ResourcePath& GetOlyPath() const;
+		void Rename(const detail::ResourcePath& new_path);
 		virtual std::string TabName() const;
 
 		void MarkDirty();

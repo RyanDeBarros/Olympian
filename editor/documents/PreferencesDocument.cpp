@@ -62,7 +62,7 @@ namespace oly::editor
 
 	void PreferencesDocument::LoadImpl()
 	{
-		std::filesystem::path path = GetOlyPath().get_absolute();
+		std::filesystem::path path = _oly_path.get_absolute();
 		toml::table table;
 		if (std::filesystem::is_regular_file(path))
 		{
@@ -87,7 +87,7 @@ namespace oly::editor
 	{
 		toml::table table;
 		Dump(table, _desc.scratch);
-		std::filesystem::path path = GetOlyPath().get_absolute();
+		std::filesystem::path path = _oly_path.get_absolute();
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << table;

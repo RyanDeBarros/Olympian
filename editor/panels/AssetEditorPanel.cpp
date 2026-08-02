@@ -144,6 +144,23 @@ namespace oly::editor
 		{
 			std::vector<size_t> closed;
 
+			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); )
+			{
+				IDocument& doc = DocumentManager::Instance().GetDocument(i);
+				if (doc.Exists())
+					++i;
+				else
+				{
+					if (_selected_tab == &doc)
+						_selected_tab = nullptr;
+
+					if (_focused_tab == &doc)
+						_focused_tab = nullptr;
+
+					DocumentManager::Instance().Remove(i);
+				}
+			}
+
 			IDocument* previously_selected_doc = _selected_tab;
 			_selected_tab = nullptr;
 			std::unordered_set<IDocument*> seen_documents;

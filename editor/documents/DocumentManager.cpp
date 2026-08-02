@@ -156,6 +156,15 @@ namespace oly::editor
 		return GetDocumentIndex(oly_path) < _documents.size();
 	}
 
+	void DocumentManager::NotifyRename(const detail::ResourcePath& old_path, const detail::ResourcePath& new_path)
+	{
+		for (auto& doc : _documents)
+		{
+			if (doc->GetOlyPath() == old_path)
+				doc->Rename(new_path);
+		}
+	}
+
 	void DocumentManager::Add(std::unique_ptr<IDocument>&& doc)
 	{
 		size_t idx = GetDocumentIndex(doc->GetOlyPath());
