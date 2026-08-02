@@ -19,12 +19,14 @@ namespace oly::editor
 	M(FontFamily) \
 	M(Font) \
 	M(Handle) \
+	M(Import) \
 	M(Minus) \
 	M(OpenInTreeView) \
 	M(Pause) \
 	M(Play) \
 	M(Plus) \
 	M(Preview) \
+	M(Prune) \
 	M(RasterFont) \
 	M(Recenter) \
 	M(Revert) \

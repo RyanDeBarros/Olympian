@@ -29,9 +29,10 @@
 
 namespace oly::editor
 {
-	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup)
-		: type(type), name(std::move(name)), popup(popup)
+	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
+		: type(type), name(std::move(name)), popup(popup_label)
 	{
+		popup.open();
 	}
 
 	ContentBrowserPanel::ContentBrowserPanel()
@@ -81,6 +82,8 @@ namespace oly::editor
 
 			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
+				CompoundUndoActionQueue fio_queue;
+
 				if (ImGui::BeginTable("##ContentBrowserToolbar", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 				{
 					ImGui::TableNextRow();
@@ -91,15 +94,13 @@ namespace oly::editor
 					ImGui::InputText("##Folder", preview.data(), preview.size() + 1, ImGuiInputTextFlags_ReadOnly);
 
 					ImGui::TableSetColumnIndex(1);
-					DrawMainToolbar();
+					DrawMainToolbar(fio_queue);
 
 					ImGui::EndTable();
 				}
 
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
-
-				CompoundUndoActionQueue fio_queue;
 
 				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
 				{
@@ -161,7 +162,7 @@ namespace oly::editor
 			Notifier::NotifyError("\"" + path.generic_string() + "\" is not located in the project resource folder");
 	}
 
-	void ContentBrowserPanel::DrawMainToolbar()
+	void ContentBrowserPanel::DrawMainToolbar(CompoundUndoActionQueue& fio_queue)
 	{
 		if (auto disabled = DisabledSection(_on_res_root))
 		{
@@ -182,11 +183,11 @@ namespace oly::editor
 			PathInfo::RevealInExplorer(_folder, true);
 
 		ImGui::SameLine();
-		static const char* NEW_ASSET_POPUP = "New";
+		imtk::popup new_asset_popup("New");
 		if (Toolbar::DrawIconButton(IconResource::CirclePlus, "New", "##New"))
-			ImGui::OpenPopup(NEW_ASSET_POPUP);
+			new_asset_popup.open();
 
-		if (ImGui::BeginPopup(NEW_ASSET_POPUP))
+		if (auto d = new_asset_popup.draw())
 		{
 			NewFolderMenu();
 			ImGui::Separator();
@@ -196,8 +197,21 @@ namespace oly::editor
 				NewAssetMenu();
 				ImGui::EndMenu();
 			}
-			
-			ImGui::EndPopup();
+		}
+
+		gui::VerticalSeparator();
+
+		if (Toolbar::DrawIconButton(IconResource::Import, "Import", "##Import"))
+		{
+			ImportFromPath(_folder, fio_queue);
+			ImGui::CloseCurrentPopup();
+		}
+
+		ImGui::SameLine();
+		if (Toolbar::DrawIconButton(IconResource::Prune, "Prune", "##Prune"))
+		{
+			PruneFromPath(_folder, fio_queue);
+			ImGui::CloseCurrentPopup();
 		}
 
 		gui::VerticalSeparator();
@@ -317,6 +331,34 @@ namespace oly::editor
 						ImGui::EndMenu();
 					}
 
+					ImGui::Separator();
+
+					if (Toolbar::IconMenuItem("Import", IconResource::Import))
+					{
+						ImportFromPath(_folder, fio_queue);
+						ImGui::CloseCurrentPopup();
+					}
+
+					if (Toolbar::IconMenuItem("Prune", IconResource::Prune))
+					{
+						PruneFromPath(_folder, fio_queue);
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Separator();
+
+					if (Toolbar::IconMenuItem("Open in tree view", IconResource::OpenInTreeView))
+					{
+						TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+						ImGui::CloseCurrentPopup();
+					}
+
+					if (Toolbar::IconMenuItem("Reveal in explorer", IconResource::FolderOpen))
+					{
+						PathInfo::RevealInExplorer(_folder, true);
+						ImGui::CloseCurrentPopup();
+					}
+
 					ImGui::EndPopup();
 				}
 
@@ -396,8 +438,7 @@ namespace oly::editor
 		imtk::id_scope id(path.string().c_str());
 		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
 		{
-			static constexpr const char* kRenamePopup = "Rename path";
-			bool open_kRenamePopup = false;
+			imtk::popup rename_popup("Rename path");
 
 			if (!dotdot)
 			{
@@ -409,13 +450,33 @@ namespace oly::editor
 					if (IsOnlySelected(path))
 					{
 						if (ImGui::MenuItem("Rename", "F2"))
-							open_kRenamePopup = true;
+							rename_popup.open();
 					}
 
 					if (ImGui::MenuItem("Delete"))
 						DeletePath(path, fio_queue);
 
-					// TODO v9.2 check if path is an importable asset or a folder -> context menu to import. Also options to prune (remove unused import files)
+					ImGui::Separator();
+
+					if (Toolbar::IconMenuItem("Import", IconResource::Import))
+					{
+						ImportFromPath(path, fio_queue);
+						ImGui::CloseCurrentPopup();
+					}
+
+					if (std::filesystem::is_directory(path) && Toolbar::IconMenuItem("Prune", IconResource::Prune))
+					{
+						PruneFromPath(path, fio_queue);
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Separator();
+
+					if (Toolbar::IconMenuItem("Reveal in explorer", IconResource::FolderOpen))
+					{
+						PathInfo::RevealInExplorer(path, false);
+						ImGui::CloseCurrentPopup();
+					}
 
 					ImGui::EndPopup();
 				}
@@ -473,7 +534,7 @@ namespace oly::editor
 				if (IsOnlySelected(path))
 				{
 					if (ImGui::Shortcut(ImGuiKey_F2, ImGuiInputFlags_RouteGlobal))
-						open_kRenamePopup = true;
+						rename_popup.open();
 				}
 
 				if (entry_table_state.delete_consumed)
@@ -492,14 +553,11 @@ namespace oly::editor
 				ImGui::EndDragDropSource();
 			}
 
-			if (open_kRenamePopup)
-			{
+			if (rename_popup.is_opening())
 				_rename_buffer = path.filename().generic_string();
-				ImGui::OpenPopup(kRenamePopup);
-			}
 
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-			if (ImGui::BeginPopupModal(kRenamePopup, 0, ImGuiWindowFlags_AlwaysAutoResize))
+			if (auto d = rename_popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				if (ImGui::IsWindowAppearing())
 					ImGui::SetKeyboardFocusHere();
@@ -507,11 +565,11 @@ namespace oly::editor
 				gui::InputText("Name", _rename_buffer);
 
 				if (ImGui::IsKeyPressed(ImGuiKey_Escape))
-					ImGui::CloseCurrentPopup();
+					d.close();
 
 				if (ImGui::IsKeyPressed(ImGuiKey_Enter))
 				{
-					ImGui::CloseCurrentPopup();
+					d.close();
 
 					auto action = std::make_unique<fio::RenamePathAction>();
 					action->old_path = path;
@@ -519,8 +577,6 @@ namespace oly::editor
 					if (action->old_path != action->new_path)
 						fio_queue.Append(std::move(action), true);
 				}
-
-				ImGui::EndPopup();
 			}
 		}
 
@@ -609,14 +665,8 @@ namespace oly::editor
 		if (!_new_asset)
 			return;
 
-		if (_new_asset->pending_popup)
-		{
-			ImGui::OpenPopup(_new_asset->popup);
-			_new_asset->pending_popup = false;
-		}
-
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-		if (ImGui::BeginPopupModal(_new_asset->popup, 0, ImGuiWindowFlags_AlwaysAutoResize))
+		if (auto d = _new_asset->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
 		{
 			if (ImGui::IsWindowAppearing())
 				ImGui::SetKeyboardFocusHere();
@@ -625,7 +675,7 @@ namespace oly::editor
 
 			if (ImGui::Button("Create"))
 			{
-				ImGui::CloseCurrentPopup();
+				d.close();
 				CreateNewAsset(fio_queue);
 			}
 
@@ -633,23 +683,21 @@ namespace oly::editor
 
 			if (ImGui::Button("Cancel"))
 			{
+				d.close();
 				_new_asset.reset();
-				ImGui::CloseCurrentPopup();
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Enter))
 			{
-				ImGui::CloseCurrentPopup();
+				d.close();
 				CreateNewAsset(fio_queue);
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 			{
+				d.close();
 				_new_asset.reset();
-				ImGui::CloseCurrentPopup();
 			}
-			
-			ImGui::EndPopup();
 		}
 	}
 	
@@ -795,5 +843,25 @@ namespace oly::editor
 		action->del_path = resource;
 
 		fio_queue.Append(std::move(action), true);
+	}
+
+	void ContentBrowserPanel::ImportFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	{
+		// TODO v9.2 if file -> do import, otherwise for folder open popup with recursive option
+	}
+	
+	void ContentBrowserPanel::ImportPathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	{
+		// TODO v9.2
+	}
+
+	void ContentBrowserPanel::PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	{
+		// TODO v9.2 if file -> do prune, otherwise for folder open popup with recursive option
+	}
+
+	void ContentBrowserPanel::PrunePathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	{
+		// TODO v9.2
 	}
 }

@@ -1,6 +1,6 @@
 #include "Controls.h"
 
-#include <string>
+#include <imtk.hpp>
 
 namespace oly::editor::gui
 {
@@ -12,19 +12,17 @@ namespace oly::editor::gui
 			flags |= ImGuiSliderFlags_Logarithmic;
 		ImGui::SliderFloat(label, &value, min, max, format, flags);
 
-		static const std::string EDIT_VALUE = "Edit value##";
-		const std::string popup = EDIT_VALUE + label;
+		imtk::popup popup("Edit value##" + std::string(label));
 
 		if (ImGui::IsItemClicked(ImGuiMouseButton_Right))
-			ImGui::OpenPopup(popup.c_str());
+			popup.open();
 
-		if (ImGui::BeginPopup(popup.c_str()))
+		if (auto d = popup.draw())
 		{
 			ImGui::SetNextItemWidth(120.f);
 			ImGui::InputFloat(label, &value, 0.f, 0.f, format);
 			value = std::max(value, min);
 			value = std::min(value, max);
-			ImGui::EndPopup();
 		}
 	}
 }

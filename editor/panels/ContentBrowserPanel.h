@@ -12,6 +12,8 @@
 
 #include <set>
 
+#include <imtk.hpp>
+
 namespace oly::editor
 {
 	class ContentBrowserPanel : public IPanel
@@ -29,12 +31,11 @@ namespace oly::editor
 
 		struct NewAssetInfo
 		{
-			bool pending_popup = true;
+			imtk::popup popup;
 			detail::Key type;
 			std::string name = "";
-			const char* popup;
 
-			NewAssetInfo(detail::Key type, std::string name, const char* popup);
+			NewAssetInfo(detail::Key type, std::string name, const char* popup_label);
 		};
 
 		std::optional<NewAssetInfo> _new_asset;
@@ -52,7 +53,7 @@ namespace oly::editor
 		static void ShowInContentBrowser(const std::filesystem::path& path);
 
 	private:
-		void DrawMainToolbar();
+		void DrawMainToolbar(CompoundUndoActionQueue& fio_queue);
 
 		void SetFolder(std::filesystem::path folder);
 		void SwitchFolder(std::filesystem::path folder);
@@ -83,5 +84,10 @@ namespace oly::editor
 		bool IsOnlySelected(const std::filesystem::path& path) const;
 
 		void DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const;
+		
+		void ImportFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void ImportPathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void PrunePathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
 	};
 }

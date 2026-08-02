@@ -9,7 +9,7 @@
 
 #include "fio/Trashcan.h"
 
-// TODO v9.2 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
+// TODO v9.4 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
 
 namespace oly::editor
 {
@@ -188,32 +188,31 @@ namespace oly::editor
 			}));
 			gui::PropertyGrid::SubmitRow();
 
-			bool open_clear_trash = false;
+			imtk::popup clear_trash_popup("Clear trash folder");
+
 			if (auto pause = FormPause())
-				open_clear_trash = ImGui::Button("Clear trash folder");
-
-			constexpr const char* kClearTrash = "Clear trash folder";
-
-			if (open_clear_trash)
-				ImGui::OpenPopup(kClearTrash);
+			{
+				if (ImGui::Button("Clear trash folder"))
+					clear_trash_popup.open();
+			}
 
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-			if (ImGui::BeginPopupModal(kClearTrash, 0, ImGuiWindowFlags_AlwaysAutoResize))
+
+
+			if (auto d = clear_trash_popup.draw(true, ImGuiWindowFlags_AlwaysAutoResize))
 			{
 				ImGui::TextUnformatted("Are you sure? This action is irreversible.");
 
 				if (ImGui::Button("Confirm"))
 				{
 					fio::Trashcan::ForceClear();
-					ImGui::CloseCurrentPopup();
+					d.close();
 				}
 
 				ImGui::SameLine();
 
 				if (ImGui::Button("Cancel"))
-					ImGui::CloseCurrentPopup();
-
-				ImGui::EndPopup();
+					d.close();
 			}
 		}
 	}
