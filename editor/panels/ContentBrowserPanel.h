@@ -74,6 +74,7 @@ namespace oly::editor
 		void NewAssetMenu();
 		void NewFolderMenu();
 		void DrawNewAssetPopups(CompoundUndoActionQueue& fio_queue);
+		void CreateNewAsset(CompoundUndoActionQueue& fio_queue);
 
 		void ClearSelection();
 		void PruneSelection();

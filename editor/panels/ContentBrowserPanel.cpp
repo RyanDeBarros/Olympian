@@ -501,19 +501,23 @@ namespace oly::editor
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			if (ImGui::BeginPopupModal(kRenamePopup, 0, ImGuiWindowFlags_AlwaysAutoResize))
 			{
-				gui::InputText("Filename", _rename_buffer);
+				if (ImGui::IsWindowAppearing())
+					ImGui::SetKeyboardFocusHere();
 
-				if (ImGui::Shortcut(ImGuiKey_Escape))
+				gui::InputText("Name", _rename_buffer);
+
+				if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 					ImGui::CloseCurrentPopup();
 
-				if (ImGui::Shortcut(ImGuiKey_Enter))
+				if (ImGui::IsKeyPressed(ImGuiKey_Enter))
 				{
 					ImGui::CloseCurrentPopup();
 
 					auto action = std::make_unique<fio::RenamePathAction>();
 					action->old_path = path;
 					action->new_path = path.parent_path() / _rename_buffer;
-					fio_queue.Append(std::move(action), true);
+					if (action->old_path != action->new_path)
+						fio_queue.Append(std::move(action), true);
 				}
 
 				ImGui::EndPopup();
@@ -614,34 +618,15 @@ namespace oly::editor
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		if (ImGui::BeginPopupModal(_new_asset->popup, 0, ImGuiWindowFlags_AlwaysAutoResize))
 		{
+			if (ImGui::IsWindowAppearing())
+				ImGui::SetKeyboardFocusHere();
+
 			gui::InputText("Name", _new_asset->name);
 
 			if (ImGui::Button("Create"))
 			{
-				std::string ext = _new_asset->type != detail::Key::Meta_Folder ? ".oly" : "";
-
-				std::filesystem::path asset_path = _folder / (_new_asset->name + ext);
-
-				if (std::filesystem::exists(asset_path))
-				{
-					size_t counter = 1;
-					while (std::filesystem::exists(asset_path))
-					{
-						std::stringstream ss;
-						ss << _new_asset->name << " (" << counter++ << ")" << ext;
-						asset_path = _folder / ss.str();
-					}
-				}
-
-				if (Editor::InitNewAsset(asset_path, _new_asset->type))
-				{
-					auto action = std::make_unique<fio::CreateAssetAction>();
-					action->asset_path = asset_path;
-					fio_queue.Append(std::move(action), false);
-				}
-
-				_new_asset.reset();
 				ImGui::CloseCurrentPopup();
+				CreateNewAsset(fio_queue);
 			}
 
 			ImGui::SameLine();
@@ -652,7 +637,13 @@ namespace oly::editor
 				ImGui::CloseCurrentPopup();
 			}
 
-			if (ImGui::Shortcut(ImGuiKey_Escape))
+			if (ImGui::IsKeyPressed(ImGuiKey_Enter))
+			{
+				ImGui::CloseCurrentPopup();
+				CreateNewAsset(fio_queue);
+			}
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
 			{
 				_new_asset.reset();
 				ImGui::CloseCurrentPopup();
@@ -660,6 +651,33 @@ namespace oly::editor
 			
 			ImGui::EndPopup();
 		}
+	}
+	
+	void ContentBrowserPanel::CreateNewAsset(CompoundUndoActionQueue& fio_queue)
+	{
+		std::string ext = _new_asset->type != detail::Key::Meta_Folder ? ".oly" : "";
+
+		std::filesystem::path asset_path = _folder / (_new_asset->name + ext);
+
+		if (std::filesystem::exists(asset_path))
+		{
+			size_t counter = 1;
+			while (std::filesystem::exists(asset_path))
+			{
+				std::stringstream ss;
+				ss << _new_asset->name << " (" << counter++ << ")" << ext;
+				asset_path = _folder / ss.str();
+			}
+		}
+
+		if (Editor::InitNewAsset(asset_path, _new_asset->type))
+		{
+			auto action = std::make_unique<fio::CreateAssetAction>();
+			action->asset_path = asset_path;
+			fio_queue.Append(std::move(action), false);
+		}
+
+		_new_asset.reset();
 	}
 
 	void ContentBrowserPanel::ClearSelection()
@@ -779,5 +797,3 @@ namespace oly::editor
 		fio_queue.Append(std::move(action), true);
 	}
 }
-
-// TODO v9.2 deleting paths should remove them from asset editor panel. renaming paths should update the paths in asset editor panel.
