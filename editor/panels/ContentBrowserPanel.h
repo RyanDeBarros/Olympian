@@ -40,6 +40,26 @@ namespace oly::editor
 
 		std::optional<NewAssetInfo> _new_asset;
 
+		struct ImportFolderInfo
+		{
+			imtk::popup popup;
+			std::filesystem::path folder;
+
+			ImportFolderInfo(std::filesystem::path folder);
+		};
+
+		std::optional<ImportFolderInfo> _import_folder;
+
+		struct PruneFolderInfo
+		{
+			imtk::popup popup;
+			std::filesystem::path folder;
+
+			PruneFolderInfo(std::filesystem::path folder);
+		};
+
+		std::optional<PruneFolderInfo> _prune_folder;
+
 	public:
 		ContentBrowserPanel();
 		static ContentBrowserPanel& Instance();
@@ -86,8 +106,11 @@ namespace oly::editor
 		void DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const;
 		
 		void ImportFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
-		void ImportPathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void ImportFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void DrawImportFolderPopup(CompoundUndoActionQueue& fio_queue);
+
 		void PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
-		void PrunePathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void PruneFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue);
 	};
 }

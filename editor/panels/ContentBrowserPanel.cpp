@@ -35,6 +35,18 @@ namespace oly::editor
 		popup.open();
 	}
 
+	ContentBrowserPanel::ImportFolderInfo::ImportFolderInfo(std::filesystem::path folder)
+		: popup("Import folder"), folder(std::move(folder))
+	{
+		popup.open();
+	}
+
+	ContentBrowserPanel::PruneFolderInfo::PruneFolderInfo(std::filesystem::path folder)
+		: popup("Prune folder"), folder(std::move(folder))
+	{
+		popup.open();
+	}
+
 	ContentBrowserPanel::ContentBrowserPanel()
 		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
 	{
@@ -120,6 +132,8 @@ namespace oly::editor
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
 
 				DrawNewAssetPopups(fio_queue);
+				DrawImportFolderPopup(fio_queue);
+				DrawPruneFolderPopup(fio_queue);
 
 				fio_queue.PushAll(_undo_history);
 			}
@@ -458,7 +472,7 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (Toolbar::IconMenuItem("Import", IconResource::Import))
+					if (Toolbar::IconMenuItem("Import", IconResource::Import)) // TODO v9.2 only if import file does not exist
 					{
 						ImportFromPath(path, fio_queue);
 						ImGui::CloseCurrentPopup();
@@ -540,7 +554,7 @@ namespace oly::editor
 				if (entry_table_state.delete_consumed)
 					DeletePath(path, fio_queue);
 
-				// TODO v9.2 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
+				// TODO v9.4 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
 
 			ImGui::InvisibleButton("##DragDropItem", entry_table_state.entry_size);
@@ -666,7 +680,7 @@ namespace oly::editor
 			return;
 
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-		if (auto d = _new_asset->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+		if (auto d = _new_asset->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize)) // TODO v9.3 add window flags to popup itself so don't need to pass to draw(). draw() parameters can be overrides.
 		{
 			if (ImGui::IsWindowAppearing())
 				ImGui::SetKeyboardFocusHere();
@@ -699,6 +713,8 @@ namespace oly::editor
 				_new_asset.reset();
 			}
 		}
+		else
+			_new_asset.reset();
 	}
 	
 	void ContentBrowserPanel::CreateNewAsset(CompoundUndoActionQueue& fio_queue)
@@ -847,21 +863,147 @@ namespace oly::editor
 
 	void ContentBrowserPanel::ImportFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
-		// TODO v9.2 if file -> do import, otherwise for folder open popup with recursive option
+		if (std::filesystem::is_regular_file(path))
+		{
+			ImportFile(path, fio_queue);
+			return;
+		}
+
+		_import_folder = ImportFolderInfo(path);
 	}
 	
-	void ContentBrowserPanel::ImportPathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	void ContentBrowserPanel::ImportFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
 		// TODO v9.2
+	}
+
+	void ContentBrowserPanel::DrawImportFolderPopup(CompoundUndoActionQueue& fio_queue)
+	{
+		if (!_import_folder)
+			return;
+
+		if (auto d = _import_folder->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::TextUnformatted("Folder");
+			ImGui::SameLine();
+			std::string folder = detail::ResourcePath(_import_folder->folder).get_resource_shorthand();
+			ImGui::InputText("##Folder", folder.data(), folder.size() + 1, ImGuiInputTextFlags_ReadOnly);
+
+			if (ImGui::Button("Import direct contents only"))
+			{
+				d.close();
+
+				std::error_code ec;
+				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+				{
+					const auto& path = entry.path();
+					if (std::filesystem::is_regular_file(path))
+						ImportFile(path, fio_queue);
+				}
+			}
+
+			if (ImGui::Button("Import recursively"))
+			{
+				d.close();
+
+				std::error_code ec;
+				std::vector<std::filesystem::path> folders;
+				folders.push_back(folder);
+
+				while (!folders.empty())
+				{
+					std::filesystem::path folder = folders.back();
+					folders.pop_back();
+
+					for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+					{
+						const auto& path = entry.path();
+						if (std::filesystem::is_regular_file(path))
+							ImportFile(path, fio_queue);
+					}
+				}
+			}
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+			{
+				d.close();
+				_import_folder.reset();
+			}
+		}
+		else
+			_import_folder.reset();
 	}
 
 	void ContentBrowserPanel::PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
-		// TODO v9.2 if file -> do prune, otherwise for folder open popup with recursive option
+		if (std::filesystem::is_regular_file(path))
+		{
+			PruneFile(path, fio_queue);
+			return;
+		}
+
+		_prune_folder = PruneFolderInfo(path);
 	}
 
-	void ContentBrowserPanel::PrunePathImpl(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	void ContentBrowserPanel::PruneFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
 		// TODO v9.2
+	}
+
+	void ContentBrowserPanel::DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue)
+	{
+		if (!_prune_folder)
+			return;
+
+		if (auto d = _prune_folder->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			ImGui::TextUnformatted("Folder");
+			ImGui::SameLine();
+			std::string folder = detail::ResourcePath(_prune_folder->folder).get_resource_shorthand();
+			ImGui::InputText("##Folder", folder.data(), folder.size() + 1, ImGuiInputTextFlags_ReadOnly);
+
+			if (ImGui::Button("Prune direct contents only"))
+			{
+				d.close();
+
+				std::error_code ec;
+				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+				{
+					const auto& path = entry.path();
+					if (std::filesystem::is_regular_file(path))
+						PruneFile(path, fio_queue);
+				}
+			}
+
+			if (ImGui::Button("Prune recursively"))
+			{
+				d.close();
+
+				std::error_code ec;
+				std::vector<std::filesystem::path> folders;
+				folders.push_back(folder);
+
+				while (!folders.empty())
+				{
+					std::filesystem::path folder = folders.back();
+					folders.pop_back();
+
+					for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+					{
+						const auto& path = entry.path();
+						if (std::filesystem::is_regular_file(path))
+							PruneFile(path, fio_queue);
+					}
+				}
+			}
+
+			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+			{
+				d.close();
+				_prune_folder.reset();
+			}
+		}
+		else
+			_prune_folder.reset();
 	}
 }

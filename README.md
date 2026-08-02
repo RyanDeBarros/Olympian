@@ -1,13 +1,12 @@
 # Olympian
-Olympian Engine is a game engine written with C++ OpenGL to make future graphics projects easier, faster, and safer. It consists of two major components - the game framework (located in `engine/`), and the editor (located in `editor/`), which are subject to different licenses.
-
-The `engine/` folder contains source code for the framework, and the general public API is included in `engine/Olympian.h`. For specialized features, refer to the (future) web documentation for which files to include.
-
-To build the editor, simply run `editor/Build.py`. This will build an executable, `editor/OlyEditor.exe`. Do not move the executable from `editor/`.
+Olympian Engine is a game engine written with C++ OpenGL to make future graphics projects easier, faster, and safer. It consists of three major components, which are subject to different licesnses:
+* The game framework: located in `engine/`, contains source code for the runtime engine, and the general public API that is included in `engine/Olympian.h`. For specialized features, refer to the (future) web documentation for which files to include.
+* The editor: located in `editor/`.
+* The detailer: located in `detail/`, serves as the ground-truth for asset formats/values, ensuring the engine and editor communicate in sync.
 
 To access the web documentation, run `mkdocs/Serve.py`.
 
-The `definitions/` folder is an internal folder containing source code for CodeGen operations. CodeGen operations are executed when configuring the engine's CMake project, which auto-generates critical code used by the engine. Additionally, this CodeGen source code is used by the editor to generate its asset interfaces. Thus, the data in `definitions/` provides a strict API between the engine and the editor to interact with assets in a compatible way.
+The editor GUI is partially built off of [imgui-toolkit](https://github.com/RyanDeBarros/imgui-toolkit), a library I'm building in conjunction with the editor.
 
 ## Licensing
 
@@ -40,9 +39,17 @@ The editor uses the following libraries:
 
 TODO v9.4 use containing folders for licenses instead of writing the library name in the filename itself. Also add a detail/ licenses folder
 
-The editor also uses assets from the following databases:
+The editor also uses assets from the following resources:
 
 - [Google Icons](https://fonts.google.com/icons)
+
+### Detailer
+
+The detail module uses the following libraries:
+
+- **nigels-com/glew**
+- **GLFW**
+- **marzer/tomlplusplus**
 
 ### Documentation
 
