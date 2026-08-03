@@ -52,7 +52,7 @@ namespace oly::editor
 			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
-			_meta.map[detail::Key::Meta_Version] = "1.0";
+			_meta.map[detail::Key::Meta_Version] = GetVersion();
 			_meta.map[detail::Key::Meta_Import] = "0";
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_RasterFont);
 
@@ -75,6 +75,11 @@ namespace oly::editor
 		_oly_path.dump_toml(table, _meta);
 		_desc.WriteToDisk();
 		MarkClean();
+	}
+
+	void RasterFontDocument::ResetAssetImpl()
+	{
+		Load(TOMLNode(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor() const

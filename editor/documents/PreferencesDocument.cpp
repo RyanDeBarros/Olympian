@@ -53,6 +53,9 @@ namespace oly::editor
 				if (ImGui::MenuItem("Discard Changes"))
 					LoadAsset();
 
+				if (ImGui::MenuItem("Reset Preferences"))
+					ResetAsset();
+
 				ImGui::EndMenu();
 			}
 
@@ -94,6 +97,11 @@ namespace oly::editor
 		_desc.WriteToDisk();
 		RevertEditorPreferences();
 		MarkClean();
+	}
+
+	void PreferencesDocument::ResetAssetImpl()
+	{
+		Load(TOMLNode(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor() const

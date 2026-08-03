@@ -857,12 +857,8 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const
 	{
-		detail::ResourcePath resource = path;
-
 		auto action = std::make_unique<fio::DeletePathAction>();
-		action->del_path = resource;
-		action->Init();
-
+		action->del_path = path;
 		fio_queue.Append(std::move(action), true);
 	}
 
@@ -965,7 +961,6 @@ namespace oly::editor
 		{
 			auto action = std::make_unique<fio::DeletePathAction>();
 			action->del_path = import_path;
-			action->Init();
 			fio_queue.Append(std::move(action), true);
 		}
 	}

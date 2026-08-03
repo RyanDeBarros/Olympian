@@ -155,6 +155,7 @@ namespace oly::editor
 		void Draw() override;
 		void LoadImpl() override;
 		void DumpImpl() override;
+		void ResetAssetImpl() override;
 		const IDoubleDescriptor& GetDoubleDescriptor() const override;
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 

@@ -16,6 +16,7 @@ namespace oly::editor
 		virtual bool QueryDirty() = 0;
 		virtual TypeErasedBox CopyScratch() const = 0;
 		virtual std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const = 0;
+		virtual bool ScratchUndoActionQuery(TypeErasedBox original, std::unique_ptr<UndoAction>& action) const = 0;
 	};
 
 	template<typename Descriptor>
@@ -60,6 +61,24 @@ namespace oly::editor
 				return nullptr;
 		}
 
+		bool ScratchUndoActionQuery(TypeErasedBox original, std::unique_ptr<UndoAction>& action) const override
+		{
+			if (auto og = original.as<Descriptor>())
+			{
+				if (scratch.QueryDirty(*og))
+				{
+					if (auto og = original.consume_unique<Descriptor>())
+						action = std::make_unique<FieldSetAction<Descriptor, void>>(DataPath(), std::move(*og), scratch);
+					else
+						action = nullptr;
+
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		void WriteToDisk()
 		{
 			disk = scratch;
@@ -68,6 +87,11 @@ namespace oly::editor
 		void LoadFromDisk()
 		{
 			scratch = disk;
+		}
+
+		void ResetScratch()
+		{
+			scratch = Descriptor();
 		}
 	};
 }

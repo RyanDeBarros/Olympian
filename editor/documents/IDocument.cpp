@@ -30,10 +30,30 @@ namespace oly::editor
 				if (ImGui::MenuItem("Discard Changes"))
 					LoadAsset();
 
+				if (ImGui::MenuItem("Reset Asset"))
+					ResetAsset();
+
 				ImGui::EndMenu();
 			}
 
 			ImGui::EndMenuBar();
+		}
+	}
+
+	void IDocument::ResetAsset()
+	{
+		auto original = GetDoubleDescriptor().CopyScratch();
+
+		ResetAssetImpl();
+		QueryDirty();
+
+		std::unique_ptr<UndoAction> action;
+		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
+		{
+			if (action)
+				_undo_history->Push(std::move(action));
+			else
+				_undo_history->Clear();
 		}
 	}
 

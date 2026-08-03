@@ -49,6 +49,24 @@ namespace oly
 		}
 
 		template<typename T>
+		const T* as() const
+		{
+			if (typeid(T) == _type)
+				return static_cast<T*>(_raw);
+			else
+				return nullptr;
+		}
+
+		template<typename T>
+		T* as()
+		{
+			if (typeid(T) == _type)
+				return static_cast<T*>(_raw);
+			else
+				return nullptr;
+		}
+
+		template<typename T>
 		std::unique_ptr<T> consume_unique()
 		{
 			if (typeid(T) == _type)

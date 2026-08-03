@@ -106,13 +106,10 @@ namespace oly::editor::fio
 		return sizeof(*this);
 	}
 
-	void DeletePathAction::Init()
-	{
-		_aux_path = GetAuxPath(del_path);
-	}
-
 	bool DeletePathAction::Forward()
 	{
+		_aux_path = GetAuxPath(del_path);
+
 		if (!Trashcan::Delete(del_path))
 		{
 			std::stringstream ss;

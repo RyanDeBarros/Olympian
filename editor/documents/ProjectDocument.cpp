@@ -45,6 +45,9 @@ namespace oly::editor
 				if (ImGui::MenuItem("Discard Changes"))
 					LoadAsset();
 
+				if (ImGui::MenuItem("Reset Project Settings"))
+					ResetAsset();
+
 				ImGui::EndMenu();
 			}
 
@@ -74,7 +77,7 @@ namespace oly::editor
 			Load(TOMLNode(), _desc.disk);
 
 			_meta = {};
-			_meta.map[detail::Key::Meta_Version] = "1.0";
+			_meta.map[detail::Key::Meta_Version] = GetVersion();
 			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Project);
 
 			MarkDirty();
@@ -90,6 +93,11 @@ namespace oly::editor
 		_oly_path.dump_toml(table, _meta);
 		_desc.WriteToDisk();
 		MarkClean();
+	}
+
+	void ProjectDocument::ResetAssetImpl()
+	{
+		Load(TOMLNode(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& ProjectDocument::GetDoubleDescriptor() const

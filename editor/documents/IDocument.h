@@ -39,6 +39,8 @@ namespace oly::editor
 		virtual void LoadImpl() = 0;
 		void DumpAsset();
 		virtual void DumpImpl() = 0;
+		void ResetAsset();
+		virtual void ResetAssetImpl() = 0;
 		bool Exists();
 
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
