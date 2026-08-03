@@ -110,7 +110,7 @@ namespace oly::editor
 		void DrawImportFolderPopup(CompoundUndoActionQueue& fio_queue);
 
 		void PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
-		void PruneFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
+		void PrunePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
 		void DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue);
 	};
 }

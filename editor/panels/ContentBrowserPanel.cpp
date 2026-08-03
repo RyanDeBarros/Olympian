@@ -27,6 +27,8 @@
 
 #include "definitions/Keys.h"
 
+// TODO v9.4 options in editor filesystem settings to auto-prune/auto-import
+
 namespace oly::editor
 {
 	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
@@ -902,12 +904,14 @@ namespace oly::editor
 				d.close();
 
 				std::error_code ec;
-				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+				for (const auto& entry : std::filesystem::directory_iterator(detail::ResourcePath(folder).get_absolute(), std::filesystem::directory_options::skip_permission_denied, ec))
 				{
 					const auto& path = entry.path();
 					if (std::filesystem::is_regular_file(path))
 						ImportFile(path, fio_queue);
 				}
+
+				_import_folder.reset();
 			}
 
 			if (ImGui::Button("Import recursively"))
@@ -916,7 +920,7 @@ namespace oly::editor
 
 				std::error_code ec;
 				std::vector<std::filesystem::path> folders;
-				folders.push_back(folder);
+				folders.push_back(detail::ResourcePath(folder).get_absolute());
 
 				while (!folders.empty())
 				{
@@ -930,6 +934,8 @@ namespace oly::editor
 							ImportFile(path, fio_queue);
 					}
 				}
+
+				_import_folder.reset();
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
@@ -944,18 +950,22 @@ namespace oly::editor
 
 	void ContentBrowserPanel::PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
-		if (std::filesystem::is_regular_file(path))
-		{
-			PruneFile(path, fio_queue);
-			return;
-		}
-
 		_prune_folder = PruneFolderInfo(path);
 	}
 
-	void ContentBrowserPanel::PruneFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
+	void ContentBrowserPanel::PrunePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
-		// TODO v9.2
+		if (!PathInfo::IsImportFile(path))
+			return;
+
+		detail::ResourcePath import_path = path;
+		detail::ResourcePath source_asset = import_path.get_source_path();
+		if (!source_asset.exists())
+		{
+			auto action = std::make_unique<fio::DeletePathAction>();
+			action->del_path = import_path;
+			fio_queue.Append(std::move(action), true);
+		}
 	}
 
 	void ContentBrowserPanel::DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue)
@@ -975,12 +985,10 @@ namespace oly::editor
 				d.close();
 
 				std::error_code ec;
-				for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
-				{
-					const auto& path = entry.path();
-					if (std::filesystem::is_regular_file(path))
-						PruneFile(path, fio_queue);
-				}
+				for (const auto& entry : std::filesystem::directory_iterator(detail::ResourcePath(folder).get_absolute(), std::filesystem::directory_options::skip_permission_denied, ec))
+					PrunePath(entry.path(), fio_queue);
+
+				_prune_folder.reset();
 			}
 
 			if (ImGui::Button("Prune recursively"))
@@ -989,7 +997,7 @@ namespace oly::editor
 
 				std::error_code ec;
 				std::vector<std::filesystem::path> folders;
-				folders.push_back(folder);
+				folders.push_back(detail::ResourcePath(folder).get_absolute());
 
 				while (!folders.empty())
 				{
@@ -997,12 +1005,10 @@ namespace oly::editor
 					folders.pop_back();
 
 					for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
-					{
-						const auto& path = entry.path();
-						if (std::filesystem::is_regular_file(path))
-							PruneFile(path, fio_queue);
-					}
+						PrunePath(entry.path(), fio_queue);
 				}
+
+				_prune_folder.reset();
 			}
 
 			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
