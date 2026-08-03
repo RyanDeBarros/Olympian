@@ -196,7 +196,7 @@ namespace oly::editor
 			}));
 			gui::PropertyGrid::SubmitRow();
 
-			imtk::popup clear_trash_popup("Clear trash folder");
+			imtk::popup clear_trash_popup("Clear trash folder", true, imtk::window_flags::always_auto_resize());
 
 			if (auto pause = FormPause())
 			{
@@ -207,7 +207,7 @@ namespace oly::editor
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
 
-			if (auto d = clear_trash_popup.draw(true, ImGuiWindowFlags_AlwaysAutoResize))
+			if (auto d = clear_trash_popup.draw())
 			{
 				ImGui::TextUnformatted("Are you sure? This action is irreversible.");
 

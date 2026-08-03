@@ -14,14 +14,24 @@ endif()
 #    imgui-toolkit
 # ====================
 
-FetchContent_Declare(
-    imtk
-    GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
-    GIT_TAG        main
-    # TODO v9.3 use specific tag
-)
+set(IMTK_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.submodule/imgui-toolkit")
 
-FetchContent_MakeAvailable(imtk)
+if (EXISTS "${IMTK_LOCAL_DIR}/CMakeLists.txt")
+    message(STATUS "Using imgui-toolkit local submodule")
+    add_subdirectory(
+        "${IMTK_LOCAL_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/imgui-toolkit"
+    )
+else()
+    FetchContent_Declare(
+        imtk
+        GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
+        GIT_TAG        main
+        # TODO v9.3 use specific tag
+    )
+
+    FetchContent_MakeAvailable(imtk)
+endif()
 
 
 # ====================

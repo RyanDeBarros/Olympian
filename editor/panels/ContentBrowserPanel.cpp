@@ -32,7 +32,7 @@
 namespace oly::editor
 {
 	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
-		: type(type), name(std::move(name)), popup(popup_label)
+		: type(type), name(std::move(name)), popup(popup_label, false, imtk::window_flags::always_auto_resize())
 	{
 		popup.open();
 	}
@@ -571,7 +571,7 @@ namespace oly::editor
 				_rename_buffer = path.filename().generic_string();
 
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-			if (auto d = rename_popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+			if (auto d = rename_popup.draw())
 			{
 				if (ImGui::IsWindowAppearing())
 					ImGui::SetKeyboardFocusHere();
@@ -680,7 +680,7 @@ namespace oly::editor
 			return;
 
 		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-		if (auto d = _new_asset->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize)) // TODO v9.3 add window flags to popup itself so don't need to pass to draw(). draw() parameters can be overrides.
+		if (auto d = _new_asset->popup.draw())
 		{
 			if (ImGui::IsWindowAppearing())
 				ImGui::SetKeyboardFocusHere();
@@ -887,7 +887,7 @@ namespace oly::editor
 		if (!_import_folder)
 			return;
 
-		if (auto d = _import_folder->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+		if (auto d = _import_folder->popup.draw())
 		{
 			ImGui::TextUnformatted("Folder");
 			ImGui::SameLine();
@@ -968,7 +968,7 @@ namespace oly::editor
 		if (!_prune_folder)
 			return;
 
-		if (auto d = _prune_folder->popup.draw(false, ImGuiWindowFlags_AlwaysAutoResize))
+		if (auto d = _prune_folder->popup.draw())
 		{
 			ImGui::TextUnformatted("Folder");
 			ImGui::SameLine();
