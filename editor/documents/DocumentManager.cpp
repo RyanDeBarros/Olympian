@@ -39,6 +39,28 @@ namespace oly::editor
 			doc->Draw();
 	}
 
+	template<typename T>
+	struct ImportableTypeTag
+	{
+		using type = T;
+	};
+
+	static OpenAssetCode ProcessUnimportedAsset(const detail::ResourcePath& source_asset, auto&& visitor)
+	{
+		std::string ext = source_asset.extension();
+		for (size_t i = 0; i < ext.size(); ++i)
+			ext[i] = tolower(ext[i]);
+
+		if (ext == ".ttf" || ext == ".otf")
+			visitor(ImportableTypeTag<FontDocument>{}, source_asset.get_import_path());
+		else if (ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".svg")
+			visitor(ImportableTypeTag<TextureDocument>{}, source_asset.get_import_path());
+		else
+			return OpenAssetCode::UnsupportedExtension;
+
+		return OpenAssetCode::Success;
+	}
+
 	OpenAssetCode DocumentManager::OpenAsset(const detail::ResourcePath& path)
 	{
 		detail::ResourcePath oly_file = path.get_import_path();
@@ -64,43 +86,34 @@ namespace oly::editor
 			}
 		}
 		else if (path.exists() && path.is_file())
-		{
-			std::string ext = path.extension();
-			for (size_t i = 0; i < ext.size(); ++i)
-				ext[i] = tolower(ext[i]);
-
-			if (ext == ".ttf" || ext == ".otf")
-				Add<FontDocument>(std::move(oly_file));
-			else if (ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".svg")
-				Add<TextureDocument>(std::move(oly_file));
-			else
-				return OpenAssetCode::UnsupportedExtension;
-		}
+			return ProcessUnimportedAsset(path, [this]<typename T>(ImportableTypeTag<T>, detail::ResourcePath oly_file) { Add<T>(std::move(oly_file)); });
 		else
 			return OpenAssetCode::DoesNotExist;
 
 		return OpenAssetCode::Success;
 	}
 
+	template<std::derived_from<IDocument> D>
+	bool InitNewAssetImpl(detail::ResourcePath path)
+	{
+		try
+		{
+			D doc(std::move(path));
+			doc.Init();
+			doc.DumpAsset();
+			return true;
+		}
+		catch (const BreakoutError&)
+		{
+			return false;
+		}
+	}
+
 	bool DocumentManager::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)
 	{
 		switch (meta_type)
 		{
-#define SWITCH_CASE(Doc) \
-		case detail::Key::Meta_##Doc: \
-		{ \
-			try \
-			{ \
-				Doc##Document doc(std::move(path)); \
-				doc.Init(); \
-				doc.DumpAsset(); \
-				return true; \
-			} \
-			catch (const BreakoutError& e) \
-			{ \
-				return false; \
-			} \
-		}
+#define SWITCH_CASE(Doc) case detail::Key::Meta_##Doc: return InitNewAssetImpl<Doc##Document>(std::move(path));
 
 			DOCUMENT_GENERATOR(SWITCH_CASE);
 
@@ -110,6 +123,25 @@ namespace oly::editor
 			return std::filesystem::create_directory(path.get_absolute());
 
 		default:
+			return false;
+		}
+	}
+
+	bool DocumentManager::ImportAsset(const detail::ResourcePath& source_asset)
+	{
+		if (source_asset.is_oly_path())
+			return false;
+
+		try
+		{
+			return ProcessUnimportedAsset(source_asset, []<typename T>(ImportableTypeTag<T>, detail::ResourcePath import_path) {
+				T doc(std::move(import_path));
+				doc.Init();
+				doc.DumpAsset();
+			}) == OpenAssetCode::Success;
+		}
+		catch (const BreakoutError&)
+		{
 			return false;
 		}
 	}

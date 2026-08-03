@@ -876,7 +876,13 @@ namespace oly::editor
 	
 	void ContentBrowserPanel::ImportFile(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
 	{
-		// TODO v9.2
+		detail::ResourcePath source_path = path;
+		if (Editor::ImportAsset(source_path))
+		{
+			auto action = std::make_unique<fio::CreateAssetAction>();
+			action->asset_path = source_path.get_import_path();
+			fio_queue.Append(std::move(action), false);
+		}
 	}
 
 	void ContentBrowserPanel::DrawImportFolderPopup(CompoundUndoActionQueue& fio_queue)

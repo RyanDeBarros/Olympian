@@ -217,4 +217,9 @@ namespace oly::editor
 	{
 		return DocumentManager::Instance().InitNewAsset(path, meta_type);
 	}
+
+	bool Editor::ImportAsset(const detail::ResourcePath& source_asset)
+	{
+		return DocumentManager::Instance().ImportAsset(source_asset);
+	}
 }

@@ -74,5 +74,6 @@ namespace oly::editor
 		static void OpenProject(const std::filesystem::path& path);
 		static void OpenFile(const std::filesystem::path& path);
 		static bool InitNewAsset(detail::ResourcePath path, detail::Key meta_type);
+		static bool ImportAsset(const detail::ResourcePath& source_asset);
 	};
 }

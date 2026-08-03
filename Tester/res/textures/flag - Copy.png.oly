@@ -1,0 +1,9 @@
+#meta version="1.0" import="1" type="texture" 
+[[Texture]]
+Animated = false
+MagFilt = 9728
+MinFilt = 9728
+Mipmaps = false
+Storage = 1
+WrapS = 33071
+WrapT = 33071

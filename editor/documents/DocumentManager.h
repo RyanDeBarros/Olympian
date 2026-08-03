@@ -30,6 +30,7 @@ namespace oly::editor
 
 		OpenAssetCode OpenAsset(const detail::ResourcePath& path);
 		bool InitNewAsset(detail::ResourcePath path, detail::Key meta_type);
+		bool ImportAsset(const detail::ResourcePath& source_asset);
 
 		size_t DocumentCount() const;
 		const IDocument& GetDocument(size_t i) const;
