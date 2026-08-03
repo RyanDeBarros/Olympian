@@ -106,6 +106,11 @@ namespace oly::editor::fio
 		return sizeof(*this);
 	}
 
+	void DeletePathAction::Init()
+	{
+		_aux_path = GetAuxPath(del_path);
+	}
+
 	bool DeletePathAction::Forward()
 	{
 		if (!Trashcan::Delete(del_path))
@@ -120,18 +125,18 @@ namespace oly::editor::fio
 		ss << "fio::DeletePathAction::Forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
 		Logger::LogSuccess(ss.str());
 
-		if (auto aux_path = GetAuxPath(del_path))
+		if (_aux_path)
 		{
-			if (!Trashcan::Delete(*aux_path))
+			if (!Trashcan::Delete(*_aux_path))
 			{
 				std::stringstream ss;
-				ss << "fio::DeletePathAction::Forward() failed to delete \"" << aux_path->get_resource_shorthand() << "\"";
+				ss << "fio::DeletePathAction::Forward() failed to delete \"" << _aux_path->get_resource_shorthand() << "\"";
 				Logger::LogError(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Forward() success: deleted \"" << aux_path->get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::Forward() success: deleted \"" << _aux_path->get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 		}
 
@@ -140,18 +145,18 @@ namespace oly::editor::fio
 
 	bool DeletePathAction::Backward()
 	{
-		if (auto aux_path = GetAuxPath(del_path))
+		if (_aux_path)
 		{
-			if (!Trashcan::Restore(*aux_path))
+			if (!Trashcan::Restore(*_aux_path))
 			{
 				std::stringstream ss;
-				ss << "fio::DeletePathAction::Backward() failed to restore \"" << aux_path->get_resource_shorthand() << "\"";
+				ss << "fio::DeletePathAction::Backward() failed to restore \"" << _aux_path->get_resource_shorthand() << "\"";
 				Logger::LogError(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Backward() success: restored \"" << aux_path->get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::Backward() success: restored \"" << _aux_path->get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 		}
 

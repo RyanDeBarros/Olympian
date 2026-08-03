@@ -474,7 +474,7 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (Toolbar::IconMenuItem("Import", IconResource::Import)) // TODO v9.2 only if import file does not exist
+					if (!detail::ResourcePath(path).get_import_path().exists() && Toolbar::IconMenuItem("Import", IconResource::Import))
 					{
 						ImportFromPath(path, fio_queue);
 						ImGui::CloseCurrentPopup();
@@ -861,6 +861,7 @@ namespace oly::editor
 
 		auto action = std::make_unique<fio::DeletePathAction>();
 		action->del_path = resource;
+		action->Init();
 
 		fio_queue.Append(std::move(action), true);
 	}
@@ -964,6 +965,7 @@ namespace oly::editor
 		{
 			auto action = std::make_unique<fio::DeletePathAction>();
 			action->del_path = import_path;
+			action->Init();
 			fio_queue.Append(std::move(action), true);
 		}
 	}

@@ -20,6 +20,12 @@ namespace oly::editor::fio
 	{
 		detail::ResourcePath del_path;
 
+	private:
+		std::optional<detail::ResourcePath> _aux_path;
+
+	public:
+		void Init();
+
 		bool Forward() override;
 		bool Backward() override;
 		size_t EmpiricalSize() const override;
