@@ -61,7 +61,7 @@ namespace oly::editor
 					DrawResult result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
 
 					imtk::id_scope scope(&data.value);
-					if (auto disabled = DisabledSection(!data.has_value))
+					if (auto d = imtk::disabled(!data.has_value))
 					{
 						ImGui::SameLine();
 						result |= gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);

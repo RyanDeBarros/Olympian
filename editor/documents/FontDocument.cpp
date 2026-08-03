@@ -42,21 +42,13 @@ namespace oly::editor
 
 		imtk::id_scope scope(this);
 
-		if (ImGui::BeginTabBar(""))
+		if (auto _ = imtk::tab_bar(""))
 		{
-			if (ImGui::BeginTabItem("Font Face"))
-			{
+			if (auto _ = imtk::tab_item("Font Face"))
 				DrawFontFace();
-				ImGui::EndTabItem();
-			}
 
-			if (ImGui::BeginTabItem("Font Atlases"))
-			{
+			if (auto _ = imtk::tab_item("Font Atlases"))
 				DrawFontAtlases();
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
 		}
 	}
 
@@ -333,7 +325,7 @@ namespace oly::editor
 
 			bool preset = desc.use_common_buffer_preset.value;
 			
-			if (auto disabled = DisabledSection(!preset))
+			if (auto d = imtk::disabled(!preset))
 			{
 				DRAW_FIELD(common_buffer_preset);
 
@@ -348,7 +340,7 @@ namespace oly::editor
 				}
 			}
 
-			if (auto disabled = DisabledSection(preset))
+			if (auto d = imtk::disabled(preset))
 			{
 				DRAW_FIELD(common_buffer);
 			}

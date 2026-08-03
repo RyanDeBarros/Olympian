@@ -7,7 +7,7 @@ namespace oly::editor::gui
 	UnsavedChangesModalResult DrawUnsavedChangesModal(const char* popup, std::vector<std::string>& description)
 	{
 		UnsavedChangesModalResult result = UnsavedChangesModalResult::None;
-		imtk::popup pop(popup, imtk::center_window::always, false, imtk::window_flags::always_auto_resize());
+		imtk::popup pop(popup, imtk::popup_config{ .center_window = imtk::center_window::always, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 
 		if (auto d = pop.draw())
 		{

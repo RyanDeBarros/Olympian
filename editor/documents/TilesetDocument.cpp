@@ -158,21 +158,13 @@ namespace oly::editor
 		if (auto subform = Subform("Advanced"))
 			_desc.scratch.storage.Draw(path / _desc.scratch.subpaths.storage);
 
-		if (ImGui::BeginTabBar("##Editors"))
+		if (auto _ = imtk::tab_bar("##Editors"))
 		{
-			if (ImGui::BeginTabItem("Group"))
-			{
+			if (auto _ = imtk::tab_item("Group"))
 				DrawGroupEditor();
-				ImGui::EndTabItem();
-			}
 
-			if (ImGui::BeginTabItem("Individual"))
-			{
+			if (auto _ = imtk::tab_item("Individual"))
 				DrawIndividualEditor();
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
 		}
 	}
 

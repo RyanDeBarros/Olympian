@@ -4,7 +4,6 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/Colors.h"
 
-#include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Toolbar.h"
@@ -484,7 +483,7 @@ namespace oly::editor
 
 		if (auto subform = Subform("Animation", true))
 		{
-			if (auto disabled = DisabledSection(_gif))
+			if (auto d = imtk::disabled(_gif))
 			{
 				DRAW_FIELD(anim);
 				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())

@@ -7,14 +7,9 @@
 
 #include "gui/DrawResult.h"
 
-#include "gui/scopes/DisabledSection.h"
-
 #include "desc/OptionalPrimitive.h"
 
 #include "external/GLM.h"
-
-#include <string>
-#include <vector>
 
 #include <imtk.hpp>
 

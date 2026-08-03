@@ -20,9 +20,9 @@ namespace oly::editor
 
 	void IDocument::DrawMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
 					DumpAsset();
@@ -32,11 +32,7 @@ namespace oly::editor
 
 				if (ImGui::MenuItem("Reset Asset"))
 					ResetAsset();
-
-				ImGui::EndMenu();
 			}
-
-			ImGui::EndMenuBar();
 		}
 	}
 

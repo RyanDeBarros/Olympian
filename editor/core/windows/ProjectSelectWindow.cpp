@@ -55,9 +55,9 @@ namespace oly::editor
 
     void ProjectSelectWindow::DrawOpenExistingGroup()
     {
-        ImGui::BeginGroup();
-        ImGui::TextUnformatted("Open Existing Project");
+        imtk::group group;
 
+        ImGui::TextUnformatted("Open Existing Project");
         ImGui::TextUnformatted("Project File");
 
         ImGui::SameLine();
@@ -87,12 +87,11 @@ namespace oly::editor
             ImGuiFileDialog::Instance()->Close();
         }
 
-        ImGui::BeginDisabled(!_valid_project_file);
-        if (ImGui::Button("Open"))
-            OpenProject();
-        ImGui::EndDisabled();
-
-        ImGui::EndGroup();
+        if (auto d = imtk::disabled(!_valid_project_file))
+        {
+            if (ImGui::Button("Open"))
+                OpenProject();
+        }
     }
 
     void ProjectSelectWindow::CheckProjectFile()

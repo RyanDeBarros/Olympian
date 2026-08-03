@@ -35,9 +35,9 @@ namespace oly::editor
 
 	void ProjectDocument::DrawMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
 					DumpAsset();
@@ -47,13 +47,9 @@ namespace oly::editor
 
 				if (ImGui::MenuItem("Reset Project Settings"))
 					ResetAsset();
-
-				ImGui::EndMenu();
 			}
 
 			// TODO v13 Run menu to configure cmake, build project, and run executable
-
-			ImGui::EndMenuBar();
 		}
 	}
 

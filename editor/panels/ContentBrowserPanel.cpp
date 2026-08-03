@@ -32,7 +32,7 @@
 namespace oly::editor
 {
 	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
-		: type(type), name(std::move(name)), popup(popup_label, imtk::center_window::always, false, imtk::window_flags::always_auto_resize())
+		: type(type), name(std::move(name)), popup(popup_label, imtk::popup_config{ .center_window = imtk::center_window::always, .window_flags = ImGuiWindowFlags_AlwaysAutoResize })
 	{
 		popup.open();
 	}
@@ -180,12 +180,12 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DrawMainToolbar(CompoundUndoActionQueue& fio_queue)
 	{
-		if (auto disabled = DisabledSection(_on_res_root))
+		if (auto d = imtk::disabled(_on_res_root))
 		{
 			if (Toolbar::DrawIconToggleButton(IconResource::StarFilled, IconResource::StarOutline, _favorited,
-				disabled.Disabled() ? "Favorite (disabled for root folder)" : "Favorite"))
+				d.is_disabled() ? "Favorite (disabled for root folder)" : "Favorite"))
 			{
-				if (!disabled.Disabled())
+				if (!d.is_disabled())
 					SyncFavoritesList();
 			}
 		}
@@ -208,11 +208,8 @@ namespace oly::editor
 			NewFolderMenu();
 			ImGui::Separator();
 
-			if (ImGui::BeginMenu("New asset"))
-			{
+			if (auto _ = imtk::menu("New asset"))
 				NewAssetMenu();
-				ImGui::EndMenu();
-			}
 		}
 
 		imtk::controls::vertical_separator();
@@ -232,7 +229,7 @@ namespace oly::editor
 
 		imtk::controls::vertical_separator();
 
-		if (auto d = DisabledSection(_folder_history.empty_backwards()))
+		if (auto d = imtk::disabled(_folder_history.empty_backwards()))
 		{
 			if (Toolbar::DrawIconButton(IconResource::CircleLeft, "Back", "##FolderHistoryBack"))
 			{
@@ -244,7 +241,7 @@ namespace oly::editor
 
 		ImGui::SameLine();
 
-		if (auto d = DisabledSection(_folder_history.empty_forwards()))
+		if (auto d = imtk::disabled(_folder_history.empty_forwards()))
 		{
 			if (Toolbar::DrawIconButton(IconResource::CircleRight, "Forward", "##FolderHistoryForward"))
 			{
@@ -341,11 +338,8 @@ namespace oly::editor
 					NewFolderMenu();
 					ImGui::Separator();
 
-					if (ImGui::BeginMenu("New asset"))
-					{
+					if (auto _ = imtk::menu("New asset"))
 						NewAssetMenu();
-						ImGui::EndMenu();
-					}
 
 					ImGui::Separator();
 
@@ -452,7 +446,7 @@ namespace oly::editor
 		imtk::id_scope id(path.string().c_str());
 		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
 		{
-			imtk::popup rename_popup("Rename path", imtk::center_window::appearing);
+			imtk::popup rename_popup("Rename path", imtk::popup_config{ .center_window = imtk::center_window::appearing });
 
 			if (!dotdot)
 			{
@@ -646,7 +640,7 @@ namespace oly::editor
 			ImGui::CloseCurrentPopup();
 		}
 
-		if (ImGui::BeginMenu("Fonts"))
+		if (auto _ = imtk::menu("Fonts"))
 		{
 			if (Toolbar::IconMenuItem("Font family", PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)))
 			{
@@ -659,8 +653,6 @@ namespace oly::editor
 				_new_asset = NewAssetInfo(detail::Key::Meta_RasterFont, "New Raster Font", "New raster font");
 				ImGui::CloseCurrentPopup();
 			}
-
-			ImGui::EndMenu();
 		}
 	}
 

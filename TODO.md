@@ -7,7 +7,6 @@
 	* Copy/paste
 	* DrawResult: persistent classes for widgets with methods that return `bool hovered()`, `bool clicked()`, etc. after calling `bool draw()`.
 	* DockTree
-	* `std::string` combos or other widgets that need adapting to C++
 	* Window
 	* Table
 	* More...

@@ -46,21 +46,14 @@ namespace oly::editor
 		_stop_listening = true;
 		imtk::id_scope scope(this);
 
-		if (ImGui::BeginTabBar(""))
+		// TODO v9.3 imtk::w::tab_bar widget with a map<std::string, imtk::w::tab_item> where the tab items have callbacks?
+		if (auto _ = imtk::tab_bar(""))
 		{
-			if (ImGui::BeginTabItem("Signals"))
-			{
+			if (auto _ = imtk::tab_item("Signals"))
 				Draw(DataPath() / _desc.scratch.subpaths.signals, _desc.scratch.signals);
-				ImGui::EndTabItem();
-			}
 
-			if (ImGui::BeginTabItem("Routes"))
-			{
+			if (auto _ = imtk::tab_item("Routes"))
 				Draw(DataPath() / _desc.scratch.subpaths.routes, _desc.scratch.routes);
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
 		}
 
 		if (_stop_listening)

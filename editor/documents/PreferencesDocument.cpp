@@ -40,9 +40,9 @@ namespace oly::editor
 
 	void PreferencesDocument::DrawMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Apply Changes"))
 					ApplyEditorPreferences();
@@ -55,11 +55,7 @@ namespace oly::editor
 
 				if (ImGui::MenuItem("Reset Preferences"))
 					ResetAsset();
-
-				ImGui::EndMenu();
 			}
-
-			ImGui::EndMenuBar();
 		}
 	}
 
@@ -196,7 +192,7 @@ namespace oly::editor
 			}));
 			gui::PropertyGrid::SubmitRow();
 
-			imtk::popup clear_trash_popup("Clear trash folder", imtk::center_window::appearing, true, imtk::window_flags::always_auto_resize());
+			imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 
 			if (auto pause = FormPause())
 			{

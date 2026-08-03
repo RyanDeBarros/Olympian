@@ -1,7 +1,6 @@
 #include "DescIO.h"
 
 #include "gui/InlineWidget.h"
-#include "gui/scopes/DisabledSection.h"
 #include "gui/scopes/Subform.h"
 
 #include "core/MemoryUnit.h"
@@ -80,7 +79,7 @@ namespace oly::editor
 			
 			for (size_t i = 0; i < count; ++i)
 			{
-				if (auto d = DisabledSection(disabled && disabled[i]))
+				if (auto d = imtk::disabled(disabled && disabled[i]))
 				{
 					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
 					if (inline_checkboxes && i + 1 < count)

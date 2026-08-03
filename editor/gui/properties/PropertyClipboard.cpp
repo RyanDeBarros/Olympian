@@ -1,8 +1,6 @@
 #include "PropertyClipboard.h"
 
-#include "gui/scopes/DisabledSection.h"
-
-#include <imgui.h>
+#include <imtk.hpp>
 
 #include <cstring>
 
@@ -223,7 +221,7 @@ namespace oly::editor
 		if (ImGui::MenuItem("Copy"))
 			Store(props);
 
-		if (auto disabled = DisabledSection(!CanPaste(props)))
+		if (auto d = imtk::disabled(!CanPaste(props)))
 		{
 			if (ImGui::MenuItem("Paste"))
 				return TryPaste(props);

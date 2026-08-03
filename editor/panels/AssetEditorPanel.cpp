@@ -140,7 +140,7 @@ namespace oly::editor
 			ImGuiTabBarFlags_Reorderable;
 
 		imtk::id_scope scope(this);
-		if (ImGui::BeginTabBar("##AssetTabs", tab_bar_flags))
+		if (auto _ = imtk::tab_bar("##AssetTabs", tab_bar_flags))
 		{
 			std::vector<size_t> closed;
 
@@ -180,7 +180,7 @@ namespace oly::editor
 				if (_focused_tab == &doc)
 					tab_item_flags |= ImGuiTabItemFlags_SetSelected;
 
-				if (ImGui::BeginTabItem((doc.TabName() + "##" + std::to_string(i)).c_str(), &open, tab_item_flags))
+				if (auto _ = imtk::tab_item(doc.TabName() + "##" + std::to_string(i), tab_item_flags, &open))
 				{
 					if (ImGui::BeginPopupContextItem("ContextMenu"))
 					{
@@ -200,7 +200,6 @@ namespace oly::editor
 					doc.Draw();
 					doc.DrawFinalize();
 					_selected_tab = &doc;
-					ImGui::EndTabItem();
 				}
 
 				if (!open)
@@ -243,7 +242,6 @@ namespace oly::editor
 				DocumentManager::Instance().Remove(*it);
 
 			_focused_tab = nullptr;
-			ImGui::EndTabBar();
 		}
 	}
 
@@ -348,16 +346,13 @@ namespace oly::editor
 
 	void AssetEditorPanel::DrawDefaultMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Open File", "Ctrl+O"))
 					OpenFile();
-
-				ImGui::EndMenu();
 			}
-			ImGui::EndMenuBar();
 		}
 	}
 

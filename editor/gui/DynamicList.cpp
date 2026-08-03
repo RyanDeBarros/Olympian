@@ -3,7 +3,6 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/UID.h"
 
-#include "gui/scopes/DisabledSection.h"
 #include "gui/graphics/Toolbar.h"
 
 #include <imtk.hpp>
@@ -208,7 +207,7 @@ namespace oly::editor::gui
 		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
 			DeferPushBack();
 
-		if (auto disabled = DisabledSection(list_size == 0))
+		if (auto d = imtk::disabled(list_size == 0))
 		{
 			ImGui::SameLine();
 			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item (Del)", "##Remove"))
