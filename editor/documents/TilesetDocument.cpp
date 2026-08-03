@@ -233,7 +233,7 @@ namespace oly::editor
 	void TilesetDocument::DrawGroupEditor()
 	{
 		int type_index = static_cast<int>(_group_editors.current_type);
-		if (gui::Combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }))
+		if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }))
 			_group_editors.current_type = static_cast<GroupEditorType>(type_index);
 
 		GridEditorStateBase* editor = nullptr;

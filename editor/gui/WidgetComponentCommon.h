@@ -39,7 +39,7 @@ namespace oly::editor::comp
 		gui::WidgetComponent c;
 		c.draw = [label, data_label, &data, ... args = std::forward<Args>(args)]() mutable  -> DrawResult {
 			imtk::id_scope scope(&data);
-			gui::VerticalSeparator();
+			imtk::controls::vertical_separator();
 			ImGui::TextUnformatted(label);
 			DrawResult result = DrawResult().Query();
 			ImGui::SameLine();

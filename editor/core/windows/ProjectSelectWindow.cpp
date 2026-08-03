@@ -61,7 +61,7 @@ namespace oly::editor
         ImGui::TextUnformatted("Project File");
 
         ImGui::SameLine();
-        if (gui::InputText("##ProjectFile", _project_file))
+        if (imtk::controls::input_text("##ProjectFile", _project_file))
             CheckProjectFile();
 
         ImGui::SameLine();

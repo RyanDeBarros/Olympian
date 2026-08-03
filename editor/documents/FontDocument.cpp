@@ -279,7 +279,7 @@ namespace oly::editor
 
 			components.push_back(comp::Generic([&k]() -> DrawResult {
 				DrawResult result;
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				ImGui::TextUnformatted(k.distance.label);
 				result.Query();
 				ImGui::SameLine();

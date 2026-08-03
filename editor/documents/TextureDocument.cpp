@@ -157,7 +157,7 @@ namespace oly::editor
 			
 			if (GIFTexture* gif = _texture.GetGIF())
 			{
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
 				ImGui::InputFloat("Speed", &gif->speed);
 				gif->Update(ImGui::GetIO().DeltaTime);
@@ -165,12 +165,12 @@ namespace oly::editor
 
 			if (SVGTexture* svg = _texture.GetSVG())
 			{
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
 				float scale = svg->preview_scale * _preview_nav.svg_scale;
 				ImGui::InputFloat("Scale", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
 				{
 					_preview_nav.svg_scale = scale;
@@ -182,7 +182,7 @@ namespace oly::editor
 
 			if (spritesheet_desc)
 			{
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				Toolbar::DrawIconToggleButton(IconResource::Preview, _preview_spritesheet, "Preview spritesheet");
 				ImGui::SameLine();
 				Toolbar::DrawIconToggleButton(IconResource::Pause, IconResource::Play, _spritesheet_preview_data.playing, "Play/pause animation");

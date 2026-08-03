@@ -215,7 +215,7 @@ namespace oly::editor
 			}
 		}
 
-		gui::VerticalSeparator();
+		imtk::controls::vertical_separator();
 
 		if (Toolbar::DrawIconButton(IconResource::Import, "Import", "##Import"))
 		{
@@ -230,7 +230,7 @@ namespace oly::editor
 			ImGui::CloseCurrentPopup();
 		}
 
-		gui::VerticalSeparator();
+		imtk::controls::vertical_separator();
 
 		if (auto d = DisabledSection(_folder_history.empty_backwards()))
 		{
@@ -254,14 +254,14 @@ namespace oly::editor
 			}
 		}
 
-		gui::VerticalSeparator();
+		imtk::controls::vertical_separator();
 
 		int columns = *Editor::GetLiveSettings().content_browser->columns;
 		ImGui::SetNextItemWidth(100.f);
 		ImGui::InputInt("Columns", &columns);
 		*Editor::GetLiveSettings().content_browser->columns = std::max(columns, 1);
 
-		gui::VerticalSeparator();
+		imtk::controls::vertical_separator();
 
 		gui::FloatControl("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 120.f, 0.1f, 10.f, "%.1f", true);
 	}
@@ -575,7 +575,7 @@ namespace oly::editor
 				if (ImGui::IsWindowAppearing())
 					ImGui::SetKeyboardFocusHere();
 
-				gui::InputText("Name", _rename_buffer);
+				imtk::controls::input_text("Name", _rename_buffer);
 
 				if (imtk::nav::escape().pressed)
 					d.close();
@@ -683,7 +683,7 @@ namespace oly::editor
 			if (ImGui::IsWindowAppearing())
 				ImGui::SetKeyboardFocusHere();
 
-			gui::InputText("Name", _new_asset->name);
+			imtk::controls::input_text("Name", _new_asset->name);
 
 			if (ImGui::Button("Create"))
 			{

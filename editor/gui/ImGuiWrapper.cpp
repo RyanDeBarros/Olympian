@@ -10,56 +10,6 @@
 
 namespace oly::editor::gui
 {
-	void VerticalSeparator()
-	{
-		ImGui::SameLine();
-		ImGui::SeparatorEx(ImGuiSeparatorFlags_Vertical);
-		ImGui::SameLine();
-	}
-
-	static const char* StringVectorComboGetter(void* data, int idx)
-	{
-		const std::vector<std::string>& items = *static_cast<const std::vector<std::string>*>(data);
-		if (idx < 0 || idx >= items.size())
-			return nullptr;
-		else
-			return items[idx].c_str();
-	}
-
-	DrawResult Combo(const char* label, int& current_item, const std::vector<std::string>& items)
-	{
-		auto styles = ApplyStyles(GUIState::input_data_styles);
-
-		float width = 0.0f;
-		for (int i = 0; i < items.size(); i++)
-			width = std::max(width, ImGui::CalcTextSize(items[i].c_str()).x);
-		width += 2 * ImGui::GetFrameHeight(); // roughly covers dropdown arrow + padding
-		ImGui::SetNextItemWidth(width);
-
-		DrawResult result = DrawResult(ImGui::Combo(label, &current_item, &StringVectorComboGetter, const_cast<std::vector<std::string>*>(&items), static_cast<int>(items.size()))).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::ComboPropertyView>(current_item, LabelSpanRegistry::Intern(items)));
-		return result;
-	}
-
-	bool InputText(const char* label, std::string& string, size_t max_size, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, void* user_data)
-	{
-		std::string buf;
-		buf.resize(max_size);
-		string.copy(buf.data(), buf.size());
-		auto styles = ApplyStyles(GUIState::input_data_styles);
-		if (ImGui::InputText(label, buf.data(), buf.size(), flags, callback, user_data))
-		{
-			string = std::move(buf);
-			size_t n = string.find('\0');
-			if (n != std::string::npos)
-				string.resize(n);
-
-			return true;
-		}
-		else
-			return false;
-	}
-
 	DrawResult InputData<bool>::operator()(const char* label, bool& data) const
 	{
 		auto styles = ApplyStyles(GUIState::input_data_styles);
@@ -156,8 +106,8 @@ namespace oly::editor::gui
 
 	DrawResult InputData<std::string>::operator()(const char* label, std::string& data) const
 	{
-		DrawResult result = InputText(label, data);
-		result.Query();
+		auto styles = ApplyStyles(GUIState::input_data_styles);
+		DrawResult result = DrawResult(imtk::controls::input_text(label, data)).Query();
 		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<std::string>>(data));
 		return result;
 	}

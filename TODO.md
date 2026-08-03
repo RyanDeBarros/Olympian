@@ -10,7 +10,6 @@
 	* `std::string` combos or other widgets that need adapting to C++
 	* Window
 	* Table
-	* Popups (allow opening from any imgui id scope, option to always center to viewport, etc.)
 	* More...
 
 ## v9.4

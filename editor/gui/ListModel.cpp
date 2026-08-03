@@ -281,7 +281,7 @@ namespace oly::editor::gui
 				slot_names.push_back(combo_getter(i));
 
 			int slot = active_index;
-			result |= gui::Combo("##SelectSlot", slot, slot_names);
+			result |= imtk::controls::combo("##SelectSlot", slot, slot_names);
 			active_index = slot;
 
 			ImGui::SameLine();
