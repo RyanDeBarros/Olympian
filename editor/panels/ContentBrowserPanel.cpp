@@ -431,9 +431,7 @@ namespace oly::editor
 
 		if (ImGui::IsWindowHovered())
 		{
-			// TODO v9.3 shorten these calls with `imtk::nav::lmb_clicked() && !imtk::nav::shift_down() && !imtk::nav::ctrl_down()`
-			if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !(ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift))
-					&& !(ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)))
+			if (imtk::nav::lmb().clicked && !imtk::nav::shift().down && !imtk::nav::ctrl().down)
 				ClearSelection();
 		}
 
@@ -530,12 +528,12 @@ namespace oly::editor
 			{
 				ImGui::SetTooltip(res.get_resource_shorthand().c_str());
 
-				if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+				if (imtk::nav::lmb().clicked)
 					ClickSelect(path);
 
 				ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
 
-				if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+				if (imtk::nav::lmb().double_clicked)
 					OpenPath(path);
 			}
 
@@ -580,10 +578,10 @@ namespace oly::editor
 
 				gui::InputText("Name", _rename_buffer);
 
-				if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+				if (imtk::nav::escape().pressed)
 					d.close();
 
-				if (ImGui::IsKeyPressed(ImGuiKey_Enter))
+				if (imtk::nav::enter().pressed)
 				{
 					d.close();
 
@@ -703,13 +701,13 @@ namespace oly::editor
 				_new_asset.reset();
 			}
 
-			if (ImGui::IsKeyPressed(ImGuiKey_Enter))
+			if (imtk::nav::enter().pressed)
 			{
 				d.close();
 				CreateNewAsset(fio_queue);
 			}
 
-			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+			if (imtk::nav::escape().pressed)
 			{
 				d.close();
 				_new_asset.reset();
@@ -795,7 +793,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::ClickSelect(const std::filesystem::path& path)
 	{
-		if ((ImGui::IsKeyDown(ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey_RightShift)) && _active_selected_path) // TODO v9.3 use imtk::nav::shift_down()
+		if (imtk::nav::shift().down && _active_selected_path)
 		{
 			const auto active_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *_active_selected_path);
 			const auto current_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), path);
@@ -810,7 +808,7 @@ namespace oly::editor
 
 			_active_selected_path = path;
 		}
-		else if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey_RightCtrl)) // TODO v9.3 use imtk::nav::ctrl_down()
+		else if (imtk::nav::ctrl().down)
 		{
 			for (auto it = _selected_paths.begin(); it != _selected_paths.end(); ++it)
 			{
@@ -935,7 +933,7 @@ namespace oly::editor
 				_import_folder.reset();
 			}
 
-			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+			if (imtk::nav::escape().pressed)
 			{
 				d.close();
 				_import_folder.reset();
@@ -1008,7 +1006,7 @@ namespace oly::editor
 				_prune_folder.reset();
 			}
 
-			if (ImGui::IsKeyPressed(ImGuiKey_Escape))
+			if (imtk::nav::escape().pressed)
 			{
 				d.close();
 				_prune_folder.reset();

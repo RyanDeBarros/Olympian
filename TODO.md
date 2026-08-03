@@ -1,8 +1,5 @@
 # Branches
 
-## v9.2
-* Content Browser Panel
-
 ## v9.3
 * Move stuff from `Olympian` editor into `imgui-toolkit`
 	* Wrap push/pop into RAII

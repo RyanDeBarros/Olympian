@@ -345,7 +345,7 @@ namespace oly::editor
 
 		if (ImGui::IsItemHovered())
 		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			if (imtk::nav::lmb().double_clicked)
 				node.Open();
 		}
 	}
