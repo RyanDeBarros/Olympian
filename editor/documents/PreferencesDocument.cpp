@@ -196,16 +196,13 @@ namespace oly::editor
 			}));
 			gui::PropertyGrid::SubmitRow();
 
-			imtk::popup clear_trash_popup("Clear trash folder", true, imtk::window_flags::always_auto_resize());
+			imtk::popup clear_trash_popup("Clear trash folder", imtk::center_window::appearing, true, imtk::window_flags::always_auto_resize());
 
 			if (auto pause = FormPause())
 			{
 				if (ImGui::Button("Clear trash folder"))
 					clear_trash_popup.open();
 			}
-
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
 
 			if (auto d = clear_trash_popup.draw())
 			{

@@ -32,7 +32,7 @@
 namespace oly::editor
 {
 	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
-		: type(type), name(std::move(name)), popup(popup_label, false, imtk::window_flags::always_auto_resize())
+		: type(type), name(std::move(name)), popup(popup_label, imtk::center_window::always, false, imtk::window_flags::always_auto_resize())
 	{
 		popup.open();
 	}
@@ -452,7 +452,7 @@ namespace oly::editor
 		imtk::id_scope id(path.string().c_str());
 		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
 		{
-			imtk::popup rename_popup("Rename path");
+			imtk::popup rename_popup("Rename path", imtk::center_window::appearing);
 
 			if (!dotdot)
 			{
@@ -570,7 +570,6 @@ namespace oly::editor
 			if (rename_popup.is_opening())
 				_rename_buffer = path.filename().generic_string();
 
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			if (auto d = rename_popup.draw())
 			{
 				if (ImGui::IsWindowAppearing())
@@ -679,7 +678,6 @@ namespace oly::editor
 		if (!_new_asset)
 			return;
 
-		ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
 		if (auto d = _new_asset->popup.draw())
 		{
 			if (ImGui::IsWindowAppearing())
