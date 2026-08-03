@@ -552,7 +552,7 @@ namespace oly::editor
 				}
 
 				if (entry_table_state.delete_consumed)
-					DeletePath(path, fio_queue);
+					DeletePath(path, fio_queue); // TODO v9.4 confirmation popup
 
 				// TODO v9.4 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
@@ -739,6 +739,8 @@ namespace oly::editor
 			auto action = std::make_unique<fio::CreateAssetAction>();
 			action->asset_path = asset_path;
 			fio_queue.Append(std::move(action), false);
+			_selected_paths = { asset_path };
+			_active_selected_path = asset_path;
 		}
 
 		_new_asset.reset();
