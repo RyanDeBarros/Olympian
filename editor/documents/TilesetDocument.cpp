@@ -243,7 +243,7 @@ namespace oly::editor
 		if (!editor)
 			return;
 
-		if (ImGui::BeginTable("##Table", 2))
+		if (auto _ = imtk::table("##Table", 2))
 		{
 			ImGui::TableNextColumn();
 			bool new_cell_selected = false;
@@ -304,14 +304,12 @@ namespace oly::editor
 					if (auto grid = editor->At(cell->first, cell->second))
 						Draw(*grid);
 			}
-
-			ImGui::EndTable();
 		}
 	}
 
 	void TilesetDocument::DrawIndividualEditor()
 	{
-		if (ImGui::BeginTable("##Table", 2))
+		if (auto _ = imtk::table("##Table", 2))
 		{
 			ImGui::TableNextColumn();
 			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
@@ -348,8 +346,6 @@ namespace oly::editor
 			ImGui::TableNextColumn();
 			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
 				Draw(_individual_editor.grid);
-
-			ImGui::EndTable();
 		}
 	}
 

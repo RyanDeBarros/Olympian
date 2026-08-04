@@ -136,7 +136,7 @@ namespace oly::editor
 
 	void FontDocument::DrawFontAtlases()
 	{
-		if (ImGui::BeginTable("", 2))
+		if (auto _ = imtk::table("", 2))
 		{
 			ImGui::TableNextColumn();
 				
@@ -158,8 +158,6 @@ namespace oly::editor
 
 			ImGui::TableNextColumn();
 			DrawAtlasPreview();
-
-			ImGui::EndTable();
 		}
 	}
 

@@ -10,7 +10,7 @@ namespace oly::editor::gui
 
 		imtk::style_var cell_padding(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().CellPadding.x, 0.f));
 
-		if (ImGui::BeginTable("##InlineWidget", components.size(), ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths,
+		if (auto _ = imtk::table("##InlineWidget", components.size(), ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths,
 			ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight())))
 		{
 			ImGui::TableNextRow();
@@ -21,8 +21,6 @@ namespace oly::editor::gui
 				if (auto _ = imtk::item_width_scope(imtk::expand_item_width{}))
 					result |= component.draw();
 			}
-
-			ImGui::EndTable();
 		}
 
 		return result;

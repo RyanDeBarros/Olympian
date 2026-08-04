@@ -39,14 +39,13 @@ namespace oly::editor
 		UpdatePreviewTexture();
 
 		imtk::id_scope scope(this);
-		if (ImGui::BeginTable("", 2))
+		if (auto _ = imtk::table("", 2))
 		{
 			ImGui::TableNextColumn();
 			Draw(DataPath(), _desc.scratch);
 
 			ImGui::TableNextColumn();
 			DrawPreview();
-			ImGui::EndTable();
 		}
 	}
 

@@ -98,7 +98,7 @@ namespace oly::editor
 			{
 				CompoundUndoActionQueue fio_queue;
 
-				if (ImGui::BeginTable("##ContentBrowserToolbar", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+				if (auto _ = imtk::table("##ContentBrowserToolbar", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
 				{
 					ImGui::TableNextRow();
 
@@ -109,14 +109,12 @@ namespace oly::editor
 
 					ImGui::TableSetColumnIndex(1);
 					DrawMainToolbar(fio_queue);
-
-					ImGui::EndTable();
 				}
 
 				const float font_global_scale = ImGui::GetIO().FontGlobalScale;
 				ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
-				if (ImGui::BeginTable("##Table", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
+				if (auto _ = imtk::table("##MainTable", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
 				{
 					ImGui::TableSetupColumn("##Favorites", ImGuiTableColumnFlags_WidthStretch, 0.25f);
 
@@ -127,8 +125,6 @@ namespace oly::editor
 
 					ImGui::TableSetColumnIndex(1);
 					DrawFolderView(fio_queue);
-					
-					ImGui::EndTable();
 				}
 
 				ImGui::GetIO().FontGlobalScale = font_global_scale;
@@ -384,7 +380,7 @@ namespace oly::editor
 		PruneSelection();
 
 		const unsigned int columns = *Editor::GetLiveSettings().content_browser->columns;
-		if (ImGui::BeginTable("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
+		if (auto _ = imtk::table("##PathEntryTable", columns, ImGuiTableFlags_SizingFixedSame))
 		{
 			EntryTableState entry_table_state;
 			entry_table_state.focused = ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows);
@@ -411,8 +407,6 @@ namespace oly::editor
 				ImGui::TableNextColumn();
 				DrawPathEntry(path, false, entry_table_state, fio_queue);
 			}
-
-			ImGui::EndTable();
 		}
 
 		if (ImGui::IsWindowHovered())
