@@ -1,6 +1,6 @@
 #include "CollapsingSection.h"
 
-#include "gui/scopes/StyleStack.h"
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -8,13 +8,13 @@ namespace oly::editor
 
 	CollapsingSection::CollapsingSection(const char* label, bool start_open)
 	{
-		gui::StyleVar1D sv(ImGuiStyleVar_ChildBorderSize, 2.f);
+		imtk::style_var sv(ImGuiStyleVar_ChildBorderSize, 2.f);
 
 		ImVec4 border_col = ImGui::GetStyle().Colors[ImGuiCol_Border];
 		const float w = border_col.w;
 		border_col *= 1.f + 0.35f * SECTION_BG_TOGGLE++;
 		border_col.w = w;
-		gui::StyleColor sc(ImGuiCol_Border, ImGui::GetColorU32(border_col));
+		imtk::style_color sc(ImGuiCol_Border, ImGui::GetColorU32(border_col));
 
 		if (ImGui::BeginChild(label, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
 		{

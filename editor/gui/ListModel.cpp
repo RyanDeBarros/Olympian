@@ -4,7 +4,6 @@
 
 #include "gui/ImGuiWrapper.h"
 #include "gui/graphics/Toolbar.h"
-#include "gui/scopes/StyleStack.h"
 
 #include <string>
 
@@ -266,7 +265,7 @@ namespace oly::editor::gui
 	{
 		DrawResult result;
 
-		StyleColor sc(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.75f));
+		imtk::style_color sc(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.75f));
 
 		if (ImGui::BeginChild(header.prompt, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
 		{

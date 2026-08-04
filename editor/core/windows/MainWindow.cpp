@@ -46,22 +46,20 @@ namespace oly::editor
             imtk::dock::make_branch(
                 ImGuiDir_Right,
                 imtk::dock::make_leaf({
-                    &typeid(TreeViewPanel)
+                    TreeViewPanel::Instance().GetTitle()
                 }),
                 imtk::dock::make_leaf({
-                    &typeid(AssetEditorPanel),
-                    &typeid(PreferencesPanel)
+                    AssetEditorPanel::Instance().GetTitle(),
+                    PreferencesPanel::Instance().GetTitle()
                 }),
                 0.2f
             ),
             imtk::dock::make_leaf({
-                &typeid(LogPanel),
-                &typeid(ContentBrowserPanel)
+                LogPanel::Instance().GetTitle(),
+                ContentBrowserPanel::Instance().GetTitle()
             }),
             0.75f
-        )->setup_layout(_dockspace_id, [this](const void* index) {
-            return _panel_manager->Get(*static_cast<const std::type_index*>(index))->GetTitle();
-        });
+        )->setup_layout(_dockspace_id);
 
         _panel_manager->Init();
         _main_menu_bar->Init();
@@ -85,8 +83,9 @@ namespace oly::editor
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        auto window_styling = imtk::style_stack().
+            push(ImGuiStyleVar_WindowRounding, 0.0f).
+            push(ImGuiStyleVar_WindowBorderSize, 0.0f).apply();
 
         ImGuiWindowFlags window_flags =
             ImGuiWindowFlags_NoDocking |
@@ -99,7 +98,7 @@ namespace oly::editor
 
         if (ImGui::Begin("Main Window", nullptr, window_flags))
         {
-            ImGui::PopStyleVar(2);
+            window_styling.kill();
 
             _main_menu_bar->Draw();
 

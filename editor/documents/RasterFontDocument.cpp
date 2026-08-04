@@ -134,14 +134,14 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(DataPath path, GlyphDesc& desc)
 	{
-		GUIState::InputDataStyleStack style_stack;
+		auto style_stack = GUIState::InputDataStyleSubstack();
 		const bool empty_codepoint = desc.codepoint.value.empty();
 		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
 
 		if (empty_codepoint || duplicate_codepoint)
 		{
-			style_stack.PushStyle(gui::StyleColorCtor{ .idx = ImGuiCol_Border, .col = Color::Error });
-			style_stack.PushStyle(gui::StyleVar1DCtor{ .idx = ImGuiStyleVar_FrameBorderSize, .value = 1.f });
+			style_stack.push(ImGuiCol_Border, Color::Error);
+			style_stack.push(ImGuiStyleVar_FrameBorderSize, 1.f);
 		}
 
 		std::string previous_codepoint = desc.codepoint.value;
@@ -153,7 +153,7 @@ namespace oly::editor
 			_codepoint_counter.decrement(previous_codepoint);
 		}
 
-		style_stack.PopStyles();
+		style_stack.clear();
 
 		if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 		{
