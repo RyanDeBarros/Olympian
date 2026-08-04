@@ -399,7 +399,7 @@ namespace oly::editor
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
 					// TODO v9.4 support dropping files directly on grid cells
-					if (ImGui::BeginDragDropTarget())
+					if (auto _ = imtk::drag_drop_target())
 					{
 						const ImGuiPayload* payload = nullptr;
 
@@ -424,8 +424,6 @@ namespace oly::editor
 							else
 								Notifier::NotifyError("Path is not located in resource folder");
 						}
-
-						ImGui::EndDragDropTarget();
 					}
 
 					desc.texture.edit.PostEdit(result);

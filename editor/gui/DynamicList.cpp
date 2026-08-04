@@ -250,7 +250,7 @@ namespace oly::editor::gui
 			if (Toolbar::DrawHandle("##Drag"))
 				OnSelect();
 
-			if (ImGui::BeginDragDropSource())
+			if (auto _ = imtk::drag_drop_source())
 			{
 				OnSelect();
 
@@ -260,10 +260,9 @@ namespace oly::editor::gui
 				};
 				ImGui::SetDragDropPayload(StringID(UID::DynamicRowReorder), &payload, sizeof(DynamicListStatePayload));
 				ImGui::TextUnformatted("Move row");
-				ImGui::EndDragDropSource();
 			}
 
-			if (ImGui::BeginDragDropTarget())
+			if (auto _ = imtk::drag_drop_target())
 			{
 				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(StringID(UID::DynamicRowReorder)))
 				{
@@ -271,8 +270,6 @@ namespace oly::editor::gui
 					if (src->identity == &_state && src->index != _index)
 						_state.row_ops.push_back(RowOperation::MakeMove(src->index, _index));
 				}
-
-				ImGui::EndDragDropTarget();
 			}
 		}
 	}

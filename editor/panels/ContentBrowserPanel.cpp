@@ -321,12 +321,10 @@ namespace oly::editor
 			{
 				ImGui::Button("Show in content browser", ImGui::GetContentRegionAvail());
 
-				if (ImGui::BeginDragDropTarget())
+				if (auto _ = imtk::drag_drop_target())
 				{
 					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV)))
 						ShowInContentBrowser(std::filesystem::path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize)));
-
-					ImGui::EndDragDropTarget();
 				}
 			}
 			else
@@ -545,12 +543,11 @@ namespace oly::editor
 
 			ImGui::InvisibleButton("##DragDropItem", entry_table_state.entry_size);
 
-			if (ImGui::BeginDragDropSource())
+			if (auto _ = imtk::drag_drop_source())
 			{
 				std::string p = path.string();
 				ImGui::SetDragDropPayload(StringID(UID::PathDragFromCB), p.c_str(), p.size());
 				ImGui::TextUnformatted("Drag path");
-				ImGui::EndDragDropSource();
 			}
 
 			if (rename_popup.is_opening())

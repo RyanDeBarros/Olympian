@@ -321,12 +321,11 @@ namespace oly::editor
 		imtk::id_scope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
-		if (ImGui::BeginDragDropSource())
+		if (auto _ = imtk::drag_drop_source())
 		{
 			std::string path = node.path.string();
 			ImGui::SetDragDropPayload(StringID(UID::PathDragFromTV), path.c_str(), path.size());
 			ImGui::TextUnformatted("Drag path");
-			ImGui::EndDragDropSource();
 		}
 
 		if (auto _ = imtk::context_menu::item("##NodeContextMenu"))
