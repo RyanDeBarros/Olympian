@@ -16,7 +16,8 @@ namespace oly::editor
 		border_col.w = w;
 		imtk::style_color sc(ImGuiCol_Border, ImGui::GetColorU32(border_col));
 
-		if (ImGui::BeginChild(label, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
+		_child = std::make_unique<imtk::child>(label, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders);
+		if (*_child)
 		{
 			if (start_open)
 				ImGui::SetNextItemOpen(true, ImGuiCond_Once);
@@ -38,7 +39,7 @@ namespace oly::editor
 			if (_visible)
 				ImGui::TreePop();
 
-			ImGui::EndChild();
+			_child.reset();
 			--SECTION_BG_TOGGLE;
 		}
 	}

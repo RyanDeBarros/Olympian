@@ -94,7 +94,7 @@ namespace oly::editor
 					_undo_history.Redo();
 			}
 
-			if (ImGui::BeginChild("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				CompoundUndoActionQueue fio_queue;
 
@@ -139,8 +139,6 @@ namespace oly::editor
 
 				fio_queue.PushAll(_undo_history);
 			}
-
-			ImGui::EndChild();
 		}
 	}
 
@@ -316,7 +314,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::DrawFolderView(CompoundUndoActionQueue& fio_queue)
 	{
-		if (ImGui::BeginChild("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			auto payload = ImGui::GetDragDropPayload();
 			if (payload && payload->IsDataType(StringID(UID::PathDragFromTV)))
@@ -333,7 +331,7 @@ namespace oly::editor
 			}
 			else
 			{
-				if (ImGui::BeginPopupContextWindow())
+				if (auto _ = imtk::context_menu::window())
 				{
 					NewFolderMenu();
 					ImGui::Separator();
@@ -368,15 +366,11 @@ namespace oly::editor
 						PathInfo::RevealInExplorer(_folder, true);
 						ImGui::CloseCurrentPopup();
 					}
-
-					ImGui::EndPopup();
 				}
 
 				DrawPathTable(fio_queue);
 			}
 		}
-
-		ImGui::EndChild();
 	}
 
 	struct ContentBrowserPanel::EntryTableState
@@ -444,13 +438,13 @@ namespace oly::editor
 	void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, CompoundUndoActionQueue& fio_queue)
 	{
 		imtk::id_scope id(path.string().c_str());
-		if (ImGui::BeginChild(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
+		if (auto _ = imtk::child(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
 		{
 			imtk::popup rename_popup("Rename path", imtk::popup_config{ .center_window = imtk::center_window::appearing });
 
 			if (!dotdot)
 			{
-				if (ImGui::BeginPopupContextWindow())
+				if (auto _ = imtk::context_menu::window())
 				{
 					if (ImGui::MenuItem("Open"))
 						OpenPath(path);
@@ -485,8 +479,6 @@ namespace oly::editor
 						PathInfo::RevealInExplorer(path, false);
 						ImGui::CloseCurrentPopup();
 					}
-
-					ImGui::EndPopup();
 				}
 			}
 
@@ -586,8 +578,6 @@ namespace oly::editor
 				}
 			}
 		}
-
-		ImGui::EndChild();
 	}
 
 	ImVec2 ContentBrowserPanel::FitPathLabel(std::string& label, const float width)

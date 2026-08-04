@@ -267,7 +267,7 @@ namespace oly::editor::gui
 
 		imtk::style_color sc(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.75f));
 
-		if (ImGui::BeginChild(header.prompt, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child(header.prompt, ImVec2(0, 0), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Borders))
 		{
 			ImGui::TextUnformatted(header.prompt);
 			ImGui::SameLine();
@@ -301,8 +301,6 @@ namespace oly::editor::gui
 			if (subresult)
 				DeferClear();
 		}
-
-		ImGui::EndChild();
 
 		return result;
 	}

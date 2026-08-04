@@ -1,11 +1,10 @@
 #pragma once
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 #include <functional>
 #include <optional>
 #include <unordered_set>
-#include <vector>
 
 namespace oly::editor::gui
 {
@@ -69,6 +68,7 @@ namespace oly::editor::gui
 		DynamicListState& _state;
 		ImVec2 _cursor, _size;
 		size_t _index;
+		std::unique_ptr<imtk::child> _child;
 
 	public:
 		DynamicRow(size_t index, const char* str_id, DynamicListState& state);

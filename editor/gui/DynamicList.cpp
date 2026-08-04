@@ -221,7 +221,7 @@ namespace oly::editor::gui
 
 	void DynamicListState::DrawBody(std::function<void(DynamicRow&)> row_draw)
 	{
-		if (ImGui::BeginChild("List"))
+		if (auto _ = imtk::child("List"))
 		{
 			for (size_t i = 0; i < list_size; ++i)
 			{
@@ -232,8 +232,6 @@ namespace oly::editor::gui
 			}
 		}
 
-		ImGui::EndChild();
-
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && !ImGui::GetIO().WantTextInput && ImGui::Shortcut(ImGuiKey_Delete))
 			DeferDelete();
 	}
@@ -243,8 +241,9 @@ namespace oly::editor::gui
 	{
 		_cursor = ImGui::GetCursorScreenPos();
 		_size = ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
+		_child = std::make_unique<imtk::child>(str_id, _size, ImGuiChildFlags_AutoResizeX);
 
-		if (ImGui::BeginChild(str_id, _size, ImGuiChildFlags_AutoResizeX))
+		if (*_child)
 		{
 			_visible = true;
 
@@ -280,8 +279,7 @@ namespace oly::editor::gui
 
 	DynamicRow::~DynamicRow()
 	{
-		ImGui::EndChild();
-
+		_child.reset();
 		if (ImGui::IsItemClicked())
 			OnSelect();
 

@@ -329,7 +329,7 @@ namespace oly::editor
 			ImGui::EndDragDropSource();
 		}
 
-		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
+		if (auto _ = imtk::context_menu::item("##NodeContextMenu"))
 		{
 			if (ImGui::MenuItem("Open"))
 				node.Open();
@@ -339,8 +339,6 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Reveal in Explorer"))
 				PathInfo::RevealInExplorer(node.path, false);
-
-			ImGui::EndPopup();
 		}
 
 		if (ImGui::IsItemHovered())

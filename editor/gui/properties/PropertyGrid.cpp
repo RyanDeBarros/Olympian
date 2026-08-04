@@ -27,6 +27,8 @@ namespace oly::editor::gui
 
 	static bool DIRTY_GRID = false;
 
+	static std::unique_ptr<imtk::child> FORM_CHILD;
+
 	static void ClearRow()
 	{
 		VALUE_COMPONENTS.clear();
@@ -187,7 +189,8 @@ namespace oly::editor::gui
 
 	bool PropertyGrid::BeginForm(ImGuiID id)
 	{
-		if (ImGui::BeginChild(id, ImVec2(0.f, 0.f), ImGuiChildFlags_AutoResizeY))
+		FORM_CHILD = std::make_unique<imtk::child>(id, ImVec2(0.f, 0.f), ImGuiChildFlags_AutoResizeY);
+		if (*FORM_CHILD)
 		{
 			if (ImGui::BeginTable("", 3, ImGuiTableFlags_BordersInner | ImGuiTableFlags_SizingFixedFit))
 			{
@@ -208,6 +211,6 @@ namespace oly::editor::gui
 		if (table_visible)
 			ImGui::EndTable();
 
-		ImGui::EndChild();
+		FORM_CHILD.reset();
 	}
 }

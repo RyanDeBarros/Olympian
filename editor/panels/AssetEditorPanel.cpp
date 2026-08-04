@@ -182,7 +182,7 @@ namespace oly::editor
 
 				if (auto _ = imtk::tab_item(doc.TabName() + "##" + std::to_string(i), tab_item_flags, &open))
 				{
-					if (ImGui::BeginPopupContextItem("ContextMenu"))
+					if (auto _ = imtk::context_menu::item("##AssetTabContextMenu"))
 					{
 						detail::ResourcePath path = doc.GetOlyPath();
 						if (detail::MetaSplitter::decode_meta(path).is_import())
@@ -193,8 +193,6 @@ namespace oly::editor
 
 						if (ImGui::MenuItem("Reveal in explorer"))
 							PathInfo::RevealInExplorer(path.get_absolute(), false);
-
-						ImGui::EndPopup();
 					}
 
 					doc.Draw();

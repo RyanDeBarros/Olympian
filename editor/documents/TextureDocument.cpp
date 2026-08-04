@@ -143,7 +143,7 @@ namespace oly::editor
 
 	void TextureDocument::DrawPreview()
 	{
-		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
@@ -230,7 +230,6 @@ namespace oly::editor
 				if (_preview_spritesheet && spritesheet_desc)
 					DrawSpritesheetOverlay(*spritesheet_desc, pos, size);
 			}
-			ImGui::EndChild();
 		}
 	}
 

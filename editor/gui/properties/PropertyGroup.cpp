@@ -2,10 +2,7 @@
 
 #include "core/Errors.h"
 
-#include <imgui.h>
-
-#include <string>
-#include <variant>
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -21,41 +18,32 @@ namespace oly::editor
 		// NOP
 	}
 
-	static bool BeginContextMenu()
+	static imtk::context_menu BeginContextMenu()
 	{
-		return ImGui::BeginPopupContextItem(("##" + std::to_string(CONTEXT_MENU_ID_COUNTER++)).c_str());
+		return imtk::context_menu::item("##" + std::to_string(CONTEXT_MENU_ID_COUNTER++));
 	}
 	
 	bool PropertyGroup::CheckValue(const IPropertyView& prop)
 	{
 		bool dirty = false;
-		if (BeginContextMenu())
-		{
+		if (auto _ = BeginContextMenu())
 			dirty = PropertyClipboard::ContextMenuItems(prop);
-			ImGui::EndPopup();
-		}
 		return dirty;
 	}
 
 	bool PropertyGroup::CheckRow(const PropertyRow& props)
 	{
 		bool dirty = false;
-		if (BeginContextMenu())
-		{
+		if (auto _ = BeginContextMenu())
 			dirty = PropertyClipboard::ContextMenuItems(props);
-			ImGui::EndPopup();
-		}
 		return dirty;
 	}
 
 	bool PropertyGroup::CheckHeader(const PropertyPageGenerator& generator)
 	{
 		bool dirty = false;
-		if (BeginContextMenu())
-		{
+		if (auto _ = BeginContextMenu())
 			dirty = PropertyClipboard::ContextMenuItems(generator());
-			ImGui::EndPopup();
-		}
 		return dirty;
 	}
 }

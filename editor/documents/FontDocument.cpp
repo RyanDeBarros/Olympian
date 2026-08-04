@@ -165,7 +165,7 @@ namespace oly::editor
 
 	void FontDocument::DrawAtlasPreview()
 	{
-		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
@@ -178,8 +178,6 @@ namespace oly::editor
 			if (auto _ = imtk::font_scope(_preview_font))
 				ImGui::TextUnformatted(_display_text.c_str());
 		}
-
-		ImGui::EndChild();
 	}
 
 	void FontDocument::Draw(DataPath path, FontFaceDesc& desc)

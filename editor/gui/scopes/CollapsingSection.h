@@ -1,11 +1,14 @@
 #pragma once
 
+#include <imtk.hpp>
+
 namespace oly::editor
 {
 	class CollapsingSection
 	{
 		bool _valid = true;
 		bool _visible = false;
+		std::unique_ptr<imtk::child> _child;
 
 	public:
 		CollapsingSection(const char* label, bool start_open = false);

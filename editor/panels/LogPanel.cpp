@@ -32,7 +32,7 @@ namespace oly::editor
 		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
-			if (ImGui::BeginChild("##LogBox", ImVec2(), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##LogBox", ImVec2(), ImGuiChildFlags_Borders))
 			{
 				for (const LogEntry& entry : Logger::Instance().Lines())
 				{
@@ -43,16 +43,12 @@ namespace oly::editor
 					ImGui::TextUnformatted(entry.msg.c_str());
 				}
 
-				if (ImGui::BeginPopupContextWindow("##LogContextMenu"))
+				if (auto _ = imtk::context_menu::window("##LogContextMenu"))
 				{
 					if (ImGui::MenuItem("Clear log"))
 						Logger::Instance().ClearLog();
-
-					ImGui::EndPopup();
 				}
 			}
-
-			ImGui::EndChild();
 		}
 	}
 }

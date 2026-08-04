@@ -247,7 +247,7 @@ namespace oly::editor
 		{
 			ImGui::TableNextColumn();
 			bool new_cell_selected = false;
-			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
 				const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
@@ -293,18 +293,17 @@ namespace oly::editor
 					}
 				}
 			}
-			ImGui::EndChild();
+
 			if (ImGui::IsItemClicked() && !new_cell_selected)
 				editor->selected_cell = std::nullopt;
 
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				if (auto cell = editor->selected_cell)
 					if (auto grid = editor->At(cell->first, cell->second))
 						Draw(*grid);
 			}
-			ImGui::EndChild();
 
 			ImGui::EndTable();
 		}
@@ -315,7 +314,7 @@ namespace oly::editor
 		if (ImGui::BeginTable("##Table", 2))
 		{
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				const float avail = std::min(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
 				const float cell_width = 0.2f * avail;
@@ -345,12 +344,10 @@ namespace oly::editor
 					}
 				}
 			}
-			ImGui::EndChild();
 
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
 				Draw(_individual_editor.grid);
-			ImGui::EndChild();
 
 			ImGui::EndTable();
 		}
