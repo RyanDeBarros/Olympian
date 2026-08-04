@@ -1,7 +1,6 @@
 #include "MainWindow.h"
 
 #include "core/editor/Editor.h"
-#include "core/windows/DockTree.h"
 #include "core/windows/MainMenuBar.h"
 #include "core/editor/Logger.h"
 
@@ -42,27 +41,27 @@ namespace oly::editor
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
-        DockTree tree = DockNode::MakeBranch(
+        imtk::dock::make_branch(
             ImGuiDir_Down,
-            DockNode::MakeBranch(
+            imtk::dock::make_branch(
                 ImGuiDir_Right,
-                DockNode::MakeLeaf({
-                    typeid(TreeViewPanel)
+                imtk::dock::make_leaf({
+                    &typeid(TreeViewPanel)
                 }),
-                DockNode::MakeLeaf({
-                    typeid(AssetEditorPanel),
-                    typeid(PreferencesPanel)
+                imtk::dock::make_leaf({
+                    &typeid(AssetEditorPanel),
+                    &typeid(PreferencesPanel)
                 }),
                 0.2f
             ),
-            DockNode::MakeLeaf({
-                typeid(LogPanel),
-                typeid(ContentBrowserPanel)
+            imtk::dock::make_leaf({
+                &typeid(LogPanel),
+                &typeid(ContentBrowserPanel)
             }),
             0.75f
-        );
-
-        tree.SetupLayout(_dockspace_id, *_panel_manager);
+        )->setup_layout(_dockspace_id, [this](const void* index) {
+            return _panel_manager->Get(*static_cast<const std::type_index*>(index))->GetTitle();
+        });
 
         _panel_manager->Init();
         _main_menu_bar->Init();
