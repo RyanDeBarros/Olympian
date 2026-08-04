@@ -2,20 +2,14 @@
 
 namespace oly::editor
 {
-	DrawDockedWindowImpl::DrawDockedWindowImpl(bool call_end, bool visible, bool request_close)
-		: _call_end(call_end), _visible(visible), _request_close(request_close)
+	DrawDockedWindowImpl::DrawDockedWindowImpl(std::unique_ptr<imtk::window>&& window, bool request_close)
+		: _window(std::move(window)), _request_close(request_close)
 	{
-	}
-
-	DrawDockedWindowImpl::~DrawDockedWindowImpl()
-	{
-		if (_call_end)
-			ImGui::End();
 	}
 
 	bool DrawDockedWindowImpl::IsVisible() const
 	{
-		return _visible;
+		return _window && *_window;
 	}
 
 	bool DrawDockedWindowImpl::RequestsClose() const
@@ -64,20 +58,23 @@ namespace oly::editor
 	{
 		if (_open)
 		{
-			bool visible = ImGui::Begin(GetTitle(), &_open, flags);
+			auto window = std::make_unique<imtk::window>(GetTitle(), flags, &_open);
+			
 			if (_gain_next == this)
 			{
-				if (visible)
+				if (window)
 					ImGui::SetWindowFocus();
 				_gain_next = nullptr;
 			}
-			return DrawDockedWindowImpl(true, visible, !_open);
+
+			return DrawDockedWindowImpl(std::move(window), !_open);
 		}
 		else
 		{
 			if (_gain_next == this)
 				_gain_next = nullptr;
-			return DrawDockedWindowImpl(false, false, false);
+
+			return DrawDockedWindowImpl(nullptr, false);
 		}
 	}
 }

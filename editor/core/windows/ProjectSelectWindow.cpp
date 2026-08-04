@@ -43,13 +43,13 @@ namespace oly::editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::Begin("Project Select Window", nullptr, window_flags);
-        style_stack.kill();
+        if (auto _ = imtk::window("Project Select Window", window_flags))
+        {
+            style_stack.kill();
 
-        if (auto grid = gui::PropertyGrid())
-            DrawOpenExistingGroup();
-
-        ImGui::End();
+            if (auto grid = gui::PropertyGrid())
+                DrawOpenExistingGroup();
+        }
 	}
 
     void ProjectSelectWindow::DrawOpenExistingGroup()

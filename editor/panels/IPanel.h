@@ -1,20 +1,16 @@
 #pragma once
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor
 {
 	class DrawDockedWindowImpl
 	{
-		bool _call_end;
-		bool _visible;
+		std::unique_ptr<imtk::window> _window;
 		bool _request_close;
 
 	public:
-		DrawDockedWindowImpl(bool call_end, bool visible, bool request_close);
-		DrawDockedWindowImpl(const DrawDockedWindowImpl&) = delete;
-		DrawDockedWindowImpl(DrawDockedWindowImpl&&) = delete;
-		~DrawDockedWindowImpl();
+		DrawDockedWindowImpl(std::unique_ptr<imtk::window>&& window, bool request_close);
 
 		bool IsVisible() const;
 		bool RequestsClose() const;

@@ -96,7 +96,7 @@ namespace oly::editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        if (ImGui::Begin("Main Window", nullptr, window_flags))
+        if (auto _ = imtk::window("Main Window", window_flags))
         {
             window_styling.kill();
 
@@ -105,7 +105,6 @@ namespace oly::editor
             ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
             _panel_manager->Draw();
             DrawNotifications();
-            ImGui::End();
         }
     }
 
@@ -143,10 +142,11 @@ namespace oly::editor
                 ImGuiWindowFlags_NoDecoration |
                 ImGuiWindowFlags_NoInputs;
 
-            ImGui::Begin(("##notif" + std::to_string(i)).c_str(), nullptr, flags);
-            if (auto _ = imtk::style_color(ImGuiCol_Text, LogLevelColor(notif.level)))
-                ImGui::TextUnformatted(notif.message.c_str());
-            ImGui::End();
+            if (auto _ = imtk::window("##notif" + std::to_string(i), flags))
+            {
+                if (auto _ = imtk::style_color(ImGuiCol_Text, LogLevelColor(notif.level)))
+                    ImGui::TextUnformatted(notif.message.c_str());
+            }
 
             notif.age += ImGui::GetIO().DeltaTime;
         }
