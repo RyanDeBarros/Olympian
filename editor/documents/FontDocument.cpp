@@ -175,9 +175,8 @@ namespace oly::editor
 			if (!_preview_font)
 				ReloadFont();
 
-			ImGui::PushFont(_preview_font);
-			ImGui::TextUnformatted(_display_text.c_str());
-			ImGui::PopFont();
+			if (auto _ = imtk::font_scope(_preview_font))
+				ImGui::TextUnformatted(_display_text.c_str());
 		}
 
 		ImGui::EndChild();

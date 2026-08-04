@@ -30,8 +30,9 @@ namespace oly::editor
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        auto style_stack = imtk::style_stack().
+            push(ImGuiStyleVar_WindowRounding, 0.0f).
+            push(ImGuiStyleVar_WindowBorderSize, 0.0f).apply();
 
         ImGuiWindowFlags window_flags =
             ImGuiWindowFlags_NoDocking |
@@ -43,12 +44,10 @@ namespace oly::editor
             ImGuiWindowFlags_NoNavFocus;
 
         ImGui::Begin("Project Select Window", nullptr, window_flags);
-        ImGui::PopStyleVar(2);
+        style_stack.kill();
 
-        {
-            gui::PropertyGrid grid;
+        if (auto grid = gui::PropertyGrid())
             DrawOpenExistingGroup();
-        }
 
         ImGui::End();
 	}

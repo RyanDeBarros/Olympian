@@ -137,18 +137,16 @@ namespace oly::editor
             Notification& notif = _notifications[i];
 
             float alpha = std::clamp(1.f - notif.age / notif.timer, 0.f, 1.f);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
+            imtk::style_var alpha_var(ImGuiStyleVar_Alpha, alpha);
             ImGuiWindowFlags flags =
                 ImGuiWindowFlags_AlwaysAutoResize |
                 ImGuiWindowFlags_NoDecoration |
                 ImGuiWindowFlags_NoInputs;
 
             ImGui::Begin(("##notif" + std::to_string(i)).c_str(), nullptr, flags);
-            ImGui::PushStyleColor(ImGuiCol_Text, LogLevelColor(notif.level));
-            ImGui::TextUnformatted(notif.message.c_str());
-            ImGui::PopStyleColor();
+            if (auto _ = imtk::style_color(ImGuiCol_Text, LogLevelColor(notif.level)))
+                ImGui::TextUnformatted(notif.message.c_str());
             ImGui::End();
-            ImGui::PopStyleVar();
 
             notif.age += ImGui::GetIO().DeltaTime;
         }

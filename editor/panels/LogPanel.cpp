@@ -5,6 +5,8 @@
 #include "core/editor/Logger.h"
 #include "panels/PanelManager.h"
 
+#include <imtk.hpp>
+
 namespace oly::editor
 {
 	LogPanel& LogPanel::Instance()
@@ -34,9 +36,9 @@ namespace oly::editor
 			{
 				for (const LogEntry& entry : Logger::Instance().Lines())
 				{
-					ImGui::PushStyleColor(ImGuiCol_Text, LogLevelColor(entry.level));
-					ImGui::TextUnformatted(LogLevelPrefix(entry.level));
-					ImGui::PopStyleColor();
+					if (auto _ = imtk::style_color(ImGuiCol_Text, LogLevelColor(entry.level)))
+						ImGui::TextUnformatted(LogLevelPrefix(entry.level));
+
 					ImGui::SameLine();
 					ImGui::TextUnformatted(entry.msg.c_str());
 				}

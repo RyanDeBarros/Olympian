@@ -1,6 +1,6 @@
 #include "InlineWidget.h"
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor::gui
 {
@@ -8,7 +8,7 @@ namespace oly::editor::gui
 	{
 		DrawResult result;
 
-		ImGui::PushStyleVar(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().CellPadding.x, 0.f));
+		imtk::style_var cell_padding(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().CellPadding.x, 0.f));
 
 		if (ImGui::BeginTable("##InlineWidget", components.size(), ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_PreciseWidths,
 			ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight())))
@@ -18,15 +18,12 @@ namespace oly::editor::gui
 			for (auto& component : components)
 			{
 				ImGui::TableNextColumn();
-				ImGui::PushItemWidth(-FLT_MIN);
-				result |= component.draw();
-				ImGui::PopItemWidth();
+				if (auto _ = imtk::item_width_scope(imtk::expand_item_width{}))
+					result |= component.draw();
 			}
 
 			ImGui::EndTable();
 		}
-
-		ImGui::PopStyleVar();
 
 		return result;
 	}

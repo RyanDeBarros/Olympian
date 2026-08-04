@@ -70,6 +70,11 @@ namespace oly::editor::gui
 		}
 	}
 
+	PropertyGrid::operator bool() const
+	{
+		return GRID_INSTANCE == this;
+	}
+
 	DrawResult PropertyGrid::Key::GetDrawResult()
 	{
 		return KEY_DRAW_RESULT;

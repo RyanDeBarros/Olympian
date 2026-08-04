@@ -17,6 +17,8 @@ namespace oly::editor::gui
 		~PropertyGrid();
 		PropertyGrid& operator=(PropertyGrid&&) = delete;
 
+		operator bool() const;
+
 		struct Key
 		{
 			static DrawResult GetDrawResult();
