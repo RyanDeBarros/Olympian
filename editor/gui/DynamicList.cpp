@@ -1,7 +1,6 @@
 #include "DynamicList.h"
 
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/UID.h"
 
 #include "gui/graphics/Toolbar.h"
 
@@ -62,7 +61,7 @@ namespace oly::editor::gui
 	{
 		return RowOperation{ .type = Type::Delete, .index1 = index, .index2 = index };
 	}
-	
+
 	RowOperation RowOperation::MakeMove(size_t src, size_t dst)
 	{
 		return RowOperation{ .type = Type::Move, .index1 = src, .index2 = dst };
@@ -104,12 +103,20 @@ namespace oly::editor::gui
 			this->valid = valid;
 	}
 
-	struct DynamicListStatePayload
+	struct DynamicListStatePayload : public imtk::drag_droppable_pod<DynamicListStatePayload>
 	{
 		const DynamicListState* identity;
 		size_t index;
-	};
 
+		DynamicListStatePayload(const DynamicListState* identity, size_t index)
+			: identity(identity), index(index)
+		{
+		}
+	};
+}
+
+namespace oly::editor::gui
+{
 	void DynamicListState::Clamp()
 	{
 		if (index >= list_size)
@@ -254,21 +261,16 @@ namespace oly::editor::gui
 			{
 				OnSelect();
 
-				DynamicListStatePayload payload{
-					.identity = &_state,
-					.index = _index
-				};
-				ImGui::SetDragDropPayload(StringID(UID::DynamicRowReorder), &payload, sizeof(DynamicListStatePayload));
+				imtk::send_drag_drop_payload(DynamicListStatePayload(&_state, _index));
 				ImGui::TextUnformatted("Move row");
 			}
 
-			if (auto _ = imtk::drag_drop_target())
+			if (auto target = imtk::drag_drop_target())
 			{
-				if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(StringID(UID::DynamicRowReorder)))
+				if (auto payload = target.accept<DynamicListStatePayload>())
 				{
-					DynamicListStatePayload* src = reinterpret_cast<DynamicListStatePayload*>(payload->Data);
-					if (src->identity == &_state && src->index != _index)
-						_state.row_ops.push_back(RowOperation::MakeMove(src->index, _index));
+					if ((*payload)->identity == &_state && (*payload)->index != _index)
+						_state.row_ops.push_back(RowOperation::MakeMove((*payload)->index, _index));
 				}
 			}
 		}

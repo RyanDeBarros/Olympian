@@ -10,7 +10,6 @@
 #include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/UID.h"
 
 #include "core/windows/MainWindow.h"
 
@@ -312,15 +311,14 @@ namespace oly::editor
 	{
 		if (auto _ = imtk::child("##FolderView", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
-			auto payload = ImGui::GetDragDropPayload();
-			if (payload && payload->IsDataType(StringID(UID::PathDragFromTV)))
+			if (imtk::drag_drop_is_type<TreeViewPathDDP>())
 			{
 				ImGui::Button("Show in content browser", ImGui::GetContentRegionAvail());
 
-				if (auto _ = imtk::drag_drop_target())
+				if (auto target = imtk::drag_drop_target())
 				{
-					if (auto payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV)))
-						ShowInContentBrowser(std::filesystem::path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize)));
+					if (auto dropped_path = target.accept<TreeViewPathDDP>())
+						ShowInContentBrowser(std::filesystem::path(*dropped_path));
 				}
 			}
 			else
@@ -539,8 +537,7 @@ namespace oly::editor
 
 			if (auto _ = imtk::drag_drop_source())
 			{
-				std::string p = path.string();
-				ImGui::SetDragDropPayload(StringID(UID::PathDragFromCB), p.c_str(), p.size());
+				imtk::send_drag_drop_payload(ContentBrowserPathDDP(path.string()));
 				ImGui::TextUnformatted("Drag path");
 			}
 
@@ -986,4 +983,19 @@ namespace oly::editor
 		else
 			_prune_folder.reset();
 	}
+
+	ContentBrowserPathDDP::ContentBrowserPathDDP(std::string path)
+		: path(std::move(path))
+	{
+	}
+
+	void ContentBrowserPathDDP::send(const std::function<void(const void*, size_t)>& dump) const
+	{
+		dump(path.data(), path.size());
+	}
+}
+
+std::string_view imtk::drag_drop_convert<oly::editor::ContentBrowserPathDDP>::view(const void* buf, size_t size) const
+{
+	return std::string_view(static_cast<const char*>(buf), size);
 }

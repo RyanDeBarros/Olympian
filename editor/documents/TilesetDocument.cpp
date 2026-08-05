@@ -1,7 +1,6 @@
 #include "TilesetDocument.h"
 
 #include "core/editor/Notifier.h"
-#include "core/editor/UID.h"
 #include "core/Colors.h"
 #include "core/Errors.h"
 
@@ -9,6 +8,9 @@
 #include "gui/graphics/Overlays.h"
 
 #include "documents/TextureDocument.h"
+
+#include "panels/ContentBrowserPanel.h"
+#include "panels/TreeViewPanel.h"
 
 #include "definitions/Keys.h"
 #include "util/Parser.h"
@@ -395,26 +397,19 @@ namespace oly::editor
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
 
 					// TODO v9.4 support dropping files directly on grid cells
-					if (auto _ = imtk::drag_drop_target())
+					if (auto target = imtk::drag_drop_target())
 					{
-						const ImGuiPayload* payload = nullptr;
+						std::optional<detail::ResourcePath> path;
+						if (auto p = target.accept<TreeViewPathDDP>())
+							path = *p;
+						else if (auto p = target.accept<ContentBrowserPathDDP>())
+							path = *p;
 
-						// TODO v9.3 imtk utilities for drag-drop, especially for receiving different payloads like this
-						if (auto test = ImGui::GetDragDropPayload())
+						if (path)
 						{
-							if (test->IsDataType(StringID(UID::PathDragFromTV)))
-								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV));
-
-							if (test->IsDataType(StringID(UID::PathDragFromCB)))
-								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromCB));
-						}
-
-						if (payload)
-						{
-							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
-							if (path.is_resource())
+							if (path->is_resource())
 							{
-								desc.texture.edit.PublishReset(path.get_resource_shorthand());
+								desc.texture.edit.PublishReset(path->get_resource_shorthand());
 								result.SetDirty(true);
 							}
 							else

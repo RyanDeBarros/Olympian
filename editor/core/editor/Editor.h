@@ -31,7 +31,6 @@ namespace oly::editor
 
 	class Editor : public imtk::instance_guard<Editor>
 	{
-		// TODO v9.3 own os_window. Make Editor an active instance singleton instead of this static singleton
 		std::unique_ptr<imtk::os_window> _os_window;
 		AppState _app_state = AppState::ProjectSelect;
 

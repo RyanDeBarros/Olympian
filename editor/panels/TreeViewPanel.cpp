@@ -5,7 +5,6 @@
 #include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/UID.h"
 
 #include "core/windows/MainWindow.h"
 
@@ -323,8 +322,7 @@ namespace oly::editor
 
 		if (auto _ = imtk::drag_drop_source())
 		{
-			std::string path = node.path.string();
-			ImGui::SetDragDropPayload(StringID(UID::PathDragFromTV), path.c_str(), path.size());
+			imtk::send_drag_drop_payload(TreeViewPathDDP(node.path.string()));
 			ImGui::TextUnformatted("Drag path");
 		}
 
@@ -395,4 +393,19 @@ namespace oly::editor
 			++local_file_index;
 		}
 	}
+
+	TreeViewPathDDP::TreeViewPathDDP(std::string path)
+		: path(std::move(path))
+	{
+	}
+
+	void TreeViewPathDDP::send(const std::function<void(const void*, size_t)>& dump) const
+	{
+		dump(path.data(), path.size());
+	}
+}
+
+std::string_view imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>::view(const void* buf, size_t size) const
+{
+	return std::string_view(static_cast<const char*>(buf), size);
 }

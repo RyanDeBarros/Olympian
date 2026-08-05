@@ -61,4 +61,20 @@ namespace oly::editor
 		void DrawNodePrefix(TreeViewNode& node);
 		void DrawRowBg(TreeViewNode& node, int& local_file_index);
 	};
+
+	struct TreeViewPathDDP : public imtk::drag_droppable
+	{
+		std::string path;
+
+		TreeViewPathDDP(std::string path);
+
+		void send(const std::function<void(const void*, size_t)>& dump) const override;
+	};
 }
+
+template<>
+struct imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>
+{
+	using payload_view = std::string_view;
+	payload_view view(const void* buf, size_t size) const;
+};

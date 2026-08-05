@@ -7,5 +7,5 @@ target_sources(OlympianEditor PRIVATE
 	ProjectInfo.cpp
 	ResourceLoader.cpp
 	ShortcutManager.cpp
-	UID.cpp
+	
 )

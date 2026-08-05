@@ -12,6 +12,11 @@ namespace oly
 		void(* _dtor)(void*);
 
 	public:
+		TypeErasedBox()
+			: _raw(nullptr), _type(typeid(void)), _dtor(nullptr)
+		{
+		}
+
 		template<typename T>
 		TypeErasedBox(T&& obj)
 			: _type(typeid(T))

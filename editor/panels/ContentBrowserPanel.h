@@ -113,4 +113,20 @@ namespace oly::editor
 		void PrunePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
 		void DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue);
 	};
+
+	struct ContentBrowserPathDDP : public imtk::drag_droppable
+	{
+		std::string path;
+
+		ContentBrowserPathDDP(std::string path);
+
+		void send(const std::function<void(const void*, size_t)>& dump) const override;
+	};
 }
+
+template<>
+struct imtk::drag_drop_convert<oly::editor::ContentBrowserPathDDP>
+{
+	using payload_view = std::string_view;
+	payload_view view(const void* buf, size_t size) const;
+};
