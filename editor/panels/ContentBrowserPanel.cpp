@@ -16,7 +16,6 @@
 #include "panels/PanelManager.h"
 #include "panels/TreeViewPanel.h"
 
-#include "gui/Controls.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/graphics/Toolbar.h"
 
@@ -253,7 +252,8 @@ namespace oly::editor
 
 		imtk::controls::vertical_separator();
 
-		gui::FloatControl("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 120.f, 0.1f, 10.f, "%.1f", true);
+		if (auto _ = imtk::item_width_scope(120.f))
+			imtk::float_control("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 0.1f, 10.f, "%.1f", ImGuiSliderFlags_Logarithmic);
 	}
 
 	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
