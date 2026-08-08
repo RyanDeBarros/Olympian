@@ -22,6 +22,8 @@ namespace oly::editor
 
 	struct GlyphDesc
 	{
+		DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
+
 		StringField codepoint;
 		StringField texture_file;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_slot;
@@ -30,9 +32,7 @@ namespace oly::editor
 		EnumField<detail::PositioningMode> origin_offset_mode;
 		Vec2Field<MakeOpt<float>(), MakeOpt<float>()> origin_offset;
 
-		DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
-
-		GlyphDesc();
+		GlyphDesc(DataPathLink link = {});
 	};
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \
@@ -47,6 +47,8 @@ namespace oly::editor
 
 	struct RasterFontDesc
 	{
+		DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
+
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> space_advance_width;
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> line_height;
 		Vec2Field<MakeOpt(0.f), MakeOpt<float>()> font_scale;
@@ -54,8 +56,6 @@ namespace oly::editor
 		VectorDesc<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;
 
-		DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
-
-		RasterFontDesc();
+		RasterFontDesc(DataPathLink link = {});
 	};
 }

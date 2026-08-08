@@ -32,8 +32,8 @@ namespace oly::editor
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
-		void Draw(DataPath path, RasterFontDesc& desc);
-		void Draw(DataPath path, GlyphDesc& desc);
+		void Draw(RasterFontDesc& desc);
+		void Draw(GlyphDesc& desc);
 
 		void Load(TOMLNode node, RasterFontDesc& desc);
 		void Load(TOMLNode node, GlyphDesc& desc);

@@ -1,20 +1,21 @@
 #pragma once
 
 #include "gui/DrawResult.h"
+#include "core/editor/Editor.h"
 
 #include <tuple>
 
 namespace oly::editor
 {
+	// TODO v9.3 remove in favour of imtk::edit_session
 	template<typename T>
-	struct EditSession
+	struct EditSession : public imtk::tick_processor
 	{
 		T& truth;
 		T buffer = T();
 		T original = T();
 
 		bool editing = false;
-		bool seen_this_frame = false;
 		bool published = false;
 
 		EditSession(T& truth)
@@ -30,7 +31,6 @@ namespace oly::editor
 				original = buffer;
 			}
 
-			seen_this_frame = true;
 			published = false;
 		}
 
@@ -47,16 +47,14 @@ namespace oly::editor
 				editing = true;
 		}
 
-		void DrawFinalize()
+		void on_last_process_frame() override
 		{
-			if (!seen_this_frame && editing)
+			if (editing)
 			{
 				editing = false;
 				truth = buffer;
 				published = true;
 			}
-
-			seen_this_frame = false;
 		}
 
 		bool Modified() const

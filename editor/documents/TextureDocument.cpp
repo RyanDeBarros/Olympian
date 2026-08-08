@@ -42,7 +42,7 @@ namespace oly::editor
 		if (auto _ = imtk::table("", 2))
 		{
 			ImGui::TableNextColumn();
-			Draw(DataPath(), _desc.scratch);
+			Draw(_desc.scratch);
 
 			ImGui::TableNextColumn();
 			DrawPreview();
@@ -82,7 +82,7 @@ namespace oly::editor
 
 		_preview_nav = {};
 		if (auto svg_desc = _desc.scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
-			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.value;
+			_preview_nav.svg_scale = (*svg_desc)[_slots.active_index].scale.value;
 
 		_stale_preview_texture = true;
 	}
@@ -415,7 +415,7 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
 	}
 
-	void TextureDocument::Draw(DataPath path, TextureVariantDesc& desc)
+	void TextureDocument::Draw(TextureVariantDesc& desc)
 	{
 		_slots.Update(*ListAdapter());
 		
@@ -424,10 +424,7 @@ namespace oly::editor
 
 		if (auto form = Form())
 		{
-			desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc_list) {
-				size_t index = _slots.active_index;
-				Draw(path / desc_list.Subpath(index), desc_list[index]);
-			});
+			desc.variant.Visit([this](auto& desc_list) { Draw(desc_list[_slots.active_index]); });
 
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
@@ -437,9 +434,9 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, RasterTextureDesc& desc)
+	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
-		Draw(path / desc.subpaths.base, desc.base);
+		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
 			DRAW_FIELD(generate_mipmaps);
@@ -450,9 +447,9 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, VectorTextureDesc& desc)
+	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
-		Draw(path / desc.subpaths.base, desc.base);
+		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
 			DRAW_FIELD(generate_mipmaps);
@@ -463,7 +460,7 @@ namespace oly::editor
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, BaseTextureDesc& desc)
+	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
@@ -489,21 +486,19 @@ namespace oly::editor
 			}
 
 			if (desc.anim.value && !_gif)
-				Draw(path / desc.subpaths.spritesheet, desc.spritesheet);
+				Draw(desc.spritesheet);
 		}
 	}
 
-	void TextureDocument::Draw(DataPath path, SpritesheetDesc& desc)
+	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
 		DRAW_FIELD(col_type);
-		const char* col_label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		DescIO::Draw(col_label, desc.col_value.edit, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
-		desc.col_value.CheckUndoAction(path / desc.subpaths.col_value);
+		desc.col_value.label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
+		DRAW_FIELD(col_value);
 
 		DRAW_FIELD(row_type);
-		const char* row_label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		DescIO::Draw(row_label, desc.row_value.edit, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
-		desc.row_value.CheckUndoAction(path / desc.subpaths.row_value);
+		desc.row_value.label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
+		DRAW_FIELD(row_value);
 
 		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
@@ -511,9 +506,9 @@ namespace oly::editor
 	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif)
 	{
 		if (svg)
-			desc.variant.variant = VectorDesc<VectorTextureDesc>();
+			desc.variant.Set<VectorDesc<VectorTextureDesc>>();
 		else
-			desc.variant.variant = VectorDesc<RasterTextureDesc>();
+			desc.variant.Set<VectorDesc<RasterTextureDesc>>();
 
 		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
@@ -623,7 +618,7 @@ namespace oly::editor
 
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.variant); });
+		return _desc.scratch.variant.Visit([this](auto& desc) { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)

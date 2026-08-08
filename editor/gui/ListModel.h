@@ -5,6 +5,7 @@
 #include "gui/DrawResult.h"
 
 #include "desc/DataPath.h"
+#include "desc/Descriptors.h"
 #include "desc/DynamicListUndoActions.h"
 
 #include "util/Counter.h"
@@ -135,44 +136,55 @@ namespace oly::editor::gui
 	template<typename T, typename Printer = StandardPrinter<T>>
 	struct VectorAdapter : public IListAdapter
 	{
-		DataPathSource list_path;
-		std::vector<T>& v;
+		const VectorDesc<T>& v;
 
-		VectorAdapter(DataPath list_path, std::vector<T>& vec) : list_path(list_path), v(vec) {}
+		VectorAdapter(const VectorDesc<T>& vec) : v(vec) {}
 
 		size_t Size() const override
 		{
-			return v.size();
+			return v.Size();
 		}
 
 		void PushBack() override
 		{
-			ExecuteDynamicListInsertAction<T, Printer>(list_path, v.size());
+			ExecuteDynamicListInsertAction<T, Printer>(v.link.ComputePath(), v.Size());
 		}
 
 		void Erase(size_t i) override
 		{
-			ExecuteDynamicListDeleteAction<T, Printer>(list_path, i);
+			ExecuteDynamicListDeleteAction<T, Printer>(v.link.ComputePath(), i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
 			if (old_size != new_size)
-				ExecuteDynamicListResizeAction<T>(list_path, old_size, new_size);
+				ExecuteDynamicListResizeAction<T>(v.link.ComputePath(), old_size, new_size);
 		}
 
 		void Clear() override
 		{
-			if (!v.empty())
-				ExecuteDynamicListResizeAction<T>(list_path, v.size(), 0);
+			if (!v.Empty())
+				ExecuteDynamicListResizeAction<T>(v.link.ComputePath(), v.Size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
 			if (src != dst)
-				ExecuteDynamicListMoveAction<T>(list_path, src, dst);
+				ExecuteDynamicListMoveAction<T>(v.link.ComputePath(), src, dst);
 		}
 	};
+
+	template<typename T>
+	std::unique_ptr<IListAdapter> MakeVectorAdapter(const VectorDesc<T>& vector)
+	{
+		return std::make_unique<VectorAdapter<T, StandardPrinter<T>>>(vector);
+	}
+
+	template<typename Printer, typename T>
+	std::unique_ptr<IListAdapter> MakeVectorAdapter(const VectorDesc<T>& vector)
+	{
+		return std::make_unique<VectorAdapter<T, Printer>>(vector);
+	}
 
 	struct ListCallbackAdapter : public IListAdapter
 	{

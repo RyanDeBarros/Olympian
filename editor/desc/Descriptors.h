@@ -1,117 +1,137 @@
 #pragma once
 
-#include "gui/ListModel.h"
+#include "desc/DataPath.h"
 
+// TODO v9.3 can remove these includes once datapath is in imtk
+#include <vector>
 #include <variant>
+#include <unordered_map>
+
+// TODO v9.3 move fields and descriptors to imtk
 
 namespace oly::editor
 {
 	template<typename Descriptor>
-	struct VectorDesc
+	class VectorDesc
 	{
-		std::vector<Descriptor> vector;
+		std::vector<Descriptor> _vector;
 
-		void PushBack()
+	public:
+		DataPathLink link;
+
+		VectorDesc(DataPathLink link)
+			: link(std::move(link))
 		{
-			vector.push_back({});
 		}
 
-		void PushBack(const Descriptor& desc)
+		Descriptor& PushBack()
 		{
-			vector.push_back(desc);
+			_vector.push_back(Descriptor(DataPathLink(link, DataPathStep(_vector.size()))));
+			return _vector.back();
 		}
 
-		void PushBack(Descriptor&& desc)
+		void Insert(size_t i, Descriptor element)
 		{
-			vector.push_back(std::move(desc));
+			for (auto it = _vector.begin() + i; it != _vector.end(); ++it)
+				it->link.SetStep(*it->link.Step() + 1);
+
+			element.link = DataPathLink(link, DataPathStep(i));
+			_vector.insert(_vector.begin() + i, element);
 		}
 
 		void Remove(size_t i)
 		{
-			vector.erase(vector.begin() + i);
+			_vector.erase(_vector.begin() + i);
+			for (auto it = _vector.begin() + i; it != _vector.end(); ++it)
+				it->link.SetStep(*it->link.Step() - 1);
 		}
 		
 		void Clear()
 		{
-			vector.clear();
+			_vector.clear();
 		}
 
 		size_t Size() const
 		{
-			return vector.size();
+			return _vector.size();
+		}
+
+		void Resize(size_t new_size)
+		{
+			if (new_size < _vector.size())
+				_vector.erase(_vector.begin() + new_size, _vector.end());
+			else if (new_size > _vector.size())
+			{
+				for (size_t i = _vector.size(); i < new_size; ++i)
+					_vector.push_back(Descriptor(DataPathLink(link, DataPathStep(i))));
+			}
 		}
 
 		bool Empty() const
 		{
-			return vector.empty();
+			return _vector.empty();
 		}
 
 		Descriptor& Back()
 		{
-			return vector.back();
+			return _vector.back();
 		}
 
 		const Descriptor& Back() const
 		{
-			return vector.back();
+			return _vector.back();
 		}
 
 		void Visit(auto&& fn)
 		{
-			for (Descriptor& desc : vector)
+			for (Descriptor& desc : _vector)
 				fn(desc);
 		}
 
 		void VisitIndexed(auto&& fn)
 		{
-			for (size_t i = 0; i < vector.size(); ++i)
-				fn(i, vector[i]);
+			for (size_t i = 0; i < _vector.size(); ++i)
+				fn(i, _vector[i]);
 		}
 
 		Descriptor& operator[](size_t i)
 		{
-			return vector[i];
+			return _vector[i];
 		}
 
 		const Descriptor& operator[](size_t i) const
 		{
-			return vector[i];
+			return _vector[i];
 		}
 
 		auto begin() const
 		{
-			return vector.begin();
+			return _vector.begin();
 		}
 
 		auto begin()
 		{
-			return vector.begin();
+			return _vector.begin();
 		}
 
 		auto end() const
 		{
-			return vector.end();
+			return _vector.end();
 		}
 
 		auto end()
 		{
-			return vector.end();
-		}
-
-		template<typename Printer = StandardPrinter<Descriptor>>
-		std::unique_ptr<gui::IListAdapter> ListAdapter(DataPath path)
-		{
-			return std::make_unique<gui::VectorAdapter<Descriptor, Printer>>(path, vector);
+			return _vector.end();
 		}
 
 		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
-				return typeid(decltype(vector)) == type ? reinterpret_cast<void*>(&vector) : nullptr;
+				return typeid(decltype(*this)) == type ? reinterpret_cast<void*>(this) : nullptr; // TODO v9.3 use static_cast over reinterpret_cast
 
 			int index = path.Step().v;
-			if (index >= 0 && index < vector.size())
-				return vector[index].PathGet(path.Next(), type);
+			if (index >= 0 && index < _vector.size())
+				return _vector[index].PathGet(path.Next(), type);
 			else
 				return nullptr;
 		}
@@ -123,7 +143,7 @@ namespace oly::editor
 			else
 			{
 				int index = path.Step().v;
-				if (index >= 0 && index < vector.size())
+				if (index >= 0 && index < _vector.size())
 				{
 					path = path.Next();
 					if (path.Empty())
@@ -131,7 +151,7 @@ namespace oly::editor
 					else
 					{
 						os << index << ".";
-						vector[index].PrintPath(os, path);
+						_vector[index].PrintPath(os, path);
 					}
 				}
 				else
@@ -139,92 +159,95 @@ namespace oly::editor
 			}
 		}
 
-		DataPathStep Subpath(size_t index)
-		{
-			return DataPathStep(index);
-		}
-
-		bool DrawFinalize(DataPath path)
-		{
-			bool dirty = false;
-			for (size_t i = 0; i < vector.size(); ++i)
-				dirty |= vector[i].DrawFinalize(path / Subpath(i));
-			return dirty;
-		}
-
 		bool QueryDirty(const VectorDesc<Descriptor>& disk) const
 		{
-			if (vector.size() != disk.vector.size())
+			if (_vector.size() != disk._vector.size())
 				return true;
 
-			for (size_t i = 0; i < vector.size(); ++i)
+			for (size_t i = 0; i < _vector.size(); ++i)
 			{
-				if (vector[i].QueryDirty(disk.vector[i]))
+				if (_vector[i].QueryDirty(disk._vector[i]))
 					return true;
 			}
 
 			return false;
 		}
+
+		void CopyData(const VectorDesc<Descriptor>& o)
+		{
+			Resize(o.Size());
+			for (size_t i = 0; i < _vector.size(); ++i)
+				_vector[i].CopyData(o._vector[i]);
+		}
 	};
 
 	template<typename... Descriptors>
-	struct VariantDesc
+	class VariantDesc
 	{
-		std::variant<Descriptors...> variant;
+		std::variant<Descriptors...> _variant;
+
+	public:
+		DataPathLink link;
+
+		VariantDesc(DataPathLink link)
+			: link(link), _variant(std::in_place_index<0>, link)
+		{
+		}
+
+		VariantDesc(std::variant<Descriptors...> descriptor)
+			: _variant(std::move(descriptor)), link(std::visit([](const auto& desc) { return desc.link; }, _variant))
+		{
+		}
 
 		void Reset()
 		{
-			std::visit([](auto& v) { v = std::decay_t<decltype(v)>(); }, variant);
+			std::visit([](auto& v) { v = std::decay_t<decltype(v)>(link); }, _variant);
 		}
 
 		template<typename Descriptor>
 		Descriptor& Set()
 		{
-			variant = Descriptor();
-			return std::get<Descriptor>(variant);
+			_variant = Descriptor(link);
+			return std::get<Descriptor>(_variant);
 		}
 
 		template<typename Descriptor>
 		void Set(Descriptor&& desc)
 		{
-			variant = std::forward<Descriptor>(desc);
+			_variant = std::forward<Descriptor>(desc);
+			std::visit([this](auto& v) { v.link = link; }, _variant);
 		}
 
 		auto Visit(auto&& visitor)
 		{
-			return std::visit([&visitor](auto& desc) { return visitor(desc); }, variant);
+			return std::visit([&visitor](auto& desc) { return visitor(desc); }, _variant);
 		}
 
 		auto Visit(auto&& visitor) const
 		{
-			return std::visit([&visitor](const auto& desc) { return visitor(desc); }, variant);
+			return std::visit([&visitor](const auto& desc) { return visitor(desc); }, _variant);
 		}
 
 		template<typename Descriptor>
 		Descriptor* TryGet()
 		{
-			return std::get_if<Descriptor>(&variant);
+			return std::get_if<Descriptor>(&_variant);
 		}
 
 		template<typename Descriptor>
 		const Descriptor* TryGet() const
 		{
-			return std::get_if<Descriptor>(&variant);
+			return std::get_if<Descriptor>(&_variant);
 		}
 
 		void* PathGet(DataPath path, std::type_index type)
 		{
-			return std::visit([path, type](auto& desc) { return desc.PathGet(path, type); }, variant);
+			return std::visit([path, type](auto& desc) { return desc.PathGet(path, type); }, _variant);
 		}
 
 		void PrintPath(std::ostream& os, DataPath path) const
 		{
-			return std::visit([&os, path](auto& desc) { return desc.PrintPath(os, path); }, variant);
-		}
-
-		bool DrawFinalize(DataPath path)
-		{
-			return std::visit([path](auto& desc) { return desc.DrawFinalize(path); }, variant);
+			return std::visit([&os, path](auto& desc) { return desc.PrintPath(os, path); }, _variant);
 		}
 
 		bool QueryDirty(const VariantDesc<Descriptors...>& disk) const
@@ -237,42 +260,67 @@ namespace oly::editor
 					return lhs.QueryDirty(rhs);
 				else
 					return true;
-			}, variant, disk.variant);
+			}, _variant, disk._variant);
+		}
+
+		void CopyData(const VariantDesc<Descriptors...>& o)
+		{
+			std::visit([this](auto& lhs, const auto& rhs) {
+				using L = std::decay_t<decltype(lhs)>;
+				using R = std::decay_t<decltype(rhs)>;
+
+				if constexpr (std::is_same_v<L, R>)
+					lhs.CopyData(rhs);
+				else
+					Set<R>().CopyData(rhs);
+			}, _variant, o._variant);
 		}
 	};
 
 	template<typename Key, typename ValueDescriptor>
-	struct MapDesc
+	class MapDesc
 	{
-		std::unordered_map<Key, ValueDescriptor> map;
+		std::unordered_map<Key, ValueDescriptor> _map;
+
+	public:
+		DataPathLink link;
+
+		MapDesc(DataPathLink link)
+			: link(std::move(link))
+		{
+		}
 
 		void Clear()
 		{
-			map.clear();
+			_map.clear();
 		}
 
 		ValueDescriptor& operator[](Key key)
 		{
-			return map[key];
+			auto it = _map.find(key);
+			if (it != _map.end())
+				return it->second;
+			else
+				return _map.emplace(key, DataPathLink(link, DataPathStep(key))).first->second;
 		}
 
 		auto begin()
 		{
-			return map.begin();
+			return _map.begin();
 		}
 
 		auto end()
 		{
-			return map.end();
+			return _map.end();
 		}
 
 		void* PathGet(DataPath path, std::type_index type)
 		{
 			if (path.Empty())
-				return typeid(decltype(map)) == type ? reinterpret_cast<void*>(&map) : nullptr;
+				return typeid(decltype(*this)) == type ? reinterpret_cast<void*>(this) : nullptr;
 
-			auto it = map.find(static_cast<Key>(path.Step().v));
-			if (it != map.end())
+			auto it = _map.find(static_cast<Key>(path.Step().v));
+			if (it != _map.end())
 				return it->second.PathGet(path.Next(), type);
 			else
 				return nullptr;
@@ -285,8 +333,8 @@ namespace oly::editor
 			else
 			{
 				auto key = static_cast<Key>(path.Step().v);
-				auto it = map.find(key);
-				if (it != map.end())
+				auto it = _map.find(key);
+				if (it != _map.end())
 				{
 					path = path.Next();
 					if (path.Empty())
@@ -302,28 +350,15 @@ namespace oly::editor
 			}
 		}
 
-		DataPathStep Subpath(Key key)
-		{
-			return DataPathStep(key);
-		}
-
-		bool DrawFinalize(DataPath path)
-		{
-			bool dirty = false;
-			for (auto& [key, desc] : map)
-				dirty |= desc.DrawFinalize(path / Subpath(key));
-			return dirty;
-		}
-
 		bool QueryDirty(const MapDesc<Key, ValueDescriptor>& disk) const
 		{
-			if (map.size() != disk.map.size())
+			if (_map.size() != disk._map.size())
 				return true;
 
-			for (const auto& [key, desc] : map)
+			for (const auto& [key, desc] : _map)
 			{
-				auto it = disk.map.find(key);
-				if (it == disk.map.end())
+				auto it = disk._map.find(key);
+				if (it == disk._map.end())
 					return true;
 
 				if (desc.QueryDirty(it->second))
@@ -331,6 +366,14 @@ namespace oly::editor
 			}
 
 			return false;
+		}
+
+		void CopyData(const MapDesc<Key, ValueDescriptor>& o)
+		{
+			// TODO v9.3 more efficient way of just calling CopyData() on common keys
+			_map.clear();
+			for (const auto& [o_key, o_desc] : o._map)
+				(*this)[o_key].CopyData(o_desc);
 		}
 	};
 }

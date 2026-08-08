@@ -32,16 +32,16 @@ namespace oly::editor
 		std::string TabName() const override;
 
 	private:
-		void Draw(DataPath path, ProjectDesc& desc);
-		void Draw(DataPath path, ContextDesc& desc);
-		void Draw(DataPath path, PlatformDesc& desc);
-		void Draw(DataPath path, WindowDesc& desc);
-		void Draw(DataPath path, ViewportDesc& desc);
-		void Draw(DataPath path, WindowHintsDesc& desc);
-		void Draw(DataPath path, CollisionDesc& desc);
-		void Draw(DataPath path, LoggerDesc& desc);
-		void Draw(DataPath path, LoggerEnableDesc& desc);
-		void Draw(DataPath path, FrameRateDesc& desc);
+		void Draw(ProjectDesc& desc);
+		void Draw(ContextDesc& desc);
+		void Draw(PlatformDesc& desc);
+		void Draw(WindowDesc& desc);
+		void Draw(ViewportDesc& desc);
+		void Draw(WindowHintsDesc& desc);
+		void Draw(CollisionDesc& desc);
+		void Draw(LoggerDesc& desc);
+		void Draw(LoggerEnableDesc& desc);
+		void Draw(FrameRateDesc& desc);
 
 		void Load(TOMLNode node, ProjectDesc& desc);
 		void Load(TOMLNode node, ContextDesc& desc);

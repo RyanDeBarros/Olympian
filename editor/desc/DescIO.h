@@ -14,6 +14,7 @@
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
+#include "desc/Descriptors.h"
 
 #include <string>
 
@@ -166,12 +167,12 @@ namespace oly::editor
 
 	public:
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(DataPath path, std::vector<T>& data,
+		static DrawResult ValueDrawDynamicList(DataPathLink link, const VectorDesc<T>& data,
 			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
-			ui_state.DrawListHeader(data.size());
+			ui_state.DrawListHeader(data.Size());
 
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
 				ImGui::SameLine();
@@ -181,42 +182,34 @@ namespace oly::editor
 					row.OnSelect();
 				});
 
-			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
+			result |= ui_state.VisitRowOps([link = std::move(link), &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-				{
-					ExecuteDynamicListDeleteAction<T, Printer>(path, op.GetIndex());
+					ExecuteDynamicVectorDescDeleteAction<T, Printer>(link.ComputePath(), op.GetIndex());
 					break;
-				}
 
 				case gui::RowOperation::Type::Move:
-				{
 					if (op.GetSrcIndex() != op.GetDstIndex())
-						ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
+						ExecuteDynamicVectorDescMoveAction<T>(link.ComputePath(), op.GetSrcIndex(), op.GetDstIndex());
 					break;
-				}
 
 				case gui::RowOperation::Type::Resize:
-				{
-					if (data.size() != op.GetSize())
-						ExecuteDynamicListResizeAction<T>(path, data.size(), op.GetSize());
+					if (data.Size() != op.GetSize())
+						ExecuteDynamicVectorDescResizeAction<T>(link.ComputePath(), data.Size(), op.GetSize());
 					break;
-				}
 
 				case gui::RowOperation::Type::PushBack:
-				{
-					ExecuteDynamicListInsertAction<T, Printer>(path, data.size());
+					ExecuteDynamicVectorDescInsertAction<T, Printer>(link.ComputePath(), data.Size());
 					break;
 				}
-				}
-				});
+			});
 
 			return result;
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(DataPath path, EditSession<std::vector<T>>& data,
+		static DrawResult ValueDrawDynamicList(DataPathLink link, EditSession<std::vector<T>>& data,
 			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
@@ -231,55 +224,47 @@ namespace oly::editor
 					row.OnSelect();
 				});
 
-			result |= ui_state.VisitRowOps([path, &data](const gui::RowOperation& op) {
+			result |= ui_state.VisitRowOps([link = std::move(link), &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-				{
 					data.CancelEditing();
-					ExecuteDynamicListDeleteAction<T, Printer>(path, op.GetIndex());
+					ExecuteDynamicListDeleteAction<T, Printer>(link.ComputePath(), op.GetIndex());
 					break;
-				}
 
 				case gui::RowOperation::Type::Move:
-				{
 					data.CancelEditing();
 					if (op.GetSrcIndex() != op.GetDstIndex())
-						ExecuteDynamicListMoveAction<T>(path, op.GetSrcIndex(), op.GetDstIndex());
+						ExecuteDynamicListMoveAction<T>(link.ComputePath(), op.GetSrcIndex(), op.GetDstIndex());
 					break;
-				}
 
 				case gui::RowOperation::Type::Resize:
-				{
 					data.CancelEditing();
 					if (data.truth.size() != op.GetSize())
-						ExecuteDynamicListResizeAction<T>(path, data.truth.size(), op.GetSize());
+						ExecuteDynamicListResizeAction<T>(link.ComputePath(), data.truth.size(), op.GetSize());
 					break;
-				}
 
 				case gui::RowOperation::Type::PushBack:
-				{
 					data.CancelEditing();
-					ExecuteDynamicListInsertAction<T, Printer>(path, data.truth.size());
+					ExecuteDynamicListInsertAction<T, Printer>(link.ComputePath(), data.truth.size());
 					break;
 				}
-				}
-				});
+			});
 
 			return result;
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def,
+		static void DrawDynamicList(DataPathLink link, const char* label, const VectorDesc<T>& data, const std::vector<T>& def,
 			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			if (data.size() != def.size())
+			if (data.Size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
-				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([link = std::move(link), &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			if (gui::PropertyGrid::Reset::Activated(0))
@@ -287,7 +272,7 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(DataPath path, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def,
+		static void DrawDynamicList(DataPathLink link, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def,
 			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
@@ -295,8 +280,8 @@ namespace oly::editor
 			if (data.buffer.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([path, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
-				{ return ValueDrawDynamicList<T, Printer>(path, data, draw_fn, ui_state); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([link = std::move(link), &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
 			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
@@ -371,11 +356,11 @@ namespace oly::editor
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
-			static void Draw(DataPath path, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+		static void Draw(const DataPathLink& link, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
-			DrawDynamicList(path, label, data, def, [&data, &def](gui::DynamicRow& row) {
+			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
 				ImGui::SameLine();
@@ -391,11 +376,11 @@ namespace oly::editor
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
-			static void Draw(DataPath path, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+		static void Draw(const DataPathLink& link, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
-			DrawDynamicList(path, label, data, def, [&data, &def](gui::DynamicRow& row) {
+			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
 				DrawResult result;
 
 				ImGui::SameLine();

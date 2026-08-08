@@ -13,12 +13,12 @@ namespace oly::editor
 
 	struct FontStyleDesc
 	{
+		DESCRIPTOR_BODY(FontStyleDesc, STYLE_GENERATOR);
+
 		StringField font_file;
 		IntField<MakeOpt(0), MakeOpt<int>()> atlas_index;
 
-		DESCRIPTOR_BODY(FontStyleDesc, STYLE_GENERATOR);
-
-		FontStyleDesc();
+		FontStyleDesc(DataPathLink link = {});
 	};
 
 #define FONT_FAMILY_GENERATOR(M) \
@@ -26,9 +26,11 @@ namespace oly::editor
 
 	struct FontFamilyDesc
 	{
+		DESCRIPTOR_BODY(FontFamilyDesc, FONT_FAMILY_GENERATOR);
+
 		MapDesc<detail::FontStyleMode, FontStyleDesc> styles;
 		static const detail::Key styles_key;
 
-		DESCRIPTOR_BODY(FontFamilyDesc, FONT_FAMILY_GENERATOR);
+		FontFamilyDesc(DataPathLink link = {});
 	};
 }

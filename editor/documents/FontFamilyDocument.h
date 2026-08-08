@@ -30,8 +30,8 @@ namespace oly::editor
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
-		void Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
-		void Draw(DataPath path, FontStyleDesc& desc);
+		void Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
+		void Draw(FontStyleDesc& desc);
 
 		void Load(TOMLNode node, FontFamilyDesc& desc);
 		void Load(TOMLNode node, FontStyleDesc& desc);

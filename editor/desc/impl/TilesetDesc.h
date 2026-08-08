@@ -17,15 +17,15 @@ namespace oly::editor
 
 	struct TilesetAssignmentDesc
 	{
+		DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
+
 		StringField texture;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
 		UVRectField uvs;
 		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
 		EnumField<detail::TileRotation> rotation;
 
-		DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
-
-		TilesetAssignmentDesc();
+		TilesetAssignmentDesc(DataPathLink link = {});
 	};
 
 #define TILESET_ASSIGNMENT_MAP_GENERATOR(M) \
@@ -33,11 +33,11 @@ namespace oly::editor
 
 	struct TilesetAssignmentMapDesc
 	{
-		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
-
 		DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
 
-		TilesetAssignmentMapDesc();
+		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
+
+		TilesetAssignmentMapDesc(DataPathLink link = {});
 	};
 
 #define TILESET_PARTIAL_GENERATOR(M) \
@@ -49,12 +49,12 @@ namespace oly::editor
 
 	struct TilesetDesc
 	{
+		DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
+
 		EnumField<detail::StorageMode> storage;
 		TilesetAssignmentMapDesc assignments;
 		static const detail::Key assignments_key;
 
-		DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
-
-		TilesetDesc();
+		TilesetDesc(DataPathLink link = {});
 	};
 }

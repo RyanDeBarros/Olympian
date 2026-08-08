@@ -52,7 +52,6 @@ namespace oly::editor
 
 		bool ShouldClose() const;
 		void Tick();
-		size_t GetFrame() const;
 
 		static void SetOSWindowSize(int width, int height);
 		static void SetOSWindowMaximized(bool maximized);

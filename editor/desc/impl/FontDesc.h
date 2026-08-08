@@ -14,12 +14,12 @@ namespace oly::editor
 
 	struct KerningDesc
 	{
+		DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
+
 		StringArrayField<2> pair;
 		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
 
-		DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
-
-		KerningDesc();
+		KerningDesc(DataPathLink link = {});
 
 		friend std::ostream& operator<<(std::ostream& os, const KerningDesc& desc);
 	};
@@ -33,14 +33,14 @@ namespace oly::editor
 
 	struct FontFaceDesc
 	{
+		DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
+
 		EnumField<detail::StorageMode> storage;
 		VectorDesc<KerningDesc> kerning;
 		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
-		DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
-
-		FontFaceDesc();
+		FontFaceDesc(DataPathLink link = {});
 	};
 
 #define FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
@@ -61,6 +61,8 @@ namespace oly::editor
 
 	struct FontAtlasDesc
 	{
+		DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
+
 		FloatField<MakeOpt(1.f), MakeOpt<float>()> font_size;
 		EnumField<detail::StorageMode> storage;
 		DisjointEnumField<GLenum> min_filter;
@@ -71,9 +73,7 @@ namespace oly::editor
 		EnumField<detail::CommonBufferPreset> common_buffer_preset;
 		StringField common_buffer;
 
-		DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
-
-		FontAtlasDesc();
+		FontAtlasDesc(DataPathLink link = {});
 	};
 
 #define FULL_FONT_GENERATOR(M) \
@@ -82,13 +82,13 @@ namespace oly::editor
 
 	struct FullFontDesc
 	{
+		DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
+
 		FontFaceDesc font_face;
 		static const detail::Key font_face_key;
 		VectorDesc<FontAtlasDesc> font_atlases;
 		static const detail::Key font_atlas_key;
 
-		DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
-
-		FullFontDesc();
+		FullFontDesc(DataPathLink link = {});
 	};
 }

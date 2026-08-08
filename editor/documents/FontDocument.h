@@ -5,6 +5,8 @@
 #include "desc/impl/FontDesc.h"
 #include "desc/DoubleDescriptor.h"
 
+#include "gui/ListModel.h"
+
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
@@ -41,8 +43,8 @@ namespace oly::editor
 		void DrawFontAtlases();
 		void DrawAtlasPreview();
 		
-		void Draw(DataPath path, FontFaceDesc& desc);
-		void Draw(DataPath path, FontAtlasDesc& desc);
+		void Draw(FontFaceDesc& desc);
+		void Draw(FontAtlasDesc& desc);
 
 		void Load(TOMLNode node, FullFontDesc& desc);
 		void Load(TOMLNode node, FontFaceDesc& desc);

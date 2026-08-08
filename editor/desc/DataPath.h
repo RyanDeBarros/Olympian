@@ -2,9 +2,12 @@
 
 #include <functional>
 #include <ostream>
+#include <optional>
 #include <span>
 #include <typeindex>
 #include <vector>
+
+// TODO v9.3 move DataPath to imtk
 
 namespace oly::editor
 {
@@ -16,6 +19,13 @@ namespace oly::editor
 		
 		constexpr bool operator==(const DataPathStep& o) const { return v == o.v; }
 		constexpr bool operator==(int o) const { return v == o; }
+
+		constexpr DataPathStep& operator++() { ++v; return *this; }
+		constexpr DataPathStep operator++(int) { DataPathStep s = *this; ++v; return s; }
+		constexpr DataPathStep operator+(int x) const { return DataPathStep(v + x); }
+		constexpr DataPathStep& operator--() { --v; return *this; }
+		constexpr DataPathStep operator--(int) { DataPathStep s = *this; --v; return s; }
+		constexpr DataPathStep operator-(int x) const { return DataPathStep(v - x); }
 	};
 
 	class DataPath;
@@ -52,4 +62,32 @@ namespace oly::editor
 
 		friend std::ostream& operator<<(std::ostream& os, DataPath path);
 	};
+
+	struct DataPathLinkSource
+	{
+		std::shared_ptr<DataPathLinkSource> parent;
+		std::optional<DataPathStep> step;
+
+		DataPathSource ComputePath() const;
+	};
+
+	struct DataPathLink
+	{
+		std::shared_ptr<DataPathLinkSource> source; // TODO v9.3 unique_ptr and remove copy ctors - just use CopyData()/Clone() ??
+
+		DataPathLink();
+		DataPathLink(DataPathLink& parent, DataPathStep step);
+
+		DataPathLink(const DataPathLink& o);
+		DataPathLink(DataPathLink&& o) noexcept;
+
+		DataPathLink& operator=(const DataPathLink& o);
+		DataPathLink& operator=(DataPathLink&& o) noexcept;
+
+		std::optional<DataPathStep> Step() const;
+		void SetStep(DataPathStep step);
+		DataPathSource ComputePath() const;
+	};
+
+#define DATA_PATH_SUBLINK(subpath) DataPathLink(this->link, subpath)
 }

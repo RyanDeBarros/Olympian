@@ -30,11 +30,10 @@ namespace oly::editor
 		imtk::id_scope scope(this);
 		if (auto form = Form())
 		{
-			DataPath path;
-			Draw(path, _desc.scratch, "Regular", detail::FontStyleMode::Regular);
-			Draw(path, _desc.scratch, "Bold", detail::FontStyleMode::Bold);
-			Draw(path, _desc.scratch, "Italic", detail::FontStyleMode::Italic);
-			Draw(path, _desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+			Draw(_desc.scratch, "Regular", detail::FontStyleMode::Regular);
+			Draw(_desc.scratch, "Bold", detail::FontStyleMode::Bold);
+			Draw(_desc.scratch, "Italic", detail::FontStyleMode::Italic);
+			Draw(_desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
 		}
 	}
 
@@ -92,13 +91,13 @@ namespace oly::editor
 		return _desc;
 	}
 
-	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
+	void FontFamilyDocument::Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
 	{
 		if (auto section = Subform(subform_header))
-			Draw(path / desc.subpaths.styles / desc.styles.Subpath(style), desc.styles[style]);
+			Draw(desc.styles[style]);
 	}
 
-	void FontFamilyDocument::Draw(DataPath path, FontStyleDesc& desc)
+	void FontFamilyDocument::Draw(FontStyleDesc& desc)
 	{
 		DRAW_FIELDS(STYLE_GENERATOR);
 	}
@@ -111,13 +110,8 @@ namespace oly::editor
 		{
 			for (auto&& [key, subnode] : *table)
 			{
-				auto style = stoi(key.str());
-				if (!style)
-					continue;
-
-				FontStyleDesc subdesc;
-				Load(TOMLNode(subnode), subdesc);
-				desc.styles.map.emplace(static_cast<detail::FontStyleMode>(*style), std::move(subdesc));
+				if (auto style = stoi(key.str()))
+					Load(TOMLNode(subnode), desc.styles[static_cast<detail::FontStyleMode>(*style)]);
 			}
 		}
 	}

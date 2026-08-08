@@ -155,10 +155,8 @@ namespace oly::editor
 		UpdateActiveTextures();
 		imtk::id_scope scope(this);
 
-		DataPathSource path;
-
 		if (auto subform = Subform("Advanced"))
-			_desc.scratch.storage.Draw(path / _desc.scratch.subpaths.storage);
+			_desc.scratch.storage.Draw();
 
 		if (auto _ = imtk::tab_bar("##Editors"))
 		{
@@ -380,8 +378,6 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			auto path = GetAssignmentPath(grid);
-
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
 			if (auto scope = imtk::id_scope(&desc.texture))
@@ -391,7 +387,7 @@ namespace oly::editor
 				if (desc.texture.edit.buffer != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> DrawResult {
 					imtk::id_scope scope(&desc.texture.value);
 
 					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
@@ -425,7 +421,7 @@ namespace oly::editor
 				if (gui::PropertyGrid::Reset::AnyActivated())
 					desc.texture.edit.PublishReset(desc.texture.def);
 
-				desc.texture.CheckUndoAction(path / desc.subpaths.texture);
+				desc.texture.CheckUndoAction();
 			}
 
 			DRAW_FIELD(texture_index);
@@ -445,11 +441,7 @@ namespace oly::editor
 			for (auto&& [key, node] : *table)
 			{
 				if (auto config = stoi(key.str()))
-				{
-					TilesetAssignmentDesc subdesc;
-					Load(TOMLNode(node), subdesc);
-					desc.assignments.map[*config] = std::move(subdesc);
-				}
+					Load(TOMLNode(node), desc.assignments.map[*config]);
 			}
 		}
 	}
@@ -486,16 +478,6 @@ namespace oly::editor
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
 	{
 		return _desc.scratch.assignments.map[config];
-	}
-
-	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfigGrid grid)
-	{
-		return GetAssignmentPath(GetResolvedTileConfig(grid));
-	}
-
-	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
-	{
-		return DataPath() / _desc.scratch.subpaths.assignments / _desc.scratch.assignments.subpaths.map / _desc.scratch.assignments.map.Subpath(config);
 	}
 
 	void TilesetDocument::UpdateActiveTextures()

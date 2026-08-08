@@ -30,6 +30,8 @@ namespace oly::editor
 
 	struct SpritesheetDesc
 	{
+		DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
+
 		EnumField<detail::SpritesheetParamType> col_type;
 		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
 		EnumField<detail::SpritesheetParamType> row_type;
@@ -42,9 +44,7 @@ namespace oly::editor
 		BoolField row_major;
 		BoolField row_up;
 
-		DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
-
-		SpritesheetDesc();
+		SpritesheetDesc(DataPathLink link = {});
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
@@ -60,6 +60,8 @@ namespace oly::editor
 
 	struct BaseTextureDesc
 	{
+		DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
+
 		DisjointEnumField<GLenum> min_filter;
 		DisjointEnumField<GLenum> mag_filter;
 		DisjointEnumField<GLenum> wrap_s;
@@ -67,9 +69,7 @@ namespace oly::editor
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 
-		DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
-
-		BaseTextureDesc(GLenum default_filter);
+		BaseTextureDesc(GLenum default_filter, DataPathLink link = {});
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -82,13 +82,13 @@ namespace oly::editor
 
 	struct RasterTextureDesc
 	{
+		DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
+
 		BaseTextureDesc base;
 		BoolField generate_mipmaps;
 		EnumField<detail::StorageMode> storage;
 
-		DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
-
-		RasterTextureDesc();
+		RasterTextureDesc(DataPathLink link = {});
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M) \
@@ -106,15 +106,15 @@ namespace oly::editor
 
 	struct VectorTextureDesc
 	{
+		DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
+
 		BaseTextureDesc base;
 		EnumField<detail::SVGMipmapGenerationMode> generate_mipmaps;
 		EnumField<detail::StorageMode> image_storage;
 		EnumField<detail::StorageMode> abstract_storage;
 		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
 
-		DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
-
-		VectorTextureDesc();
+		VectorTextureDesc(DataPathLink link = {});
 	};
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
@@ -125,10 +125,12 @@ namespace oly::editor
 
 	struct TextureVariantDesc
 	{
+		DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
+
 		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
-		DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
+		TextureVariantDesc(DataPathLink link = {});
 
 		size_t Size() const;
 		bool Empty() const;

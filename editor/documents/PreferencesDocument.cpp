@@ -32,7 +32,7 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		Draw(DataPath(), _desc.scratch);
+		Draw(_desc.scratch);
 
 		if (gui::PropertyGrid::DirtyGrid())
 			MarkDirty();
@@ -127,7 +127,7 @@ namespace oly::editor
 		Editor::OnPreferencesChanged().invoke();
 	}
 
-	void PreferencesDocument::Draw(DataPath path, PreferencesDesc& desc)
+	void PreferencesDocument::Draw(PreferencesDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -137,48 +137,48 @@ namespace oly::editor
 			if (Form::ValidActiveForm())
 			{
 				if (auto subform = Subform("Edit"))
-					Draw(path / desc.subpaths.edit, desc.edit);
+					Draw(desc.edit);
 
 				if (auto subform = Subform("Content Browser"))
-					Draw(path / desc.subpaths.content_browser, desc.content_browser);
+					Draw(desc.content_browser);
 
 				if (auto subform = Subform("Tree View"))
-					Draw(path / desc.subpaths.tree_view, desc.tree_view);
+					Draw(desc.tree_view);
 
 				if (auto subform = Subform("Filesystem"))
-					Draw(path / desc.subpaths.filesystem, desc.filesystem);
+					Draw(desc.filesystem);
 			}
 		}
 	}
 
-	void PreferencesDocument::Draw(DataPath path, EditSettingsDesc& desc)
+	void PreferencesDocument::Draw(EditSettingsDesc& desc)
 	{
 		if (auto subform = Subform("Undo History"))
-			Draw(path / desc.subpaths.undo_history, desc.undo_history);
+			Draw(desc.undo_history);
 	}
 	
-	void PreferencesDocument::Draw(DataPath path, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
 	{
 		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, ContentBrowserSettingsDesc& desc)
+	void PreferencesDocument::Draw(ContentBrowserSettingsDesc& desc)
 	{
 		DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, TreeViewSettingsDesc& desc)
+	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
 	{
 		if (auto subform = Subform("Advanced##TreeView"))
-			Draw(path / desc.subpaths.advanced, desc.advanced);
+			Draw(desc.advanced);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesDocument::Draw(TreeViewAdvancedSettingsDesc& desc)
 	{
 		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, FilesystemSettingsDesc& desc)
+	void PreferencesDocument::Draw(FilesystemSettingsDesc& desc)
 	{
 		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 

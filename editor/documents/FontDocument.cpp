@@ -131,7 +131,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = Form())
-			Draw(DataPath() / _desc.scratch.subpaths.font_face, _desc.scratch.font_face);
+			Draw(_desc.scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -147,7 +147,7 @@ namespace oly::editor
 			if (auto form = Form())
 			{
 				if (!_desc.scratch.font_atlases.Empty())
-					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
+					Draw(_desc.scratch.font_atlases[_atlas_slots.active_index]);
 
 				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
 					MarkDirty();
@@ -178,7 +178,7 @@ namespace oly::editor
 		}
 	}
 
-	void FontDocument::Draw(DataPath path, FontFaceDesc& desc)
+	void FontDocument::Draw(FontFaceDesc& desc)
 	{
 		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
@@ -202,7 +202,7 @@ namespace oly::editor
 		};
 
 		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
-		for (auto& k : desc.kerning.vector)
+		for (auto& k : desc.kerning)
 		{
 			k.distance.edit.PreEdit();
 			k.pair.edits[0].PreEdit();
@@ -217,7 +217,7 @@ namespace oly::editor
 				gui::PropertyGrid::Reset::Button(1 + i);
 		}
 
-		DescIO::DrawDynamicList(path / desc.subpaths.kerning, "Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
+		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
 			DynamicArray<gui::WidgetComponent> components;
 			auto& k = desc.kerning[row.Index()];
 
@@ -278,11 +278,9 @@ namespace oly::editor
 			return gui::InlineWidget::Draw(components);
 		}, desc.kerning_ui_state);
 
-		auto kerning_path = path / desc.subpaths.kerning;
 		for (size_t i = 0; i < desc.kerning.Size(); ++i)
 		{
 			KerningDesc& k = desc.kerning[i];
-			auto kerning_subpath = kerning_path / desc.kerning.Subpath(i);
 			if (gui::PropertyGrid::Reset::Activated(1 + i))
 			{
 				k.distance.edit.PublishReset(k.distance.def);
@@ -301,12 +299,12 @@ namespace oly::editor
 				original.distance.value = std::move(k.distance.edit.original);
 				original.pair.value[0] = std::move(k.pair.edits[0].original);
 				original.pair.value[1] = std::move(k.pair.edits[1].original);
-				PushFieldSetAction(kerning_subpath, std::move(original), k);
+				PushFieldSetAction(k.link.ComputePath(), std::move(original), k);
 			}
 		}
 	}
 	
-	void FontDocument::Draw(DataPath path, FontAtlasDesc& desc)
+	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
 		DRAW_FIELD(font_size);
 		if (gui::PropertyGrid::DirtyRow())
@@ -352,13 +350,13 @@ namespace oly::editor
 			for (size_t i = 0; i < array->size(); ++i)
 			{
 				desc.font_atlases.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.font_atlases.vector.back());
+				Load(TOMLNode(*array->get(i)), desc.font_atlases.Back());
 			}
 		}
 		else
 		{
 			desc.font_atlases.PushBack();
-			Load(TOMLNode(), desc.font_atlases.vector.back());
+			Load(TOMLNode(), desc.font_atlases.Back());
 		}
 	}
 
@@ -372,7 +370,7 @@ namespace oly::editor
 			for (size_t i = 0; i < array->size(); ++i)
 			{
 				desc.kerning.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.kerning.vector.back());
+				Load(TOMLNode(*array->get(i)), desc.kerning.Back());
 			}
 		}
 	}
@@ -437,6 +435,6 @@ namespace oly::editor
 
 	std::unique_ptr<gui::IListAdapter> FontDocument::FontAtlasListAdapter()
 	{
-		return _desc.scratch.font_atlases.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.font_atlases);
+		return gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.font_atlases);
 	}
 }

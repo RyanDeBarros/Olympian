@@ -10,12 +10,12 @@ namespace oly::editor
 
 	struct ViewportDesc
 	{
+		DESCRIPTOR_BODY(ViewportDesc, VIEWPORT_GENERATOR);
+
 		BoolField boxed;
 		BoolField stretch;
 
-		DESCRIPTOR_BODY(ViewportDesc, VIEWPORT_GENERATOR);
-
-		ViewportDesc();
+		ViewportDesc(DataPathLink link = {});
 	};
 
 #define WINDOW_HINTS_GENERATOR(M) \
@@ -44,6 +44,8 @@ namespace oly::editor
 
 	struct WindowHintsDesc
 	{
+		DESCRIPTOR_BODY(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
+
 		Color4Field context_clear_color;
 		IntField<MakeOpt(0), MakeOpt<int>()> context_swap_interval;
 		BoolField window_resizable;
@@ -67,9 +69,7 @@ namespace oly::editor
 		BoolField window_opengl_forward_compat;
 		BoolField window_context_debug;
 
-		DESCRIPTOR_BODY(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
-
-		WindowHintsDesc();
+		WindowHintsDesc(DataPathLink link = {});
 	};
 
 #define WINDOW_PARTIAL_GENERATOR(M) \
@@ -84,6 +84,8 @@ namespace oly::editor
 
 	struct WindowDesc
 	{
+		DESCRIPTOR_BODY(WindowDesc, WINDOW_GENERATOR);
+
 		IntField<MakeOpt(1), MakeOpt<int>()> width;
 		IntField<MakeOpt(1), MakeOpt<int>()> height;
 		StringField title;
@@ -92,9 +94,7 @@ namespace oly::editor
 		WindowHintsDesc window_hints;
 		static const detail::Key window_hints_key;
 
-		DESCRIPTOR_BODY(WindowDesc, WINDOW_GENERATOR);
-
-		WindowDesc();
+		WindowDesc(DataPathLink link = {});
 	};
 
 #define PLATFORM_PARTIAL_GENERATOR(M) \
@@ -106,13 +106,13 @@ namespace oly::editor
 
 	struct PlatformDesc
 	{
+		DESCRIPTOR_BODY(PlatformDesc, PLATFORM_GENERATOR);
+
 		WindowDesc window;
 		static const detail::Key window_key;
 		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
 
-		DESCRIPTOR_BODY(PlatformDesc, PLATFORM_GENERATOR);
-
-		PlatformDesc();
+		PlatformDesc(DataPathLink link = {});
 	};
 
 #define COLLISION_GENERATOR(M) \
@@ -121,12 +121,12 @@ namespace oly::editor
 
 	struct CollisionDesc
 	{
+		DESCRIPTOR_BODY(CollisionDesc, COLLISION_GENERATOR);
+
 		StringArrayField<32> masks;
 		StringArrayField<32> layers;
 
-		DESCRIPTOR_BODY(CollisionDesc, COLLISION_GENERATOR);
-
-		CollisionDesc();
+		CollisionDesc(DataPathLink link = {});
 	};
 
 #define LOGGER_ENABLE_GENERATOR(M) \
@@ -138,15 +138,15 @@ namespace oly::editor
 
 	struct LoggerEnableDesc
 	{
+		DESCRIPTOR_BODY(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
+
 		BoolField debug;
 		BoolField info;
 		BoolField warning;
 		BoolField error;
 		BoolField fatal;
 
-		DESCRIPTOR_BODY(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
-
-		LoggerEnableDesc();
+		LoggerEnableDesc(DataPathLink link = {});
 	};
 
 #define LOGGER_PARTIAL_GENERATOR(M) \
@@ -161,6 +161,8 @@ namespace oly::editor
 
 	struct LoggerDesc
 	{
+		DESCRIPTOR_BODY(LoggerDesc, LOGGER_GENERATOR);
+
 		BoolField use_logfile;
 		BoolField use_console;
 		OptionalIntField<MakeOpt(0), MakeOpt<int>()> max_prior_log_files;
@@ -169,9 +171,7 @@ namespace oly::editor
 		LoggerEnableDesc enable;
 		static const detail::Key enable_key;
 
-		DESCRIPTOR_BODY(LoggerDesc, LOGGER_GENERATOR);
-
-		LoggerDesc();
+		LoggerDesc(DataPathLink link = {});
 	};
 
 #define FRAME_RATE_GENERATOR(M) \
@@ -180,12 +180,12 @@ namespace oly::editor
 
 	struct FrameRateDesc
 	{
+		DESCRIPTOR_BODY(FrameRateDesc, FRAME_RATE_GENERATOR);
+
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> frame_length_clip;
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
 
-		DESCRIPTOR_BODY(FrameRateDesc, FRAME_RATE_GENERATOR);
-
-		FrameRateDesc();
+		FrameRateDesc(DataPathLink link = {});
 	};
 
 #define CONTEXT_GENERATOR(M) \
@@ -196,6 +196,8 @@ namespace oly::editor
 
 	struct ContextDesc
 	{
+		DESCRIPTOR_BODY(ContextDesc, CONTEXT_GENERATOR);
+
 		PlatformDesc platform;
 		static const detail::Key platform_key;
 		CollisionDesc collision;
@@ -205,7 +207,7 @@ namespace oly::editor
 		FrameRateDesc frame_rate;
 		static const detail::Key frame_rate_key;
 
-		DESCRIPTOR_BODY(ContextDesc, CONTEXT_GENERATOR);
+		ContextDesc(DataPathLink link = {});
 	};
 
 #define PROJECT_GENERATOR(M) \
@@ -213,9 +215,11 @@ namespace oly::editor
 
 	struct ProjectDesc
 	{
+		DESCRIPTOR_BODY(ProjectDesc, PROJECT_GENERATOR);
+
 		ContextDesc context;
 		static const detail::Key context_key;
 
-		DESCRIPTOR_BODY(ProjectDesc, PROJECT_GENERATOR);
+		ProjectDesc(DataPathLink link = {});
 	};
 }

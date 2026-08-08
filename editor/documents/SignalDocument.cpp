@@ -50,10 +50,10 @@ namespace oly::editor
 		if (auto _ = imtk::tab_bar(""))
 		{
 			if (auto _ = imtk::tab_item("Signals"))
-				Draw(DataPath() / _desc.scratch.subpaths.signals, _desc.scratch.signals);
+				Draw(_desc.scratch.signals);
 
 			if (auto _ = imtk::tab_item("Routes"))
-				Draw(DataPath() / _desc.scratch.subpaths.routes, _desc.scratch.routes);
+				Draw(_desc.scratch.routes);
 		}
 
 		if (_stop_listening)
@@ -88,8 +88,8 @@ namespace oly::editor
 		}
 
 		_desc.LoadFromDisk();
-		_signal_slots.Init(*_desc.scratch.signals.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.signals));
-		_route_slots.Init(*_desc.scratch.routes.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.routes));
+		_signal_slots.Init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.signals));
+		_route_slots.Init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -116,9 +116,9 @@ namespace oly::editor
 		return _desc;
 	}
 
-	void SignalDocument::Draw(DataPath path, VectorDesc<SignalDesc>& desc)
+	void SignalDocument::Draw(VectorDesc<SignalDesc>& desc)
 	{
-		_signal_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
+		_signal_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Signal"))
 		{
@@ -137,18 +137,18 @@ namespace oly::editor
 		if (auto form = Form())
 		{
 			if (!desc.Empty())
-				Draw(path / desc.Subpath(_signal_slots.active_index), desc[_signal_slots.active_index]);
+				Draw(desc[_signal_slots.active_index]);
 
-			if (_signal_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
+			if (_signal_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
 			_signal_slots.active_index.ConsumeModified();
 		}
 	}
 
-	void SignalDocument::Draw(DataPath path, VectorDesc<RouteDesc>& desc)
+	void SignalDocument::Draw(VectorDesc<RouteDesc>& desc)
 	{
-		_route_slots.Update(*desc.ListAdapter<BriefDescPrinter>(path));
+		_route_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Route"))
 		{
@@ -167,9 +167,9 @@ namespace oly::editor
 		if (auto form = Form())
 		{
 			if (!desc.Empty())
-				Draw(path / desc.Subpath(_route_slots.active_index), desc[_route_slots.active_index]);
+				Draw(desc[_route_slots.active_index]);
 
-			if (_route_slots.ConsumeOps(*desc.ListAdapter<BriefDescPrinter>(path)))
+			if (_route_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
 			_route_slots.active_index.ConsumeModified();
@@ -203,7 +203,7 @@ namespace oly::editor
 		return id_counter;
 	}
 
-	void SignalDocument::Draw(DataPath path, SignalDesc& desc)
+	void SignalDocument::Draw(SignalDesc& desc)
 	{
 		gui::Outline dup_outline;
 		
@@ -229,7 +229,7 @@ namespace oly::editor
 				SignalDesc initial_desc = desc; \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				PushFieldSetAction<SignalDesc, BriefDescPrinter>(path, std::move(initial_desc), desc); \
+				PushFieldSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), desc); \
 			} \
 			break; \
 		}
@@ -239,10 +239,10 @@ namespace oly::editor
 #undef SWITCH_CASE
 		}
 
-		desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc) { Draw(path, desc); });
+		desc.variant.Visit([this](auto& desc) { Draw(desc); });
 	}
 	
-	void SignalDocument::Draw(DataPath path, RouteDesc& desc)
+	void SignalDocument::Draw(RouteDesc& desc)
 	{
 		auto signal_id_counter = GetSignalIDCounter();
 		auto id_counter = GetIDCounter();
@@ -264,7 +264,7 @@ namespace oly::editor
 		desc.signals.edit.PreEdit();
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(path / desc.subpaths.signals, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
+		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
 			auto component = comp::Generic([&]() -> DrawResult {
 				std::string& element = desc.signals.edit.buffer[row.Index()];
 
@@ -295,10 +295,10 @@ namespace oly::editor
 
 		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		desc.signals.CheckUndoAction(path / desc.subpaths.signals);
+		desc.signals.CheckUndoAction();
 	}
 
-	void SignalDocument::Draw(DataPath path, KeyDesc& desc)
+	void SignalDocument::Draw(KeyDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -324,19 +324,19 @@ namespace oly::editor
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+			desc.required_mods.Draw(disabled_required_mods);
 
 			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+			desc.forbidden_mods.Draw(disabled_forbidden_mods);
 		}
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, MouseButtonDesc& desc)
+	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -362,19 +362,19 @@ namespace oly::editor
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.Draw(path / desc.subpaths.required_mods, disabled_required_mods);
+			desc.required_mods.Draw(disabled_required_mods);
 
 			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.Draw(path / desc.subpaths.forbidden_mods, disabled_forbidden_mods);
+			desc.forbidden_mods.Draw(disabled_forbidden_mods);
 		}
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, GamepadButtonDesc& desc)
+	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -396,10 +396,10 @@ namespace oly::editor
 		DRAW_FIELD(button);
 
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, GamepadAxis1DDesc& desc)
+	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -422,10 +422,10 @@ namespace oly::editor
 
 		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, GamepadAxis2DDesc& desc)
+	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
 		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
 			_stop_listening = false;
@@ -448,42 +448,42 @@ namespace oly::editor
 
 		DRAW_FIELD(deadzone);
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, CursorPosDesc& desc)
+	void SignalDocument::Draw(CursorPosDesc& desc)
 	{
 		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 	
-	void SignalDocument::Draw(DataPath path, ScrollDesc& desc)
+	void SignalDocument::Draw(ScrollDesc& desc)
 	{
 		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
-			Draw(path / desc.subpaths.modifier, desc.modifier);
+			Draw(desc.modifier);
 	}
 
-	void SignalDocument::Draw(DataPath path, Modifier0dDesc& desc)
+	void SignalDocument::Draw(Modifier0dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Draw(path / desc.subpaths.base, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(DataPath path, Modifier1dDesc& desc)
+	void SignalDocument::Draw(Modifier1dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Draw(path / desc.subpaths.base, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(DataPath path, Modifier2dDesc& desc)
+	void SignalDocument::Draw(Modifier2dDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Draw(path / desc.subpaths.base, desc.base);
+		Draw(desc.base);
 	}
 	
-	void SignalDocument::Draw(DataPath path, ModifierBaseDesc& desc)
+	void SignalDocument::Draw(ModifierBaseDesc& desc)
 	{
 		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
@@ -522,7 +522,7 @@ namespace oly::editor
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
 		{ \
-			T##Desc subdesc; \
+			T##Desc subdesc(desc.variant.link); \
 			Load(node, subdesc); \
 			desc.variant.Set(std::move(subdesc)); \
 			break; \

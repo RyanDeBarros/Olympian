@@ -173,8 +173,6 @@ namespace oly::editor
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
-		DataPathSource GetAssignmentPath(const detail::TileConfigGrid grid);
-		DataPathSource GetAssignmentPath(const detail::TileConfig config);
 		void UpdateActiveTextures();
 
 		static bool TextureErrorIsWarning(TilesetDocument::TextureError error);

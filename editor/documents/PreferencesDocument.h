@@ -31,13 +31,13 @@ namespace oly::editor
 	private:
 		void ActiveDescChanged();
 
-		void Draw(DataPath path, PreferencesDesc& desc);
-		void Draw(DataPath path, EditSettingsDesc& desc);
-		void Draw(DataPath path, UndoHistorySettingsDesc& desc);
-		void Draw(DataPath path, ContentBrowserSettingsDesc& desc);
-		void Draw(DataPath path, TreeViewSettingsDesc& desc);
-		void Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc);
-		void Draw(DataPath path, FilesystemSettingsDesc& desc);
+		void Draw(PreferencesDesc& desc);
+		void Draw(EditSettingsDesc& desc);
+		void Draw(UndoHistorySettingsDesc& desc);
+		void Draw(ContentBrowserSettingsDesc& desc);
+		void Draw(TreeViewSettingsDesc& desc);
+		void Draw(TreeViewAdvancedSettingsDesc& desc);
+		void Draw(FilesystemSettingsDesc& desc);
 
 		void Load(TOMLNode node, PreferencesDesc& desc);
 		void Load(TOMLNode node, EditSettingsDesc& desc);

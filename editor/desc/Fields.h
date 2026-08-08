@@ -14,7 +14,7 @@
 
 namespace oly::editor
 {
-#define DRAW_FIELD(field) desc.field.Draw(path / desc.subpaths.field);
+#define DRAW_FIELD(field) desc.field.Draw();
 #define DRAW_FIELDS(GENERATOR) GENERATOR(DRAW_FIELD);
 
 #define LOAD_FIELD(field) desc.field.Load(node);
@@ -45,9 +45,11 @@ namespace oly::editor
 #define _SUBPATH_STRUCT_ENTRY(field) static constexpr DataPathStep field = DataPathStep(_E_##field);
 #define _SUBPATH_PATH_GET(field) case _E_##field: return field.PathGet(path.Next(), type);
 #define _SUBPATH_PRINT_PATH(field) case _E_##field: internal::PrintDescPath(os, path.Next(), #field, field); break;
-#define _SUBPATH_DRAW_FINALIZE(field) dirty |= field.DrawFinalize(path / subpaths.field);
 #define _SUBPATH_QUERY_DIRTY(field) if (field.QueryDirty(disk.field)) return true;
+#define _SUBPATH_COPY_DATA(field) field.CopyData(o.field);
+	// TODO v9.3 make note that DESCRIPTOR_BODY() must be the first thing in the descriptor class definition, or at least before the generator members are declared - once moved to imtk
 #define DESCRIPTOR_BODY(Klass, GENERATOR) \
+		public: DataPathLink link; \
 		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
 		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
 		void* PathGet(DataPath path, std::type_index type) \
@@ -75,8 +77,8 @@ namespace oly::editor
 				} \
 			} \
 		} \
-		bool DrawFinalize(DataPath path) { bool dirty = false; GENERATOR(_SUBPATH_DRAW_FINALIZE); return dirty; } \
-		bool QueryDirty(const Klass& disk) const { GENERATOR(_SUBPATH_QUERY_DIRTY); return false; }
+		bool QueryDirty(const Klass& disk) const { GENERATOR(_SUBPATH_QUERY_DIRTY); return false; } \
+		void CopyData(const Klass& o) { GENERATOR(_SUBPATH_COPY_DATA); }
 
 	extern detail::Key NullKey();
 
@@ -85,14 +87,20 @@ namespace oly::editor
 	{
 		using SelfType = std::conditional_t<std::is_void_v<Self>, PrimitiveField<T, Self>, Self>;
 
+		DataPathLink link;
 		T def;
 		T value;
 		detail::Key key;
 		const char* label;
 
-		PrimitiveField(T def, detail::Key key, const char* label) : def(def), value(def), key(key), label(label) {}
+		PrimitiveField(DataPathLink link, T def, detail::Key key, const char* label) : link(std::move(link)), def(def), value(def), key(key), label(label) {}
 
-		bool QueryDirty(const SelfType& disk) const
+		void CopyData(const PrimitiveField& o)
+		{
+			value = o.value;
+		}
+
+		bool QueryDirty(const SelfType& disk) const // TODO v9.3 remove SelfType/Self CRTP?
 		{
 			return value != disk.value;
 		}
@@ -124,28 +132,23 @@ namespace oly::editor
 			else
 				return nullptr;
 		}
-		
-		bool DrawFinalize(DataPath path)
-		{
-			return false;
-		}
 	};
 
 	struct BoolField : public PrimitiveField<bool, BoolField>
 	{
 		using PrimitiveField<bool, BoolField>::PrimitiveField;
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			const auto initial = value;
 			DescIO::Draw(label, value, def);
 			if (initial != value)
-				PushFieldSetAction(path, initial, value);
+				PushFieldSetAction(link.ComputePath(), initial, value);
 		}
 	};
 
 	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
-	struct RangeField : public PrimitiveField<T, RangeField<T, U, _Min, _Max>>
+	struct RangeField : public PrimitiveField<T, RangeField<T, U, _Min, _Max>>, public imtk::tick_processor
 	{
 		using Super = PrimitiveField<T, RangeField<T, U, _Min, _Max>>;
 
@@ -154,7 +157,7 @@ namespace oly::editor
 
 		EditSession<T> edit;
 
-		RangeField(T def, detail::Key key, const char* label) : Super(def, key, label), edit(this->value) {}
+		RangeField(DataPathLink link, T def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(this->value) {}
 
 		RangeField(const RangeField& o)
 			: Super(o), edit(this->value)
@@ -182,27 +185,24 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		// TODO v9.3 CopyData() for fields that have edit sessions that directly copies edit?
+
+		void Draw()
 		{
 			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), this->value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(this->link.ComputePath(), std::move(edit.original), this->value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
@@ -222,20 +222,20 @@ namespace oly::editor
 
 		using PrimitiveField<E, EnumField<E>>::PrimitiveField;
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			const auto initial = this->value;
 			DescIO::Draw(this->label, this->value, this->def);
 			if (initial != this->value)
-				PushFieldSetAction(path, initial, this->value);
+				PushFieldSetAction(this->link.ComputePath(), initial, this->value);
 		}
 	};
 
-	struct StringField : public PrimitiveField<std::string, StringField>
+	struct StringField : public PrimitiveField<std::string, StringField>, public imtk::tick_processor
 	{
 		EditSession<std::string> edit;
 
-		StringField(std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(def), key, label), edit(value) {}
+		StringField(DataPathLink link, std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(link), std::move(def), key, label), edit(value) {}
 
 		StringField(const StringField& o)
 			: PrimitiveField(o), edit(value)
@@ -263,35 +263,30 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
-	struct Color4Field : public PrimitiveField<Color4, Color4Field>
+	struct Color4Field : public PrimitiveField<Color4, Color4Field>, public imtk::tick_processor
 	{
 		EditSession<Color4> edit;
 
-		Color4Field(Color4 def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value)
+		Color4Field(DataPathLink link, Color4 def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value)
 		{
 		}
 
@@ -321,35 +316,30 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
-	struct RectField : public PrimitiveField<Rect, RectField>
+	struct RectField : public PrimitiveField<Rect, RectField>, public imtk::tick_processor
 	{
 		EditSession<Rect> edit;
 
-		RectField(Rect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
+		RectField(DataPathLink link, Rect def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
 		RectField(const RectField& o)
 			: PrimitiveField(o), edit(value)
@@ -377,35 +367,30 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
-	struct UVRectField : public PrimitiveField<UVRect, UVRectField>
+	struct UVRectField : public PrimitiveField<UVRect, UVRectField>, public imtk::tick_processor
 	{
 		EditSession<UVRect> edit;
 
-		UVRectField(UVRect def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
+		UVRectField(DataPathLink link, UVRect def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
 		UVRectField(const UVRectField& o)
 			: PrimitiveField(o), edit(value)
@@ -433,35 +418,30 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
-	struct TopSidePaddingField : public PrimitiveField<TopSidePadding, TopSidePaddingField>
+	struct TopSidePaddingField : public PrimitiveField<TopSidePadding, TopSidePaddingField>, public imtk::tick_processor
 	{
 		EditSession<TopSidePadding> edit;
 
-		TopSidePaddingField(TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(def, key, label), edit(value) {}
+		TopSidePaddingField(DataPathLink link, TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
 		TopSidePaddingField(const TopSidePaddingField& o)
 			: PrimitiveField(o), edit(value)
@@ -489,27 +469,22 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			DescIO::Draw(label, edit, def);
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
@@ -521,15 +496,15 @@ namespace oly::editor
 		const char** sublabels;
 		bool inline_checkboxes;
 
-		ArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
-			: Super(def, key, label), sublabels(sublabels), inline_checkboxes(inline_checkboxes) {}
+		ArrayField(DataPathLink link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
+			: Super(std::move(link), def, key, label), sublabels(sublabels), inline_checkboxes(inline_checkboxes) {}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			const auto initial = this->value;
 			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N, inline_checkboxes);
 			if (initial != this->value)
-				PushFieldSetAction(path, initial, this->value);
+				PushFieldSetAction(this->link.ComputePath(), initial, this->value);
 		}
 	};
 
@@ -537,18 +512,18 @@ namespace oly::editor
 	using BoolArrayField = ArrayField<bool, N>;
 
 	template<typename T, size_t N>
-	struct SessionArrayField : public PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>
+	struct SessionArrayField : public PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>, public imtk::tick_processor
 	{
 		using Super = PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>;
 
 		const char** sublabels = nullptr;
 		std::array<EditSession<T>, N> edits;
 
-		SessionArrayField(std::array<T, N> def, detail::Key key, const char* label)
-			: Super(def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})) {}
+		SessionArrayField(DataPathLink link, std::array<T, N> def, detail::Key key, const char* label)
+			: Super(std::move(link), def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})) {}
 
-		SessionArrayField(std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: Super(def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})), sublabels(sublabels) {}
+		SessionArrayField(DataPathLink link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: Super(std::move(link), def, key, label), edits(_MakeEdits(this->value, std::make_index_sequence<N>{})), sublabels(sublabels) {}
 
 	private:
 		template<size_t... Is>
@@ -584,28 +559,23 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void Draw()
 		{
 			if (sublabels)
 				DescIO::Draw(this->label, edits.data(), this->def.data(), sublabels, N);
 			else
 				DescIO::Draw(this->label, edits.data(), this->def.data(), N);
 
-			CheckUndoAction(path);
+			CheckUndoAction();
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
-			bool modified = false;
 			for (size_t i = 0; i < N; ++i)
 			{
 				if (edits[i].ConsumeModified())
-				{
-					modified = true;
-					PushFieldSetAction(path / DataPathStep(i), std::move(edits[i].original), this->value[i]);
-				}
+					PushFieldSetAction(this->link.ComputePath() / DataPathStep(i), std::move(edits[i].original), this->value[i]);
 			}
-			return modified;
 		}
 
 		void* PathGet(DataPath path, std::type_index type)
@@ -626,11 +596,11 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
 			for (auto& edit : edits)
-				edit.DrawFinalize();
-			return CheckUndoAction(path);
+				edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 	};
 
@@ -651,7 +621,7 @@ namespace oly::editor
 
 		EditSession<std::vector<std::string>> edit;
 
-		StringVectorField(std::vector<std::string> def, detail::Key key, const char* label) : Super(def, key, label), edit(value) {}
+		StringVectorField(DataPathLink link, std::vector<std::string> def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(value) {}
 
 		StringVectorField(const StringVectorField& o)
 			: Super(o), edit(value)
@@ -679,21 +649,17 @@ namespace oly::editor
 			return *this;
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), this->value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(this->link.ComputePath(), std::move(edit.original), this->value);
 		}
 	};
 
 	template<typename E>
 	struct DisjointEnumField
 	{
+		DataPathLink link;
 		E def;
 		int index;
 		int def_index;
@@ -704,19 +670,24 @@ namespace oly::editor
 		size_t count;
 
 		template<size_t Count>
-		DisjointEnumField(E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
-			: def(def), key(key), label(label), values(values), names(LabelSpanRegistry::Intern(std::span<const char*>(names, Count))), count(Count)
+		DisjointEnumField(DataPathLink link, E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
+			: link(std::move(link)), def(def), key(key), label(label), values(values), names(LabelSpanRegistry::Intern(std::span<const char*>(names, Count))), count(Count)
 		{
 			SetValue(def);
 			def_index = Index(def);
 		}
 
-		void Draw(DataPath path)
+		void CopyData(const DisjointEnumField& o)
+		{
+			index = o.index;
+		}
+
+		void Draw()
 		{
 			const auto initial = index;
 			DescIO::Draw(label, index, def_index, names);
 			if (initial != index)
-				PushFieldSetAction(path, initial, index);
+				PushFieldSetAction(link.ComputePath(), initial, index);
 		}
 
 		void Load(TOMLNode node)
@@ -758,11 +729,6 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool DrawFinalize(DataPath path)
-		{
-			return false;
-		}
-
 		bool QueryDirty(const DisjointEnumField<E>& disk) const
 		{
 			return index != disk.index;
@@ -770,12 +736,13 @@ namespace oly::editor
 	};
 	
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
-	struct OptionalRangeField
+	struct OptionalRangeField : public imtk::tick_processor
 	{
 		using Self = OptionalRangeField<T, _Min, _Max>;
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
 
+		DataPathLink link;
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> value;
 		EditSession<OptionalPrimitive<T>> edit;
@@ -783,18 +750,18 @@ namespace oly::editor
 		detail::Key enable_key;
 		const char* label;
 
-		OptionalRangeField(OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
-			: def(def), value(def), edit(value), value_key(value_key), enable_key(enable_key), label(label)
+		OptionalRangeField(DataPathLink link, OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
+			: link(std::move(link)), def(def), value(def), edit(value), value_key(value_key), enable_key(enable_key), label(label)
 		{
 		}
 
 		OptionalRangeField(const OptionalRangeField& o)
-			: def(o.def), value(o.value), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+			: link(o.link), def(o.def), value(o.value), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
 		{
 		}
 
 		OptionalRangeField(OptionalRangeField&& o)
-			: def(std::move(o.def)), value(std::move(o.value)), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
+			: link(std::move(o.link)), def(std::move(o.def)), value(std::move(o.value)), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
 		{
 		}
 
@@ -826,21 +793,21 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void CopyData(const OptionalRangeField& o)
 		{
-			DescIO::Draw(label, edit, def, Min, Max);
-			CheckUndoAction(path);
+			value = o.value;
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void Draw()
+		{
+			DescIO::Draw(label, edit, def, Min, Max);
+			CheckUndoAction();
+		}
+
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
 		void Load(TOMLNode node)
@@ -870,10 +837,10 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool DrawFinalize(DataPath path)
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 
 		bool QueryDirty(const OptionalRangeField& disk) const
@@ -892,11 +859,12 @@ namespace oly::editor
 	using OptionalDoubleField = OptionalRangeField<double, Min, Max>;
 
 	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
-	struct CompactOptionalRangeField
+	struct CompactOptionalRangeField : public imtk::tick_processor
 	{
 		inline static const OptionalPrimitive<T> Min = _Min;
 		inline static const OptionalPrimitive<T> Max = _Max;
 
+		DataPathLink link;
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> value;
 		EditSession<OptionalPrimitive<T>> edit;
@@ -904,18 +872,18 @@ namespace oly::editor
 		detail::Key key;
 		const char* label;
 
-		CompactOptionalRangeField(OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
-			: def(def), value(def), edit(value), nullopt(nullopt), key(key), label(label)
+		CompactOptionalRangeField(DataPathLink link, OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
+			: link(std::move(link)), def(def), value(def), edit(value), nullopt(nullopt), key(key), label(label)
 		{
 		}
 
 		CompactOptionalRangeField(const CompactOptionalRangeField& o)
-			: def(o.def), value(o.value), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
+			: link(o.link), def(o.def), value(o.value), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
 		{
 		}
 
 		CompactOptionalRangeField(CompactOptionalRangeField&& o) noexcept
-			: def(std::move(o.def)), value(std::move(o.value)), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
+			: link(std::move(o.link)), def(std::move(o.def)), value(std::move(o.value)), edit(value), nullopt(o.nullopt), key(o.key), label(o.label)
 		{
 		}
 
@@ -947,21 +915,21 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw(DataPath path)
+		void CopyData(const CompactOptionalRangeField& o)
 		{
-			DescIO::Draw(label, edit, def, Min, Max);
-			CheckUndoAction(path);
+			value = o.value;
 		}
 
-		bool CheckUndoAction(DataPath path)
+		void Draw()
+		{
+			DescIO::Draw(label, edit, def, Min, Max);
+			CheckUndoAction();
+		}
+
+		void CheckUndoAction()
 		{
 			if (edit.ConsumeModified())
-			{
-				PushFieldSetAction(path, std::move(edit.original), value);
-				return true;
-			}
-			else
-				return false;
+				PushFieldSetAction(link.ComputePath(), std::move(edit.original), value);
 		}
 
 		void Load(TOMLNode node)
@@ -995,10 +963,11 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool DrawFinalize(DataPath path)
+		// TODO v9.3 remove DrawFinalize: have fields inherit from imtk::tick_processor, and pass DataPath to constructor of fields (store DataPathSource as member). Make sure it syncs for dynamic descriptors
+		void on_last_process_frame() override
 		{
-			edit.DrawFinalize();
-			return CheckUndoAction(path);
+			edit.on_last_process_frame();
+			CheckUndoAction();
 		}
 
 		bool QueryDirty(const CompactOptionalRangeField& disk) const
@@ -1028,6 +997,7 @@ namespace oly::editor
 	template<typename E, size_t Count>
 	struct BitsetField
 	{
+		DataPathLink link;
 		bool def_flags[Count];
 		bool value_flags[Count];
 		E def;
@@ -1040,31 +1010,36 @@ namespace oly::editor
 
 		static const inline size_t Count = Count;
 
-		BitsetField(E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
-			: def(def), value(def), key(key), label(label), values(values), names(names), inline_checkboxes(inline_checkboxes)
+		BitsetField(DataPathLink link, E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
+			: link(std::move(link)), def(def), value(def), key(key), label(label), values(values), names(names), inline_checkboxes(inline_checkboxes)
 		{
 			SetFlags();
 		}
 
-		void Draw(DataPath path, const bool (&disabled)[Count])
+		void CopyData(const BitsetField& o)
 		{
-			return Draw(path, static_cast<const bool*>(disabled));
+			value = o.value;
 		}
 
-		void Draw(DataPath path)
+		void Draw(const bool (&disabled)[Count])
 		{
-			return Draw(path, nullptr);
+			return Draw(static_cast<const bool*>(disabled));
+		}
+
+		void Draw()
+		{
+			return Draw(nullptr);
 		}
 
 	private:
-		void Draw(DataPath path, const bool* disabled)
+		void Draw(const bool* disabled)
 		{
 			const auto initial = value;
 			SetFlags();
 			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count, inline_checkboxes);
 			SetEnum();
 			if (initial != value)
-				PushFieldSetAction(path, initial, value);
+				PushFieldSetAction(link.ComputePath(), initial, value);
 		}
 
 		void SetFlags()
@@ -1105,11 +1080,6 @@ namespace oly::editor
 				return reinterpret_cast<void*>(&value);
 			else
 				return nullptr;
-		}
-
-		bool DrawFinalize(DataPath path)
-		{
-			return false;
 		}
 
 		bool QueryDirty(const BitsetField<E, Count>& disk) const

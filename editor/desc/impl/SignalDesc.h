@@ -19,13 +19,13 @@ namespace oly::editor
 
 	struct ModifierBaseDesc
 	{
+		DESCRIPTOR_BODY(ModifierBaseDesc, MODIFIER_BASE_GENERATOR);
+
 		EnumField<detail::Swizzle> swizzle;
 		Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
 		BoolArrayField<3> invert;
 
-		DESCRIPTOR_BODY(ModifierBaseDesc, MODIFIER_BASE_GENERATOR);
-
-		ModifierBaseDesc();
+		ModifierBaseDesc(DataPathLink link = {});
 	};
 
 #define MODIFIER_0D_PARTIAL_GENERATOR(M) \
@@ -37,12 +37,12 @@ namespace oly::editor
 
 	struct Modifier0dDesc
 	{
+		DESCRIPTOR_BODY(Modifier0dDesc, MODIFIER_0D_GENERATOR);
+
 		ModifierBaseDesc base;
 		EnumField<detail::Axis0dConversion> conversion;
 
-		DESCRIPTOR_BODY(Modifier0dDesc, MODIFIER_0D_GENERATOR);
-
-		Modifier0dDesc();
+		Modifier0dDesc(DataPathLink link = {});
 	};
 
 #define MODIFIER_1D_PARTIAL_GENERATOR(M) \
@@ -54,12 +54,12 @@ namespace oly::editor
 
 	struct Modifier1dDesc
 	{
+		DESCRIPTOR_BODY(Modifier1dDesc, MODIFIER_1D_GENERATOR);
+
 		ModifierBaseDesc base;
 		EnumField<detail::Axis1dConversion> conversion;
 
-		DESCRIPTOR_BODY(Modifier1dDesc, MODIFIER_1D_GENERATOR);
-
-		Modifier1dDesc();
+		Modifier1dDesc(DataPathLink link = {});
 	};
 
 #define MODIFIER_2D_PARTIAL_GENERATOR(M) \
@@ -71,12 +71,12 @@ namespace oly::editor
 
 	struct Modifier2dDesc
 	{
+		DESCRIPTOR_BODY(Modifier2dDesc, MODIFIER_2D_GENERATOR);
+
 		ModifierBaseDesc base;
 		EnumField<detail::Axis2dConversion> conversion;
 
-		DESCRIPTOR_BODY(Modifier2dDesc, MODIFIER_2D_GENERATOR);
-
-		Modifier2dDesc();
+		Modifier2dDesc(DataPathLink link = {});
 	};
 
 #define KEY_MODS_GENERATOR(M) \
@@ -93,14 +93,14 @@ namespace oly::editor
 
 	struct KeyDesc
 	{
+		DESCRIPTOR_BODY(KeyDesc, KEY_GENERATOR);
+
 		DisjointEnumField<detail::KeyInput> key;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
-		DESCRIPTOR_BODY(KeyDesc, KEY_GENERATOR);
-
-		KeyDesc();
+		KeyDesc(DataPathLink link = {});
 	};
 
 #define MOUSE_BUTTON_MODS_GENERATOR(M) \
@@ -117,14 +117,14 @@ namespace oly::editor
 
 	struct MouseButtonDesc
 	{
+		DESCRIPTOR_BODY(MouseButtonDesc, MOUSE_BUTTON_GENERATOR);
+
 		DisjointEnumField<detail::MouseButton> button;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
-		DESCRIPTOR_BODY(MouseButtonDesc, MOUSE_BUTTON_GENERATOR);
-
-		MouseButtonDesc();
+		MouseButtonDesc(DataPathLink link = {});
 	};
 
 #define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
@@ -136,12 +136,12 @@ namespace oly::editor
 
 	struct GamepadButtonDesc
 	{
+		DESCRIPTOR_BODY(GamepadButtonDesc, GAMEPAD_BUTTON_GENERATOR);
+
 		DisjointEnumField<GLenum> button;
 		Modifier0dDesc modifier;
 
-		DESCRIPTOR_BODY(GamepadButtonDesc, GAMEPAD_BUTTON_GENERATOR);
-
-		GamepadButtonDesc();
+		GamepadButtonDesc(DataPathLink link = {});
 	};
 
 #define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
@@ -154,13 +154,13 @@ namespace oly::editor
 
 	struct GamepadAxis1DDesc
 	{
+		DESCRIPTOR_BODY(GamepadAxis1DDesc, GAMEPAD_AXIS_1D_GENERATOR);
+
 		DisjointEnumField<GLenum> axis;
 		Modifier1dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		DESCRIPTOR_BODY(GamepadAxis1DDesc, GAMEPAD_AXIS_1D_GENERATOR);
-
-		GamepadAxis1DDesc();
+		GamepadAxis1DDesc(DataPathLink link = {});
 	};
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
@@ -173,13 +173,13 @@ namespace oly::editor
 
 	struct GamepadAxis2DDesc
 	{
+		DESCRIPTOR_BODY(GamepadAxis2DDesc, GAMEPAD_AXIS_2D_GENERATOR);
+
 		EnumField<detail::GamepadAxis2D> axis;
 		Modifier2dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		DESCRIPTOR_BODY(GamepadAxis2DDesc, GAMEPAD_AXIS_2D_GENERATOR);
-
-		GamepadAxis2DDesc();
+		GamepadAxis2DDesc(DataPathLink link = {});
 	};
 
 #define CURSOR_POS_PARTIAL_GENERATOR(M)
@@ -190,9 +190,11 @@ namespace oly::editor
 
 	struct CursorPosDesc
 	{
+		DESCRIPTOR_BODY(CursorPosDesc, CURSOR_POS_GENERATOR);
+
 		Modifier2dDesc modifier;
 
-		DESCRIPTOR_BODY(CursorPosDesc, CURSOR_POS_GENERATOR);
+		CursorPosDesc(DataPathLink link = {});
 	};
 
 #define SCROLL_PARTIAL_GENERATOR(M)
@@ -203,9 +205,11 @@ namespace oly::editor
 
 	struct ScrollDesc
 	{
+		DESCRIPTOR_BODY(ScrollDesc, SCROLL_GENERATOR);
+		
 		Modifier2dDesc modifier;
 
-		DESCRIPTOR_BODY(ScrollDesc, SCROLL_GENERATOR);
+		ScrollDesc(DataPathLink link = {});
 	};
 
 #define SIGNAL_PARTIAL_GENERATOR(M) \
@@ -227,14 +231,14 @@ namespace oly::editor
 
 	struct SignalDesc
 	{
+		DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
+
 		StringField id;
 		EnumField<detail::SignalBindingType> binding;
 		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
-		DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
-
-		SignalDesc();
+		SignalDesc(DataPathLink link = {});
 	};
 
 #define ROUTE_GENERATOR(M) \
@@ -243,12 +247,12 @@ namespace oly::editor
 
 	struct RouteDesc
 	{
+		DESCRIPTOR_BODY(RouteDesc, ROUTE_GENERATOR);
+
 		StringField id;
 		StringVectorField signals;
 
-		DESCRIPTOR_BODY(RouteDesc, ROUTE_GENERATOR);
-
-		RouteDesc();
+		RouteDesc(DataPathLink link = {});
 	};
 
 #define SIGNAL_FULL_GENERATOR(M) \
@@ -257,11 +261,13 @@ namespace oly::editor
 
 	struct SignalFullDesc
 	{
+		DESCRIPTOR_BODY(SignalFullDesc, SIGNAL_FULL_GENERATOR);
+
 		VectorDesc<SignalDesc> signals;
 		static const detail::Key signals_key;
 		VectorDesc<RouteDesc> routes;
 		static const detail::Key routes_key;
 
-		DESCRIPTOR_BODY(SignalFullDesc, SIGNAL_FULL_GENERATOR);
+		SignalFullDesc(DataPathLink link = {});
 	};
 }

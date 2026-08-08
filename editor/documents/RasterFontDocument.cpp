@@ -29,7 +29,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		imtk::id_scope scope(this);
-		Draw(DataPath(), _desc.scratch);
+		Draw(_desc.scratch);
 	}
 
 	void RasterFontDocument::LoadImpl()
@@ -92,7 +92,7 @@ namespace oly::editor
 		return _desc;
 	}
 
-	void RasterFontDocument::Draw(DataPath path, RasterFontDesc& desc)
+	void RasterFontDocument::Draw(RasterFontDesc& desc)
 	{
 		if (auto form = Form())
 		{
@@ -119,7 +119,7 @@ namespace oly::editor
 				if (Form::ValidActiveForm())
 				{
 					if (!desc.glyphs.Empty())
-						Draw(path / desc.subpaths.glyphs / desc.glyphs.Subpath(_glyph_model.active_index), desc.glyphs[_glyph_model.active_index]);
+						Draw(desc.glyphs[_glyph_model.active_index]);
 
 					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 				}
@@ -132,7 +132,7 @@ namespace oly::editor
 		}
 	}
 
-	void RasterFontDocument::Draw(DataPath path, GlyphDesc& desc)
+	void RasterFontDocument::Draw(GlyphDesc& desc)
 	{
 		auto style_stack = GUIState::InputDataStyleSubstack();
 		const bool empty_codepoint = desc.codepoint.value.empty();
@@ -146,7 +146,7 @@ namespace oly::editor
 
 		std::string previous_codepoint = desc.codepoint.value;
 		DRAW_FIELD(codepoint);
-		desc.codepoint.Draw(path / desc.subpaths.codepoint);
+		desc.codepoint.Draw();
 		if (gui::PropertyGrid::DirtyRow())
 		{
 			_codepoint_counter.increment(desc.codepoint.value);
@@ -216,7 +216,7 @@ namespace oly::editor
 
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
-		return std::make_unique<gui::ListCallbackAdapter>(_desc.scratch.glyphs.ListAdapter<BriefGlyphDescPrinter>(DataPath() / _desc.scratch.subpaths.glyphs),
+		return std::make_unique<gui::ListCallbackAdapter>(gui::MakeVectorAdapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),
 			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

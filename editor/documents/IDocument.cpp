@@ -95,10 +95,10 @@ namespace oly::editor
 		return ss.str();
 	}
 
+	// TODO v9.3 put in on_last_process_frame() instead. Use priority system to enforce order (submit_edit -> check_undo -> query_dirty) instead of calling on_last_process_frame() - make protected
 	void IDocument::DrawFinalize()
 	{
-		if (GetDoubleDescriptor().DrawFinalize())
-			MarkDirty();
+		QueryDirty();
 	}
 
 	const detail::ResourcePath& IDocument::GetOlyPath() const

@@ -28,8 +28,6 @@
 
 namespace oly::editor
 {
-	static size_t FRAME_COUNTER = 0;
-
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
 		_logger(std::make_unique<Logger>()),
@@ -68,6 +66,7 @@ namespace oly::editor
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();
+		imtk::begin_frame();
 
 		_shortcut_manager->PollShortcuts();
 		Texture::Update();
@@ -82,14 +81,8 @@ namespace oly::editor
 			break;
 		}
 
-		++FRAME_COUNTER;
-
+		imtk::end_frame();
 		_os_window->end_frame();
-	}
-
-	size_t Editor::GetFrame() const
-	{
-		return FRAME_COUNTER;
 	}
 	
 	void Editor::SetOSWindowSize(int width, int height)

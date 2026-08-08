@@ -10,44 +10,50 @@ namespace oly::editor
 		"Z"
 	};
 
-	ModifierBaseDesc::ModifierBaseDesc() :
-		swizzle(detail::Swizzle::None, detail::Key::Swizzle, "Swizzle"),
-		multiplier(glm::vec3(1.f, 1.f, 1.f), detail::Key::Multiplier, "Multiplier"),
-		invert({ false, false, false }, detail::Key::Invert, "Invert", MODIFIER_INVERT_SUBLABELS, true)
+	ModifierBaseDesc::ModifierBaseDesc(DataPathLink link) :
+		link(std::move(link)),
+		swizzle(DATA_PATH_SUBLINK(subpaths.swizzle), detail::Swizzle::None, detail::Key::Swizzle, "Swizzle"),
+		multiplier(DATA_PATH_SUBLINK(subpaths.multiplier), glm::vec3(1.f, 1.f, 1.f), detail::Key::Multiplier, "Multiplier"),
+		invert(DATA_PATH_SUBLINK(subpaths.invert), { false, false, false }, detail::Key::Invert, "Invert", MODIFIER_INVERT_SUBLABELS, true)
 	{
 	}
 
-	Modifier0dDesc::Modifier0dDesc() :
-		base(),
-		conversion(detail::Axis0dConversion::None, detail::Key::Conversion, "Conversion")
+	Modifier0dDesc::Modifier0dDesc(DataPathLink link) :
+		link(std::move(link)),
+		base(DATA_PATH_SUBLINK(subpaths.base)),
+		conversion(DATA_PATH_SUBLINK(subpaths.conversion), detail::Axis0dConversion::None, detail::Key::Conversion, "Conversion")
 	{
 	}
 
-	Modifier1dDesc::Modifier1dDesc() :
-		base(),
-		conversion(detail::Axis1dConversion::None, detail::Key::Conversion, "Conversion")
+	Modifier1dDesc::Modifier1dDesc(DataPathLink link) :
+		link(std::move(link)),
+		base(DATA_PATH_SUBLINK(subpaths.base)),
+		conversion(DATA_PATH_SUBLINK(subpaths.conversion), detail::Axis1dConversion::None, detail::Key::Conversion, "Conversion")
 	{
 	}
 
-	Modifier2dDesc::Modifier2dDesc() :
-		base(),
-		conversion(detail::Axis2dConversion::None, detail::Key::Conversion, "Conversion")
+	Modifier2dDesc::Modifier2dDesc(DataPathLink link) :
+		link(std::move(link)),
+		base(DATA_PATH_SUBLINK(subpaths.base)),
+		conversion(DATA_PATH_SUBLINK(subpaths.conversion), detail::Axis2dConversion::None, detail::Key::Conversion, "Conversion")
 	{
 	}
 
-	KeyDesc::KeyDesc() :
-		key(detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
-		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		modifier()
+	KeyDesc::KeyDesc(DataPathLink link) :
+		link(std::move(link)),
+		key(DATA_PATH_SUBLINK(subpaths.key), detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
+		required_mods(DATA_PATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		forbidden_mods(DATA_PATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
-	MouseButtonDesc::MouseButtonDesc() :
-		button(detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
-		required_mods(detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		forbidden_mods(detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		modifier()
+	MouseButtonDesc::MouseButtonDesc(DataPathLink link) :
+		link(std::move(link)),
+		button(DATA_PATH_SUBLINK(subpaths.button), detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
+		required_mods(DATA_PATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		forbidden_mods(DATA_PATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
@@ -87,9 +93,10 @@ namespace oly::editor
 		"Dpad (left)"
 	};
 
-	GamepadButtonDesc::GamepadButtonDesc() :
-		button(GLFW_GAMEPAD_BUTTON_A, detail::Key::Button, "Button", GAMEPAD_BUTTON_VALUES, GAMEPAD_BUTTON_NAMES),
-		modifier()
+	GamepadButtonDesc::GamepadButtonDesc(DataPathLink link) :
+		link(std::move(link)),
+		button(DATA_PATH_SUBLINK(subpaths.button), GLFW_GAMEPAD_BUTTON_A, detail::Key::Button, "Button", GAMEPAD_BUTTON_VALUES, GAMEPAD_BUTTON_NAMES),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
@@ -111,35 +118,58 @@ namespace oly::editor
 		"Right trigger (R2)",
 	};
 
-	GamepadAxis1DDesc::GamepadAxis1DDesc() :
-		axis(GLFW_GAMEPAD_AXIS_LEFT_X, detail::Key::Axis1D, "Axis", GAMEPAD_AXIS_1D_VALUES, GAMEPAD_AXIS_1D_NAMES),
-		modifier(),
-		deadzone(0.f, detail::Key::Deadzone, "Deadzone")
+	GamepadAxis1DDesc::GamepadAxis1DDesc(DataPathLink link) :
+		link(std::move(link)),
+		axis(DATA_PATH_SUBLINK(subpaths.axis), GLFW_GAMEPAD_AXIS_LEFT_X, detail::Key::Axis1D, "Axis", GAMEPAD_AXIS_1D_VALUES, GAMEPAD_AXIS_1D_NAMES),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier)),
+		deadzone(DATA_PATH_SUBLINK(subpaths.deadzone), 0.f, detail::Key::Deadzone, "Deadzone")
 	{
 	}
 
-	GamepadAxis2DDesc::GamepadAxis2DDesc() :
-		axis(detail::GamepadAxis2D::LeftXY, detail::Key::Axis2D, "Axis"),
-		modifier(),
-		deadzone(0.f, detail::Key::Deadzone, "Deadzone")
+	GamepadAxis2DDesc::GamepadAxis2DDesc(DataPathLink link) :
+		link(std::move(link)),
+		axis(DATA_PATH_SUBLINK(subpaths.axis), detail::GamepadAxis2D::LeftXY, detail::Key::Axis2D, "Axis"),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier)),
+		deadzone(DATA_PATH_SUBLINK(subpaths.deadzone), 0.f, detail::Key::Deadzone, "Deadzone")
+	{
+	}
+
+	CursorPosDesc::CursorPosDesc(DataPathLink link) :
+		link(std::move(link)),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier))
+	{
+	}
+
+	ScrollDesc::ScrollDesc(DataPathLink link) :
+		link(std::move(link)),
+		modifier(DATA_PATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
 	const detail::Key SignalDesc::modifier_key = detail::Key::Modifier;
 
-	SignalDesc::SignalDesc() :
-		id("", detail::Key::ID, "ID"),
-		binding(detail::SignalBindingType::Key, detail::Key::Binding, "Binding"),
-		variant(KeyDesc())
+	SignalDesc::SignalDesc(DataPathLink link) :
+		link(std::move(link)),
+		id(DATA_PATH_SUBLINK(subpaths.id), "", detail::Key::ID, "ID"),
+		binding(DATA_PATH_SUBLINK(subpaths.binding), detail::SignalBindingType::Key, detail::Key::Binding, "Binding"),
+		variant(KeyDesc(DATA_PATH_SUBLINK(subpaths.variant)))
 	{
 	}
 
-	RouteDesc::RouteDesc() :
-		id("", detail::Key::ID, "ID"),
-		signals({}, detail::Key::Signals, "Signals")
+	RouteDesc::RouteDesc(DataPathLink link) :
+		link(std::move(link)),
+		id(DATA_PATH_SUBLINK(subpaths.id), "", detail::Key::ID, "ID"),
+		signals(DATA_PATH_SUBLINK(subpaths.signals), {}, detail::Key::Signals, "Signals")
 	{
 	}
 
 	const detail::Key SignalFullDesc::signals_key = detail::Key::SignalArray;
 	const detail::Key SignalFullDesc::routes_key = detail::Key::RoutingArray;
+
+	SignalFullDesc::SignalFullDesc(DataPathLink link) :
+		link(std::move(link)),
+		signals(DATA_PATH_SUBLINK(subpaths.signals)),
+		routes(DATA_PATH_SUBLINK(subpaths.routes))
+	{
+	}
 }
