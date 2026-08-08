@@ -63,27 +63,30 @@ namespace oly::editor
 		friend std::ostream& operator<<(std::ostream& os, DataPath path);
 	};
 
-	// TODO v9.3 rename + hide members, also hide members of DataPathLink
-	struct DataPathLinkSource
+
+	class DataPathLink
 	{
-		std::shared_ptr<DataPathLinkSource> parent;
-		std::optional<DataPathStep> step;
+		class Node
+		{
+			friend class DataPathLink;
 
-		DataPathSource ComputePath() const;
-	};
+			std::shared_ptr<Node> parent;
+			std::optional<DataPathStep> step;
 
-	struct DataPathLink
-	{
-		std::shared_ptr<DataPathLinkSource> source;
+			DataPathSource ComputePath() const;
+		};
 
+		std::shared_ptr<Node> node;
+
+	public:
 		DataPathLink();
 		DataPathLink(DataPathLink& parent, DataPathStep step);
 
 		DataPathLink(const DataPathLink& o) = delete;
-		DataPathLink(DataPathLink&& o) noexcept;
+		DataPathLink(DataPathLink&& o) noexcept = default;
 
 		DataPathLink& operator=(const DataPathLink& o) = delete;
-		DataPathLink& operator=(DataPathLink&& o) noexcept;
+		DataPathLink& operator=(DataPathLink&& o) noexcept = default;
 
 		std::optional<DataPathStep> Step() const;
 		void SetStep(DataPathStep step);

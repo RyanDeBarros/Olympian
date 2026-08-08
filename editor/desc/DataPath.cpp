@@ -77,7 +77,7 @@ namespace oly::editor
 		return os << ")";
 	}
 
-	DataPathSource DataPathLinkSource::ComputePath() const
+	DataPathSource DataPathLink::Node::ComputePath() const
 	{
 		auto path = parent ? parent->ComputePath() : DataPathSource();
 		if (step)
@@ -86,49 +86,36 @@ namespace oly::editor
 	}
 
 	DataPathLink::DataPathLink()
-		: source(std::make_unique<DataPathLinkSource>())
+		: node(std::make_unique<Node>())
 	{
 	}
 
 	DataPathLink::DataPathLink(DataPathLink& parent, DataPathStep step)
-		: source(std::make_unique<DataPathLinkSource>())
+		: node(std::make_unique<Node>())
 	{
-		source->parent = parent.source;
-		source->step = step;
-	}
-
-	DataPathLink::DataPathLink(DataPathLink&& o) noexcept
-		: source(std::move(o.source))
-	{
-	}
-
-	DataPathLink& DataPathLink::operator=(DataPathLink&& o) noexcept
-	{
-		if (this != &o)
-			source = std::move(o.source);
-
-		return *this;
+		node->parent = parent.node;
+		node->step = step;
 	}
 
 	std::optional<DataPathStep> DataPathLink::Step() const
 	{
-		return source->step;
+		return node->step;
 	}
 
 	void DataPathLink::SetStep(DataPathStep step)
 	{
-		source->step = step;
+		node->step = step;
 	}
 
 	DataPathLink DataPathLink::Share() const
 	{
 		DataPathLink clone;
-		clone.source = source;
+		clone.node = node;
 		return clone;
 	}
 
 	DataPathSource DataPathLink::ComputePath() const
 	{
-		return source->ComputePath();
+		return node->ComputePath();
 	}
 }
