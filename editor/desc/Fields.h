@@ -82,11 +82,9 @@ namespace oly::editor
 
 	extern detail::Key NullKey();
 
-	template<typename T, typename Self>
+	template<typename T>
 	struct PrimitiveField
 	{
-		using SelfType = std::conditional_t<std::is_void_v<Self>, PrimitiveField<T, Self>, Self>;
-
 		DataPathLink link;
 		T def;
 		T value;
@@ -100,7 +98,7 @@ namespace oly::editor
 			value = o.value;
 		}
 
-		bool QueryDirty(const SelfType& disk) const // TODO v9.3 remove SelfType/Self CRTP?
+		bool QueryDirty(const PrimitiveField& disk) const
 		{
 			return value != disk.value;
 		}
@@ -134,9 +132,9 @@ namespace oly::editor
 		}
 	};
 
-	struct BoolField : public PrimitiveField<bool, BoolField>
+	struct BoolField : public PrimitiveField<bool>
 	{
-		using PrimitiveField<bool, BoolField>::PrimitiveField;
+		using PrimitiveField<bool>::PrimitiveField;
 
 		void Draw()
 		{
@@ -148,9 +146,9 @@ namespace oly::editor
 	};
 
 	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
-	struct RangeField : public PrimitiveField<T, RangeField<T, U, _Min, _Max>>, public imtk::tick_processor
+	struct RangeField : public PrimitiveField<T>, public imtk::tick_processor
 	{
-		using Super = PrimitiveField<T, RangeField<T, U, _Min, _Max>>;
+		using Super = PrimitiveField<T>;
 
 		inline static const OptionalPrimitive<U> Min = _Min;
 		inline static const OptionalPrimitive<U> Max = _Max;
@@ -203,11 +201,11 @@ namespace oly::editor
 	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E>
-	struct EnumField : public PrimitiveField<E, EnumField<E>>
+	struct EnumField : public PrimitiveField<E>
 	{
 		static_assert(std::is_enum_v<E>);
 
-		using PrimitiveField<E, EnumField<E>>::PrimitiveField;
+		using PrimitiveField<E>::PrimitiveField;
 
 		void Draw()
 		{
@@ -218,7 +216,7 @@ namespace oly::editor
 		}
 	};
 
-	struct StringField : public PrimitiveField<std::string, StringField>, public imtk::tick_processor
+	struct StringField : public PrimitiveField<std::string>, public imtk::tick_processor
 	{
 		EditSession<std::string> edit;
 
@@ -256,13 +254,11 @@ namespace oly::editor
 		}
 	};
 
-	struct Color4Field : public PrimitiveField<Color4, Color4Field>, public imtk::tick_processor
+	struct Color4Field : public PrimitiveField<Color4>, public imtk::tick_processor
 	{
 		EditSession<Color4> edit;
 
-		Color4Field(DataPathLink link, Color4 def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value)
-		{
-		}
+		Color4Field(DataPathLink link, Color4 def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
 		Color4Field(Color4Field&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
@@ -296,7 +292,7 @@ namespace oly::editor
 		}
 	};
 
-	struct RectField : public PrimitiveField<Rect, RectField>, public imtk::tick_processor
+	struct RectField : public PrimitiveField<Rect>, public imtk::tick_processor
 	{
 		EditSession<Rect> edit;
 
@@ -334,7 +330,7 @@ namespace oly::editor
 		}
 	};
 
-	struct UVRectField : public PrimitiveField<UVRect, UVRectField>, public imtk::tick_processor
+	struct UVRectField : public PrimitiveField<UVRect>, public imtk::tick_processor
 	{
 		EditSession<UVRect> edit;
 
@@ -372,7 +368,7 @@ namespace oly::editor
 		}
 	};
 
-	struct TopSidePaddingField : public PrimitiveField<TopSidePadding, TopSidePaddingField>, public imtk::tick_processor
+	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>, public imtk::tick_processor
 	{
 		EditSession<TopSidePadding> edit;
 
@@ -411,9 +407,9 @@ namespace oly::editor
 	};
 
 	template<typename T, size_t N>
-	struct ArrayField : public PrimitiveField<std::array<T, N>, ArrayField<T, N>>
+	struct ArrayField : public PrimitiveField<std::array<T, N>>
 	{
-		using Super = PrimitiveField<std::array<T, N>, ArrayField<T, N>>;
+		using Super = PrimitiveField<std::array<T, N>>;
 
 		const char** sublabels;
 		bool inline_checkboxes;
@@ -434,9 +430,9 @@ namespace oly::editor
 	using BoolArrayField = ArrayField<bool, N>;
 
 	template<typename T, size_t N>
-	struct SessionArrayField : public PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>, public imtk::tick_processor
+	struct SessionArrayField : public PrimitiveField<std::array<T, N>>, public imtk::tick_processor
 	{
-		using Super = PrimitiveField<std::array<T, N>, SessionArrayField<T, N>>;
+		using Super = PrimitiveField<std::array<T, N>>;
 
 		const char** sublabels = nullptr;
 		std::array<EditSession<T>, N> edits;
@@ -530,11 +526,11 @@ namespace oly::editor
 	using StringArrayField = SessionArrayField<std::string, N>;
 
 	template<typename T>
-	struct VectorField : public PrimitiveField<std::vector<T>, VectorField<T>>
+	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
 		gui::DynamicListState ui_state;
 
-		using PrimitiveField<std::vector<T>, VectorField<T>>::PrimitiveField;
+		using PrimitiveField<std::vector<T>>::PrimitiveField;
 	};
 
 	struct StringVectorField : public VectorField<std::string>
