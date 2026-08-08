@@ -159,22 +159,9 @@ namespace oly::editor
 
 		RangeField(DataPathLink link, T def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(this->value) {}
 
-		RangeField(const RangeField& o)
-			: Super(o), edit(this->value)
-		{
-		}
-
 		RangeField(RangeField&& o) noexcept
 			: Super(std::move(o)), edit(this->value)
 		{
-		}
-
-		RangeField& operator=(const RangeField& o)
-		{
-			if (this != &o)
-				Super::operator=(o);
-
-			return *this;
 		}
 
 		RangeField& operator=(RangeField&& o) noexcept
@@ -237,22 +224,9 @@ namespace oly::editor
 
 		StringField(DataPathLink link, std::string def, detail::Key key, const char* label) : PrimitiveField(std::move(link), std::move(def), key, label), edit(value) {}
 
-		StringField(const StringField& o)
-			: PrimitiveField(o), edit(value)
-		{
-		}
-
 		StringField(StringField&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
 		{
-		}
-
-		StringField& operator=(const StringField& o)
-		{
-			if (this != &o)
-				PrimitiveField::operator=(o);
-
-			return *this;
 		}
 
 		StringField& operator=(StringField&& o) noexcept
@@ -290,22 +264,9 @@ namespace oly::editor
 		{
 		}
 
-		Color4Field(const Color4Field& o)
-			: PrimitiveField(o), edit(value)
-		{
-		}
-
 		Color4Field(Color4Field&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
 		{
-		}
-
-		Color4Field& operator=(const Color4Field& o)
-		{
-			if (this != &o)
-				PrimitiveField::operator=(o);
-
-			return *this;
 		}
 
 		Color4Field& operator=(Color4Field&& o) noexcept
@@ -341,22 +302,9 @@ namespace oly::editor
 
 		RectField(DataPathLink link, Rect def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
-		RectField(const RectField& o)
-			: PrimitiveField(o), edit(value)
-		{
-		}
-
 		RectField(RectField&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
 		{
-		}
-
-		RectField& operator=(const RectField& o)
-		{
-			if (this != &o)
-				PrimitiveField::operator=(o);
-
-			return *this;
 		}
 
 		RectField& operator=(RectField&& o) noexcept
@@ -392,22 +340,9 @@ namespace oly::editor
 
 		UVRectField(DataPathLink link, UVRect def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
-		UVRectField(const UVRectField& o)
-			: PrimitiveField(o), edit(value)
-		{
-		}
-
 		UVRectField(UVRectField&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
 		{
-		}
-
-		UVRectField& operator=(const UVRectField& o)
-		{
-			if (this != &o)
-				PrimitiveField::operator=(o);
-
-			return *this;
 		}
 
 		UVRectField& operator=(UVRectField&& o) noexcept
@@ -443,22 +378,9 @@ namespace oly::editor
 
 		TopSidePaddingField(DataPathLink link, TopSidePadding def, detail::Key key, const char* label) : PrimitiveField(std::move(link), def, key, label), edit(value) {}
 
-		TopSidePaddingField(const TopSidePaddingField& o)
-			: PrimitiveField(o), edit(value)
-		{
-		}
-
 		TopSidePaddingField(TopSidePaddingField&& o) noexcept
 			: PrimitiveField(std::move(o)), edit(value)
 		{
-		}
-
-		TopSidePaddingField& operator=(const TopSidePaddingField& o)
-		{
-			if (this != &o)
-				PrimitiveField::operator=(o);
-
-			return *this;
 		}
 
 		TopSidePaddingField& operator=(TopSidePaddingField&& o) noexcept
@@ -623,22 +545,9 @@ namespace oly::editor
 
 		StringVectorField(DataPathLink link, std::vector<std::string> def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(value) {}
 
-		StringVectorField(const StringVectorField& o)
-			: Super(o), edit(value)
-		{
-		}
-
 		StringVectorField(StringVectorField&& o) noexcept
 			: Super(std::move(o)), edit(value)
 		{
-		}
-
-		StringVectorField& operator=(const StringVectorField& o)
-		{
-			if (this != &o)
-				Super::operator=(o);
-
-			return *this;
 		}
 
 		StringVectorField& operator=(StringVectorField&& o) noexcept

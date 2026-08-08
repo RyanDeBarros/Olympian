@@ -226,10 +226,13 @@ namespace oly::editor
 		{ \
 			if (!desc.variant.TryGet<T##Desc>()) \
 			{ \
-				SignalDesc initial_desc = desc; \
+				SignalDesc initial_desc; \
+				initial_desc.CopyData(desc); \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				PushFieldSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), desc); \
+				SignalDesc final_desc; \
+				final_desc.CopyData(desc); \
+				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), std::move(final_desc)); \
 			} \
 			break; \
 		}
@@ -522,7 +525,7 @@ namespace oly::editor
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
 		{ \
-			T##Desc subdesc(desc.variant.link); \
+			T##Desc subdesc; \
 			Load(node, subdesc); \
 			desc.variant.Set(std::move(subdesc)); \
 			break; \

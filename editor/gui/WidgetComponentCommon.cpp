@@ -15,7 +15,7 @@ namespace oly::editor::comp
 	gui::WidgetComponent Generic(std::function<DrawResult()> draw)
 	{
 		gui::WidgetComponent c;
-		c.draw = draw;
+		c.draw = std::move(draw);
 		return c;
 	}
 }

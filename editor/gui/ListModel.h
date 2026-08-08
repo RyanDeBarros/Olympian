@@ -147,30 +147,30 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			ExecuteDynamicListInsertAction<T, Printer>(v.link.ComputePath(), v.Size());
+			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.ComputePath(), v.Size());
 		}
 
 		void Erase(size_t i) override
 		{
-			ExecuteDynamicListDeleteAction<T, Printer>(v.link.ComputePath(), i);
+			ExecuteDynamicVectorDescDeleteAction<T, Printer>(v.link.ComputePath(), i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
 			if (old_size != new_size)
-				ExecuteDynamicListResizeAction<T>(v.link.ComputePath(), old_size, new_size);
+				ExecuteDynamicVectorDescResizeAction<T>(v.link.ComputePath(), old_size, new_size);
 		}
 
 		void Clear() override
 		{
 			if (!v.Empty())
-				ExecuteDynamicListResizeAction<T>(v.link.ComputePath(), v.Size(), 0);
+				ExecuteDynamicVectorDescResizeAction<T>(v.link.ComputePath(), v.Size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
 			if (src != dst)
-				ExecuteDynamicListMoveAction<T>(v.link.ComputePath(), src, dst);
+				ExecuteDynamicVectorDescMoveAction<T>(v.link.ComputePath(), src, dst);
 		}
 	};
 

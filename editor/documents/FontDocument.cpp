@@ -299,7 +299,9 @@ namespace oly::editor
 				original.distance.value = std::move(k.distance.edit.original);
 				original.pair.value[0] = std::move(k.pair.edits[0].original);
 				original.pair.value[1] = std::move(k.pair.edits[1].original);
-				PushFieldSetAction(k.link.ComputePath(), std::move(original), k);
+				KerningDesc newest; // TODO v9.3 macro or something to simplify this common pattern of copying data without upper link
+				newest.CopyData(k);
+				PushDescriptorSetAction(k.link.ComputePath(), std::move(original), std::move(newest));
 			}
 		}
 	}

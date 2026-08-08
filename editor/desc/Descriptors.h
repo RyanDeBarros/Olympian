@@ -36,7 +36,7 @@ namespace oly::editor
 				it->link.SetStep(*it->link.Step() + 1);
 
 			element.link = DataPathLink(link, DataPathStep(i));
-			_vector.insert(_vector.begin() + i, element);
+			_vector.insert(_vector.begin() + i, std::move(element));
 		}
 
 		void Remove(size_t i)
@@ -184,30 +184,27 @@ namespace oly::editor
 	template<typename... Descriptors>
 	class VariantDesc
 	{
-		std::variant<Descriptors...> _variant;
-
 	public:
 		DataPathLink link;
 
+	private:
+		std::variant<Descriptors...> _variant;
+
+	public:
 		VariantDesc(DataPathLink link)
-			: link(link), _variant(std::in_place_index<0>, link)
+			: link(std::move(link)), _variant(std::in_place_index<0>, this->link.Share())
 		{
 		}
 
 		VariantDesc(std::variant<Descriptors...> descriptor)
-			: _variant(std::move(descriptor)), link(std::visit([](const auto& desc) { return desc.link; }, _variant))
+			: link(std::visit([](const auto& desc) { return desc.link.Share(); }, descriptor)), _variant(std::move(descriptor))
 		{
-		}
-
-		void Reset()
-		{
-			std::visit([](auto& v) { v = std::decay_t<decltype(v)>(link); }, _variant);
 		}
 
 		template<typename Descriptor>
 		Descriptor& Set()
 		{
-			_variant = Descriptor(link);
+			_variant = Descriptor(link.Share());
 			return std::get<Descriptor>(_variant);
 		}
 
@@ -215,7 +212,7 @@ namespace oly::editor
 		void Set(Descriptor&& desc)
 		{
 			_variant = std::forward<Descriptor>(desc);
-			std::visit([this](auto& v) { v.link = link; }, _variant);
+			std::visit([this](auto& v) { v.link = link.Share(); }, _variant);
 		}
 
 		auto Visit(auto&& visitor)

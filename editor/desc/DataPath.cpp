@@ -97,26 +97,9 @@ namespace oly::editor
 		source->step = step;
 	}
 
-	DataPathLink::DataPathLink(const DataPathLink& o)
-		: source(std::make_unique<DataPathLinkSource>())
-	{
-		*source = *o.source;
-	}
-
 	DataPathLink::DataPathLink(DataPathLink&& o) noexcept
 		: source(std::move(o.source))
 	{
-	}
-
-	DataPathLink& DataPathLink::operator=(const DataPathLink& o)
-	{
-		if (this != &o)
-		{
-			//source->parent = o.source->parent;
-			source->step = o.source->step;
-		}
-
-		return *this;
 	}
 
 	DataPathLink& DataPathLink::operator=(DataPathLink&& o) noexcept
@@ -135,6 +118,13 @@ namespace oly::editor
 	void DataPathLink::SetStep(DataPathStep step)
 	{
 		source->step = step;
+	}
+
+	DataPathLink DataPathLink::Share() const
+	{
+		DataPathLink clone;
+		clone.source = source;
+		return clone;
 	}
 
 	DataPathSource DataPathLink::ComputePath() const

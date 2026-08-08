@@ -112,13 +112,13 @@ namespace oly::editor
 
 	void PreferencesDocument::ApplyEditorPreferences()
 	{
-		Editor::GetPreferences() = _desc.scratch;
+		Editor::GetPreferences().CopyData(_desc.scratch);
 		ActiveDescChanged();
 	}
 
 	void PreferencesDocument::RevertEditorPreferences()
 	{
-		Editor::GetPreferences() = _desc.disk;
+		Editor::GetPreferences().CopyData(_desc.disk);
 		ActiveDescChanged();
 	}
 
