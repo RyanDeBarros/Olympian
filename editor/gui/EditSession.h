@@ -19,7 +19,7 @@ namespace oly::editor
 		bool published = false;
 
 		EditSession(T& truth)
-			: truth(truth)
+			: imtk::tick_processor(imtk::tick_process_phase::submit_edit), truth(truth)
 		{
 		}
 

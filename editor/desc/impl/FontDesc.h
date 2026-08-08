@@ -19,7 +19,7 @@ namespace oly::editor
 		StringArrayField<2> pair;
 		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
 
-		KerningDesc(DataPathLink link = {});
+		KerningDesc(imtk::datapath_link link = {});
 
 		friend std::ostream& operator<<(std::ostream& os, const KerningDesc& desc);
 	};
@@ -40,7 +40,7 @@ namespace oly::editor
 		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
-		FontFaceDesc(DataPathLink link = {});
+		FontFaceDesc(imtk::datapath_link link = {});
 	};
 
 #define FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
@@ -73,7 +73,7 @@ namespace oly::editor
 		EnumField<detail::CommonBufferPreset> common_buffer_preset;
 		StringField common_buffer;
 
-		FontAtlasDesc(DataPathLink link = {});
+		FontAtlasDesc(imtk::datapath_link link = {});
 	};
 
 #define FULL_FONT_GENERATOR(M) \
@@ -89,6 +89,6 @@ namespace oly::editor
 		VectorDesc<FontAtlasDesc> font_atlases;
 		static const detail::Key font_atlas_key;
 
-		FullFontDesc(DataPathLink link = {});
+		FullFontDesc(imtk::datapath_link link = {});
 	};
 }

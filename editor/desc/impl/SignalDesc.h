@@ -25,7 +25,7 @@ namespace oly::editor
 		Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
 		BoolArrayField<3> invert;
 
-		ModifierBaseDesc(DataPathLink link = {});
+		ModifierBaseDesc(imtk::datapath_link link = {});
 	};
 
 #define MODIFIER_0D_PARTIAL_GENERATOR(M) \
@@ -42,7 +42,7 @@ namespace oly::editor
 		ModifierBaseDesc base;
 		EnumField<detail::Axis0dConversion> conversion;
 
-		Modifier0dDesc(DataPathLink link = {});
+		Modifier0dDesc(imtk::datapath_link link = {});
 	};
 
 #define MODIFIER_1D_PARTIAL_GENERATOR(M) \
@@ -59,7 +59,7 @@ namespace oly::editor
 		ModifierBaseDesc base;
 		EnumField<detail::Axis1dConversion> conversion;
 
-		Modifier1dDesc(DataPathLink link = {});
+		Modifier1dDesc(imtk::datapath_link link = {});
 	};
 
 #define MODIFIER_2D_PARTIAL_GENERATOR(M) \
@@ -76,7 +76,7 @@ namespace oly::editor
 		ModifierBaseDesc base;
 		EnumField<detail::Axis2dConversion> conversion;
 
-		Modifier2dDesc(DataPathLink link = {});
+		Modifier2dDesc(imtk::datapath_link link = {});
 	};
 
 #define KEY_MODS_GENERATOR(M) \
@@ -100,7 +100,7 @@ namespace oly::editor
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
-		KeyDesc(DataPathLink link = {});
+		KeyDesc(imtk::datapath_link link = {});
 	};
 
 #define MOUSE_BUTTON_MODS_GENERATOR(M) \
@@ -124,7 +124,7 @@ namespace oly::editor
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> forbidden_mods;
 		Modifier0dDesc modifier;
 
-		MouseButtonDesc(DataPathLink link = {});
+		MouseButtonDesc(imtk::datapath_link link = {});
 	};
 
 #define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
@@ -141,7 +141,7 @@ namespace oly::editor
 		DisjointEnumField<GLenum> button;
 		Modifier0dDesc modifier;
 
-		GamepadButtonDesc(DataPathLink link = {});
+		GamepadButtonDesc(imtk::datapath_link link = {});
 	};
 
 #define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
@@ -160,7 +160,7 @@ namespace oly::editor
 		Modifier1dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		GamepadAxis1DDesc(DataPathLink link = {});
+		GamepadAxis1DDesc(imtk::datapath_link link = {});
 	};
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
@@ -179,7 +179,7 @@ namespace oly::editor
 		Modifier2dDesc modifier;
 		FloatField<MakeOpt(0.f), MakeOpt(1.f)> deadzone;
 
-		GamepadAxis2DDesc(DataPathLink link = {});
+		GamepadAxis2DDesc(imtk::datapath_link link = {});
 	};
 
 #define CURSOR_POS_PARTIAL_GENERATOR(M)
@@ -194,7 +194,7 @@ namespace oly::editor
 
 		Modifier2dDesc modifier;
 
-		CursorPosDesc(DataPathLink link = {});
+		CursorPosDesc(imtk::datapath_link link = {});
 	};
 
 #define SCROLL_PARTIAL_GENERATOR(M)
@@ -209,7 +209,7 @@ namespace oly::editor
 		
 		Modifier2dDesc modifier;
 
-		ScrollDesc(DataPathLink link = {});
+		ScrollDesc(imtk::datapath_link link = {});
 	};
 
 #define SIGNAL_PARTIAL_GENERATOR(M) \
@@ -238,7 +238,7 @@ namespace oly::editor
 		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
-		SignalDesc(DataPathLink link = {});
+		SignalDesc(imtk::datapath_link link = {});
 	};
 
 #define ROUTE_GENERATOR(M) \
@@ -252,7 +252,7 @@ namespace oly::editor
 		StringField id;
 		StringVectorField signals;
 
-		RouteDesc(DataPathLink link = {});
+		RouteDesc(imtk::datapath_link link = {});
 	};
 
 #define SIGNAL_FULL_GENERATOR(M) \
@@ -268,6 +268,6 @@ namespace oly::editor
 		VectorDesc<RouteDesc> routes;
 		static const detail::Key routes_key;
 
-		SignalFullDesc(DataPathLink link = {});
+		SignalFullDesc(imtk::datapath_link link = {});
 	};
 }

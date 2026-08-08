@@ -229,7 +229,7 @@ namespace oly::editor
 				SignalDesc initial_desc = CloneDescData(desc); \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), CloneDescData(desc)); \
+				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.compute_path(), std::move(initial_desc), CloneDescData(desc)); \
 			} \
 			break; \
 		}

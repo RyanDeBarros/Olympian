@@ -32,7 +32,7 @@ namespace oly::editor
 		EnumField<detail::PositioningMode> origin_offset_mode;
 		Vec2Field<MakeOpt<float>(), MakeOpt<float>()> origin_offset;
 
-		GlyphDesc(DataPathLink link = {});
+		GlyphDesc(imtk::datapath_link link = {});
 	};
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \
@@ -56,6 +56,6 @@ namespace oly::editor
 		VectorDesc<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;
 
-		RasterFontDesc(DataPathLink link = {});
+		RasterFontDesc(imtk::datapath_link link = {});
 	};
 }

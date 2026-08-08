@@ -4,7 +4,6 @@
 
 #include "gui/DrawResult.h"
 
-#include "desc/DataPath.h"
 #include "desc/Descriptors.h"
 #include "desc/DynamicListUndoActions.h"
 
@@ -147,30 +146,30 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.ComputePath(), v.Size());
+			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.compute_path(), v.Size());
 		}
 
 		void Erase(size_t i) override
 		{
-			ExecuteDynamicVectorDescDeleteAction<T, Printer>(v.link.ComputePath(), i);
+			ExecuteDynamicVectorDescDeleteAction<T, Printer>(v.link.compute_path(), i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
 			if (old_size != new_size)
-				ExecuteDynamicVectorDescResizeAction<T>(v.link.ComputePath(), old_size, new_size);
+				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), old_size, new_size);
 		}
 
 		void Clear() override
 		{
 			if (!v.Empty())
-				ExecuteDynamicVectorDescResizeAction<T>(v.link.ComputePath(), v.Size(), 0);
+				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), v.Size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
 			if (src != dst)
-				ExecuteDynamicVectorDescMoveAction<T>(v.link.ComputePath(), src, dst);
+				ExecuteDynamicVectorDescMoveAction<T>(v.link.compute_path(), src, dst);
 		}
 	};
 

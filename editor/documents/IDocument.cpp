@@ -7,7 +7,7 @@
 namespace oly::editor
 {
 	IDocument::IDocument(detail::ResourcePath&& oly_path)
-		: _oly_path(std::move(oly_path))
+		: imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path))
 	{
 	}
 
@@ -78,25 +78,24 @@ namespace oly::editor
 		return _oly_path.exists();
 	}
 
-	void* IDocument::PathGet(DataPath path, std::type_index type)
+	void* IDocument::PathGet(imtk::datapath_view path, std::type_index type)
 	{
 		return GetDoubleDescriptor().PathGet(path, type);
 	}
 
-	void IDocument::PrintPath(std::ostream& os, DataPath path) const
+	void IDocument::PrintPath(std::ostream& os, imtk::datapath_view path) const
 	{
 		GetDoubleDescriptor().PrintPath(os, path);
 	}
 	
-	std::string IDocument::PathString(DataPath path) const
+	std::string IDocument::PathString(imtk::datapath_view path) const
 	{
 		std::stringstream ss;
 		PrintPath(ss, path);
 		return ss.str();
 	}
 
-	// TODO v9.3 put in on_last_process_frame() instead. Use priority system to enforce order (submit_edit -> check_undo -> query_dirty) instead of calling on_last_process_frame() - make protected
-	void IDocument::DrawFinalize()
+	void IDocument::on_last_process_frame()
 	{
 		QueryDirty();
 	}

@@ -1,11 +1,6 @@
 #pragma once
 
-#include "desc/DataPath.h"
-
-// TODO v9.3 can remove these includes once datapath is in imtk
-#include <vector>
-#include <variant>
-#include <unordered_map>
+#include <imtk.hpp>
 
 // TODO v9.3 move fields and descriptors to imtk
 
@@ -17,25 +12,25 @@ namespace oly::editor
 		std::vector<Descriptor> _vector;
 
 	public:
-		DataPathLink link;
+		imtk::datapath_link link;
 
-		VectorDesc(DataPathLink link)
+		VectorDesc(imtk::datapath_link link)
 			: link(std::move(link))
 		{
 		}
 
 		Descriptor& PushBack()
 		{
-			_vector.push_back(Descriptor(DataPathLink(link, DataPathStep(_vector.size()))));
+			_vector.push_back(Descriptor(imtk::datapath_link(link, imtk::datapath::step(_vector.size()))));
 			return _vector.back();
 		}
 
 		void Insert(size_t i, Descriptor element)
 		{
 			for (auto it = _vector.begin() + i; it != _vector.end(); ++it)
-				it->link.SetStep(*it->link.Step() + 1);
+				it->link.set_step(*it->link.step() + 1);
 
-			element.link = DataPathLink(link, DataPathStep(i));
+			element.link = imtk::datapath_link(link, imtk::datapath::step(i));
 			_vector.insert(_vector.begin() + i, std::move(element));
 		}
 
@@ -43,7 +38,7 @@ namespace oly::editor
 		{
 			_vector.erase(_vector.begin() + i);
 			for (auto it = _vector.begin() + i; it != _vector.end(); ++it)
-				it->link.SetStep(*it->link.Step() - 1);
+				it->link.set_step(*it->link.step() - 1);
 		}
 		
 		void Clear()
@@ -63,7 +58,7 @@ namespace oly::editor
 			else if (new_size > _vector.size())
 			{
 				for (size_t i = _vector.size(); i < new_size; ++i)
-					_vector.push_back(Descriptor(DataPathLink(link, DataPathStep(i))));
+					_vector.push_back(Descriptor(imtk::datapath_link(link, imtk::datapath::step(i))));
 			}
 		}
 
@@ -124,29 +119,29 @@ namespace oly::editor
 			return _vector.end();
 		}
 
-		void* PathGet(DataPath path, std::type_index type)
+		void* PathGet(imtk::datapath_view path, std::type_index type)
 		{
-			if (path.Empty())
+			if (path.empty())
 				return typeid(decltype(*this)) == type ? static_cast<void*>(this) : nullptr;
 			
-			int index = path.Step().v;
+			int index = path.step();
 			if (index >= 0 && index < _vector.size())
-				return _vector[index].PathGet(path.Next(), type);
+				return _vector[index].PathGet(path.next(), type);
 			else
 				return nullptr;
 		}
 
-		void PrintPath(std::ostream& os, DataPath path) const
+		void PrintPath(std::ostream& os, imtk::datapath_view path) const
 		{
-			if (path.Empty())
+			if (path.empty())
 				os << "<error>";
 			else
 			{
-				int index = path.Step().v;
+				int index = path.step();
 				if (index >= 0 && index < _vector.size())
 				{
-					path = path.Next();
-					if (path.Empty())
+					path = path.next();
+					if (path.empty())
 						os << index;
 					else
 					{
@@ -185,26 +180,26 @@ namespace oly::editor
 	class VariantDesc
 	{
 	public:
-		DataPathLink link;
+		imtk::datapath_link link;
 
 	private:
 		std::variant<Descriptors...> _variant;
 
 	public:
-		VariantDesc(DataPathLink link)
-			: link(std::move(link)), _variant(std::in_place_index<0>, this->link.Share())
+		VariantDesc(imtk::datapath_link link)
+			: link(std::move(link)), _variant(std::in_place_index<0>, this->link.share())
 		{
 		}
 
 		VariantDesc(std::variant<Descriptors...> descriptor)
-			: link(std::visit([](const auto& desc) { return desc.link.Share(); }, descriptor)), _variant(std::move(descriptor))
+			: link(std::visit([](const auto& desc) { return desc.link.share(); }, descriptor)), _variant(std::move(descriptor))
 		{
 		}
 
 		template<typename Descriptor>
 		Descriptor& Set()
 		{
-			_variant = Descriptor(link.Share());
+			_variant = Descriptor(link.share());
 			return std::get<Descriptor>(_variant);
 		}
 
@@ -212,7 +207,7 @@ namespace oly::editor
 		void Set(Descriptor&& desc)
 		{
 			_variant = std::forward<Descriptor>(desc);
-			std::visit([this](auto& v) { v.link = link.Share(); }, _variant);
+			std::visit([this](auto& v) { v.link = link.share(); }, _variant);
 		}
 
 		auto Visit(auto&& visitor)
@@ -237,12 +232,12 @@ namespace oly::editor
 			return std::get_if<Descriptor>(&_variant);
 		}
 
-		void* PathGet(DataPath path, std::type_index type)
+		void* PathGet(imtk::datapath_view path, std::type_index type)
 		{
 			return std::visit([path, type](auto& desc) { return desc.PathGet(path, type); }, _variant);
 		}
 
-		void PrintPath(std::ostream& os, DataPath path) const
+		void PrintPath(std::ostream& os, imtk::datapath_view path) const
 		{
 			return std::visit([&os, path](auto& desc) { return desc.PrintPath(os, path); }, _variant);
 		}
@@ -280,9 +275,9 @@ namespace oly::editor
 		std::unordered_map<Key, ValueDescriptor> _map;
 
 	public:
-		DataPathLink link;
+		imtk::datapath_link link;
 
-		MapDesc(DataPathLink link)
+		MapDesc(imtk::datapath_link link)
 			: link(std::move(link))
 		{
 		}
@@ -298,7 +293,7 @@ namespace oly::editor
 			if (it != _map.end())
 				return it->second;
 			else
-				return _map.emplace(key, DataPathLink(link, DataPathStep(key))).first->second;
+				return _map.emplace(key, imtk::datapath_link(link, imtk::datapath::step(key))).first->second;
 		}
 
 		auto begin()
@@ -311,30 +306,30 @@ namespace oly::editor
 			return _map.end();
 		}
 
-		void* PathGet(DataPath path, std::type_index type)
+		void* PathGet(imtk::datapath_view path, std::type_index type)
 		{
-			if (path.Empty())
+			if (path.empty())
 				return typeid(decltype(*this)) == type ? static_cast<void*>(this) : nullptr;
 
-			auto it = _map.find(static_cast<Key>(path.Step().v));
+			auto it = _map.find(static_cast<Key>((int)path.step()));
 			if (it != _map.end())
-				return it->second.PathGet(path.Next(), type);
+				return it->second.PathGet(path.next(), type);
 			else
 				return nullptr;
 		}
 
-		void PrintPath(std::ostream& os, DataPath path) const
+		void PrintPath(std::ostream& os, imtk::datapath_view path) const
 		{
-			if (path.Empty())
+			if (path.empty())
 				os << "<error>";
 			else
 			{
-				auto key = static_cast<Key>(path.Step().v);
+				auto key = static_cast<Key>((int)path.step());
 				auto it = _map.find(key);
 				if (it != _map.end())
 				{
-					path = path.Next();
-					if (path.Empty())
+					path = path.next();
+					if (path.empty())
 						os << key;
 					else
 					{

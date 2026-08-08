@@ -15,7 +15,7 @@ namespace oly::editor
 		BoolField boxed;
 		BoolField stretch;
 
-		ViewportDesc(DataPathLink link = {});
+		ViewportDesc(imtk::datapath_link link = {});
 	};
 
 #define WINDOW_HINTS_GENERATOR(M) \
@@ -69,7 +69,7 @@ namespace oly::editor
 		BoolField window_opengl_forward_compat;
 		BoolField window_context_debug;
 
-		WindowHintsDesc(DataPathLink link = {});
+		WindowHintsDesc(imtk::datapath_link link = {});
 	};
 
 #define WINDOW_PARTIAL_GENERATOR(M) \
@@ -94,7 +94,7 @@ namespace oly::editor
 		WindowHintsDesc window_hints;
 		static const detail::Key window_hints_key;
 
-		WindowDesc(DataPathLink link = {});
+		WindowDesc(imtk::datapath_link link = {});
 	};
 
 #define PLATFORM_PARTIAL_GENERATOR(M) \
@@ -112,7 +112,7 @@ namespace oly::editor
 		static const detail::Key window_key;
 		IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)> gamepads;
 
-		PlatformDesc(DataPathLink link = {});
+		PlatformDesc(imtk::datapath_link link = {});
 	};
 
 #define COLLISION_GENERATOR(M) \
@@ -126,7 +126,7 @@ namespace oly::editor
 		StringArrayField<32> masks;
 		StringArrayField<32> layers;
 
-		CollisionDesc(DataPathLink link = {});
+		CollisionDesc(imtk::datapath_link link = {});
 	};
 
 #define LOGGER_ENABLE_GENERATOR(M) \
@@ -146,7 +146,7 @@ namespace oly::editor
 		BoolField error;
 		BoolField fatal;
 
-		LoggerEnableDesc(DataPathLink link = {});
+		LoggerEnableDesc(imtk::datapath_link link = {});
 	};
 
 #define LOGGER_PARTIAL_GENERATOR(M) \
@@ -171,7 +171,7 @@ namespace oly::editor
 		LoggerEnableDesc enable;
 		static const detail::Key enable_key;
 
-		LoggerDesc(DataPathLink link = {});
+		LoggerDesc(imtk::datapath_link link = {});
 	};
 
 #define FRAME_RATE_GENERATOR(M) \
@@ -185,7 +185,7 @@ namespace oly::editor
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> frame_length_clip;
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
 
-		FrameRateDesc(DataPathLink link = {});
+		FrameRateDesc(imtk::datapath_link link = {});
 	};
 
 #define CONTEXT_GENERATOR(M) \
@@ -207,7 +207,7 @@ namespace oly::editor
 		FrameRateDesc frame_rate;
 		static const detail::Key frame_rate_key;
 
-		ContextDesc(DataPathLink link = {});
+		ContextDesc(imtk::datapath_link link = {});
 	};
 
 #define PROJECT_GENERATOR(M) \
@@ -220,6 +220,6 @@ namespace oly::editor
 		ContextDesc context;
 		static const detail::Key context_key;
 
-		ProjectDesc(DataPathLink link = {});
+		ProjectDesc(imtk::datapath_link link = {});
 	};
 }

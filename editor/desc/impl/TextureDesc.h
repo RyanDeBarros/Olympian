@@ -44,7 +44,7 @@ namespace oly::editor
 		BoolField row_major;
 		BoolField row_up;
 
-		SpritesheetDesc(DataPathLink link = {});
+		SpritesheetDesc(imtk::datapath_link link = {});
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
@@ -69,7 +69,7 @@ namespace oly::editor
 		BoolField anim;
 		SpritesheetDesc spritesheet;
 
-		BaseTextureDesc(GLenum default_filter, DataPathLink link = {});
+		BaseTextureDesc(GLenum default_filter, imtk::datapath_link link = {});
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -88,7 +88,7 @@ namespace oly::editor
 		BoolField generate_mipmaps;
 		EnumField<detail::StorageMode> storage;
 
-		RasterTextureDesc(DataPathLink link = {});
+		RasterTextureDesc(imtk::datapath_link link = {});
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M) \
@@ -114,7 +114,7 @@ namespace oly::editor
 		EnumField<detail::StorageMode> abstract_storage;
 		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
 
-		VectorTextureDesc(DataPathLink link = {});
+		VectorTextureDesc(imtk::datapath_link link = {});
 	};
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
@@ -130,7 +130,7 @@ namespace oly::editor
 		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
-		TextureVariantDesc(DataPathLink link = {});
+		TextureVariantDesc(imtk::datapath_link link = {});
 
 		size_t Size() const;
 		bool Empty() const;

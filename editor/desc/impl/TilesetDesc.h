@@ -25,7 +25,7 @@ namespace oly::editor
 		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
 		EnumField<detail::TileRotation> rotation;
 
-		TilesetAssignmentDesc(DataPathLink link = {});
+		TilesetAssignmentDesc(imtk::datapath_link link = {});
 	};
 
 #define TILESET_ASSIGNMENT_MAP_GENERATOR(M) \
@@ -37,7 +37,7 @@ namespace oly::editor
 
 		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
 
-		TilesetAssignmentMapDesc(DataPathLink link = {});
+		TilesetAssignmentMapDesc(imtk::datapath_link link = {});
 	};
 
 #define TILESET_PARTIAL_GENERATOR(M) \
@@ -55,6 +55,6 @@ namespace oly::editor
 		TilesetAssignmentMapDesc assignments;
 		static const detail::Key assignments_key;
 
-		TilesetDesc(DataPathLink link = {});
+		TilesetDesc(imtk::datapath_link link = {});
 	};
 }

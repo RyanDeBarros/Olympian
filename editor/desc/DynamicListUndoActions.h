@@ -7,7 +7,6 @@
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
 
-#include "desc/DataPath.h"
 #include "desc/Descriptors.h"
 
 #include "util/FixedArray.h"
@@ -21,11 +20,11 @@ namespace oly::editor
 	{
 		using ListType = std::vector<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t delete_index;
 		ElementType deleted_element;
 
-		DynamicListDeleteAction(DataPath list_path, size_t delete_index, ElementType deleted_element)
+		DynamicListDeleteAction(imtk::datapath_view list_path, size_t delete_index, ElementType deleted_element)
 			: list_path(list_path), delete_index(delete_index), deleted_element(std::move(deleted_element))
 		{
 		}
@@ -90,7 +89,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	void ExecuteDynamicListDeleteAction(DataPath list_path, size_t delete_index)
+	void ExecuteDynamicListDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
@@ -100,11 +99,11 @@ namespace oly::editor
 	{
 		using ListType = std::vector<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t insert_index;
 		ElementType inserted_element;
 
-		DynamicListInsertAction(DataPath list_path, size_t insert_index, ElementType inserted_element)
+		DynamicListInsertAction(imtk::datapath_view list_path, size_t insert_index, ElementType inserted_element)
 			: list_path(list_path), insert_index(insert_index), inserted_element(std::move(inserted_element))
 		{
 		}
@@ -169,7 +168,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	void ExecuteDynamicListInsertAction(DataPath list_path, size_t insert_index)
+	void ExecuteDynamicListInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
 	}
@@ -179,11 +178,11 @@ namespace oly::editor
 	{
 		using ListType = std::vector<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t src_index;
 		size_t dst_index;
 
-		DynamicListMoveAction(DataPath list_path, size_t src_index, size_t dst_index)
+		DynamicListMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 			: list_path(list_path), src_index(src_index), dst_index(dst_index)
 		{
 		}
@@ -239,7 +238,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType>
-	void ExecuteDynamicListMoveAction(DataPath list_path, size_t src_index, size_t dst_index)
+	void ExecuteDynamicListMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListMoveAction<ElementType>>(list_path, src_index, dst_index));
 	}
@@ -249,12 +248,12 @@ namespace oly::editor
 	{
 		using ListType = std::vector<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t initial_size;
 		size_t final_size;
 		FixedArray<ElementType> erased;
 
-		DynamicListResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
+		DynamicListResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 			: list_path(list_path), initial_size(initial_size), final_size(final_size), erased(std::max(initial_size, final_size) - std::min(initial_size, final_size))
 		{
 		}
@@ -328,7 +327,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType>
-	void ExecuteDynamicListResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
+	void ExecuteDynamicListResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}
@@ -338,11 +337,11 @@ namespace oly::editor
 	{
 		using ListType = VectorDesc<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t delete_index;
 		ElementType deleted_element;
 
-		DynamicVectorDescDeleteAction(DataPath list_path, size_t delete_index, ElementType deleted_element)
+		DynamicVectorDescDeleteAction(imtk::datapath_view list_path, size_t delete_index, ElementType deleted_element)
 			: list_path(list_path), delete_index(delete_index), deleted_element(std::move(deleted_element))
 		{
 		}
@@ -407,7 +406,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	void ExecuteDynamicVectorDescDeleteAction(DataPath list_path, size_t delete_index)
+	void ExecuteDynamicVectorDescDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
@@ -417,11 +416,11 @@ namespace oly::editor
 	{
 		using ListType = VectorDesc<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t insert_index;
 		ElementType inserted_element;
 
-		DynamicVectorDescInsertAction(DataPath list_path, size_t insert_index, ElementType inserted_element)
+		DynamicVectorDescInsertAction(imtk::datapath_view list_path, size_t insert_index, ElementType inserted_element)
 			: list_path(list_path), insert_index(insert_index), inserted_element(std::move(inserted_element))
 		{
 		}
@@ -486,7 +485,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	void ExecuteDynamicVectorDescInsertAction(DataPath list_path, size_t insert_index)
+	void ExecuteDynamicVectorDescInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
 	}
@@ -496,11 +495,11 @@ namespace oly::editor
 	{
 		using ListType = VectorDesc<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t src_index;
 		size_t dst_index;
 
-		DynamicVectorDescMoveAction(DataPath list_path, size_t src_index, size_t dst_index)
+		DynamicVectorDescMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 			: list_path(list_path), src_index(src_index), dst_index(dst_index)
 		{
 		}
@@ -556,7 +555,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType>
-	void ExecuteDynamicVectorDescMoveAction(DataPath list_path, size_t src_index, size_t dst_index)
+	void ExecuteDynamicVectorDescMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescMoveAction<ElementType>>(list_path, src_index, dst_index));
 	}
@@ -566,12 +565,12 @@ namespace oly::editor
 	{
 		using ListType = VectorDesc<ElementType>;
 
-		DataPathSource list_path;
+		imtk::datapath list_path;
 		size_t initial_size;
 		size_t final_size;
 		FixedArray<ElementType> erased;
 
-		DynamicVectorDescResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
+		DynamicVectorDescResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 			: list_path(list_path), initial_size(initial_size), final_size(final_size), erased(std::max(initial_size, final_size) - std::min(initial_size, final_size))
 		{
 		}
@@ -645,7 +644,7 @@ namespace oly::editor
 	};
 
 	template<typename ElementType>
-	void ExecuteDynamicVectorDescResizeAction(DataPath list_path, size_t initial_size, size_t final_size)
+	void ExecuteDynamicVectorDescResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 	{
 		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}

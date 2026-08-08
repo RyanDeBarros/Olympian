@@ -7,8 +7,6 @@
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
 
-#include "desc/DataPath.h"
-
 #include <sstream>
 
 namespace oly::editor
@@ -16,11 +14,11 @@ namespace oly::editor
 	template<typename T, typename Printer = StandardPrinter<T>>
 	struct FieldSetAction : public UndoAction
 	{
-		DataPathSource path;
+		imtk::datapath path;
 		T initial_value;
 		T final_value;
 
-		FieldSetAction(DataPath path, T initial_value, T final_value) :
+		FieldSetAction(imtk::datapath_view path, T initial_value, T final_value) :
 			path(path), initial_value(std::move(initial_value)), final_value(std::move(final_value))
 		{
 		}
@@ -82,7 +80,7 @@ namespace oly::editor
 	};
 
 	template<typename T, typename Printer = StandardPrinter<T>>
-	void PushFieldSetAction(DataPath path, T initial_value, T final_value)
+	void PushFieldSetAction(imtk::datapath_view path, T initial_value, T final_value)
 	{
 		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}
@@ -90,11 +88,11 @@ namespace oly::editor
 	template<typename Desc, typename Printer = StandardPrinter<Desc>>
 	struct DescriptorSetAction : public UndoAction
 	{
-		DataPathSource path;
+		imtk::datapath path;
 		Desc initial_value;
 		Desc final_value;
 
-		DescriptorSetAction(DataPath path, Desc initial_value, Desc final_value) :
+		DescriptorSetAction(imtk::datapath_view path, Desc initial_value, Desc final_value) :
 			path(path), initial_value(std::move(initial_value)), final_value(std::move(final_value))
 		{
 		}
@@ -156,7 +154,7 @@ namespace oly::editor
 	};
 
 	template<typename Desc, typename Printer = StandardPrinter<Desc>>
-	void PushDescriptorSetAction(DataPath path, Desc initial_value, Desc final_value)
+	void PushDescriptorSetAction(imtk::datapath_view path, Desc initial_value, Desc final_value)
 	{
 		UndoHistory::ActiveInstance().Push(std::make_unique<DescriptorSetAction<Desc, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}

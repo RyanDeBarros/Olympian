@@ -299,7 +299,7 @@ namespace oly::editor
 				original.distance.value = std::move(k.distance.edit.original);
 				original.pair.value[0] = std::move(k.pair.edits[0].original);
 				original.pair.value[1] = std::move(k.pair.edits[1].original);
-				PushDescriptorSetAction(k.link.ComputePath(), std::move(original), CloneDescData(k));
+				PushDescriptorSetAction(k.link.compute_path(), std::move(original), CloneDescData(k));
 			}
 		}
 	}

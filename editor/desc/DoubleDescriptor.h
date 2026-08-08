@@ -1,6 +1,5 @@
 #pragma once
 
-#include "desc/DataPath.h"
 #include "desc/FieldSetAction.h"
 
 #include "util/TypeErasedBox.h"
@@ -10,8 +9,8 @@ namespace oly::editor
 	struct IDoubleDescriptor
 	{
 		virtual ~IDoubleDescriptor() = default;
-		virtual void* PathGet(DataPath path, std::type_index type) = 0;
-		virtual void PrintPath(std::ostream& os, DataPath path) const = 0;
+		virtual void* PathGet(imtk::datapath_view path, std::type_index type) = 0;
+		virtual void PrintPath(std::ostream& os, imtk::datapath_view path) const = 0;
 		virtual bool QueryDirty() = 0;
 		virtual TypeErasedBox CopyScratch() const = 0;
 		virtual std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const = 0;
@@ -27,12 +26,12 @@ namespace oly::editor
 		DoubleDescriptor() = default;
 		DoubleDescriptor(Descriptor scratch, Descriptor disk) : scratch(std::move(scratch)), disk(std::move(disk)) {}
 
-		void* PathGet(DataPath path, std::type_index type) override
+		void* PathGet(imtk::datapath_view path, std::type_index type) override
 		{
 			return scratch.PathGet(path, type);
 		}
 
-		void PrintPath(std::ostream& os, DataPath path) const override
+		void PrintPath(std::ostream& os, imtk::datapath_view path) const override
 		{
 			scratch.PrintPath(os, path);
 		}
@@ -50,7 +49,7 @@ namespace oly::editor
 		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
 		{
 			if (auto og = original.consume_unique<Descriptor>())
-				return std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), CloneDescData(scratch));
+				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), CloneDescData(scratch));
 			else
 				return nullptr;
 		}
@@ -62,7 +61,7 @@ namespace oly::editor
 				if (scratch.QueryDirty(*og))
 				{
 					if (auto og = original.consume_unique<Descriptor>())
-						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), CloneDescData(scratch));
+						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), CloneDescData(scratch));
 					else
 						action = nullptr;
 

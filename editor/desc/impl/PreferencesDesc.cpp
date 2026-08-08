@@ -4,11 +4,11 @@
 
 namespace oly::editor
 {
-	UndoHistorySettingsDesc::UndoHistorySettingsDesc(DataPathLink link) :
+	UndoHistorySettingsDesc::UndoHistorySettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		count_limit(DATA_PATH_SUBLINK(subpaths.count_limit), 500, detail::Key::UndoHistoryCountLimit, "Count limit"),
-		size_limit(DATA_PATH_SUBLINK(subpaths.size_limit), 32, detail::Key::UndoHistorySizeLimit, "Size limit"),
-		size_limit_unit(DATA_PATH_SUBLINK(subpaths.size_limit_unit), MemoryUnit::MiB, detail::Key::UndoHistorySizeLimitUnit, "Size unit")
+		count_limit(IMTK_DATAPATH_SUBLINK(subpaths.count_limit), 500, detail::Key::UndoHistoryCountLimit, "Count limit"),
+		size_limit(IMTK_DATAPATH_SUBLINK(subpaths.size_limit), 32, detail::Key::UndoHistorySizeLimit, "Size limit"),
+		size_limit_unit(IMTK_DATAPATH_SUBLINK(subpaths.size_limit_unit), MemoryUnit::MiB, detail::Key::UndoHistorySizeLimitUnit, "Size unit")
 	{
 	}
 
@@ -24,21 +24,21 @@ namespace oly::editor
 
 	const detail::Key EditSettingsDesc::undo_history_key = detail::Key::UndoHistory;
 
-	EditSettingsDesc::EditSettingsDesc(DataPathLink link) :
+	EditSettingsDesc::EditSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		undo_history(DATA_PATH_SUBLINK(subpaths.undo_history))
+		undo_history(IMTK_DATAPATH_SUBLINK(subpaths.undo_history))
 	{
 	}
 
-	ContentBrowserSettingsDesc::ContentBrowserSettingsDesc(DataPathLink link) :
+	ContentBrowserSettingsDesc::ContentBrowserSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		folder_history_limit(DATA_PATH_SUBLINK(subpaths.folder_history_limit), 30, detail::Key::FolderHistoryLimit, "Folder history limit")
+		folder_history_limit(IMTK_DATAPATH_SUBLINK(subpaths.folder_history_limit), 30, detail::Key::FolderHistoryLimit, "Folder history limit")
 	{
 	}
 
-	TreeViewAdvancedSettingsDesc::TreeViewAdvancedSettingsDesc(DataPathLink link) :
+	TreeViewAdvancedSettingsDesc::TreeViewAdvancedSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		analysis_interval(DATA_PATH_SUBLINK(subpaths.analysis_interval), 10.f, detail::Key::AnalysisInterval, "Analysis interval")
+		analysis_interval(IMTK_DATAPATH_SUBLINK(subpaths.analysis_interval), 10.f, detail::Key::AnalysisInterval, "Analysis interval")
 	{
 	}
 
@@ -49,16 +49,16 @@ namespace oly::editor
 
 	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;
 
-	TreeViewSettingsDesc::TreeViewSettingsDesc(DataPathLink link) :
+	TreeViewSettingsDesc::TreeViewSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		advanced(DATA_PATH_SUBLINK(subpaths.advanced))
+		advanced(IMTK_DATAPATH_SUBLINK(subpaths.advanced))
 	{
 	}
 
-	FilesystemSettingsDesc::FilesystemSettingsDesc(DataPathLink link) :
+	FilesystemSettingsDesc::FilesystemSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		trash_limit(DATA_PATH_SUBLINK(subpaths.trash_limit), 5, detail::Key::TrashLimit, "Trash limit"),
-		trash_limit_unit(DATA_PATH_SUBLINK(subpaths.trash_limit_unit), MemoryUnit::GiB, detail::Key::TrashLimitUnit, "Trash limit unit")
+		trash_limit(IMTK_DATAPATH_SUBLINK(subpaths.trash_limit), 5, detail::Key::TrashLimit, "Trash limit"),
+		trash_limit_unit(IMTK_DATAPATH_SUBLINK(subpaths.trash_limit_unit), MemoryUnit::GiB, detail::Key::TrashLimitUnit, "Trash limit unit")
 	{
 	}
 
@@ -72,12 +72,12 @@ namespace oly::editor
 	const detail::Key PreferencesDesc::tree_view_key = detail::Key::TreeView;
 	const detail::Key PreferencesDesc::filesystem_key = detail::Key::Filesystem;
 
-	PreferencesDesc::PreferencesDesc(DataPathLink link) :
+	PreferencesDesc::PreferencesDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		edit(DATA_PATH_SUBLINK(subpaths.edit)),
-		content_browser(DATA_PATH_SUBLINK(subpaths.content_browser)),
-		tree_view(DATA_PATH_SUBLINK(subpaths.tree_view)),
-		filesystem(DATA_PATH_SUBLINK(subpaths.filesystem))
+		edit(IMTK_DATAPATH_SUBLINK(subpaths.edit)),
+		content_browser(IMTK_DATAPATH_SUBLINK(subpaths.content_browser)),
+		tree_view(IMTK_DATAPATH_SUBLINK(subpaths.tree_view)),
+		filesystem(IMTK_DATAPATH_SUBLINK(subpaths.filesystem))
 	{
 	}
 }

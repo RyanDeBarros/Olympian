@@ -18,7 +18,7 @@ namespace oly::editor
 		StringField font_file;
 		IntField<MakeOpt(0), MakeOpt<int>()> atlas_index;
 
-		FontStyleDesc(DataPathLink link = {});
+		FontStyleDesc(imtk::datapath_link link = {});
 	};
 
 #define FONT_FAMILY_GENERATOR(M) \
@@ -31,6 +31,6 @@ namespace oly::editor
 		MapDesc<detail::FontStyleMode, FontStyleDesc> styles;
 		static const detail::Key styles_key;
 
-		FontFamilyDesc(DataPathLink link = {});
+		FontFamilyDesc(imtk::datapath_link link = {});
 	};
 }

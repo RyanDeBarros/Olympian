@@ -63,7 +63,6 @@ namespace oly::editor
 
 			_doc.DrawMenuBar();
 			_doc.Draw();
-			_doc.DrawFinalize();
 		}
 
 		if (_window_unsaved_changes_modal)

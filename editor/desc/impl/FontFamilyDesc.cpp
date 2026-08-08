@@ -4,18 +4,18 @@
 
 namespace oly::editor
 {
-	FontStyleDesc::FontStyleDesc(DataPathLink link) :
+	FontStyleDesc::FontStyleDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		font_file(DATA_PATH_SUBLINK(subpaths.font_file), "", detail::Key::File, "Font file"),
-		atlas_index(DATA_PATH_SUBLINK(subpaths.atlas_index), 0, detail::Key::AtlasIndex, "Atlas index")
+		font_file(IMTK_DATAPATH_SUBLINK(subpaths.font_file), "", detail::Key::File, "Font file"),
+		atlas_index(IMTK_DATAPATH_SUBLINK(subpaths.atlas_index), 0, detail::Key::AtlasIndex, "Atlas index")
 	{
 	}
 
 	const detail::Key FontFamilyDesc::styles_key = detail::Key::Style;
 
-	FontFamilyDesc::FontFamilyDesc(DataPathLink link) :
+	FontFamilyDesc::FontFamilyDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		styles(DATA_PATH_SUBLINK(subpaths.styles))
+		styles(IMTK_DATAPATH_SUBLINK(subpaths.styles))
 	{
 	}
 }

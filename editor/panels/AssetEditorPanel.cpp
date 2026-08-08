@@ -198,7 +198,6 @@ namespace oly::editor
 					}
 
 					doc.Draw();
-					doc.DrawFinalize();
 					_selected_tab = &doc;
 				}
 
@@ -218,9 +217,6 @@ namespace oly::editor
 					}
 				}
 			}
-
-			if (previously_selected_doc && _selected_tab != previously_selected_doc)
-				previously_selected_doc->DrawFinalize();
 
 			RemoveOldPendingDocuments(seen_documents);
 

@@ -8,15 +8,13 @@
 
 #include "gui/properties/PropertyGrid.h"
 
-#include "desc/DataPath.h"
-
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
 {
 	struct IDoubleDescriptor;
 
-	class IDocument
+	class IDocument : public imtk::tick_processor
 	{
 	protected:
 		detail::ResourcePath _oly_path;
@@ -46,10 +44,10 @@ namespace oly::editor
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 
-		void* PathGet(DataPath path, std::type_index type);
-		void PrintPath(std::ostream& os, DataPath path) const;
-		std::string PathString(DataPath path) const;
-		void DrawFinalize();
+		void* PathGet(imtk::datapath_view path, std::type_index type);
+		void PrintPath(std::ostream& os, imtk::datapath_view path) const;
+		std::string PathString(imtk::datapath_view path) const;
+		void on_last_process_frame() override;
 
 		const detail::ResourcePath& GetOlyPath() const;
 		void Rename(const detail::ResourcePath& new_path);

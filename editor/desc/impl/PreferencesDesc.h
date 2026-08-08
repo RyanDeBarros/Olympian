@@ -19,7 +19,7 @@ namespace oly::editor
 		IntField<MakeOpt(1), MakeOpt<int>()> size_limit;
 		EnumField<MemoryUnit> size_limit_unit;
 
-		UndoHistorySettingsDesc(DataPathLink link = {});
+		UndoHistorySettingsDesc(imtk::datapath_link link = {});
 
 		size_t CountLimit() const;
 		size_t SizeLimit() const;
@@ -35,7 +35,7 @@ namespace oly::editor
 		UndoHistorySettingsDesc undo_history;
 		static const detail::Key undo_history_key;
 
-		EditSettingsDesc(DataPathLink link = {});
+		EditSettingsDesc(imtk::datapath_link link = {});
 	};
 
 #define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
@@ -47,7 +47,7 @@ namespace oly::editor
 
 		IntField<MakeOpt(1), MakeOpt<int>()> folder_history_limit;
 
-		ContentBrowserSettingsDesc(DataPathLink link = {});
+		ContentBrowserSettingsDesc(imtk::datapath_link link = {});
 	};
 
 #define TREE_VIEW_ADVANCED_SETTINGS_GENERATOR(M) \
@@ -59,7 +59,7 @@ namespace oly::editor
 
 		FloatField<MakeOpt(0.1f), MakeOpt<float>()> analysis_interval;
 
-		TreeViewAdvancedSettingsDesc(DataPathLink link = {});
+		TreeViewAdvancedSettingsDesc(imtk::datapath_link link = {});
 		
 		float AnalysisInterval() const;
 	};
@@ -74,7 +74,7 @@ namespace oly::editor
 		TreeViewAdvancedSettingsDesc advanced;
 		static const detail::Key advanced_key;
 
-		TreeViewSettingsDesc(DataPathLink link = {});
+		TreeViewSettingsDesc(imtk::datapath_link link = {});
 	};
 
 #define FILESYSTEM_SETTINGS_GENERATOR(M) \
@@ -88,7 +88,7 @@ namespace oly::editor
 		IntField<MakeOpt(1), MakeOpt<int>()> trash_limit;
 		EnumField<MemoryUnit> trash_limit_unit;
 
-		FilesystemSettingsDesc(DataPathLink link = {});
+		FilesystemSettingsDesc(imtk::datapath_link link = {});
 
 		size_t TrashLimit() const;
 	};
@@ -112,6 +112,6 @@ namespace oly::editor
 		FilesystemSettingsDesc filesystem;
 		static const detail::Key filesystem_key;
 
-		PreferencesDesc(DataPathLink link = {});
+		PreferencesDesc(imtk::datapath_link link = {});
 	};
 }
