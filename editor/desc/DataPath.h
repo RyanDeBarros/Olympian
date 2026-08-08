@@ -63,7 +63,6 @@ namespace oly::editor
 		friend std::ostream& operator<<(std::ostream& os, DataPath path);
 	};
 
-
 	class DataPathLink
 	{
 		class Node

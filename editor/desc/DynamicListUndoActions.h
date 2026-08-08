@@ -382,9 +382,7 @@ namespace oly::editor
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index <= ref_vector.Size())
 				{
-					ElementType element;
-					element.CopyData(deleted_element);
-					ref_vector.Insert(delete_index, std::move(element));
+					ref_vector.Insert(delete_index, CloneDescData(deleted_element));
 					success = true;
 				}
 			}
@@ -436,9 +434,7 @@ namespace oly::editor
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index <= ref_vector.Size())
 				{
-					ElementType element;
-					element.CopyData(inserted_element);
-					ref_vector.Insert(insert_index, std::move(element));
+					ref_vector.Insert(insert_index, CloneDescData(inserted_element));
 					success = true;
 				}
 			}

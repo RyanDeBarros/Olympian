@@ -226,13 +226,10 @@ namespace oly::editor
 		{ \
 			if (!desc.variant.TryGet<T##Desc>()) \
 			{ \
-				SignalDesc initial_desc; \
-				initial_desc.CopyData(desc); \
+				SignalDesc initial_desc = CloneDescData(desc); \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.Set<T##Desc>(); \
-				SignalDesc final_desc; \
-				final_desc.CopyData(desc); \
-				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), std::move(final_desc)); \
+				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.ComputePath(), std::move(initial_desc), CloneDescData(desc)); \
 			} \
 			break; \
 		}

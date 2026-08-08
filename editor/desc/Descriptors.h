@@ -367,10 +367,20 @@ namespace oly::editor
 
 		void CopyData(const MapDesc<Key, ValueDescriptor>& o)
 		{
-			// TODO v9.3 more efficient way of just calling CopyData() on common keys
-			_map.clear();
+			for (auto it = _map.begin(); it != _map.end(); ++it)
+			{
+				auto o_it = o._map.find(it->first);
+				if (o_it != o._map.end())
+					it->second.CopyData(o_it->second);
+				else
+					it = _map.erase(it);
+			}
+
 			for (const auto& [o_key, o_desc] : o._map)
-				(*this)[o_key].CopyData(o_desc);
+			{
+				if (!_map.contains(o_key))
+					(*this)[o_key].CopyData(o_desc);
+			}
 		}
 	};
 }

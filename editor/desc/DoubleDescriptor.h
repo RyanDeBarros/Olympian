@@ -44,19 +44,13 @@ namespace oly::editor
 
 		TypeErasedBox CopyScratch() const
 		{
-			Descriptor copy;
-			copy.CopyData(scratch);
-			return TypeErasedBox(std::move(copy));
+			return TypeErasedBox(CloneDescData(scratch));
 		}
 
 		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
 		{
 			if (auto og = original.consume_unique<Descriptor>())
-			{
-				Descriptor newest;
-				newest.CopyData(scratch);
-				return std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), std::move(newest));
-			}
+				return std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), CloneDescData(scratch));
 			else
 				return nullptr;
 		}
@@ -68,11 +62,7 @@ namespace oly::editor
 				if (scratch.QueryDirty(*og))
 				{
 					if (auto og = original.consume_unique<Descriptor>())
-					{
-						Descriptor newest;
-						newest.CopyData(scratch);
-						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), std::move(newest));
-					}
+						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(DataPath(), std::move(*og), CloneDescData(scratch));
 					else
 						action = nullptr;
 

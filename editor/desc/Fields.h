@@ -80,6 +80,14 @@ namespace oly::editor
 		bool QueryDirty(const Klass& disk) const { GENERATOR(_SUBPATH_QUERY_DIRTY); return false; } \
 		void CopyData(const Klass& o) { GENERATOR(_SUBPATH_COPY_DATA); }
 
+	template<typename Desc>
+	inline Desc CloneDescData(const Desc& desc)
+	{
+		Desc copy;
+		copy.CopyData(desc);
+		return copy;
+	}
+
 	extern detail::Key NullKey();
 
 	template<typename T>
@@ -868,7 +876,7 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		// TODO v9.3 remove DrawFinalize: have fields inherit from imtk::tick_processor, and pass DataPath to constructor of fields (store DataPathSource as member). Make sure it syncs for dynamic descriptors
+		// TODO v9.3 remove DrawFinalize: make sure things sync for dynamic descriptors
 		void on_last_process_frame() override
 		{
 			edit.on_last_process_frame();
