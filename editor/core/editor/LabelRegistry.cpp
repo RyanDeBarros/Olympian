@@ -104,6 +104,6 @@ namespace oly::editor
 
 	const char* LabelSpanRegistry::ComboGetter(void* user_data, int idx)
 	{
-		return String(*reinterpret_cast<Handle*>(user_data), idx);
+		return String(*static_cast<Handle*>(user_data), idx);
 	}
 }
