@@ -81,7 +81,7 @@ namespace oly::editor
 		_slots.Init(*ListAdapter());
 
 		_preview_nav = {};
-		if (auto svg_desc = _desc.scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
+		if (auto svg_desc = _desc.scratch.variant.try_get<imtk::desc::vector<VectorTextureDesc>>())
 			_preview_nav.svg_scale = (*svg_desc)[_slots.active_index].scale.value;
 
 		_stale_preview_texture = true;
@@ -424,7 +424,7 @@ namespace oly::editor
 
 		if (auto form = Form())
 		{
-			desc.variant.Visit([this](auto& desc_list) { Draw(desc_list[_slots.active_index]); });
+			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.active_index]); });
 
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
@@ -439,11 +439,11 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			DRAW_FIELD(generate_mipmaps);
+			desc.generate_mipmaps.draw();
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(storage);
+			desc.storage.draw();
 		}
 	}
 	
@@ -452,11 +452,11 @@ namespace oly::editor
 		Draw(desc.base);
 		if (auto subform = Subform("Storage", true))
 		{
-			DRAW_FIELD(generate_mipmaps);
+			desc.generate_mipmaps.draw();
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
+			IMTK_DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
 		}
 	}
 	
@@ -464,23 +464,23 @@ namespace oly::editor
 	{
 		if (auto subform = Subform("Parameters", true))
 		{
-			DRAW_FIELD(min_filter);
+			desc.min_filter.draw();
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(mag_filter);
+			desc.mag_filter.draw();
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(wrap_s);
-			DRAW_FIELD(wrap_t);
+			desc.wrap_s.draw();
+			desc.wrap_t.draw();
 		}
 
 		if (auto subform = Subform("Animation", true))
 		{
 			if (auto d = imtk::disabled(_gif))
 			{
-				DRAW_FIELD(anim);
+				desc.anim.draw();
 				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
@@ -492,23 +492,23 @@ namespace oly::editor
 
 	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
-		DRAW_FIELD(col_type);
+		desc.col_type.draw();
 		desc.col_value.label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		DRAW_FIELD(col_value);
+		desc.col_value.draw();
 
-		DRAW_FIELD(row_type);
+		desc.row_type.draw();
 		desc.row_value.label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		DRAW_FIELD(row_value);
+		desc.row_value.draw();
 
-		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif)
 	{
 		if (svg)
-			desc.variant.Set<VectorDesc<VectorTextureDesc>>();
+			desc.variant.set<imtk::desc::vector<VectorTextureDesc>>();
 		else
-			desc.variant.Set<VectorDesc<RasterTextureDesc>>();
+			desc.variant.set<imtk::desc::vector<RasterTextureDesc>>();
 
 		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
@@ -529,18 +529,18 @@ namespace oly::editor
 	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
-		LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
-		LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
 	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc, bool gif)
 	{
-		LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		IMTK_LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
 		if (gif)
 		{
@@ -549,26 +549,22 @@ namespace oly::editor
 		}
 		else
 		{
-			desc.anim.Load(node);
+			desc.anim.load(node);
 			Load(node, desc.spritesheet);
 		}
 	}
 
 	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
 	{
-		LOAD_FIELDS(SPRITESHEET_GENERATOR);
+		IMTK_LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
 	{
 		toml::array array;
-		desc.variant.Visit([this, &array](auto& d) {
+		desc.variant.visit([this, &array](auto& d) {
 			for (auto& desc : d)
-			{
-				toml::table table;
-				Dump(table, desc);
-				array.push_back(std::move(table));
-			}
+				Dump(array.emplace_back<toml::table>(), desc);
 		});
 		table.insert_or_assign(detail::encode_key(desc.array_key), std::move(array));
 	}
@@ -576,26 +572,26 @@ namespace oly::editor
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		DUMP_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, VectorTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		DUMP_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
 	{
-		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
-		desc.anim.Dump(table);
+		IMTK_DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		desc.anim.dump(table);
 		if (desc.anim.value && !_gif)
 			Dump(table, desc.spritesheet);
 	}
 
 	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
 	{
-		DUMP_FIELDS(SPRITESHEET_GENERATOR);
+		IMTK_DUMP_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
 	void TextureDocument::OnActiveSlotChanged()
@@ -618,7 +614,7 @@ namespace oly::editor
 
 	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.Visit([this](auto& desc) { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
+		return _desc.scratch.variant.visit([this](auto& desc) { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)

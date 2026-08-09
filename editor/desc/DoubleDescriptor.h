@@ -9,9 +9,9 @@ namespace oly::editor
 	struct IDoubleDescriptor
 	{
 		virtual ~IDoubleDescriptor() = default;
-		virtual void* PathGet(imtk::datapath_view path, std::type_index type) = 0;
-		virtual void PrintPath(std::ostream& os, imtk::datapath_view path) const = 0;
-		virtual bool QueryDirty() = 0;
+		virtual void* resolve(imtk::datapath_view path, std::type_index type) = 0;
+		virtual void describe(std::ostream& os, imtk::datapath_view path) const = 0;
+		virtual bool query_dirty() = 0;
 		virtual TypeErasedBox CopyScratch() const = 0;
 		virtual std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const = 0;
 		virtual bool ScratchUndoActionQuery(TypeErasedBox original, std::unique_ptr<UndoAction>& action) const = 0;
@@ -26,30 +26,30 @@ namespace oly::editor
 		DoubleDescriptor() = default;
 		DoubleDescriptor(Descriptor scratch, Descriptor disk) : scratch(std::move(scratch)), disk(std::move(disk)) {}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type) override
+		void* resolve(imtk::datapath_view path, std::type_index type) override
 		{
-			return scratch.PathGet(path, type);
+			return scratch.resolve(path, type);
 		}
 
-		void PrintPath(std::ostream& os, imtk::datapath_view path) const override
+		void describe(std::ostream& os, imtk::datapath_view path) const override
 		{
-			scratch.PrintPath(os, path);
+			scratch.describe(os, path);
 		}
 
-		bool QueryDirty() override
+		bool query_dirty() override
 		{
-			return scratch.QueryDirty(disk);
+			return scratch.query_dirty(disk);
 		}
 
 		TypeErasedBox CopyScratch() const
 		{
-			return TypeErasedBox(CloneDescData(scratch));
+			return TypeErasedBox(imtk::desc::clone_data(scratch));
 		}
 
 		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
 		{
 			if (auto og = original.consume_unique<Descriptor>())
-				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), CloneDescData(scratch));
+				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 			else
 				return nullptr;
 		}
@@ -58,10 +58,10 @@ namespace oly::editor
 		{
 			if (auto og = original.as<Descriptor>())
 			{
-				if (scratch.QueryDirty(*og))
+				if (scratch.query_dirty(*og))
 				{
 					if (auto og = original.consume_unique<Descriptor>())
-						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), CloneDescData(scratch));
+						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 					else
 						action = nullptr;
 
@@ -74,12 +74,12 @@ namespace oly::editor
 
 		void WriteToDisk()
 		{
-			disk.CopyData(scratch);
+			disk.copy_data(scratch);
 		}
 
 		void LoadFromDisk()
 		{
-			scratch.CopyData(disk);
+			scratch.copy_data(disk);
 		}
 
 		void ResetScratch()

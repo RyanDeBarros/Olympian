@@ -4,7 +4,6 @@
 
 #include "gui/DrawResult.h"
 
-#include "desc/Descriptors.h"
 #include "desc/DynamicListUndoActions.h"
 
 #include "util/Counter.h"
@@ -135,18 +134,18 @@ namespace oly::editor::gui
 	template<typename T, typename Printer = StandardPrinter<T>>
 	struct VectorAdapter : public IListAdapter
 	{
-		const VectorDesc<T>& v;
+		const imtk::desc::vector<T>& v;
 
-		VectorAdapter(const VectorDesc<T>& vec) : v(vec) {}
+		VectorAdapter(const imtk::desc::vector<T>& vec) : v(vec) {}
 
 		size_t Size() const override
 		{
-			return v.Size();
+			return v.size();
 		}
 
 		void PushBack() override
 		{
-			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.compute_path(), v.Size());
+			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.compute_path(), v.size());
 		}
 
 		void Erase(size_t i) override
@@ -162,8 +161,8 @@ namespace oly::editor::gui
 
 		void Clear() override
 		{
-			if (!v.Empty())
-				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), v.Size(), 0);
+			if (!v.empty())
+				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), v.size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
@@ -174,13 +173,13 @@ namespace oly::editor::gui
 	};
 
 	template<typename T>
-	std::unique_ptr<IListAdapter> MakeVectorAdapter(const VectorDesc<T>& vector)
+	std::unique_ptr<IListAdapter> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
 	{
 		return std::make_unique<VectorAdapter<T, StandardPrinter<T>>>(vector);
 	}
 
 	template<typename Printer, typename T>
-	std::unique_ptr<IListAdapter> MakeVectorAdapter(const VectorDesc<T>& vector)
+	std::unique_ptr<IListAdapter> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
 	{
 		return std::make_unique<VectorAdapter<T, Printer>>(vector);
 	}

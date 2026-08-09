@@ -10,7 +10,7 @@ namespace oly::editor
 
 	struct ViewportDesc
 	{
-		DESCRIPTOR_BODY(ViewportDesc, VIEWPORT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ViewportDesc, VIEWPORT_GENERATOR);
 
 		BoolField boxed;
 		BoolField stretch;
@@ -44,7 +44,7 @@ namespace oly::editor
 
 	struct WindowHintsDesc
 	{
-		DESCRIPTOR_BODY(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(WindowHintsDesc, WINDOW_HINTS_GENERATOR);
 
 		Color4Field context_clear_color;
 		IntField<MakeOpt(0), MakeOpt<int>()> context_swap_interval;
@@ -84,7 +84,7 @@ namespace oly::editor
 
 	struct WindowDesc
 	{
-		DESCRIPTOR_BODY(WindowDesc, WINDOW_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(WindowDesc, WINDOW_GENERATOR);
 
 		IntField<MakeOpt(1), MakeOpt<int>()> width;
 		IntField<MakeOpt(1), MakeOpt<int>()> height;
@@ -106,7 +106,7 @@ namespace oly::editor
 
 	struct PlatformDesc
 	{
-		DESCRIPTOR_BODY(PlatformDesc, PLATFORM_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(PlatformDesc, PLATFORM_GENERATOR);
 
 		WindowDesc window;
 		static const detail::Key window_key;
@@ -121,7 +121,7 @@ namespace oly::editor
 
 	struct CollisionDesc
 	{
-		DESCRIPTOR_BODY(CollisionDesc, COLLISION_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(CollisionDesc, COLLISION_GENERATOR);
 
 		StringArrayField<32> masks;
 		StringArrayField<32> layers;
@@ -138,7 +138,7 @@ namespace oly::editor
 
 	struct LoggerEnableDesc
 	{
-		DESCRIPTOR_BODY(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(LoggerEnableDesc, LOGGER_ENABLE_GENERATOR);
 
 		BoolField debug;
 		BoolField info;
@@ -161,7 +161,7 @@ namespace oly::editor
 
 	struct LoggerDesc
 	{
-		DESCRIPTOR_BODY(LoggerDesc, LOGGER_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(LoggerDesc, LOGGER_GENERATOR);
 
 		BoolField use_logfile;
 		BoolField use_console;
@@ -180,7 +180,7 @@ namespace oly::editor
 
 	struct FrameRateDesc
 	{
-		DESCRIPTOR_BODY(FrameRateDesc, FRAME_RATE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FrameRateDesc, FRAME_RATE_GENERATOR);
 
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> frame_length_clip;
 		DoubleField<MakeOpt(0.0), MakeOpt<double>()> time_scale;
@@ -196,7 +196,7 @@ namespace oly::editor
 
 	struct ContextDesc
 	{
-		DESCRIPTOR_BODY(ContextDesc, CONTEXT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ContextDesc, CONTEXT_GENERATOR);
 
 		PlatformDesc platform;
 		static const detail::Key platform_key;
@@ -215,7 +215,7 @@ namespace oly::editor
 
 	struct ProjectDesc
 	{
-		DESCRIPTOR_BODY(ProjectDesc, PROJECT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ProjectDesc, PROJECT_GENERATOR);
 
 		ContextDesc context;
 		static const detail::Key context_key;

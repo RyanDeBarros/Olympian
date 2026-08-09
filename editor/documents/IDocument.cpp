@@ -41,7 +41,7 @@ namespace oly::editor
 		auto original = GetDoubleDescriptor().CopyScratch();
 
 		ResetAssetImpl();
-		QueryDirty();
+		query_dirty();
 
 		std::unique_ptr<UndoAction> action;
 		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
@@ -78,26 +78,26 @@ namespace oly::editor
 		return _oly_path.exists();
 	}
 
-	void* IDocument::PathGet(imtk::datapath_view path, std::type_index type)
+	void* IDocument::resolve(imtk::datapath_view path, std::type_index type)
 	{
-		return GetDoubleDescriptor().PathGet(path, type);
+		return GetDoubleDescriptor().resolve(path, type);
 	}
 
-	void IDocument::PrintPath(std::ostream& os, imtk::datapath_view path) const
+	void IDocument::describe(std::ostream& os, imtk::datapath_view path) const
 	{
-		GetDoubleDescriptor().PrintPath(os, path);
+		GetDoubleDescriptor().describe(os, path);
 	}
 	
 	std::string IDocument::PathString(imtk::datapath_view path) const
 	{
 		std::stringstream ss;
-		PrintPath(ss, path);
+		describe(ss, path);
 		return ss.str();
 	}
 
 	void IDocument::on_last_process_frame()
 	{
-		QueryDirty();
+		query_dirty();
 	}
 
 	const detail::ResourcePath& IDocument::GetOlyPath() const
@@ -131,9 +131,9 @@ namespace oly::editor
 		return _dirty;
 	}
 
-	void IDocument::QueryDirty()
+	void IDocument::query_dirty()
 	{
-		_dirty = GetDoubleDescriptor().QueryDirty();
+		_dirty = GetDoubleDescriptor().query_dirty();
 	}
 
 	void IDocument::Undo()

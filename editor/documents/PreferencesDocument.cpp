@@ -112,13 +112,13 @@ namespace oly::editor
 
 	void PreferencesDocument::ApplyEditorPreferences()
 	{
-		Editor::GetPreferences().CopyData(_desc.scratch);
+		Editor::GetPreferences().copy_data(_desc.scratch);
 		ActiveDescChanged();
 	}
 
 	void PreferencesDocument::RevertEditorPreferences()
 	{
-		Editor::GetPreferences().CopyData(_desc.disk);
+		Editor::GetPreferences().copy_data(_desc.disk);
 		ActiveDescChanged();
 	}
 
@@ -159,12 +159,12 @@ namespace oly::editor
 	
 	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
 	{
-		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Draw(ContentBrowserSettingsDesc& desc)
 	{
-		DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
@@ -175,12 +175,12 @@ namespace oly::editor
 
 	void PreferencesDocument::Draw(TreeViewAdvancedSettingsDesc& desc)
 	{
-		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Draw(FilesystemSettingsDesc& desc)
 	{
-		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 
 		if (auto subform = Subform("Advanced"))
 		{
@@ -233,12 +233,12 @@ namespace oly::editor
 
 	void PreferencesDocument::Load(TOMLNode node, UndoHistorySettingsDesc& desc)
 	{
-		LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, ContentBrowserSettingsDesc& desc)
 	{
-		LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, TreeViewSettingsDesc& desc)
@@ -248,12 +248,12 @@ namespace oly::editor
 
 	void PreferencesDocument::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
 	{
-		LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(TOMLNode node, FilesystemSettingsDesc& desc)
 	{
-		LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, PreferencesDesc& desc)
@@ -286,12 +286,12 @@ namespace oly::editor
 
 	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
 	{
-		DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, ContentBrowserSettingsDesc& desc)
 	{
-		DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)
@@ -303,11 +303,11 @@ namespace oly::editor
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)
 	{
-		DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, FilesystemSettingsDesc& desc)
 	{
-		DUMP_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}
 }

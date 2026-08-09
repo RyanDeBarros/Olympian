@@ -116,7 +116,7 @@ namespace oly::editor
 		return _desc;
 	}
 
-	void SignalDocument::Draw(VectorDesc<SignalDesc>& desc)
+	void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
 	{
 		_signal_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
@@ -124,7 +124,7 @@ namespace oly::editor
 		{
 			_signal_slots.DrawComboHeader({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" },
 				[&desc](size_t i) {
-					if (i < desc.Size())
+					if (i < desc.size())
 					{
 						std::string id = desc[i].id.value;
 						if (!id.empty())
@@ -136,7 +136,7 @@ namespace oly::editor
 
 		if (auto form = Form())
 		{
-			if (!desc.Empty())
+			if (!desc.empty())
 				Draw(desc[_signal_slots.active_index]);
 
 			if (_signal_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
@@ -146,7 +146,7 @@ namespace oly::editor
 		}
 	}
 
-	void SignalDocument::Draw(VectorDesc<RouteDesc>& desc)
+	void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
 	{
 		_route_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
@@ -154,7 +154,7 @@ namespace oly::editor
 		{
 			_route_slots.DrawComboHeader({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" },
 				[&desc](size_t i) {
-					if (i < desc.Size())
+					if (i < desc.size())
 					{
 						std::string id = desc[i].id.value;
 						if (!id.empty())
@@ -166,7 +166,7 @@ namespace oly::editor
 
 		if (auto form = Form())
 		{
-			if (!desc.Empty())
+			if (!desc.empty())
 				Draw(desc[_route_slots.active_index]);
 
 			if (_route_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
@@ -207,7 +207,7 @@ namespace oly::editor
 	{
 		gui::Outline dup_outline;
 		
-		DRAW_FIELD(id);
+		desc.id.draw();
 		if (GetIDCounter().count(desc.id.value) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -224,12 +224,12 @@ namespace oly::editor
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
 		{ \
-			if (!desc.variant.TryGet<T##Desc>()) \
+			if (!desc.variant.try_get<T##Desc>()) \
 			{ \
-				SignalDesc initial_desc = CloneDescData(desc); \
+				SignalDesc initial_desc = imtk::desc::clone_data(desc); \
 				initial_desc.binding.value = initial_binding; \
-				desc.variant.Set<T##Desc>(); \
-				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.compute_path(), std::move(initial_desc), CloneDescData(desc)); \
+				desc.variant.set<T##Desc>(); \
+				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
 			} \
 			break; \
 		}
@@ -239,7 +239,7 @@ namespace oly::editor
 #undef SWITCH_CASE
 		}
 
-		desc.variant.Visit([this](auto& desc) { Draw(desc); });
+		desc.variant.visit([this](auto& desc) { Draw(desc); });
 	}
 	
 	void SignalDocument::Draw(RouteDesc& desc)
@@ -252,7 +252,7 @@ namespace oly::editor
 
 		gui::Outline dup_outline;
 
-		DRAW_FIELD(id);
+		desc.id.draw();
 		if (id_counter.count(desc.id.value) > 1)
 		{
 			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
@@ -317,19 +317,19 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		DRAW_FIELD(key);
+		desc.key.draw();
 
 		if (auto subform = Subform("Keyboard Mods", true))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.Draw(disabled_required_mods);
+			desc.required_mods.draw(disabled_required_mods);
 
 			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.Draw(disabled_forbidden_mods);
+			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
 
 		if (auto subform = Subform("Modifiers"))
@@ -355,19 +355,19 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		DRAW_FIELD(button);
+		desc.button.draw();
 
 		if (auto subform = Subform("Keyboard Mods", true))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.Draw(disabled_required_mods);
+			desc.required_mods.draw(disabled_required_mods);
 
 			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
 			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.Draw(disabled_forbidden_mods);
+			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
 
 		if (auto subform = Subform("Modifiers"))
@@ -393,7 +393,7 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		DRAW_FIELD(button);
+		desc.button.draw();
 
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
@@ -418,9 +418,9 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		DRAW_FIELD(axis);
+		desc.axis.draw();
 
-		DRAW_FIELD(deadzone);
+		desc.deadzone.draw();
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
@@ -444,48 +444,48 @@ namespace oly::editor
 			}
 			return result;
 		}));
-		DRAW_FIELD(axis);
+		desc.axis.draw();
 
-		DRAW_FIELD(deadzone);
+		desc.deadzone.draw();
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
 	void SignalDocument::Draw(CursorPosDesc& desc)
 	{
-		DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
 	void SignalDocument::Draw(ScrollDesc& desc)
 	{
-		DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 
 	void SignalDocument::Draw(Modifier0dDesc& desc)
 	{
-		DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
 		Draw(desc.base);
 	}
 	
 	void SignalDocument::Draw(Modifier1dDesc& desc)
 	{
-		DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
 		Draw(desc.base);
 	}
 	
 	void SignalDocument::Draw(Modifier2dDesc& desc)
 	{
-		DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
 		Draw(desc.base);
 	}
 	
 	void SignalDocument::Draw(ModifierBaseDesc& desc)
 	{
-		DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
+		IMTK_DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 
 	void SignalDocument::Load(TOMLNode node, SignalFullDesc& desc)
@@ -494,24 +494,26 @@ namespace oly::editor
 		if (signal_array && !signal_array->empty())
 		{
 			for (size_t i = 0; i < signal_array->size(); ++i)
-				desc.signals.PushBack();
-
-			desc.signals.VisitIndexed([this, &signal_array](size_t i, auto& d) { Load(TOMLNode(*signal_array->get(i)), d); });
+				desc.signals.push_back();
+			
+			for (size_t i = 0; i < desc.signals.size(); ++i)
+				Load(TOMLNode(*signal_array->get(i)), desc.signals[i]);
 		}
 
 		TOMLArray route_array = node[detail::encode_key(desc.routes_key)].as_array();
 		if (route_array && !route_array->empty())
 		{
 			for (size_t i = 0; i < route_array->size(); ++i)
-				desc.routes.PushBack();
+				desc.routes.push_back();
 
-			desc.routes.VisitIndexed([this, &route_array](size_t i, auto& d) { Load(TOMLNode(*route_array->get(i)), d); });
+			for (size_t i = 0; i < desc.routes.size(); ++i)
+				Load(TOMLNode(*route_array->get(i)), desc.routes[i]);
 		}
 	}
 
 	void SignalDocument::Load(TOMLNode node, SignalDesc& desc)
 	{
-		LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
 
 		detail::SignalBindingType type = detail::SignalBindingType::Key;
 		if (auto v = node[detail::encode_key(desc.modifier_key)].value<int64_t>())
@@ -524,7 +526,7 @@ namespace oly::editor
 		{ \
 			T##Desc subdesc; \
 			Load(node, subdesc); \
-			desc.variant.Set(std::move(subdesc)); \
+			desc.variant.set(std::move(subdesc)); \
 			break; \
 		}
 
@@ -536,99 +538,101 @@ namespace oly::editor
 
 	void SignalDocument::Load(TOMLNode node, RouteDesc& desc)
 	{
-		LOAD_FIELDS(ROUTE_GENERATOR);
+		IMTK_LOAD_FIELDS(ROUTE_GENERATOR);
 	}
 
 	void SignalDocument::Load(TOMLNode node, KeyDesc& desc)
 	{
-		LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 
 	void SignalDocument::Load(TOMLNode node, MouseButtonDesc& desc)
 	{
-		LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 
 	void SignalDocument::Load(TOMLNode node, GamepadButtonDesc& desc)
 	{
-		LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, GamepadAxis1DDesc& desc)
 	{
-		LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, GamepadAxis2DDesc& desc)
 	{
-		LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, CursorPosDesc& desc)
 	{
-		LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, ScrollDesc& desc)
 	{
-		LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, Modifier0dDesc& desc)
 	{
-		LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, Modifier1dDesc& desc)
 	{
-		LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, Modifier2dDesc& desc)
 	{
-		LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
 	void SignalDocument::Load(TOMLNode node, ModifierBaseDesc& desc)
 	{
-		LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
+		IMTK_LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 
 	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
 	{
-		toml::table subtable;
-		desc.signals.Visit([this, &subtable](SignalDesc& desc) { Dump(subtable, desc); });
-		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(subtable));
+		toml::array signal_array;
+		for (auto& d : desc.signals)
+			Dump(signal_array.emplace_back<toml::table>(), d);
+		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(signal_array));
 
-		subtable.clear();
-		desc.routes.Visit([this, &subtable](RouteDesc& desc) { Dump(subtable, desc); });
-		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(subtable));
+		toml::array route_array;
+		for (auto& d : desc.routes)
+			Dump(route_array.emplace_back<toml::table>(), d);
+		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(route_array));
 	}
 
 	void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
 	{
-		DUMP_FIELDS(SIGNAL_PARTIAL_GENERATOR);
-		desc.variant.Visit([this, &table](auto& desc) { Dump(table, desc); });
+		IMTK_DUMP_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+		desc.variant.visit([this, &table](auto& desc) { Dump(table, desc); });
 	}
 
 	void SignalDocument::Dump(toml::table& table, RouteDesc& desc)
 	{
-		DUMP_FIELDS(ROUTE_GENERATOR);
+		IMTK_DUMP_FIELDS(ROUTE_GENERATOR);
 	}
 
 	void SignalDocument::Dump(toml::table& table, KeyDesc& desc)
 	{
-		DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -637,7 +641,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, MouseButtonDesc& desc)
 	{
-		DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -646,7 +650,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, GamepadButtonDesc& desc)
 	{
-		DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -655,7 +659,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, GamepadAxis1DDesc& desc)
 	{
-		DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -664,7 +668,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, GamepadAxis2DDesc& desc)
 	{
-		DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -673,7 +677,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, CursorPosDesc& desc)
 	{
-		DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -682,7 +686,7 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, ScrollDesc& desc)
 	{
-		DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.modifier);
@@ -691,24 +695,24 @@ namespace oly::editor
 	
 	void SignalDocument::Dump(toml::table& table, Modifier0dDesc& desc)
 	{
-		DUMP_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
 		Dump(table, desc.base);
 	}
 	
 	void SignalDocument::Dump(toml::table& table, Modifier1dDesc& desc)
 	{
-		DUMP_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
 		Dump(table, desc.base);
 	}
 	
 	void SignalDocument::Dump(toml::table& table, Modifier2dDesc& desc)
 	{
-		DUMP_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
 		Dump(table, desc.base);
 	}
 	
 	void SignalDocument::Dump(toml::table& table, ModifierBaseDesc& desc)
 	{
-		DUMP_FIELDS(MODIFIER_BASE_GENERATOR);
+		IMTK_DUMP_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 }

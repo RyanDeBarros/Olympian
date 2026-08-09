@@ -7,8 +7,6 @@
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
 
-#include "desc/Descriptors.h"
-
 #include "util/FixedArray.h"
 
 #include <sstream>
@@ -32,7 +30,7 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index < ref_vector.size())
@@ -59,7 +57,7 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index <= ref_vector.size())
@@ -111,7 +109,7 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index <= ref_vector.size())
@@ -137,7 +135,7 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index < ref_vector.size())
@@ -190,7 +188,7 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (src_index < ref_vector.size() && dst_index < ref_vector.size())
@@ -212,7 +210,7 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (src_index < ref_vector.size() && dst_index < ref_vector.size())
@@ -261,7 +259,7 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -292,7 +290,7 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -335,7 +333,7 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	struct DynamicVectorDescDeleteAction : public UndoAction
 	{
-		using ListType = VectorDesc<ElementType>;
+		using ListType = imtk::desc::vector<ElementType>;
 
 		imtk::datapath list_path;
 		size_t delete_index;
@@ -349,13 +347,13 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (delete_index < ref_vector.Size())
+				if (delete_index < ref_vector.size())
 				{
 					deleted_element = std::move(ref_vector[delete_index]);
-					ref_vector.Remove(delete_index);
+					ref_vector.remove(delete_index);
 					success = true;
 				}
 			}
@@ -376,12 +374,12 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (delete_index <= ref_vector.Size())
+				if (delete_index <= ref_vector.size())
 				{
-					ref_vector.Insert(delete_index, CloneDescData(deleted_element));
+					ref_vector.insert(delete_index, imtk::desc::clone_data(deleted_element));
 					success = true;
 				}
 			}
@@ -414,7 +412,7 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	struct DynamicVectorDescInsertAction : public UndoAction
 	{
-		using ListType = VectorDesc<ElementType>;
+		using ListType = imtk::desc::vector<ElementType>;
 
 		imtk::datapath list_path;
 		size_t insert_index;
@@ -428,12 +426,12 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (insert_index <= ref_vector.Size())
+				if (insert_index <= ref_vector.size())
 				{
-					ref_vector.Insert(insert_index, CloneDescData(inserted_element));
+					ref_vector.insert(insert_index, imtk::desc::clone_data(inserted_element));
 					success = true;
 				}
 			}
@@ -454,13 +452,13 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (insert_index < ref_vector.Size())
+				if (insert_index < ref_vector.size())
 				{
 					inserted_element = std::move(ref_vector[insert_index]);
-					ref_vector.Remove(insert_index);
+					ref_vector.remove(insert_index);
 					success = true;
 				}
 			}
@@ -493,7 +491,7 @@ namespace oly::editor
 	template<typename ElementType>
 	struct DynamicVectorDescMoveAction : public UndoAction
 	{
-		using ListType = VectorDesc<ElementType>;
+		using ListType = imtk::desc::vector<ElementType>;
 
 		imtk::datapath list_path;
 		size_t src_index;
@@ -507,14 +505,14 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (src_index < ref_vector.Size() && dst_index < ref_vector.Size())
+				if (std::max(src_index, dst_index) < ref_vector.size())
 				{
 					auto moved = std::move(ref_vector[src_index]);
-					ref_vector.Remove(src_index);
-					ref_vector.Insert(dst_index, std::move(moved));
+					ref_vector.remove(src_index);
+					ref_vector.insert(dst_index, std::move(moved));
 					success = true;
 				}
 			}
@@ -529,14 +527,14 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
-				if (src_index < ref_vector.Size() && dst_index < ref_vector.Size())
+				if (std::max(src_index, dst_index) < ref_vector.size())
 				{
 					auto moved = std::move(ref_vector[dst_index]);
-					ref_vector.Remove(dst_index);
-					ref_vector.Insert(src_index, std::move(moved));
+					ref_vector.remove(dst_index);
+					ref_vector.insert(src_index, std::move(moved));
 					success = true;
 				}
 			}
@@ -563,7 +561,7 @@ namespace oly::editor
 	template<typename ElementType>
 	struct DynamicVectorDescResizeAction : public UndoAction
 	{
-		using ListType = VectorDesc<ElementType>;
+		using ListType = imtk::desc::vector<ElementType>;
 
 		imtk::datapath list_path;
 		size_t initial_size;
@@ -578,22 +576,22 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
 				if (initial_size < final_size)
 				{
-					ref_vector.Resize(final_size);
+					ref_vector.resize(final_size);
 					for (size_t i = initial_size; i < final_size; ++i)
-						ref_vector[i].CopyData(erased[i - initial_size]);
+						ref_vector[i].copy_data(erased[i - initial_size]);
 				}
 				else if (initial_size > final_size)
 				{
-					ref_vector.Resize(initial_size);
+					ref_vector.resize(initial_size);
 					for (size_t i = final_size; i < initial_size; ++i)
-						erased[i - final_size].CopyData(ref_vector[i]);
-					ref_vector.Resize(final_size);
+						erased[i - final_size].copy_data(ref_vector[i]);
+					ref_vector.resize(final_size);
 				}
 
 				success = true;
@@ -609,22 +607,22 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(list_path, typeid(ListType)))
+			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
 				if (initial_size < final_size)
 				{
-					ref_vector.Resize(final_size);
+					ref_vector.resize(final_size);
 					for (size_t i = initial_size; i < final_size; ++i)
-						erased[i - initial_size].CopyData(ref_vector[i]);
-					ref_vector.Resize(initial_size);
+						erased[i - initial_size].copy_data(ref_vector[i]);
+					ref_vector.resize(initial_size);
 				}
 				else if (initial_size > final_size)
 				{
-					ref_vector.Resize(initial_size);
+					ref_vector.resize(initial_size);
 					for (size_t i = final_size; i < initial_size; ++i)
-						ref_vector[i].CopyData(erased[i - final_size]);
+						ref_vector[i].copy_data(erased[i - final_size]);
 				}
 
 				success = true;
@@ -642,6 +640,8 @@ namespace oly::editor
 			return sizeof(*this) + erased.length() * sizeof(ElementType);
 		}
 	};
+
+	// TODO v9.3 use imtk::desc::... and imtk::field::... to differentiate between utilities, instead of this convoluted name
 
 	template<typename ElementType>
 	void ExecuteDynamicVectorDescResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)

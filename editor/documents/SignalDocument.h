@@ -38,8 +38,8 @@ namespace oly::editor
 		IDoubleDescriptor& GetDoubleDescriptor() override;
 
 	private:
-		void Draw(VectorDesc<SignalDesc>& desc);
-		void Draw(VectorDesc<RouteDesc>& desc);
+		void Draw(imtk::desc::vector<SignalDesc>& desc);
+		void Draw(imtk::desc::vector<RouteDesc>& desc);
 		Counter<std::string> GetSignalIDCounter() const;
 		Counter<std::string> GetRouteIDCounter() const;
 		Counter<std::string> GetIDCounter() const;

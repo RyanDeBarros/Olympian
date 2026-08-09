@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/PositioningMode.h"
@@ -22,7 +21,7 @@ namespace oly::editor
 
 	struct GlyphDesc
 	{
-		DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
 
 		StringField codepoint;
 		StringField texture_file;
@@ -47,13 +46,13 @@ namespace oly::editor
 
 	struct RasterFontDesc
 	{
-		DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
 
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> space_advance_width;
 		FloatField<MakeOpt<float>(), MakeOpt<float>()> line_height;
 		Vec2Field<MakeOpt(0.f), MakeOpt<float>()> font_scale;
 		EnumField<detail::StorageMode> storage;
-		VectorDesc<GlyphDesc> glyphs;
+		imtk::desc::vector<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;
 
 		RasterFontDesc(imtk::datapath_link link = {});

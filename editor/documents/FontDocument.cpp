@@ -146,7 +146,7 @@ namespace oly::editor
 				
 			if (auto form = Form())
 			{
-				if (!_desc.scratch.font_atlases.Empty())
+				if (!_desc.scratch.font_atlases.empty())
 					Draw(_desc.scratch.font_atlases[_atlas_slots.active_index]);
 
 				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
@@ -180,7 +180,7 @@ namespace oly::editor
 
 	void FontDocument::Draw(FontFaceDesc& desc)
 	{
-		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
 		struct CodepointHash
 		{
@@ -210,7 +210,7 @@ namespace oly::editor
 			counter.increment({ k.pair.edits[0].buffer, k.pair.edits[1].buffer });
 		}
 
-		for (size_t i = 0; i < desc.kerning.Size(); ++i)
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			auto& k = desc.kerning[i];
 			if (k.distance.edit.buffer != k.distance.def || k.pair.edits[0].buffer != k.pair.def[0] || k.pair.edits[1].buffer != k.pair.def[1])
@@ -278,7 +278,7 @@ namespace oly::editor
 			return gui::InlineWidget::Draw(components);
 		}, desc.kerning_ui_state);
 
-		for (size_t i = 0; i < desc.kerning.Size(); ++i)
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			KerningDesc& k = desc.kerning[i];
 			if (gui::PropertyGrid::Reset::Activated(1 + i))
@@ -299,29 +299,27 @@ namespace oly::editor
 				original.distance.value = std::move(k.distance.edit.original);
 				original.pair.value[0] = std::move(k.pair.edits[0].original);
 				original.pair.value[1] = std::move(k.pair.edits[1].original);
-				PushDescriptorSetAction(k.link.compute_path(), std::move(original), CloneDescData(k));
+				PushDescriptorSetAction(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}
 	}
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
-		DRAW_FIELD(font_size);
+		desc.font_size.draw();
 		if (gui::PropertyGrid::DirtyRow())
 			DestroyFont();
 
-		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
+		IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
 		if (auto subform = Subform("Common buffer"))
 		{
-			DRAW_FIELD(use_common_buffer_preset);
-
+			desc.use_common_buffer_preset.draw();
 			bool preset = desc.use_common_buffer_preset.value;
 			
 			if (auto d = imtk::disabled(!preset))
 			{
-				DRAW_FIELD(common_buffer_preset);
-
+				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
 					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
@@ -334,9 +332,7 @@ namespace oly::editor
 			}
 
 			if (auto d = imtk::disabled(preset))
-			{
-				DRAW_FIELD(common_buffer);
-			}
+				desc.common_buffer.draw();
 		}
 	}
 
@@ -349,40 +345,40 @@ namespace oly::editor
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
-				desc.font_atlases.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.font_atlases.Back());
+				desc.font_atlases.push_back();
+				Load(TOMLNode(*array->get(i)), desc.font_atlases.back());
 			}
 		}
 		else
 		{
-			desc.font_atlases.PushBack();
-			Load(TOMLNode(), desc.font_atlases.Back());
+			desc.font_atlases.push_back();
+			Load(TOMLNode(), desc.font_atlases.back());
 		}
 	}
 
 	void FontDocument::Load(TOMLNode node, FontFaceDesc& desc)
 	{
-		LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
 		TOMLArray array = node[detail::encode_key(desc.kerning_key)].as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
-				desc.kerning.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.kerning.Back());
+				desc.kerning.push_back();
+				Load(TOMLNode(*array->get(i)), desc.kerning.back());
 			}
 		}
 	}
 
 	void FontDocument::Load(TOMLNode node, KerningDesc& desc)
 	{
-		LOAD_FIELDS(KERNING_GENERATOR);
+		IMTK_LOAD_FIELDS(KERNING_GENERATOR);
 	}
 
 	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
 	{
-		LOAD_FIELDS(FONT_ATLAS_GENERATOR);
+		IMTK_LOAD_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FullFontDesc& desc)
@@ -393,36 +389,28 @@ namespace oly::editor
 
 		toml::array array;
 		for (auto& d : desc.font_atlases)
-		{
-			toml::table subtable;
-			Dump(subtable, d);
-			array.push_back(std::move(subtable));
-		}
+			Dump(array.emplace_back<toml::table>(), d);
 		table.insert_or_assign(detail::encode_key(desc.font_atlas_key), std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
 	{
-		DUMP_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 		
 		toml::array array;
 		for (auto& d : desc.kerning)
-		{
-			toml::table subtable;
-			Dump(subtable, d);
-			array.push_back(std::move(subtable));
-		}
+			Dump(array.emplace_back<toml::table>(), d);
 		table.insert_or_assign(detail::encode_key(desc.kerning_key), std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, KerningDesc& desc)
 	{
-		DUMP_FIELDS(KERNING_GENERATOR);
+		IMTK_DUMP_FIELDS(KERNING_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
 	{
-		DUMP_FIELDS(FONT_ATLAS_GENERATOR);
+		IMTK_DUMP_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 
 	struct BriefDescPrinter

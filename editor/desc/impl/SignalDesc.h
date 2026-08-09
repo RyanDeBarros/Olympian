@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
@@ -19,7 +18,7 @@ namespace oly::editor
 
 	struct ModifierBaseDesc
 	{
-		DESCRIPTOR_BODY(ModifierBaseDesc, MODIFIER_BASE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ModifierBaseDesc, MODIFIER_BASE_GENERATOR);
 
 		EnumField<detail::Swizzle> swizzle;
 		Vec3Field<MakeOpt<float>(), MakeOpt<float>()> multiplier;
@@ -37,7 +36,7 @@ namespace oly::editor
 
 	struct Modifier0dDesc
 	{
-		DESCRIPTOR_BODY(Modifier0dDesc, MODIFIER_0D_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(Modifier0dDesc, MODIFIER_0D_GENERATOR);
 
 		ModifierBaseDesc base;
 		EnumField<detail::Axis0dConversion> conversion;
@@ -54,7 +53,7 @@ namespace oly::editor
 
 	struct Modifier1dDesc
 	{
-		DESCRIPTOR_BODY(Modifier1dDesc, MODIFIER_1D_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(Modifier1dDesc, MODIFIER_1D_GENERATOR);
 
 		ModifierBaseDesc base;
 		EnumField<detail::Axis1dConversion> conversion;
@@ -71,7 +70,7 @@ namespace oly::editor
 
 	struct Modifier2dDesc
 	{
-		DESCRIPTOR_BODY(Modifier2dDesc, MODIFIER_2D_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(Modifier2dDesc, MODIFIER_2D_GENERATOR);
 
 		ModifierBaseDesc base;
 		EnumField<detail::Axis2dConversion> conversion;
@@ -93,7 +92,7 @@ namespace oly::editor
 
 	struct KeyDesc
 	{
-		DESCRIPTOR_BODY(KeyDesc, KEY_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(KeyDesc, KEY_GENERATOR);
 
 		DisjointEnumField<detail::KeyInput> key;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
@@ -117,7 +116,7 @@ namespace oly::editor
 
 	struct MouseButtonDesc
 	{
-		DESCRIPTOR_BODY(MouseButtonDesc, MOUSE_BUTTON_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(MouseButtonDesc, MOUSE_BUTTON_GENERATOR);
 
 		DisjointEnumField<detail::MouseButton> button;
 		BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT> required_mods;
@@ -136,7 +135,7 @@ namespace oly::editor
 
 	struct GamepadButtonDesc
 	{
-		DESCRIPTOR_BODY(GamepadButtonDesc, GAMEPAD_BUTTON_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(GamepadButtonDesc, GAMEPAD_BUTTON_GENERATOR);
 
 		DisjointEnumField<GLenum> button;
 		Modifier0dDesc modifier;
@@ -154,7 +153,7 @@ namespace oly::editor
 
 	struct GamepadAxis1DDesc
 	{
-		DESCRIPTOR_BODY(GamepadAxis1DDesc, GAMEPAD_AXIS_1D_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(GamepadAxis1DDesc, GAMEPAD_AXIS_1D_GENERATOR);
 
 		DisjointEnumField<GLenum> axis;
 		Modifier1dDesc modifier;
@@ -173,7 +172,7 @@ namespace oly::editor
 
 	struct GamepadAxis2DDesc
 	{
-		DESCRIPTOR_BODY(GamepadAxis2DDesc, GAMEPAD_AXIS_2D_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(GamepadAxis2DDesc, GAMEPAD_AXIS_2D_GENERATOR);
 
 		EnumField<detail::GamepadAxis2D> axis;
 		Modifier2dDesc modifier;
@@ -190,7 +189,7 @@ namespace oly::editor
 
 	struct CursorPosDesc
 	{
-		DESCRIPTOR_BODY(CursorPosDesc, CURSOR_POS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(CursorPosDesc, CURSOR_POS_GENERATOR);
 
 		Modifier2dDesc modifier;
 
@@ -205,7 +204,7 @@ namespace oly::editor
 
 	struct ScrollDesc
 	{
-		DESCRIPTOR_BODY(ScrollDesc, SCROLL_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ScrollDesc, SCROLL_GENERATOR);
 		
 		Modifier2dDesc modifier;
 
@@ -231,11 +230,11 @@ namespace oly::editor
 
 	struct SignalDesc
 	{
-		DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
 
 		StringField id;
 		EnumField<detail::SignalBindingType> binding;
-		VariantDesc<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
+		imtk::desc::variant<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc> variant;
 		static const detail::Key modifier_key;
 
 		SignalDesc(imtk::datapath_link link = {});
@@ -247,7 +246,7 @@ namespace oly::editor
 
 	struct RouteDesc
 	{
-		DESCRIPTOR_BODY(RouteDesc, ROUTE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(RouteDesc, ROUTE_GENERATOR);
 
 		StringField id;
 		StringVectorField signals;
@@ -261,11 +260,11 @@ namespace oly::editor
 
 	struct SignalFullDesc
 	{
-		DESCRIPTOR_BODY(SignalFullDesc, SIGNAL_FULL_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(SignalFullDesc, SIGNAL_FULL_GENERATOR);
 
-		VectorDesc<SignalDesc> signals;
+		imtk::desc::vector<SignalDesc> signals;
 		static const detail::Key signals_key;
-		VectorDesc<RouteDesc> routes;
+		imtk::desc::vector<RouteDesc> routes;
 		static const detail::Key routes_key;
 
 		SignalFullDesc(imtk::datapath_link link = {});

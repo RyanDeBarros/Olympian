@@ -13,7 +13,7 @@ namespace oly::editor
 
 	struct UndoHistorySettingsDesc
 	{
-		DESCRIPTOR_BODY(UndoHistorySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(UndoHistorySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
 
 		IntField<MakeOpt(1), MakeOpt<int>()> count_limit;
 		IntField<MakeOpt(1), MakeOpt<int>()> size_limit;
@@ -30,7 +30,7 @@ namespace oly::editor
 
 	struct EditSettingsDesc
 	{
-		DESCRIPTOR_BODY(EditSettingsDesc, EDIT_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(EditSettingsDesc, EDIT_SETTINGS_GENERATOR);
 
 		UndoHistorySettingsDesc undo_history;
 		static const detail::Key undo_history_key;
@@ -43,7 +43,7 @@ namespace oly::editor
 
 	struct ContentBrowserSettingsDesc
 	{
-		DESCRIPTOR_BODY(ContentBrowserSettingsDesc, CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(ContentBrowserSettingsDesc, CONTENT_BROWSER_SETTINGS_GENERATOR);
 
 		IntField<MakeOpt(1), MakeOpt<int>()> folder_history_limit;
 
@@ -55,7 +55,7 @@ namespace oly::editor
 
 	struct TreeViewAdvancedSettingsDesc
 	{
-		DESCRIPTOR_BODY(TreeViewAdvancedSettingsDesc, TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TreeViewAdvancedSettingsDesc, TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 
 		FloatField<MakeOpt(0.1f), MakeOpt<float>()> analysis_interval;
 
@@ -69,7 +69,7 @@ namespace oly::editor
 
 	struct TreeViewSettingsDesc
 	{
-		DESCRIPTOR_BODY(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
 
 		TreeViewAdvancedSettingsDesc advanced;
 		static const detail::Key advanced_key;
@@ -83,7 +83,7 @@ namespace oly::editor
 
 	struct FilesystemSettingsDesc
 	{
-		DESCRIPTOR_BODY(FilesystemSettingsDesc, FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FilesystemSettingsDesc, FILESYSTEM_SETTINGS_GENERATOR);
 
 		IntField<MakeOpt(1), MakeOpt<int>()> trash_limit;
 		EnumField<MemoryUnit> trash_limit_unit;
@@ -101,7 +101,7 @@ namespace oly::editor
 
 	struct PreferencesDesc
 	{
-		DESCRIPTOR_BODY(PreferencesDesc, PREFERENCES_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(PreferencesDesc, PREFERENCES_GENERATOR);
 
 		EditSettingsDesc edit;
 		static const detail::Key edit_key;

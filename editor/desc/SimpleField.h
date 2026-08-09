@@ -29,12 +29,12 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			Serializer<T>{}.Load(value, node[detail::encode_key(key)]);
+			Serializer<T>{}.load(value, node[detail::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table)
 		{
-			table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value));
+			table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value));
 		}
 
 		const T& operator*() const

@@ -12,6 +12,8 @@
 
 #include <set>
 
+// TODO v9.3 move serializer (all of desc - without impl/) to imtk
+
 namespace oly::editor
 {
 	template<typename T>
@@ -20,7 +22,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<bool>
 	{
-		bool Load(bool& obj, TOMLNode node) const
+		bool load(bool& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<bool>())
 			{
@@ -31,7 +33,7 @@ namespace oly::editor
 				return false;
 		}
 
-		bool Dump(const bool obj) const
+		bool dump(const bool obj) const
 		{
 			return obj;
 		}
@@ -40,7 +42,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<int>
 	{
-		bool Load(int& obj, TOMLNode node) const
+		bool load(int& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<int64_t>())
 			{
@@ -51,7 +53,7 @@ namespace oly::editor
 				return false;
 		}
 
-		int64_t Dump(const int obj) const
+		int64_t dump(const int obj) const
 		{
 			return static_cast<int64_t>(obj);
 		}
@@ -60,7 +62,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<int64_t>
 	{
-		bool Load(int64_t& obj, TOMLNode node) const
+		bool load(int64_t& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<int64_t>())
 			{
@@ -71,7 +73,7 @@ namespace oly::editor
 				return false;
 		}
 
-		int64_t Dump(const int64_t obj) const
+		int64_t dump(const int64_t obj) const
 		{
 			return obj;
 		}
@@ -80,7 +82,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<unsigned int>
 	{
-		bool Load(unsigned int& obj, TOMLNode node) const
+		bool load(unsigned int& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<int64_t>())
 			{
@@ -91,7 +93,7 @@ namespace oly::editor
 				return false;
 		}
 
-		int64_t Dump(const unsigned int obj) const
+		int64_t dump(const unsigned int obj) const
 		{
 			return static_cast<int64_t>(obj);
 		}
@@ -100,7 +102,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<unsigned char>
 	{
-		bool Load(unsigned char& obj, TOMLNode node) const
+		bool load(unsigned char& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<int64_t>())
 			{
@@ -111,7 +113,7 @@ namespace oly::editor
 				return false;
 		}
 
-		int64_t Dump(const unsigned char obj) const
+		int64_t dump(const unsigned char obj) const
 		{
 			return static_cast<int64_t>(obj);
 		}
@@ -120,7 +122,7 @@ namespace oly::editor
 	template<Enum E>
 	struct Serializer<E>
 	{
-		bool Load(E& obj, TOMLNode node) const
+		bool load(E& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<int64_t>())
 			{
@@ -131,7 +133,7 @@ namespace oly::editor
 				return false;
 		}
 
-		int64_t Dump(const E obj) const
+		int64_t dump(const E obj) const
 		{
 			return static_cast<int64_t>(obj);
 		}
@@ -140,7 +142,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<float>
 	{
-		bool Load(float& obj, TOMLNode node) const
+		bool load(float& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<double>())
 			{
@@ -151,7 +153,7 @@ namespace oly::editor
 				return false;
 		}
 
-		double Dump(const float obj) const
+		double dump(const float obj) const
 		{
 			return static_cast<double>(obj);
 		}
@@ -160,7 +162,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<double>
 	{
-		bool Load(double& obj, TOMLNode node) const
+		bool load(double& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<double>())
 			{
@@ -171,7 +173,7 @@ namespace oly::editor
 				return false;
 		}
 
-		double Dump(const double obj) const
+		double dump(const double obj) const
 		{
 			return obj;
 		}
@@ -180,7 +182,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<std::string>
 	{
-		bool Load(std::string& obj, TOMLNode node) const
+		bool load(std::string& obj, TOMLNode node) const
 		{
 			if (auto v = node.value<std::string>())
 			{
@@ -191,7 +193,7 @@ namespace oly::editor
 				return false;
 		}
 
-		std::string Dump(const std::string& obj) const
+		std::string dump(const std::string& obj) const
 		{
 			return obj;
 		}
@@ -200,25 +202,25 @@ namespace oly::editor
 	template<typename T, glm::length_t L>
 	struct Serializer<glm::vec<L, T>>
 	{
-		bool Load(glm::vec<L, T>& obj, TOMLNode node) const
+		bool load(glm::vec<L, T>& obj, TOMLNode node) const
 		{
 			if (auto arr = node.as_array())
 			{
 				bool fully_loaded = true;
 				for (glm::length_t i = 0; i < glm::min(static_cast<glm::length_t>(arr->size()), L); ++i)
-					fully_loaded &= Serializer<T>{}.Load(obj[i], TOMLNode(*arr->get(i)));
+					fully_loaded &= Serializer<T>{}.load(obj[i], TOMLNode(*arr->get(i)));
 				return fully_loaded;
 			}
 			else
 				return false;
 		}
 
-		toml::array Dump(const glm::vec<L, T> obj) const
+		toml::array dump(const glm::vec<L, T> obj) const
 		{
 			toml::array arr;
 			arr.reserve(L);
 			for (glm::length_t i = 0; i < L; ++i)
-				arr.push_back(Serializer<T>{}.Dump(obj[i]));
+				arr.push_back(Serializer<T>{}.dump(obj[i]));
 			return arr;
 		}
 	};
@@ -226,25 +228,25 @@ namespace oly::editor
 	template<typename T, size_t N>
 	struct Serializer<std::array<T, N>>
 	{
-		bool Load(std::array<T, N>& obj, TOMLNode node) const
+		bool load(std::array<T, N>& obj, TOMLNode node) const
 		{
 			if (auto arr = node.as_array())
 			{
 				bool fully_loaded = true;
 				for (size_t i = 0; i < std::min(arr->size(), N); ++i)
-					fully_loaded &= Serializer<T>{}.Load(obj[i], TOMLNode(*arr->get(i)));
+					fully_loaded &= Serializer<T>{}.load(obj[i], TOMLNode(*arr->get(i)));
 				return fully_loaded;
 			}
 			else
 				return false;
 		}
 
-		toml::array Dump(const std::array<T, N>& obj) const
+		toml::array dump(const std::array<T, N>& obj) const
 		{
 			toml::array arr;
 			arr.reserve(N);
 			for (size_t i = 0; i < N; ++i)
-				arr.push_back(Serializer<T>{}.Dump(obj[i]));
+				arr.push_back(Serializer<T>{}.dump(obj[i]));
 			return arr;
 		}
 	};
@@ -252,7 +254,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<Color4>
 	{
-		bool Load(Color4& obj, TOMLNode node) const
+		bool load(Color4& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
@@ -270,7 +272,7 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const Color4 obj) const
+		toml::array dump(const Color4 obj) const
 		{
 			toml::array arr;
 			arr.reserve(Color4::N);
@@ -283,7 +285,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<Rect>
 	{
-		bool Load(Rect& obj, TOMLNode node) const
+		bool load(Rect& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
@@ -301,7 +303,7 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const Rect obj) const
+		toml::array dump(const Rect obj) const
 		{
 			toml::array arr;
 			arr.reserve(Rect::N);
@@ -314,7 +316,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<UVRect>
 	{
-		bool Load(UVRect& obj, TOMLNode node) const
+		bool load(UVRect& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
@@ -332,7 +334,7 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const UVRect obj) const
+		toml::array dump(const UVRect obj) const
 		{
 			toml::array arr;
 			arr.reserve(UVRect::N);
@@ -345,7 +347,7 @@ namespace oly::editor
 	template<>
 	struct Serializer<TopSidePadding>
 	{
-		bool Load(TopSidePadding& obj, TOMLNode node) const
+		bool load(TopSidePadding& obj, TOMLNode node) const
 		{
 			if (auto array = node.as_array())
 			{
@@ -363,7 +365,7 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const TopSidePadding obj) const
+		toml::array dump(const TopSidePadding obj) const
 		{
 			toml::array arr;
 			arr.reserve(TopSidePadding::N);
@@ -376,7 +378,7 @@ namespace oly::editor
 	template<typename T>
 	struct Serializer<std::vector<T>>
 	{
-		bool Load(std::vector<T>& obj, TOMLNode node) const
+		bool load(std::vector<T>& obj, TOMLNode node) const
 		{
 			if (auto arr = node.as_array())
 			{
@@ -385,7 +387,7 @@ namespace oly::editor
 				for (size_t i = 0; i < arr->size(); ++i)
 				{
 					T el{};
-					if (Serializer<T>{}.Load(el, TOMLNode(*arr->get(i))))
+					if (Serializer<T>{}.load(el, TOMLNode(*arr->get(i))))
 						obj.push_back(std::move(el));
 					else
 						fully_loaded = false;
@@ -396,12 +398,12 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const std::vector<T>& obj) const
+		toml::array dump(const std::vector<T>& obj) const
 		{
 			toml::array arr;
 			arr.reserve(obj.size());
 			for (const T& el : obj)
-				arr.push_back(Serializer<T>{}.Dump(el));
+				arr.push_back(Serializer<T>{}.dump(el));
 			return arr;
 		}
 	};
@@ -409,7 +411,7 @@ namespace oly::editor
 	template<typename T>
 	struct Serializer<std::set<T>>
 	{
-		bool Load(std::set<T>& obj, TOMLNode node) const
+		bool load(std::set<T>& obj, TOMLNode node) const
 		{
 			if (auto arr = node.as_array())
 			{
@@ -418,7 +420,7 @@ namespace oly::editor
 				for (size_t i = 0; i < arr->size(); ++i)
 				{
 					T el{};
-					if (Serializer<T>{}.Load(el, TOMLNode(*arr->get(i))))
+					if (Serializer<T>{}.load(el, TOMLNode(*arr->get(i))))
 						obj.insert(std::move(el));
 					else
 						fully_loaded = false;
@@ -429,12 +431,12 @@ namespace oly::editor
 				return false;
 		}
 
-		toml::array Dump(const std::set<T>& obj) const
+		toml::array dump(const std::set<T>& obj) const
 		{
 			toml::array arr;
 			arr.reserve(obj.size());
 			for (const T& el : obj)
-				arr.push_back(Serializer<T>{}.Dump(el));
+				arr.push_back(Serializer<T>{}.dump(el));
 			return arr;
 		}
 	};
@@ -442,10 +444,10 @@ namespace oly::editor
 	template<>
 	struct Serializer<detail::ResourcePath>
 	{
-		bool Load(detail::ResourcePath& obj, TOMLNode node) const
+		bool load(detail::ResourcePath& obj, TOMLNode node) const
 		{
 			std::string path;
-			if (Serializer<std::string>{}.Load(path, node))
+			if (Serializer<std::string>{}.load(path, node))
 			{
 				obj = std::move(path);
 				return true;
@@ -454,9 +456,9 @@ namespace oly::editor
 				return false;
 		}
 
-		auto Dump(const detail::ResourcePath& obj) const
+		auto dump(const detail::ResourcePath& obj) const
 		{
-			return Serializer<std::string>{}.Dump(obj.get_resource_shorthand());
+			return Serializer<std::string>{}.dump(obj.get_resource_shorthand());
 		}
 	};
 }

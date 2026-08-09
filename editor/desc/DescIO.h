@@ -14,7 +14,6 @@
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
-#include "desc/Descriptors.h"
 
 #include <string>
 
@@ -167,12 +166,12 @@ namespace oly::editor
 
 	public:
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(const imtk::datapath_link& link, const VectorDesc<T>& data,
+		static DrawResult ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
 			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
 			DrawResult result;
 
-			ui_state.DrawListHeader(data.Size());
+			ui_state.DrawListHeader(data.size());
 
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
 				ImGui::SameLine();
@@ -195,12 +194,12 @@ namespace oly::editor
 					break;
 
 				case gui::RowOperation::Type::Resize:
-					if (data.Size() != op.GetSize())
-						ExecuteDynamicVectorDescResizeAction<T>(link.compute_path(), data.Size(), op.GetSize());
+					if (data.size() != op.GetSize())
+						ExecuteDynamicVectorDescResizeAction<T>(link.compute_path(), data.size(), op.GetSize());
 					break;
 
 				case gui::RowOperation::Type::PushBack:
-					ExecuteDynamicVectorDescInsertAction<T, Printer>(link.compute_path(), data.Size());
+					ExecuteDynamicVectorDescInsertAction<T, Printer>(link.compute_path(), data.size());
 					break;
 				}
 			});
@@ -255,12 +254,12 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, const VectorDesc<T>& data, const std::vector<T>& def,
+		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
 			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			if (data.Size() != def.size())
+			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
 			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult

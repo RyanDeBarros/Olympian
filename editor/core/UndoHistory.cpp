@@ -64,7 +64,7 @@ namespace oly::editor
 				_redo.push_back(std::move(action));
 
 				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() + 1 == *_clean_marker))
-					ActiveDocument::Get().QueryDirty();
+					ActiveDocument::Get().query_dirty();
 			}
 			else
 			{
@@ -100,7 +100,7 @@ namespace oly::editor
 				_undo.push_back(std::move(action));
 
 				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() == *_clean_marker + 1))
-					ActiveDocument::Get().QueryDirty();
+					ActiveDocument::Get().query_dirty();
 			}
 			else
 			{

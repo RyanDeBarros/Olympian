@@ -99,12 +99,12 @@ namespace oly::editor
 
 	void FontFamilyDocument::Draw(FontStyleDesc& desc)
 	{
-		DRAW_FIELDS(STYLE_GENERATOR);
+		IMTK_DRAW_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)
 	{
-		desc.styles.Clear();
+		desc.styles.clear();
 
 		if (auto table = node[detail::encode_key(desc.styles_key)].as_table())
 		{
@@ -118,7 +118,7 @@ namespace oly::editor
 
 	void FontFamilyDocument::Load(TOMLNode node, FontStyleDesc& desc)
 	{
-		LOAD_FIELDS(STYLE_GENERATOR);
+		IMTK_LOAD_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Dump(toml::table& table, FontFamilyDesc& desc)
@@ -135,6 +135,6 @@ namespace oly::editor
 
 	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)
 	{
-		DUMP_FIELDS(STYLE_GENERATOR);
+		IMTK_DUMP_FIELDS(STYLE_GENERATOR);
 	}
 }

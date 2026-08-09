@@ -14,80 +14,6 @@
 
 namespace oly::editor
 {
-#define DRAW_FIELD(field) desc.field.Draw();
-#define DRAW_FIELDS(GENERATOR) GENERATOR(DRAW_FIELD);
-
-#define LOAD_FIELD(field) desc.field.Load(node);
-#define LOAD_FIELDS(GENERATOR) GENERATOR(LOAD_FIELD)
-
-#define DUMP_FIELD(field) desc.field.Dump(table);
-#define DUMP_FIELDS(GENERATOR) GENERATOR(DUMP_FIELD)
-
-	namespace internal
-	{
-		template<typename T>
-		void PrintDescPath(std::ostream& os, imtk::datapath_view path, const char* name, const T& field)
-		{
-			if constexpr (requires(T t, std::ostream os, imtk::datapath_view path) { t.PrintPath(os, path); })
-			{
-				os << name << ".";
-				if (path.empty())
-					os << "<error>";
-				else
-					field.PrintPath(os, path);
-			}
-			else
-				os << name;
-		}
-	}
-
-#define _SUBPATH_ENUM_ENTRY(field) _E_##field,
-#define _SUBPATH_STRUCT_ENTRY(field) static constexpr imtk::datapath::step field = imtk::datapath::step(_E_##field);
-#define _SUBPATH_PATH_GET(field) case _E_##field: return field.PathGet(path.next(), type);
-#define _SUBPATH_PRINT_PATH(field) case _E_##field: internal::PrintDescPath(os, path.next(), #field, field); break;
-#define _SUBPATH_QUERY_DIRTY(field) if (field.QueryDirty(disk.field)) return true;
-#define _SUBPATH_COPY_DATA(field) field.CopyData(o.field);
-	// TODO v9.3 make note that DESCRIPTOR_BODY() must be the first thing in the descriptor class definition, or at least before the generator members are declared - once moved to imtk
-#define DESCRIPTOR_BODY(Klass, GENERATOR) \
-		public: imtk::datapath_link link; \
-		private: enum : int { GENERATOR(_SUBPATH_ENUM_ENTRY) }; \
-		public: struct { GENERATOR(_SUBPATH_STRUCT_ENTRY) } subpaths; \
-		void* PathGet(imtk::datapath_view path, std::type_index type) \
-		{ \
-			if (path.empty()) \
-				return typeid(decltype(*this)) == type ? static_cast<void*>(this) : nullptr; \
-			switch (path.step()) \
-			{ \
-				GENERATOR(_SUBPATH_PATH_GET); \
-			default: \
-				return nullptr; \
-			} \
-		} \
-		void PrintPath(std::ostream& os, imtk::datapath_view path) const \
-		{ \
-			if (path.empty()) \
-				os << "<error>"; \
-			else \
-			{ \
-				switch (path.step()) \
-				{ \
-					GENERATOR(_SUBPATH_PRINT_PATH); \
-				default: \
-					os << "<error>"; \
-				} \
-			} \
-		} \
-		bool QueryDirty(const Klass& disk) const { GENERATOR(_SUBPATH_QUERY_DIRTY); return false; } \
-		void CopyData(const Klass& o) { GENERATOR(_SUBPATH_COPY_DATA); }
-
-	template<typename Desc>
-	inline Desc CloneDescData(const Desc& desc)
-	{
-		Desc copy;
-		copy.CopyData(desc);
-		return copy;
-	}
-
 	extern detail::Key NullKey();
 
 	template<typename T>
@@ -101,37 +27,37 @@ namespace oly::editor
 
 		PrimitiveField(imtk::datapath_link link, T def, detail::Key key, const char* label) : link(std::move(link)), def(def), value(def), key(key), label(label) {}
 
-		void CopyData(const PrimitiveField& o)
+		void copy_data(const PrimitiveField& o)
 		{
 			value = o.value;
 		}
 
-		bool QueryDirty(const PrimitiveField& disk) const
+		bool query_dirty(const PrimitiveField& disk) const
 		{
 			return value != disk.value;
 		}
 
-		void Load(TOMLNode node)
+		void load(TOMLNode node)
 		{
 			value = def;
 			if (key != NullKey())
-				Serializer<T>{}.Load(value, node[detail::encode_key(key)]);
+				Serializer<T>{}.load(value, node[detail::encode_key(key)]);
 			else
-				Serializer<T>{}.Load(value, node);
+				Serializer<T>{}.load(value, node);
 		}
 
-		void Dump(toml::table& table) const
+		void dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value));
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value));
 		}
 
-		void Dump(toml::array& array) const
+		void dump(toml::array& array) const
 		{
-			array.push_back(Serializer<T>{}.Dump(value));
+			array.push_back(Serializer<T>{}.dump(value));
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.empty())
 				return static_cast<void*>(&value);
@@ -144,7 +70,7 @@ namespace oly::editor
 	{
 		using PrimitiveField<bool>::PrimitiveField;
 
-		void Draw()
+		void draw()
 		{
 			const auto initial = value;
 			DescIO::Draw(label, value, def);
@@ -184,9 +110,9 @@ namespace oly::editor
 			return *this;
 		}
 
-		// TODO v9.3 CopyData() for fields that have edit sessions that directly copies edit?
+		// TODO v9.3 copy_data() for fields that have edit sessions that directly copies edit?
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
 			CheckUndoAction();
@@ -220,7 +146,7 @@ namespace oly::editor
 
 		using PrimitiveField<E>::PrimitiveField;
 
-		void Draw()
+		void draw()
 		{
 			const auto initial = this->value;
 			DescIO::Draw(this->label, this->value, this->def);
@@ -254,7 +180,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def);
 			CheckUndoAction();
@@ -297,7 +223,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def);
 			CheckUndoAction();
@@ -340,7 +266,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def);
 			CheckUndoAction();
@@ -383,7 +309,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def);
 			CheckUndoAction();
@@ -426,7 +352,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def);
 			CheckUndoAction();
@@ -455,7 +381,7 @@ namespace oly::editor
 		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
 			: Super(std::move(link), def, key, label), sublabels(sublabels), inline_checkboxes(inline_checkboxes) {}
 
-		void Draw()
+		void draw()
 		{
 			const auto initial = this->value;
 			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N, inline_checkboxes);
@@ -511,7 +437,7 @@ namespace oly::editor
 			return *this;
 		}
 
-		void Draw()
+		void draw()
 		{
 			if (sublabels)
 				DescIO::Draw(this->label, edits.data(), this->def.data(), sublabels, N);
@@ -530,7 +456,7 @@ namespace oly::editor
 			}
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (path.empty())
 				return typeid(decltype(this->value)) == type ? static_cast<void*>(&this->value) : nullptr;
@@ -614,12 +540,12 @@ namespace oly::editor
 			def_index = Index(def);
 		}
 
-		void CopyData(const DisjointEnumField& o)
+		void copy_data(const DisjointEnumField& o)
 		{
 			index = o.index;
 		}
 
-		void Draw()
+		void draw()
 		{
 			const auto initial = index;
 			DescIO::Draw(label, index, def_index, names);
@@ -627,12 +553,12 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), initial, index);
 		}
 
-		void Load(TOMLNode node)
+		void load(TOMLNode node)
 		{
 			index = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
 		}
 		
-		void Dump(toml::table& table) const
+		void dump(toml::table& table) const
 		{
 			table.insert_or_assign(detail::encode_key(key), Value());
 		}
@@ -658,7 +584,7 @@ namespace oly::editor
 			return -1;
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (type == typeid(decltype(index)) && path.empty())
 				return static_cast<void*>(&index);
@@ -666,7 +592,7 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool QueryDirty(const DisjointEnumField<E>& disk) const
+		bool query_dirty(const DisjointEnumField<E>& disk) const
 		{
 			return index != disk.index;
 		}
@@ -712,12 +638,12 @@ namespace oly::editor
 			return *this;
 		}
 
-		void CopyData(const OptionalRangeField& o)
+		void copy_data(const OptionalRangeField& o)
 		{
 			value = o.value;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def, Min, Max);
 			CheckUndoAction();
@@ -729,26 +655,26 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
 		}
 
-		void Load(TOMLNode node)
+		void load(TOMLNode node)
 		{
 			value = def;
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				Serializer<T>{}.Load(value.value, node[detail::encode_key(value_key)]);
-				Serializer<bool>{}.Load(value.has_value, node[detail::encode_key(enable_key)]);
+				Serializer<T>{}.load(value.value, node[detail::encode_key(value_key)]);
+				Serializer<bool>{}.load(value.has_value, node[detail::encode_key(enable_key)]);
 			}
 		}
 
-		void Dump(toml::table& table) const
+		void dump(toml::table& table) const
 		{
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.Dump(value.has_value));
-				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.Dump(value.value));
+				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.dump(value.has_value));
+				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.dump(value.value));
 			}
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.empty())
 				return static_cast<void*>(&value);
@@ -761,7 +687,7 @@ namespace oly::editor
 			CheckUndoAction();
 		}
 
-		bool QueryDirty(const OptionalRangeField& disk) const
+		bool query_dirty(const OptionalRangeField& disk) const
 		{
 			return value != disk.value;
 		}
@@ -815,12 +741,12 @@ namespace oly::editor
 			return *this;
 		}
 
-		void CopyData(const CompactOptionalRangeField& o)
+		void copy_data(const CompactOptionalRangeField& o)
 		{
 			value = o.value;
 		}
 
-		void Draw()
+		void draw()
 		{
 			DescIO::Draw(label, edit, def, Min, Max);
 			CheckUndoAction();
@@ -832,13 +758,13 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
 		}
 
-		void Load(TOMLNode node)
+		void load(TOMLNode node)
 		{
 			value = def;
 			if (key != NullKey())
 			{
 				T temp = def.value;
-				if (Serializer<T>{}.Load(temp, node[detail::encode_key(key)]))
+				if (Serializer<T>{}.load(temp, node[detail::encode_key(key)]))
 				{
 					value.has_value = temp != nullopt;
 					if (value.has_value)
@@ -849,13 +775,13 @@ namespace oly::editor
 			}
 		}
 
-		void Dump(toml::table& table) const
+		void dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.Dump(value.has_value ? value.value : nullopt));
+				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value.has_value ? value.value : nullopt));
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.empty())
 				return static_cast<void*>(&value);
@@ -868,7 +794,7 @@ namespace oly::editor
 			CheckUndoAction();
 		}
 
-		bool QueryDirty(const CompactOptionalRangeField& disk) const
+		bool query_dirty(const CompactOptionalRangeField& disk) const
 		{
 			return value != disk.value;
 		}
@@ -914,23 +840,23 @@ namespace oly::editor
 			SetFlags();
 		}
 
-		void CopyData(const BitsetField& o)
+		void copy_data(const BitsetField& o)
 		{
 			value = o.value;
 		}
 
-		void Draw(const bool (&disabled)[Count])
+		void draw(const bool (&disabled)[Count])
 		{
-			return Draw(static_cast<const bool*>(disabled));
+			return draw(static_cast<const bool*>(disabled));
 		}
 
-		void Draw()
+		void draw()
 		{
-			return Draw(nullptr);
+			return draw(nullptr);
 		}
 
 	private:
-		void Draw(const bool* disabled)
+		void draw(const bool* disabled)
 		{
 			const auto initial = value;
 			SetFlags();
@@ -961,18 +887,18 @@ namespace oly::editor
 		}
 
 	public:
-		void Load(TOMLNode node)
+		void load(TOMLNode node)
 		{
 			value = def;
-			Serializer<E>{}.Load(value, node[detail::encode_key(key)]);
+			Serializer<E>{}.load(value, node[detail::encode_key(key)]);
 		}
 
-		void Dump(toml::table& table) const
+		void dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.Dump(value));
+			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.dump(value));
 		}
 
-		void* PathGet(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
 			if (type == typeid(decltype(value)) && path.empty())
 				return static_cast<void*>(&value);
@@ -980,7 +906,7 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool QueryDirty(const BitsetField<E, Count>& disk) const
+		bool query_dirty(const BitsetField<E, Count>& disk) const
 		{
 			return value != disk.value;
 		}

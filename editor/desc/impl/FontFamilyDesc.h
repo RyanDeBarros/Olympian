@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/FontStyle.h"
 
@@ -13,7 +12,7 @@ namespace oly::editor
 
 	struct FontStyleDesc
 	{
-		DESCRIPTOR_BODY(FontStyleDesc, STYLE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FontStyleDesc, STYLE_GENERATOR);
 
 		StringField font_file;
 		IntField<MakeOpt(0), MakeOpt<int>()> atlas_index;
@@ -26,9 +25,9 @@ namespace oly::editor
 
 	struct FontFamilyDesc
 	{
-		DESCRIPTOR_BODY(FontFamilyDesc, FONT_FAMILY_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FontFamilyDesc, FONT_FAMILY_GENERATOR);
 
-		MapDesc<detail::FontStyleMode, FontStyleDesc> styles;
+		imtk::desc::map<detail::FontStyleMode, FontStyleDesc> styles;
 		static const detail::Key styles_key;
 
 		FontFamilyDesc(imtk::datapath_link link = {});

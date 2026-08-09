@@ -156,7 +156,7 @@ namespace oly::editor
 		imtk::id_scope scope(this);
 
 		if (auto subform = Subform("Advanced"))
-			_desc.scratch.storage.Draw();
+			_desc.scratch.storage.draw();
 
 		if (auto _ = imtk::tab_bar("##Editors"))
 		{
@@ -424,18 +424,18 @@ namespace oly::editor
 				desc.texture.CheckUndoAction();
 			}
 
-			DRAW_FIELD(texture_index);
-			DRAW_FIELD(uvs);
-			DRAW_FIELD(reflection);
-			DRAW_FIELD(rotation);
+			desc.texture_index.draw();
+			desc.uvs.draw();
+			desc.reflection.draw();
+			desc.rotation.draw();
 		}
 	}
 
 	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)
 	{
-		LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
 
-		desc.assignments.map.Clear();
+		desc.assignments.map.clear();
 		if (auto table = node[detail::encode_key(desc.assignments_key)].as_table())
 		{
 			for (auto&& [key, node] : *table)
@@ -448,12 +448,12 @@ namespace oly::editor
 
 	void TilesetDocument::Load(TOMLNode node, TilesetAssignmentDesc& desc)
 	{
-		LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+		IMTK_LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
 	}
 
 	void TilesetDocument::Dump(toml::table& table, TilesetDesc& desc)
 	{
-		DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		for (auto& [config, subdesc] : desc.assignments.map)
@@ -467,7 +467,7 @@ namespace oly::editor
 
 	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)
 	{
-		DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+		IMTK_DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
 	}
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)

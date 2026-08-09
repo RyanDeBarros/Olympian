@@ -26,7 +26,7 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
 			{
 				T& ref = *static_cast<T*>(var);
 				ref = final_value;
@@ -51,7 +51,7 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(path, typeid(T)))
+			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
 			{
 				T& ref = *static_cast<T*>(var);
 				ref = initial_value;
@@ -100,10 +100,10 @@ namespace oly::editor
 		bool Forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(path, typeid(Desc)))
+			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
 			{
 				Desc& ref = *static_cast<Desc*>(var);
-				ref.CopyData(final_value);
+				ref.copy_data(final_value);
 				success = true;
 			}
 
@@ -125,10 +125,10 @@ namespace oly::editor
 		bool Backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().PathGet(path, typeid(Desc)))
+			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
 			{
 				Desc& ref = *static_cast<Desc*>(var);
-				ref.CopyData(initial_value);
+				ref.copy_data(initial_value);
 				success = true;
 			}
 

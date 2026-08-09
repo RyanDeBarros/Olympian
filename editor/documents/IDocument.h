@@ -44,8 +44,8 @@ namespace oly::editor
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 
-		void* PathGet(imtk::datapath_view path, std::type_index type);
-		void PrintPath(std::ostream& os, imtk::datapath_view path) const;
+		void* resolve(imtk::datapath_view path, std::type_index type);
+		void describe(std::ostream& os, imtk::datapath_view path) const;
 		std::string PathString(imtk::datapath_view path) const;
 		void on_last_process_frame() override;
 
@@ -56,7 +56,7 @@ namespace oly::editor
 		void MarkDirty();
 		void MarkClean();
 		bool IsDirty() const;
-		void QueryDirty();
+		void query_dirty();
 
 		void Undo();
 		void Redo();

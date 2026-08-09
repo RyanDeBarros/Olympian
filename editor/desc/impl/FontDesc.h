@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
@@ -14,7 +13,7 @@ namespace oly::editor
 
 	struct KerningDesc
 	{
-		DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
 
 		StringArrayField<2> pair;
 		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
@@ -33,10 +32,10 @@ namespace oly::editor
 
 	struct FontFaceDesc
 	{
-		DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
 
 		EnumField<detail::StorageMode> storage;
-		VectorDesc<KerningDesc> kerning;
+		imtk::desc::vector<KerningDesc> kerning;
 		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
@@ -61,7 +60,7 @@ namespace oly::editor
 
 	struct FontAtlasDesc
 	{
-		DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
 
 		FloatField<MakeOpt(1.f), MakeOpt<float>()> font_size;
 		EnumField<detail::StorageMode> storage;
@@ -82,11 +81,11 @@ namespace oly::editor
 
 	struct FullFontDesc
 	{
-		DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
 
 		FontFaceDesc font_face;
 		static const detail::Key font_face_key;
-		VectorDesc<FontAtlasDesc> font_atlases;
+		imtk::desc::vector<FontAtlasDesc> font_atlases;
 		static const detail::Key font_atlas_key;
 
 		FullFontDesc(imtk::datapath_link link = {});

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/SpritesheetParamType.h"
 #include "definitions/enums/StorageMode.h"
@@ -30,7 +29,7 @@ namespace oly::editor
 
 	struct SpritesheetDesc
 	{
-		DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
 
 		EnumField<detail::SpritesheetParamType> col_type;
 		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
@@ -60,7 +59,7 @@ namespace oly::editor
 
 	struct BaseTextureDesc
 	{
-		DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
 
 		DisjointEnumField<GLenum> min_filter;
 		DisjointEnumField<GLenum> mag_filter;
@@ -82,7 +81,7 @@ namespace oly::editor
 
 	struct RasterTextureDesc
 	{
-		DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
 
 		BaseTextureDesc base;
 		BoolField generate_mipmaps;
@@ -106,7 +105,7 @@ namespace oly::editor
 
 	struct VectorTextureDesc
 	{
-		DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
 
 		BaseTextureDesc base;
 		EnumField<detail::SVGMipmapGenerationMode> generate_mipmaps;
@@ -125,9 +124,9 @@ namespace oly::editor
 
 	struct TextureVariantDesc
 	{
-		DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
 
-		VariantDesc<VectorDesc<RasterTextureDesc>, VectorDesc<VectorTextureDesc>> variant;
+		imtk::desc::variant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
 		TextureVariantDesc(imtk::datapath_link link = {});
@@ -140,15 +139,13 @@ namespace oly::editor
 
 		auto Visit(size_t i, auto&& visitor)
 		{
-			return variant.Visit([&visitor, i](auto& desc) {
+			return variant.visit([&visitor, i](auto& desc) {
 				using T = std::invoke_result_t<decltype(visitor), decltype(desc[i])>;
 				if constexpr (std::is_same_v<T, void>)
-				{
 					return visitor(desc[i]);
-				}
 				else
 				{
-					if (i < desc.Size())
+					if (i < desc.size())
 						return std::optional<T>(visitor(desc[i]));
 					else
 						return std::optional<T>(std::nullopt);
@@ -158,8 +155,8 @@ namespace oly::editor
 
 		void VisitIndexed(auto&& visitor)
 		{
-			variant.Visit([&visitor](auto& desc) {
-				for (size_t i = 0; i < desc.Size(); ++i)
+			variant.visit([&visitor](auto& desc) {
+				for (size_t i = 0; i < desc.size(); ++i)
 					visitor(i, desc[i]);
 			});
 		}

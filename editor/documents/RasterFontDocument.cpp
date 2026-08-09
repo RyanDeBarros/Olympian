@@ -96,7 +96,7 @@ namespace oly::editor
 	{
 		if (auto form = Form())
 		{
-			DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+			IMTK_DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
 			if (auto subform = Subform("Glyphs"))
 			{
@@ -108,7 +108,7 @@ namespace oly::editor
 					{
 						_glyph_model.DrawComboHeader({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" },
 							[&desc](size_t i) -> std::string {
-								if (i < desc.glyphs.Size() && !desc.glyphs[i].codepoint.value.empty())
+								if (i < desc.glyphs.size() && !desc.glyphs[i].codepoint.value.empty())
 									return desc.glyphs[i].codepoint.value;
 								else
 									return "Glyph #" + std::to_string(i);
@@ -118,7 +118,7 @@ namespace oly::editor
 
 				if (Form::ValidActiveForm())
 				{
-					if (!desc.glyphs.Empty())
+					if (!desc.glyphs.empty())
 						Draw(desc.glyphs[_glyph_model.active_index]);
 
 					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
@@ -145,8 +145,7 @@ namespace oly::editor
 		}
 
 		std::string previous_codepoint = desc.codepoint.value;
-		DRAW_FIELD(codepoint);
-		desc.codepoint.Draw();
+		desc.codepoint.draw();
 		if (gui::PropertyGrid::DirtyRow())
 		{
 			_codepoint_counter.increment(desc.codepoint.value);
@@ -163,47 +162,43 @@ namespace oly::editor
 				ImGui::SetTooltip("Duplicate codepoint");
 		}
 
-		DRAW_FIELDS(GLYPH_BODY_GENERATOR);
+		IMTK_DRAW_FIELDS(GLYPH_BODY_GENERATOR);
 	}
 
 	void RasterFontDocument::Load(TOMLNode node, RasterFontDesc& desc)
 	{
-		LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-		desc.glyphs.Clear();
+		desc.glyphs.clear();
 		if (auto array = node[detail::encode_key(desc.glyphs_key)].as_array())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
-				desc.glyphs.PushBack();
-				Load(TOMLNode(array->get(i)), desc.glyphs.Back());
+				desc.glyphs.push_back();
+				Load(TOMLNode(array->get(i)), desc.glyphs.back());
 			}
 		}
 	}
 
 	void RasterFontDocument::Load(TOMLNode node, GlyphDesc& desc)
 	{
-		LOAD_FIELDS(GLYPH_GENERATOR);
+		IMTK_LOAD_FIELDS(GLYPH_GENERATOR);
 	}
 
 	void RasterFontDocument::Dump(toml::table& table, RasterFontDesc& desc)
 	{
-		DUMP_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
 		toml::array array;
-		array.reserve(desc.glyphs.Size());
+		array.reserve(desc.glyphs.size());
 		for (auto& subdesc : desc.glyphs)
-		{
-			toml::table subtable;
-			Dump(subtable, subdesc);
-			array.push_back(std::move(subtable));
-		}
+			Dump(array.emplace_back<toml::table>(), subdesc);
 		table.insert_or_assign(detail::encode_key(desc.glyphs_key), std::move(array));
 	}
 
 	void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)
 	{
-		DUMP_FIELDS(GLYPH_GENERATOR);
+		IMTK_DUMP_FIELDS(GLYPH_GENERATOR);
 	}
 
 	struct BriefGlyphDescPrinter

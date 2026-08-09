@@ -137,12 +137,12 @@ namespace oly::editor
 		if (auto subform = Subform("Window"))
 			Draw(desc.window);
 		
-		DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 	}
 	
 	void ProjectDocument::Draw(WindowDesc& desc)
 	{
-		DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		if (auto subform = Subform("Viewport"))
 			Draw(desc.viewport);
@@ -153,34 +153,34 @@ namespace oly::editor
 
 	void ProjectDocument::Draw(ViewportDesc& desc)
 	{
-		DRAW_FIELDS(VIEWPORT_GENERATOR);
+		IMTK_DRAW_FIELDS(VIEWPORT_GENERATOR);
 	}
 
 	void ProjectDocument::Draw(WindowHintsDesc& desc)
 	{
-		DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
+		IMTK_DRAW_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
 	void ProjectDocument::Draw(CollisionDesc& desc)
 	{
-		DRAW_FIELDS(COLLISION_GENERATOR);
+		IMTK_DRAW_FIELDS(COLLISION_GENERATOR);
 	}
 
 	void ProjectDocument::Draw(LoggerDesc& desc)
 	{
-		DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
 		if (auto subform = Subform("Enable Streams"))
 			Draw(desc.enable);
 	}
 	
 	void ProjectDocument::Draw(LoggerEnableDesc& desc)
 	{
-		DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
+		IMTK_DRAW_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
 	void ProjectDocument::Draw(FrameRateDesc& desc)
 	{
-		DRAW_FIELDS(FRAME_RATE_GENERATOR);
+		IMTK_DRAW_FIELDS(FRAME_RATE_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, ProjectDesc& desc)
@@ -198,14 +198,14 @@ namespace oly::editor
 
 	void ProjectDocument::Load(TOMLNode node, PlatformDesc& desc)
 	{
-		LOAD_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 
 		Load(node[detail::encode_key(desc.window_key)], desc.window);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, WindowDesc& desc)
 	{
-		LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		Load(node[detail::encode_key(desc.viewport_key)], desc.viewport);
 		Load(node[detail::encode_key(desc.window_hints_key)], desc.window_hints);
@@ -213,34 +213,34 @@ namespace oly::editor
 
 	void ProjectDocument::Load(TOMLNode node, ViewportDesc& desc)
 	{
-		LOAD_FIELDS(VIEWPORT_GENERATOR);
+		IMTK_LOAD_FIELDS(VIEWPORT_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, WindowHintsDesc& desc)
 	{
-		LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
+		IMTK_LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, CollisionDesc& desc)
 	{
-		LOAD_FIELDS(COLLISION_GENERATOR);
+		IMTK_LOAD_FIELDS(COLLISION_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, LoggerDesc& desc)
 	{
-		LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
 
 		Load(node[detail::encode_key(desc.enable_key)], desc.enable);
 	}
 	
 	void ProjectDocument::Load(TOMLNode node, LoggerEnableDesc& desc)
 	{
-		LOAD_FIELDS(LOGGER_ENABLE_GENERATOR);
+		IMTK_LOAD_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
 	void ProjectDocument::Load(TOMLNode node, FrameRateDesc& desc)
 	{
-		LOAD_FIELDS(FRAME_RATE_GENERATOR);
+		IMTK_LOAD_FIELDS(FRAME_RATE_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, ProjectDesc& desc)
@@ -271,7 +271,7 @@ namespace oly::editor
 
 	void ProjectDocument::Dump(toml::table& table, PlatformDesc& desc)
 	{
-		DUMP_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.window);
@@ -280,7 +280,7 @@ namespace oly::editor
 
 	void ProjectDocument::Dump(toml::table& table, WindowDesc& desc)
 	{
-		DUMP_FIELDS(WINDOW_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.viewport);
@@ -292,22 +292,22 @@ namespace oly::editor
 
 	void ProjectDocument::Dump(toml::table& table, ViewportDesc& desc)
 	{
-		DUMP_FIELDS(VIEWPORT_GENERATOR);
+		IMTK_DUMP_FIELDS(VIEWPORT_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, WindowHintsDesc& desc)
 	{
-		DUMP_FIELDS(WINDOW_HINTS_GENERATOR);
+		IMTK_DUMP_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, CollisionDesc& desc)
 	{
-		DUMP_FIELDS(COLLISION_GENERATOR);
+		IMTK_DUMP_FIELDS(COLLISION_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, LoggerDesc& desc)
 	{
-		DUMP_FIELDS(LOGGER_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(LOGGER_PARTIAL_GENERATOR);
 
 		toml::table subtable;
 		Dump(subtable, desc.enable);
@@ -316,11 +316,11 @@ namespace oly::editor
 	
 	void ProjectDocument::Dump(toml::table& table, LoggerEnableDesc& desc)
 	{
-		DUMP_FIELDS(LOGGER_ENABLE_GENERATOR);
+		IMTK_DUMP_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
 	void ProjectDocument::Dump(toml::table& table, FrameRateDesc& desc)
 	{
-		DUMP_FIELDS(FRAME_RATE_GENERATOR);
+		IMTK_DUMP_FIELDS(FRAME_RATE_GENERATOR);
 	}
 }

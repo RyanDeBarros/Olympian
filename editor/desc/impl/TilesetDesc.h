@@ -1,7 +1,6 @@
 #pragma once
 
 #include "desc/Fields.h"
-#include "desc/Descriptors.h"
 
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/TilesetConfiguration.h"
@@ -17,7 +16,7 @@ namespace oly::editor
 
 	struct TilesetAssignmentDesc
 	{
-		DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
 
 		StringField texture;
 		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
@@ -33,9 +32,9 @@ namespace oly::editor
 
 	struct TilesetAssignmentMapDesc
 	{
-		DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
 
-		MapDesc<detail::TileConfig, TilesetAssignmentDesc> map;
+		imtk::desc::map<detail::TileConfig, TilesetAssignmentDesc> map;
 
 		TilesetAssignmentMapDesc(imtk::datapath_link link = {});
 	};
@@ -49,7 +48,7 @@ namespace oly::editor
 
 	struct TilesetDesc
 	{
-		DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
 
 		EnumField<detail::StorageMode> storage;
 		TilesetAssignmentMapDesc assignments;
