@@ -1,8 +1,6 @@
 #pragma once
 
-#include "external/GLM.h"
-
-#include <ostream>
+#include <imtk.hpp>
 
 namespace oly::editor
 {

@@ -9,8 +9,6 @@
 
 #include "desc/OptionalPrimitive.h"
 
-#include "external/GLM.h"
-
 #include <imtk.hpp>
 
 namespace oly::editor::gui

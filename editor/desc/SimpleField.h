@@ -4,8 +4,6 @@
 
 #include "assets/TranslateKey.h"
 
-#include "external/TOML.h"
-
 namespace oly::editor
 {
 #define LOAD_SIMPLE_FIELD(F) F.Load(node);
@@ -14,7 +12,7 @@ namespace oly::editor
 #define DUMP_SIMPLE_FIELD(F) F.Dump(table);
 #define DUMP_SIMPLE_FIELDS(GENERATOR) GENERATOR(DUMP_SIMPLE_FIELD)
 
-#define LOAD_SIMPLE_FIELDS_IMPL(GENERATOR) void Load(TOMLNode node) { LOAD_SIMPLE_FIELDS(GENERATOR) }
+#define LOAD_SIMPLE_FIELDS_IMPL(GENERATOR) void Load(imtk::toml_node node) { LOAD_SIMPLE_FIELDS(GENERATOR) }
 #define DUMP_SIMPLE_FIELDS_IMPL(GENERATOR) void Dump(toml::table& table) { DUMP_SIMPLE_FIELDS(GENERATOR) }
 #define LOAD_DUMP_SIMPLE_FIELDS_IMPL(GENERATOR) LOAD_SIMPLE_FIELDS_IMPL(GENERATOR) DUMP_SIMPLE_FIELDS_IMPL(GENERATOR)
 
@@ -29,7 +27,7 @@ namespace oly::editor
 		{
 		}
 
-		void Load(TOMLNode node)
+		void Load(imtk::toml_node node)
 		{
 			imtk::serializer<T>{}.load(value, node[detail::encode_key(key)]);
 		}
@@ -81,7 +79,7 @@ namespace oly::editor
 		{
 		}
 
-		void Load(TOMLNode node)
+		void Load(imtk::toml_node node)
 		{
 			desc.Load(node[detail::encode_key(key)]);
 		}
@@ -135,14 +133,14 @@ namespace oly::editor
 		{
 		}
 
-		void Load(TOMLNode node)
+		void Load(imtk::toml_node node)
 		{
 			descs.clear();
 			if (auto array = node[detail::encode_key(key)].as_array())
 			{
 				descs.resize(array->size());
 				for (size_t i = 0; i < descs.size(); ++i)
-					descs[i].Load(TOMLNode(*array->get(i)));
+					descs[i].Load(imtk::toml_node(*array->get(i)));
 			}
 		}
 

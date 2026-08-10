@@ -1,7 +1,5 @@
 #pragma once
 
-#include "external/GL.h"
-
 #include "util/FunctionalEvent.h"
 
 #include "assets/KeyDecl.h"
@@ -9,6 +7,7 @@
 
 #include <imtk.hpp>
 
+// TODO v9.3 remove once fio stuff is added to imtk
 #include <filesystem>
 #include <memory>
 

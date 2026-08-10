@@ -35,7 +35,7 @@ namespace oly::editor
 			}
 		}
 
-		desc.Load(TOMLNode(table));
+		desc.Load(imtk::toml_node(table));
 	}
 
 	void LiveSettings::Dump()

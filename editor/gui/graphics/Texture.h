@@ -1,14 +1,6 @@
 #pragma once
 
-#include "external/GL.h"
-
-#include <memory>
-#include <optional>
-#include <string_view>
-#include <variant>
-#include <vector>
-
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor
 {

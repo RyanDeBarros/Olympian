@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gui/DrawResult.h"
+// TODO v9.3 move InputListener to imtk
 
-#include "external/GL.h"
+#include "gui/DrawResult.h"
 
 #include "definitions/enums/GamepadAxis2D.h"
 #include "definitions/enums/KeyInput.h"
@@ -10,7 +10,7 @@
 
 #include <optional>
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor
 {

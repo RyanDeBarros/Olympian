@@ -1,5 +1,7 @@
 #include "Texture.h"
 
+// TODO v9.3 move Texture to imtk::texture
+
 #include "core/Errors.h"
 
 #include "external/STB.h"
@@ -9,8 +11,6 @@
 
 #include <filesystem>
 #include <fstream>
-#include <unordered_map>
-#include <vector>
 
 namespace oly::editor
 {

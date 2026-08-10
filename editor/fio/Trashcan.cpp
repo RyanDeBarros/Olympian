@@ -119,7 +119,7 @@ namespace oly::editor::fio
 		{
 		}
 
-		void Load(const TOMLNode& node)
+		void Load(const imtk::toml_node node)
 		{
 			entries.Load(node);
 			total_size = 0;
@@ -201,7 +201,7 @@ namespace oly::editor::fio
 		{
 			auto path = TrashManifest();
 			if (std::filesystem::exists(path))
-				manifest.Load((TOMLNode)toml::parse_file(path.string()));
+				manifest.Load(imtk::toml_node(toml::parse_file(path.string())));
 		}
 
 		ManifestIO(const ManifestIO&) = delete;

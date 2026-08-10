@@ -9,13 +9,10 @@
 #include "gui/properties/PropertyGroup.h"
 #include "gui/properties/PropertyViews.h"
 
-#include "external/GL.h"
-#include "external/GLM.h"
-
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
 
-#include <string>
+#include <imtk.hpp>
 
 namespace oly::editor
 {
