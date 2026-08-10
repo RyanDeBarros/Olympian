@@ -4,9 +4,6 @@
 
 #include "core/Errors.h"
 
-#include "external/STB.h"
-#include "external/NSVG.h"
-
 #include "util/Hash.h"
 
 #include <filesystem>
