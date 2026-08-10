@@ -41,7 +41,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load raster font - corrupted asset: " + _oly_path.string());
 
@@ -49,7 +49,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -79,7 +79,7 @@ namespace oly::editor
 
 	void RasterFontDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor() const
@@ -165,7 +165,7 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(GLYPH_BODY_GENERATOR);
 	}
 
-	void RasterFontDocument::Load(TOMLNode node, RasterFontDesc& desc)
+	void RasterFontDocument::Load(imtk::toml_node node, RasterFontDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
@@ -175,12 +175,12 @@ namespace oly::editor
 			for (size_t i = 0; i < array->size(); ++i)
 			{
 				desc.glyphs.push_back();
-				Load(TOMLNode(array->get(i)), desc.glyphs.back());
+				Load(imtk::toml_node(array->get(i)), desc.glyphs.back());
 			}
 		}
 	}
 
-	void RasterFontDocument::Load(TOMLNode node, GlyphDesc& desc)
+	void RasterFontDocument::Load(imtk::toml_node node, GlyphDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GLYPH_GENERATOR);
 	}

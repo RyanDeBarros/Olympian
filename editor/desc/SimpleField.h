@@ -4,6 +4,8 @@
 
 #include "assets/TranslateKey.h"
 
+#include "external/TOML.h"
+
 namespace oly::editor
 {
 #define LOAD_SIMPLE_FIELD(F) F.Load(node);
@@ -29,12 +31,12 @@ namespace oly::editor
 
 		void Load(TOMLNode node)
 		{
-			Serializer<T>{}.load(value, node[detail::encode_key(key)]);
+			imtk::serializer<T>{}.load(value, node[detail::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table)
 		{
-			table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value));
+			table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value));
 		}
 
 		const T& operator*() const

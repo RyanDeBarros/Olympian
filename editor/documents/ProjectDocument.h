@@ -43,16 +43,16 @@ namespace oly::editor
 		void Draw(LoggerEnableDesc& desc);
 		void Draw(FrameRateDesc& desc);
 
-		void Load(TOMLNode node, ProjectDesc& desc);
-		void Load(TOMLNode node, ContextDesc& desc);
-		void Load(TOMLNode node, PlatformDesc& desc);
-		void Load(TOMLNode node, WindowDesc& desc);
-		void Load(TOMLNode node, ViewportDesc& desc);
-		void Load(TOMLNode node, WindowHintsDesc& desc);
-		void Load(TOMLNode node, CollisionDesc& desc);
-		void Load(TOMLNode node, LoggerDesc& desc);
-		void Load(TOMLNode node, LoggerEnableDesc& desc);
-		void Load(TOMLNode node, FrameRateDesc& desc);
+		void Load(imtk::toml_node node, ProjectDesc& desc);
+		void Load(imtk::toml_node node, ContextDesc& desc);
+		void Load(imtk::toml_node node, PlatformDesc& desc);
+		void Load(imtk::toml_node node, WindowDesc& desc);
+		void Load(imtk::toml_node node, ViewportDesc& desc);
+		void Load(imtk::toml_node node, WindowHintsDesc& desc);
+		void Load(imtk::toml_node node, CollisionDesc& desc);
+		void Load(imtk::toml_node node, LoggerDesc& desc);
+		void Load(imtk::toml_node node, LoggerEnableDesc& desc);
+		void Load(imtk::toml_node node, FrameRateDesc& desc);
 
 		void Dump(toml::table& table, ProjectDesc& desc);
 		void Dump(toml::table& table, ContextDesc& desc);

@@ -33,8 +33,8 @@ namespace oly::editor
 		void Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
 		void Draw(FontStyleDesc& desc);
 
-		void Load(TOMLNode node, FontFamilyDesc& desc);
-		void Load(TOMLNode node, FontStyleDesc& desc);
+		void Load(imtk::toml_node node, FontFamilyDesc& desc);
+		void Load(imtk::toml_node node, FontStyleDesc& desc);
 
 		void Dump(toml::table& table, FontFamilyDesc& desc);
 		void Dump(toml::table& table, FontStyleDesc& desc);

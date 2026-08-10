@@ -75,7 +75,7 @@ namespace oly::editor
 			}
 		}
 
-		Load(TOMLNode(table), _desc.disk);
+		Load(imtk::toml_node(table), _desc.disk);
 
 		_desc.LoadFromDisk();
 		RevertEditorPreferences();
@@ -97,7 +97,7 @@ namespace oly::editor
 
 	void PreferencesDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor() const
@@ -218,7 +218,7 @@ namespace oly::editor
 		}
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, PreferencesDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
 		Load(node[detail::encode_key(desc.content_browser_key)], desc.content_browser);
@@ -226,32 +226,32 @@ namespace oly::editor
 		Load(node[detail::encode_key(desc.filesystem_key)], desc.filesystem);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, EditSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, EditSettingsDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.undo_history_key)], desc.undo_history);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, UndoHistorySettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, ContentBrowserSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, TreeViewSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, TreeViewSettingsDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.advanced_key)], desc.advanced);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, FilesystemSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, FilesystemSettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}

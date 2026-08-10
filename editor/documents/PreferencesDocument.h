@@ -39,13 +39,13 @@ namespace oly::editor
 		void Draw(TreeViewAdvancedSettingsDesc& desc);
 		void Draw(FilesystemSettingsDesc& desc);
 
-		void Load(TOMLNode node, PreferencesDesc& desc);
-		void Load(TOMLNode node, EditSettingsDesc& desc);
-		void Load(TOMLNode node, UndoHistorySettingsDesc& desc);
-		void Load(TOMLNode node, ContentBrowserSettingsDesc& desc);
-		void Load(TOMLNode node, TreeViewSettingsDesc& desc);
-		void Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc);
-		void Load(TOMLNode node, FilesystemSettingsDesc& desc);
+		void Load(imtk::toml_node node, PreferencesDesc& desc);
+		void Load(imtk::toml_node node, EditSettingsDesc& desc);
+		void Load(imtk::toml_node node, UndoHistorySettingsDesc& desc);
+		void Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc);
+		void Load(imtk::toml_node node, TreeViewSettingsDesc& desc);
+		void Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc);
+		void Load(imtk::toml_node node, FilesystemSettingsDesc& desc);
 
 		void Dump(toml::table& table, PreferencesDesc& desc);
 		void Dump(toml::table& table, EditSettingsDesc& desc);

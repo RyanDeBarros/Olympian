@@ -76,11 +76,11 @@ namespace oly::editor
 		void Draw(BaseTextureDesc& desc);
 		void Draw(SpritesheetDesc& desc);
 
-		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
-		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, VectorTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, BaseTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, SpritesheetDesc& desc);
+		static void Load(imtk::toml_node node, TextureVariantDesc& desc, bool svg, bool gif);
+		static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, SpritesheetDesc& desc);
 
 		void Dump(toml::table& table, TextureVariantDesc& desc);
 		void Dump(toml::table& table, RasterTextureDesc& desc);

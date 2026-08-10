@@ -58,7 +58,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk, _svg, _gif);
+				Load(imtk::toml_node(table), _desc.disk, _svg, _gif);
 			else
 				Notifier::NotifyError("cannot load texture - corrupted asset: " + GetSourcePath().string());
 
@@ -66,7 +66,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk, _svg, _gif);
+			Load(imtk::toml_node(), _desc.disk, _svg, _gif);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -98,7 +98,7 @@ namespace oly::editor
 
 	void TextureDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch, _svg, _gif);
+		Load(imtk::toml_node(), _desc.scratch, _svg, _gif);
 	}
 
 	const IDoubleDescriptor& TextureDocument::GetDoubleDescriptor() const
@@ -503,42 +503,42 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, TextureVariantDesc& desc, bool svg, bool gif)
 	{
 		if (svg)
 			desc.variant.set<imtk::desc::vector<VectorTextureDesc>>();
 		else
 			desc.variant.set<imtk::desc::vector<RasterTextureDesc>>();
 
-		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
+		const toml::array* array = node[detail::encode_key(desc.array_key)].as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 				desc.PushBack();
 
-			desc.VisitIndexed([&array, gif](size_t i, auto& d) { Load(TOMLNode(*array->get(i)), d, gif); });
+			desc.VisitIndexed([&array, gif](size_t i, auto& d) { Load(imtk::toml_node(*array->get(i)), d, gif); });
 		}
 		else
 		{
 			desc.PushBack();
 
-			desc.Visit(0, [gif](auto& d) { Load(TOMLNode(), d, gif); });
+			desc.Visit(0, [gif](auto& d) { Load(imtk::toml_node(), d, gif); });
 		}
 	}
 	
-	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
 		IMTK_LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
 		IMTK_LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif)
 	{
 		IMTK_LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
@@ -554,7 +554,7 @@ namespace oly::editor
 		}
 	}
 
-	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
+	void TextureDocument::Load(imtk::toml_node node, SpritesheetDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
@@ -636,8 +636,8 @@ namespace oly::editor
 		std::string err = oly_path.load_toml(table);
 		if (err.empty())
 		{
-			TOMLNode node = TOMLNode(table);
-			TOMLArray array = node[detail::encode_key(TextureVariantDesc::array_key)].as_array();
+			imtk::toml_node node = imtk::toml_node(table);
+			const toml::array* array = node[detail::encode_key(TextureVariantDesc::array_key)].as_array();
 			if (!array || slot >= array->size() || !array->get(slot))
 				return TextureSettingsLoadResult::BadSlot;
 			

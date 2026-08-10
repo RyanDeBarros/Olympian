@@ -46,10 +46,10 @@ namespace oly::editor
 		void Draw(FontFaceDesc& desc);
 		void Draw(FontAtlasDesc& desc);
 
-		void Load(TOMLNode node, FullFontDesc& desc);
-		void Load(TOMLNode node, FontFaceDesc& desc);
-		void Load(TOMLNode node, KerningDesc& desc);
-		void Load(TOMLNode node, FontAtlasDesc& desc);
+		void Load(imtk::toml_node node, FullFontDesc& desc);
+		void Load(imtk::toml_node node, FontFaceDesc& desc);
+		void Load(imtk::toml_node node, KerningDesc& desc);
+		void Load(imtk::toml_node node, FontAtlasDesc& desc);
 
 		void Dump(toml::table& table, FullFontDesc& desc);
 		void Dump(toml::table& table, FontFaceDesc& desc);

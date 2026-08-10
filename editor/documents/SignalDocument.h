@@ -58,20 +58,20 @@ namespace oly::editor
 		void Draw(Modifier2dDesc& desc);
 		void Draw(ModifierBaseDesc& desc);
 
-		void Load(TOMLNode node, SignalFullDesc& desc);
-		void Load(TOMLNode node, SignalDesc& desc);
-		void Load(TOMLNode node, RouteDesc& desc);
-		void Load(TOMLNode node, KeyDesc& desc);
-		void Load(TOMLNode node, MouseButtonDesc& desc);
-		void Load(TOMLNode node, GamepadButtonDesc& desc);
-		void Load(TOMLNode node, GamepadAxis1DDesc& desc);
-		void Load(TOMLNode node, GamepadAxis2DDesc& desc);
-		void Load(TOMLNode node, CursorPosDesc& desc);
-		void Load(TOMLNode node, ScrollDesc& desc);
-		void Load(TOMLNode node, Modifier0dDesc& desc);
-		void Load(TOMLNode node, Modifier1dDesc& desc);
-		void Load(TOMLNode node, Modifier2dDesc& desc);
-		void Load(TOMLNode node, ModifierBaseDesc& desc);
+		void Load(imtk::toml_node node, SignalFullDesc& desc);
+		void Load(imtk::toml_node node, SignalDesc& desc);
+		void Load(imtk::toml_node node, RouteDesc& desc);
+		void Load(imtk::toml_node node, KeyDesc& desc);
+		void Load(imtk::toml_node node, MouseButtonDesc& desc);
+		void Load(imtk::toml_node node, GamepadButtonDesc& desc);
+		void Load(imtk::toml_node node, GamepadAxis1DDesc& desc);
+		void Load(imtk::toml_node node, GamepadAxis2DDesc& desc);
+		void Load(imtk::toml_node node, CursorPosDesc& desc);
+		void Load(imtk::toml_node node, ScrollDesc& desc);
+		void Load(imtk::toml_node node, Modifier0dDesc& desc);
+		void Load(imtk::toml_node node, Modifier1dDesc& desc);
+		void Load(imtk::toml_node node, Modifier2dDesc& desc);
+		void Load(imtk::toml_node node, ModifierBaseDesc& desc);
 
 		void Dump(toml::table& table, SignalFullDesc& desc);
 		void Dump(toml::table& table, SignalDesc& desc);

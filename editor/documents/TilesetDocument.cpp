@@ -177,7 +177,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load tileset - corrupted asset: " + _oly_path.string());
 
@@ -185,7 +185,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -209,7 +209,7 @@ namespace oly::editor
 
 	void TilesetDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor() const
@@ -431,7 +431,7 @@ namespace oly::editor
 		}
 	}
 
-	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)
+	void TilesetDocument::Load(imtk::toml_node node, TilesetDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
 
@@ -441,12 +441,12 @@ namespace oly::editor
 			for (auto&& [key, node] : *table)
 			{
 				if (auto config = stoi(key.str()))
-					Load(TOMLNode(node), desc.assignments.map[*config]);
+					Load(imtk::toml_node(node), desc.assignments.map[*config]);
 			}
 		}
 	}
 
-	void TilesetDocument::Load(TOMLNode node, TilesetAssignmentDesc& desc)
+	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
 	}

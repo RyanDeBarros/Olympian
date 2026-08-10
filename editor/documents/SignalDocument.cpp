@@ -69,7 +69,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load signal - corrupted asset: " + _oly_path.string());
 
@@ -77,7 +77,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -103,7 +103,7 @@ namespace oly::editor
 
 	void SignalDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& SignalDocument::GetDoubleDescriptor() const
@@ -488,30 +488,30 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
 	}
 
-	void SignalDocument::Load(TOMLNode node, SignalFullDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, SignalFullDesc& desc)
 	{
-		TOMLArray signal_array = node[detail::encode_key(desc.signals_key)].as_array();
+		const toml::array* signal_array = node[detail::encode_key(desc.signals_key)].as_array();
 		if (signal_array && !signal_array->empty())
 		{
 			for (size_t i = 0; i < signal_array->size(); ++i)
 				desc.signals.push_back();
 			
 			for (size_t i = 0; i < desc.signals.size(); ++i)
-				Load(TOMLNode(*signal_array->get(i)), desc.signals[i]);
+				Load(imtk::toml_node(*signal_array->get(i)), desc.signals[i]);
 		}
 
-		TOMLArray route_array = node[detail::encode_key(desc.routes_key)].as_array();
+		const toml::array* route_array = node[detail::encode_key(desc.routes_key)].as_array();
 		if (route_array && !route_array->empty())
 		{
 			for (size_t i = 0; i < route_array->size(); ++i)
 				desc.routes.push_back();
 
 			for (size_t i = 0; i < desc.routes.size(); ++i)
-				Load(TOMLNode(*route_array->get(i)), desc.routes[i]);
+				Load(imtk::toml_node(*route_array->get(i)), desc.routes[i]);
 		}
 	}
 
-	void SignalDocument::Load(TOMLNode node, SignalDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, SignalDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
 
@@ -536,72 +536,72 @@ namespace oly::editor
 		}
 	}
 
-	void SignalDocument::Load(TOMLNode node, RouteDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, RouteDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(ROUTE_GENERATOR);
 	}
 
-	void SignalDocument::Load(TOMLNode node, KeyDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, KeyDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 
-	void SignalDocument::Load(TOMLNode node, MouseButtonDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, MouseButtonDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 
-	void SignalDocument::Load(TOMLNode node, GamepadButtonDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, GamepadButtonDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, GamepadAxis1DDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, GamepadAxis1DDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, GamepadAxis2DDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, GamepadAxis2DDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, CursorPosDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, CursorPosDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, ScrollDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, ScrollDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, Modifier0dDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, Modifier0dDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, Modifier1dDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, Modifier1dDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, Modifier2dDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, Modifier2dDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
 		Load(node, desc.base);
 	}
 	
-	void SignalDocument::Load(TOMLNode node, ModifierBaseDesc& desc)
+	void SignalDocument::Load(imtk::toml_node node, ModifierBaseDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
 	}

@@ -62,7 +62,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load project file - corrupted asset: " + GetOlyPath().string());
 
@@ -70,7 +70,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -93,7 +93,7 @@ namespace oly::editor
 
 	void ProjectDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& ProjectDocument::GetDoubleDescriptor() const
@@ -183,12 +183,12 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(FRAME_RATE_GENERATOR);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, ProjectDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, ProjectDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.context_key)], desc.context);
 	}
 	
-	void ProjectDocument::Load(TOMLNode node, ContextDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, ContextDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.platform_key)], desc.platform);
 		Load(node[detail::encode_key(desc.collision_key)], desc.collision);
@@ -196,14 +196,14 @@ namespace oly::editor
 		Load(node[detail::encode_key(desc.frame_rate_key)], desc.frame_rate);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, PlatformDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, PlatformDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 
 		Load(node[detail::encode_key(desc.window_key)], desc.window);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, WindowDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, WindowDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
@@ -211,34 +211,34 @@ namespace oly::editor
 		Load(node[detail::encode_key(desc.window_hints_key)], desc.window_hints);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, ViewportDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, ViewportDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(VIEWPORT_GENERATOR);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, WindowHintsDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, WindowHintsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(WINDOW_HINTS_GENERATOR);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, CollisionDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, CollisionDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(COLLISION_GENERATOR);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, LoggerDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, LoggerDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
 
 		Load(node[detail::encode_key(desc.enable_key)], desc.enable);
 	}
 	
-	void ProjectDocument::Load(TOMLNode node, LoggerEnableDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, LoggerEnableDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(LOGGER_ENABLE_GENERATOR);
 	}
 
-	void ProjectDocument::Load(TOMLNode node, FrameRateDesc& desc)
+	void ProjectDocument::Load(imtk::toml_node node, FrameRateDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(FRAME_RATE_GENERATOR);
 	}

@@ -61,7 +61,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load font - corrupted asset: " + GetSourcePath().string());
 
@@ -69,7 +69,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -95,7 +95,7 @@ namespace oly::editor
 
 	void FontDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& FontDocument::GetDoubleDescriptor() const
@@ -336,47 +336,47 @@ namespace oly::editor
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, FullFontDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FullFontDesc& desc)
 	{
 		Load(node[detail::encode_key(desc.font_face_key)], desc.font_face);
 
-		TOMLArray array = node[detail::encode_key(desc.font_atlas_key)].as_array();
+		const toml::array* array = node[detail::encode_key(desc.font_atlas_key)].as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
 				desc.font_atlases.push_back();
-				Load(TOMLNode(*array->get(i)), desc.font_atlases.back());
+				Load(imtk::toml_node(*array->get(i)), desc.font_atlases.back());
 			}
 		}
 		else
 		{
 			desc.font_atlases.push_back();
-			Load(TOMLNode(), desc.font_atlases.back());
+			Load(imtk::toml_node(), desc.font_atlases.back());
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, FontFaceDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FontFaceDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
 
-		TOMLArray array = node[detail::encode_key(desc.kerning_key)].as_array();
+		const toml::array* array = node[detail::encode_key(desc.kerning_key)].as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
 				desc.kerning.push_back();
-				Load(TOMLNode(*array->get(i)), desc.kerning.back());
+				Load(imtk::toml_node(*array->get(i)), desc.kerning.back());
 			}
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, KerningDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, KerningDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(KERNING_GENERATOR);
 	}
 
-	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FontAtlasDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(FONT_ATLAS_GENERATOR);
 	}

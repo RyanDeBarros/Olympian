@@ -46,7 +46,7 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
 				Notifier::NotifyError("cannot load font family - corrupted asset: " + _oly_path.string());
 
@@ -54,7 +54,7 @@ namespace oly::editor
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -78,7 +78,7 @@ namespace oly::editor
 
 	void FontFamilyDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
 	const IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor() const
@@ -102,7 +102,7 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(STYLE_GENERATOR);
 	}
 
-	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)
+	void FontFamilyDocument::Load(imtk::toml_node node, FontFamilyDesc& desc)
 	{
 		desc.styles.clear();
 
@@ -111,12 +111,12 @@ namespace oly::editor
 			for (auto&& [key, subnode] : *table)
 			{
 				if (auto style = stoi(key.str()))
-					Load(TOMLNode(subnode), desc.styles[static_cast<detail::FontStyleMode>(*style)]);
+					Load(imtk::toml_node(subnode), desc.styles[static_cast<detail::FontStyleMode>(*style)]);
 			}
 		}
 	}
 
-	void FontFamilyDocument::Load(TOMLNode node, FontStyleDesc& desc)
+	void FontFamilyDocument::Load(imtk::toml_node node, FontStyleDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(STYLE_GENERATOR);
 	}

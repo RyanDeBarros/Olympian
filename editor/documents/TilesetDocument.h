@@ -165,8 +165,8 @@ namespace oly::editor
 		void DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
 		void Draw(const detail::TileConfigGrid grid);
 
-		void Load(TOMLNode node, TilesetDesc& desc);
-		void Load(TOMLNode node, TilesetAssignmentDesc& desc);
+		void Load(imtk::toml_node node, TilesetDesc& desc);
+		void Load(imtk::toml_node node, TilesetAssignmentDesc& desc);
 		
 		void Dump(toml::table& table, TilesetDesc& desc);
 		void Dump(toml::table& table, TilesetAssignmentDesc& desc);

@@ -37,24 +37,24 @@ namespace oly::editor
 			return value != disk.value;
 		}
 
-		void load(TOMLNode node)
+		void load(imtk::toml_node node)
 		{
 			value = def;
 			if (key != NullKey())
-				Serializer<T>{}.load(value, node[detail::encode_key(key)]);
+				imtk::serializer<T>{}.load(value, node[detail::encode_key(key)]);
 			else
-				Serializer<T>{}.load(value, node);
+				imtk::serializer<T>{}.load(value, node);
 		}
 
 		void dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value));
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value));
 		}
 
 		void dump(toml::array& array) const
 		{
-			array.push_back(Serializer<T>{}.dump(value));
+			array.push_back(imtk::serializer<T>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -553,7 +553,7 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), initial, index);
 		}
 
-		void load(TOMLNode node)
+		void load(imtk::toml_node node)
 		{
 			index = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
 		}
@@ -655,13 +655,13 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
 		}
 
-		void load(TOMLNode node)
+		void load(imtk::toml_node node)
 		{
 			value = def;
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				Serializer<T>{}.load(value.value, node[detail::encode_key(value_key)]);
-				Serializer<bool>{}.load(value.has_value, node[detail::encode_key(enable_key)]);
+				imtk::serializer<T>{}.load(value.value, node[detail::encode_key(value_key)]);
+				imtk::serializer<bool>{}.load(value.has_value, node[detail::encode_key(enable_key)]);
 			}
 		}
 
@@ -669,8 +669,8 @@ namespace oly::editor
 		{
 			if (enable_key != NullKey() && value_key != NullKey())
 			{
-				table.insert_or_assign(detail::encode_key(enable_key), Serializer<bool>{}.dump(value.has_value));
-				table.insert_or_assign(detail::encode_key(value_key), Serializer<T>{}.dump(value.value));
+				table.insert_or_assign(detail::encode_key(enable_key), imtk::serializer<bool>{}.dump(value.has_value));
+				table.insert_or_assign(detail::encode_key(value_key), imtk::serializer<T>{}.dump(value.value));
 			}
 		}
 
@@ -758,13 +758,13 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
 		}
 
-		void load(TOMLNode node)
+		void load(imtk::toml_node node)
 		{
 			value = def;
 			if (key != NullKey())
 			{
 				T temp = def.value;
-				if (Serializer<T>{}.load(temp, node[detail::encode_key(key)]))
+				if (imtk::serializer<T>{}.load(temp, node[detail::encode_key(key)]))
 				{
 					value.has_value = temp != nullopt;
 					if (value.has_value)
@@ -778,7 +778,7 @@ namespace oly::editor
 		void dump(toml::table& table) const
 		{
 			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), Serializer<T>{}.dump(value.has_value ? value.value : nullopt));
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value.has_value ? value.value : nullopt));
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -887,15 +887,15 @@ namespace oly::editor
 		}
 
 	public:
-		void load(TOMLNode node)
+		void load(imtk::toml_node node)
 		{
 			value = def;
-			Serializer<E>{}.load(value, node[detail::encode_key(key)]);
+			imtk::serializer<E>{}.load(value, node[detail::encode_key(key)]);
 		}
 
 		void dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), Serializer<E>{}.dump(value));
+			table.insert_or_assign(detail::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)

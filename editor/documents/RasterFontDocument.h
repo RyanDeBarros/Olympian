@@ -35,8 +35,8 @@ namespace oly::editor
 		void Draw(RasterFontDesc& desc);
 		void Draw(GlyphDesc& desc);
 
-		void Load(TOMLNode node, RasterFontDesc& desc);
-		void Load(TOMLNode node, GlyphDesc& desc);
+		void Load(imtk::toml_node node, RasterFontDesc& desc);
+		void Load(imtk::toml_node node, GlyphDesc& desc);
 
 		void Dump(toml::table& table, RasterFontDesc& desc);
 		void Dump(toml::table& table, GlyphDesc& desc);
