@@ -2,8 +2,6 @@
 
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/graphics/Texture.h"
-
 #include <string>
 
 namespace oly::editor
@@ -37,7 +35,7 @@ namespace oly::editor
 		const ImVec2 start = pos + 0.5f * size * settings.shrink;
 		const ImVec2 end = pos + size * (1.f - 0.5f * settings.shrink);
 		ImU32 tint = ImGui::GetColorU32(ImVec4(1.f, 1.f, 1.f, settings.tint_alpha));
-		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).ID(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
+		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).id(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
 	}
 
 	DrawResult Toolbar::DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip, IconSettings settings)

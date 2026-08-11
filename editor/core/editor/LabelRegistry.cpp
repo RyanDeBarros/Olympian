@@ -1,6 +1,6 @@
 #include "LabelRegistry.h"
 
-#include "util/Hash.h"
+#include <imp/hash.hpp>
 
 #include <algorithm>
 
@@ -23,7 +23,7 @@ namespace oly::editor
 	{
 		size_t operator()(const std::vector<std::string>& span) const
 		{
-			Hasher h;
+			imp::hasher h;
 			for (const auto& s : span)
 				h.with(s);
 			return h;
@@ -31,7 +31,7 @@ namespace oly::editor
 
 		size_t operator()(const std::span<std::string_view> span) const
 		{
-			Hasher h;
+			imp::hasher h;
 			for (const auto& s : span)
 				h.with(s);
 			return h;
@@ -39,7 +39,7 @@ namespace oly::editor
 
 		size_t operator()(const std::span<const char* const> span) const
 		{
-			Hasher h;
+			imp::hasher h;
 			for (const auto& s : span)
 				h.with(std::string_view(s));
 			return h;

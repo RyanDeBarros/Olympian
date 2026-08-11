@@ -1,5 +1,6 @@
 #include "Editor.h"
 
+#include "core/Errors.h"
 #include "core/windows/ProjectSelectWindow.h"
 #include "core/windows/MainWindow.h"
 
@@ -9,8 +10,6 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/ShortcutManager.h"
-
-#include "gui/graphics/Texture.h"
 
 #include "documents/DocumentManager.h"
 
@@ -46,6 +45,8 @@ namespace oly::editor
 			Editor::instance().RequestShutdown();
 		});
 
+		imtk::set_error_logger([](const char* error) { BreakoutError::Log(error); });
+
 		ResourceLoader::LoadAll();
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
@@ -63,13 +64,13 @@ namespace oly::editor
 		return _os_window->should_close();
 	}
 
+	// TODO v9.3 handle breakout errors - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();
 		imtk::begin_frame();
 
 		_shortcut_manager->PollShortcuts();
-		Texture::Update();
 
 		switch (_app_state)
 		{

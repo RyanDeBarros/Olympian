@@ -10,9 +10,10 @@
 #include "definitions/Keys.h"
 
 #include "util/Counter.h"
-#include "util/Hash.h"
 #include "util/Parser.h"
 #include "util/DynamicArray.h"
+
+#include <imp/hash.hpp>
 
 namespace oly::editor
 {
@@ -201,7 +202,7 @@ namespace oly::editor
 			}
 		};
 
-		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
+		Counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
 		for (auto& k : desc.kerning)
 		{
 			k.distance.edit.PreEdit();

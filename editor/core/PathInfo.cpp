@@ -32,7 +32,7 @@ namespace oly::editor
         return PathInfo::GetAssetIcon(detail::MetaSplitter::decode_meta(path.string().c_str()).get_type());
     }
 
-    Texture PathInfo::GetIcon(const std::filesystem::path& path)
+    imtk::texture PathInfo::GetIcon(const std::filesystem::path& path)
     {
         return ResourceLoader::GetTexture(GetIconResource(path));
     }

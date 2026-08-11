@@ -1,6 +1,6 @@
 #pragma once
 
-#include "util/Hash.h"
+#include <imp/hash.hpp>
 
 #include <unordered_map>
 #include <vector>
@@ -21,7 +21,7 @@ namespace oly
 		template<typename View, typename ViewHash = std::hash<View>, typename ViewEquals = std::equal_to<View>, typename ConvertType = void>
 		Handle Intern(const View& view)
 		{
-			size_t hash = Hasher().with<ViewHash>(view);
+			size_t hash = imp::hasher().with<ViewHash>(view);
 			auto range = lut.equal_range(hash);
 
 			for (auto it = range.first; it != range.second; ++it)

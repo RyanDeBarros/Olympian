@@ -133,11 +133,11 @@ namespace oly::editor
 		});
 
 		if (_svg)
-			_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else if (_gif)
-			_texture = { GIFTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::gif_texture::load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else
-			_texture = { RasterTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::raster_texture::load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 	}
 
 	void TextureDocument::DrawPreview()
@@ -149,19 +149,19 @@ namespace oly::editor
 			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", "##Recenter"))
 			{
 				_preview_nav = {};
-				if (SVGTexture* svg = _texture.GetSVG())
-					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+				if (imtk::svg_texture* svg = _texture.get_svg())
+					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 			}
 			
-			if (GIFTexture* gif = _texture.GetGIF())
+			if (imtk::gif_texture* gif = _texture.get_gif())
 			{
 				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
 				ImGui::InputFloat("Speed", &gif->speed);
-				gif->Update(ImGui::GetIO().DeltaTime);
+				gif->update();
 			}
 
-			if (SVGTexture* svg = _texture.GetSVG())
+			if (imtk::svg_texture* svg = _texture.get_svg())
 			{
 				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
@@ -172,7 +172,7 @@ namespace oly::editor
 				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
 				{
 					_preview_nav.svg_scale = scale;
-					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 				}
 			}
 
@@ -220,12 +220,12 @@ namespace oly::editor
 			{
 				ImVec2 avail = ImGui::GetContentRegionAvail();
 				ImVec2 cursor = ImGui::GetCursorScreenPos();
-				ImVec2 size = _texture.Size() * std::pow(2.f, _preview_nav.zoom);
+				ImVec2 size = ImVec2(_texture.width(), _texture.height()) * std::pow(2.f, _preview_nav.zoom);
 
 				ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
 				ImVec2 pos = cursor + offset;
 
-				ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
+				ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size);
 				if (_preview_spritesheet && spritesheet_desc)
 					DrawSpritesheetOverlay(*spritesheet_desc, pos, size);
 			}
@@ -244,8 +244,8 @@ namespace oly::editor
 
 	SpritesheetInfo TextureDocument::CalcSpritesheetInfo(const SpritesheetDesc& desc)
 	{
-		int xoff = _texture.Width() > 1 ? std::min(desc.col_offset_pixel.value, static_cast<int>(_texture.Width())) : 0;
-		int working_width = static_cast<int>(_texture.Width()) - xoff;
+		int xoff = _texture.width() > 1 ? std::min(desc.col_offset_pixel.value, static_cast<int>(_texture.width())) : 0;
+		int working_width = static_cast<int>(_texture.width()) - xoff;
 
 		int cols = desc.col_type.value == detail::SpritesheetParamType::Index ? desc.col_value.value : 1;
 		float cell_width = desc.col_type.value == detail::SpritesheetParamType::Pixel ? desc.col_value.value : 1;
@@ -260,8 +260,8 @@ namespace oly::editor
 
 		const float full_width = cols * cell_width;
 
-		int yoff = _texture.Height() > 1 ? std::min(desc.row_offset_pixel.value, static_cast<int>(_texture.Height())) : 0;
-		int working_height = static_cast<int>(_texture.Height()) - yoff;
+		int yoff = _texture.height() > 1 ? std::min(desc.row_offset_pixel.value, static_cast<int>(_texture.height())) : 0;
+		int working_height = static_cast<int>(_texture.height()) - yoff;
 
 		int rows = desc.row_type.value == detail::SpritesheetParamType::Index ? desc.row_value.value : 1;
 		float cell_height = desc.row_type.value == detail::SpritesheetParamType::Pixel ? desc.row_value.value : 1;
@@ -291,7 +291,7 @@ namespace oly::editor
 		auto info = CalcSpritesheetInfo(desc);
 		auto dl = ImGui::GetWindowDrawList();
 
-		ImVec2 scale = size / _texture.Size();
+		ImVec2 scale = ImVec2(size.x / _texture.width(), size.y / _texture.height());
 		rect_start += info.rect_offset * scale;
 
 		std::vector<int> xpos(info.cols + 1);
@@ -405,14 +405,14 @@ namespace oly::editor
 		const int col1 = desc.row_major.value ? active_index % info.cols : info.cols - (active_index % info.cols);
 		const int col2 = desc.row_major.value ? col1 + 1 : col1 - 1;
 
-		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.Width(), std::min(row1, row2) * info.cell_height / _texture.Height());
-		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.Width(), std::max(row1, row2) * info.cell_height / _texture.Height());
+		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.width(), std::min(row1, row2) * info.cell_height / _texture.height());
+		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.width(), std::max(row1, row2) * info.cell_height / _texture.height());
 
-		ImVec2 uv_offset = info.rect_offset / _texture.Size();
+		ImVec2 uv_offset = ImVec2(info.rect_offset.x / _texture.width(), info.rect_offset.y / _texture.height());
 		uv_min += uv_offset;
 		uv_max += uv_offset;
 
-		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
+		ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size, uv_min, uv_max);
 	}
 
 	void TextureDocument::Draw(TextureVariantDesc& desc)

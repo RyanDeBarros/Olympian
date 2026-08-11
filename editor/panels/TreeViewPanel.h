@@ -2,8 +2,6 @@
 
 #include "panels/IPanel.h"
 
-#include "gui/graphics/Texture.h"
-
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
@@ -12,7 +10,7 @@ namespace oly::editor
 	{
 		std::filesystem::path path;
 		std::vector<std::unique_ptr<TreeViewNode>> subnodes;
-		Texture icon;
+		imtk::texture icon;
 		bool dropdown_open = false;
 		bool is_import = false;
 		float timer = 0.f;

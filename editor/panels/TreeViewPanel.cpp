@@ -370,7 +370,7 @@ namespace oly::editor
 
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
 		ImVec2 size(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::GetWindowDrawList()->AddImage(node.icon.ID(), cursor, cursor + size);
+		ImGui::GetWindowDrawList()->AddImage(node.icon.id(), cursor, cursor + size);
 		ImGui::Dummy(size);
 		ImGui::SameLine();
 	}

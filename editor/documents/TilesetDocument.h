@@ -6,7 +6,6 @@
 #include "desc/DoubleDescriptor.h"
 
 #include "gui/scopes/Form.h"
-#include "gui/graphics/Texture.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -138,7 +137,7 @@ namespace oly::editor
 
 		struct ActiveTexture
 		{
-			Texture texture;
+			imtk::texture texture;
 			TextureError error = TextureError::None;
 			std::string current_texture = "";
 			unsigned int current_texture_index = 0;

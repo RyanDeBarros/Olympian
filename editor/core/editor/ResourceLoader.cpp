@@ -1,14 +1,10 @@
 #include "ResourceLoader.h"
 
 #include "core/Errors.h"
-#include "gui/graphics/Texture.h"
-
-#include <memory>
-#include <string>
 
 namespace oly::editor
 {
-#define TEXTURE_DECL(Icon) static Texture Icon##Icon;
+#define TEXTURE_DECL(Icon) static imtk::texture Icon##Icon;
 	ICON_RESOURCE_GENERATOR(TEXTURE_DECL);
 #undef TEXTURE_DECL
 
@@ -17,7 +13,7 @@ namespace oly::editor
 #define RES_FOLDER "res/"
 #define ICONS_FOLDER RES_FOLDER "icons/"
 
-#define LOAD_ICON(Icon) Icon##Icon = { Texture::LoadGeneric(ICONS_FOLDER #Icon ".png", GL_LINEAR, GL_LINEAR, 1.f, true) };
+#define LOAD_ICON(Icon) Icon##Icon = { imtk::texture::load_generic(ICONS_FOLDER #Icon ".png", GL_LINEAR, GL_LINEAR, 1.f, true) };
 		ICON_RESOURCE_GENERATOR(LOAD_ICON)
 #undef LOAD_ICON
 
@@ -25,7 +21,7 @@ namespace oly::editor
 #undef RES_FOLDER
 	}
 
-	Texture ResourceLoader::GetTexture(IconResource resource)
+	imtk::texture ResourceLoader::GetTexture(IconResource resource)
 	{
 		switch (resource)
 		{
@@ -34,6 +30,6 @@ namespace oly::editor
 #undef SWITCH_ICON
 		}
 
-		BreakoutError::Throw(("Texture not available for resource: " + std::to_string(static_cast<int>(resource))).c_str());
+		BreakoutError::Throw("Texture not available for resource: " + std::to_string(static_cast<int>(resource)));
 	}
 }

@@ -505,7 +505,7 @@ namespace oly::editor
 					bool generate_mipmaps = false;
 					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
-						active.texture = Texture::LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
+						active.texture = imtk::texture::load_generic(filepath, min_filter, mag_filter, scale, generate_mipmaps);
 					else
 					{
 						switch (result)
@@ -555,7 +555,7 @@ namespace oly::editor
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
 			gui::Overlay::QuadWarning(rect_start, rect_end);
 		}
-		else if (active.texture.Empty())
+		else if (active.texture.empty())
 			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(empty_gray_value));
 		else
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
@@ -595,7 +595,7 @@ namespace oly::editor
 		}
 
 		ImVec2 rect_delta = rect_end - rect_start;
-		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.ID(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
+		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.id(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
 			rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
 	}
 

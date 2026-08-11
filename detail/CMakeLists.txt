@@ -54,6 +54,20 @@ FetchContent_MakeAvailable(tomlplusplus)
 
 
 # ====================
+#      imperious
+# ====================
+
+FetchContent_Declare(
+    imperious
+    GIT_REPOSITORY https://github.com/RyanDeBarros/Imperious.git
+    GIT_TAG        main
+    # TODO v9.3 use specific tag
+)
+
+FetchContent_MakeAvailable(imperious)
+
+
+# ====================
 #     Build Detail
 # ====================
 
@@ -71,6 +85,7 @@ target_link_libraries(OlympianDetail PRIVATE
 	libglew_static
     glfw
     tomlplusplus::tomlplusplus
+    imperious
 )
 
 target_include_directories(OlympianDetail PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})

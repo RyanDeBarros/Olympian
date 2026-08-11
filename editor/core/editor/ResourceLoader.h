@@ -1,5 +1,7 @@
 #pragma once
 
+#include <imtk.hpp>
+
 namespace oly::editor
 {
 #define ICON_RESOURCE_GENERATOR(M) \
@@ -46,12 +48,10 @@ namespace oly::editor
 		ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
 	};
 
-	class Texture;
-
 	struct ResourceLoader
 	{
 		static void LoadAll();
 
-		static Texture GetTexture(IconResource resource);
+		static imtk::texture GetTexture(IconResource resource);
 	};
 }

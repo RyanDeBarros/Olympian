@@ -513,7 +513,7 @@ namespace oly::editor
 					OpenPath(path);
 			}
 
-			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(std::filesystem::is_directory(path) ? path : res.get_import_path().get_absolute()).ID(),
+			ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(std::filesystem::is_directory(path) ? path : res.get_import_path().get_absolute()).id(),
 				icon_start, icon_start + icon_size);
 
 			if (entry_table_state.focused && IsSelected(path) && !dotdot)

@@ -5,7 +5,6 @@
 #include "desc/impl/TextureDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/graphics/Texture.h"
 #include "gui/ListModel.h"
 
 #include "assets/MetaSplitter.h"
@@ -41,7 +40,7 @@ namespace oly::editor
 		bool _gif = false;
 		bool _svg = false;
 		gui::ListModel _slots;
-		Texture _texture;
+		imtk::texture _texture;
 		PreviewNav _preview_nav;
 		bool _preview_spritesheet = true;
 		bool _stale_preview_texture = true;
