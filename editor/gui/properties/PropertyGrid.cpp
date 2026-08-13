@@ -17,7 +17,7 @@ namespace oly::editor::gui
 	static DrawResult KEY_DRAW_RESULT;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
-	static PropertyRow VALUE_PROPERTIES;
+	static imtk::prop::view_list VALUE_PROPERTIES;
 	static DrawResult VALUE_DRAW_RESULT;
 
 	static DrawResult FULL_DRAW_RESULT;
@@ -33,7 +33,7 @@ namespace oly::editor::gui
 	static void ClearRow()
 	{
 		VALUE_COMPONENTS.clear();
-		VALUE_PROPERTIES.list.clear();
+		VALUE_PROPERTIES.subviews.clear();
 
 		SUBROWS_TO_RESET.clear();
 	}
@@ -54,7 +54,7 @@ namespace oly::editor::gui
 		KEY_LABEL.clear();
 		ACTIVATED_RESET_SUBROWS.clear();
 
-		PropertyGroup::Begin();
+		imtk::prop::clipboard::new_session();
 	}
 
 	PropertyGrid::PropertyGrid(PropertyGrid&& o) noexcept
@@ -66,11 +66,7 @@ namespace oly::editor::gui
 	PropertyGrid::~PropertyGrid()
 	{
 		if (GRID_INSTANCE == this)
-		{
 			GRID_INSTANCE = nullptr;
-
-			PropertyGroup::End();
-		}
 	}
 
 	PropertyGrid::operator bool() const
@@ -98,12 +94,12 @@ namespace oly::editor::gui
 		VALUE_COMPONENTS.push_back(std::move(component));
 	}
 
-	bool PropertyGrid::Value::CheckProperty(std::unique_ptr<IPropertyView>&& prop)
+	bool PropertyGrid::Value::CheckProperty(std::unique_ptr<imtk::prop::iview> prop)
 	{
-		bool immediate = PropertyGroup::CheckValue(*prop);
-		DIRTY_GRID |= immediate;
-		VALUE_PROPERTIES.list.push_back(std::move(prop));
-		return immediate;
+		bool dirty = imtk::prop::clipboard::context_menu(*prop);
+		DIRTY_GRID |= dirty;
+		VALUE_PROPERTIES.subviews.push_back(std::move(prop));
+		return dirty;
 	}
 
 	void PropertyGrid::Reset::Button(size_t subrow)
@@ -128,7 +124,7 @@ namespace oly::editor::gui
 		KEY_LABEL.clear();
 
 		KEY_DRAW_RESULT = DrawResult().Query();
-		KEY_DRAW_RESULT |= PropertyGroup::CheckRow(VALUE_PROPERTIES);
+		KEY_DRAW_RESULT |= imtk::prop::clipboard::context_menu(VALUE_PROPERTIES);
 	}
 
 	static void DrawValueCell()
@@ -186,6 +182,13 @@ namespace oly::editor::gui
 	bool PropertyGrid::DirtyGrid()
 	{
 		return DIRTY_GRID;
+	}
+
+	bool PropertyGrid::CheckHeader(const imtk::prop::view_generator& generator)
+	{
+		bool dirty = imtk::prop::clipboard::context_menu(generator);
+		DIRTY_GRID |= dirty;
+		return dirty;
 	}
 
 	bool PropertyGrid::BeginForm(ImGuiID id)

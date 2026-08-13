@@ -12,7 +12,7 @@
 
 #include <span>
 
-// TODO DEBT support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkoboxes or combos enabling/disabling sections.
+// TODO DEBT support more complex property views. For example, a dynamic list of strings should be able to paste into another, even though they might have different sizes. Another example is dynamic descriptors, such as checkboxes or combos enabling/disabling sections.
 
 namespace oly::editor
 {
@@ -23,13 +23,12 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count)
 	{
-		const auto generator = [data, count](PropertyPage& props) {
-			PropertyRow row;
+		imtk::prop::view_generator generator = [data, count]() {
+			auto view = std::make_unique<imtk::prop::view_list>();
 			for (size_t i = 0; i < count; ++i)
-				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
-
-			props.page.push_back(std::move(row));
-			};
+				view->subviews.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+			return view;
+		};
 
 		if (auto subform = Subform(label, generator))
 		{
@@ -40,13 +39,12 @@ namespace oly::editor
 
 	void DescIO::Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count)
 	{
-		const auto generator = [data, count](PropertyPage& props) {
-			PropertyRow row;
+		imtk::prop::view_generator generator = [data, count]() {
+			auto view = std::make_unique<imtk::prop::view_list>();
 			for (size_t i = 0; i < count; ++i)
-				row.list.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
-
-			props.page.push_back(std::move(row));
-			};
+				view->subviews.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+			return view;
+		};
 
 		if (auto subform = Subform(label, generator))
 		{

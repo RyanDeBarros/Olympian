@@ -1,15 +1,34 @@
 #pragma once
 
-#include "gui/properties/PropertyClipboard.h"
+#include <imtk.hpp>
+
+#include <optional>
+#include <string>
 
 namespace oly::editor::prop
 {
 	template<typename T>
-	RawPropertyPayload MakePropertyPayload(const T& value);
+	struct PropertyPayloadInterface
+	{
+		static imtk::prop::payload Dump(const T& value)
+		{
+			return imtk::prop::payload::pod(value);
+		}
 
-	template<typename T>
-	bool CanParsePropertyPayload(const RawPropertyPayload& payload);
+		static std::optional<T> Load(const imtk::prop::payload& payload)
+		{
+			if (auto data = payload.resolve<T>())
+				return *data;
+			else
+				return std::nullopt;
+		}
+	};
 
-	template<typename T>
-	bool TryParsePropertyPayload(const RawPropertyPayload& payload, T& value);
+	// TODO v9.3 put into separate common_interfaces file
+	template<>
+	struct PropertyPayloadInterface<std::string>
+	{
+		static imtk::prop::payload Dump(const std::string& value);
+		static std::optional<std::string> Load(const imtk::prop::payload& payload);
+	};
 }

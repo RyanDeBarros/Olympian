@@ -2,7 +2,6 @@
 
 #include "gui/scopes/Form.h"
 #include "gui/scopes/CollapsingSection.h"
-#include "gui/properties/PropertyClipboard.h"
 
 #include <optional>
 
@@ -15,7 +14,7 @@ namespace oly::editor
 		std::optional<Form> _subform;
 
 	public:
-		Subform(const char* label, const std::function<void(PropertyPage&)>& property_page_generator, bool start_open = false);
+		Subform(const char* label, const imtk::prop::view_generator& property_generator, bool start_open = false);
 		Subform(const char* label, bool start_open = false);
 		Subform(const Subform&) = delete;
 		Subform(Subform&&) = delete;

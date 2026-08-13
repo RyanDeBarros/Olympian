@@ -2,8 +2,6 @@
 
 namespace oly::editor::prop
 {
-	static PropUID COMBO_UID = OLY_DECL_PROP_UID;
-
 	struct ComboPropertyPayload
 	{
 		int index;
@@ -15,33 +13,26 @@ namespace oly::editor::prop
 	{
 	}
 
-	RawPropertyPayload ComboPropertyView::Dump() const
+	imtk::prop::payload ComboPropertyView::dump() const
 	{
-		return RawPropertyPayload::Make(ComboPropertyPayload{ .index = index, .names = names }, COMBO_UID);
+		return imtk::prop::payload::pod(ComboPropertyPayload{ .index = index, .names = names });
 	}
 
-	bool ComboPropertyView::CanParse(const RawPropertyPayload& payload) const
+	bool ComboPropertyView::can_load(const imtk::prop::payload& payload) const
 	{
-		if (payload.type == COMBO_UID)
-		{
-			auto& data = *reinterpret_cast<const ComboPropertyPayload*>(payload.data.data());
-			if (data.names == names)
-				return true;
-			else
-				return false;
-		}
+		if (auto data = payload.resolve<ComboPropertyPayload>())
+			return data->names == names;
 		else
 			return false;
 	}
 
-	bool ComboPropertyView::TryParse(const RawPropertyPayload& payload) const
+	bool ComboPropertyView::try_load(const imtk::prop::payload& payload) const
 	{
-		if (CanParse(payload))
+		if (auto data = payload.resolve<ComboPropertyPayload>())
 		{
-			auto& data = *reinterpret_cast<const ComboPropertyPayload*>(payload.data.data());
-			if (index != data.index)
+			if (data->names == names && index != data->index)
 			{
-				index = data.index;
+				index = data->index;
 				return true;
 			}
 			else

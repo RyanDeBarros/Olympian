@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/WidgetComponent.h"
-#include "gui/properties/PropertyGroup.h"
 
 #include <imtk.hpp>
 
@@ -31,7 +30,7 @@ namespace oly::editor::gui
 			static DrawResult GetDrawResult();
 
 			static void AddComponent(WidgetComponent component);
-			static bool CheckProperty(std::unique_ptr<IPropertyView>&& prop);
+			static bool CheckProperty(std::unique_ptr<imtk::prop::iview> prop);
 		};
 
 		struct Reset
@@ -45,8 +44,9 @@ namespace oly::editor::gui
 
 		static void SubmitRow();
 		static bool DirtyRow();
-
+		
 		static bool DirtyGrid();
+		static bool CheckHeader(const imtk::prop::view_generator& generator);
 
 		static bool BeginForm(ImGuiID id);
 		static void EndForm(bool table_visible);

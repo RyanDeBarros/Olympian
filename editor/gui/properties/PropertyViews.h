@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui/properties/PropertyClipboard.h"
 #include "gui/properties/PropertyPayloads.h"
 
 // TODO v9.3 remove after moving to imtk
@@ -9,41 +8,44 @@
 namespace oly::editor::prop
 {
 	template<typename T>
-	struct PrimitivePropertyView : public IPropertyView
+	struct PrimitivePropertyView : public imtk::prop::iview
 	{
 		T& ref;
 
 		PrimitivePropertyView(T& ref) : ref(ref) {}
 
-		RawPropertyPayload Dump() const override
+		imtk::prop::payload dump() const override
 		{
-			return MakePropertyPayload(ref);
+			return PropertyPayloadInterface<T>::Dump(ref);
 		}
 
-		bool CanParse(const RawPropertyPayload& payload) const override
+		bool can_load(const imtk::prop::payload& payload) const override
 		{
-			return CanParsePropertyPayload<T>(payload);
+			return imp::erase_type<T>() == payload.type;
 		}
 		
-		bool TryParse(const RawPropertyPayload& payload) const override
+		bool try_load(const imtk::prop::payload& payload) const override
 		{
-			const T og = ref;
-			if (TryParsePropertyPayload(payload, ref))
-				return ref != og;
+			auto obj = PropertyPayloadInterface<T>::Load(payload);
+			if (obj && ref != *obj)
+			{
+				ref = *obj;
+				return true;
+			}
 			else
 				return false;
 		}
 	};
 
-	struct ComboPropertyView : public IPropertyView
+	struct ComboPropertyView : public imtk::prop::iview
 	{
 		int& index;
 		imtk::label_span_registry::handle names;
 		
 		ComboPropertyView(int& index, imtk::label_span_registry::handle names);
 
-		RawPropertyPayload Dump() const override;
-		bool CanParse(const RawPropertyPayload& payload) const override;
-		bool TryParse(const RawPropertyPayload& payload) const override;
+		imtk::prop::payload dump() const override;
+		bool can_load(const imtk::prop::payload& payload) const override;
+		bool try_load(const imtk::prop::payload& payload) const override;
 	};
 }
