@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/editor/LabelRegistry.h"
-
 #include "desc/DescIO.h"
 #include "desc/Serializer.h"
 #include "desc/FieldSetAction.h"
@@ -529,12 +527,12 @@ namespace oly::editor
 		detail::Key key;
 		const char* label;
 		const E* values;
-		LabelSpanRegistry::Handle names;
+		imtk::label_span_registry::handle names;
 		size_t count;
 
 		template<size_t Count>
 		DisjointEnumField(imtk::datapath_link link, E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
-			: link(std::move(link)), def(def), key(key), label(label), values(values), names(LabelSpanRegistry::Intern(std::span<const char*>(names, Count))), count(Count)
+			: link(std::move(link)), def(def), key(key), label(label), values(values), names(imtk::label_span_registry::intern(std::span<const char*>(names, Count))), count(Count)
 		{
 			SetValue(def);
 			def_index = Index(def);

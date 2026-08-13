@@ -1,9 +1,10 @@
 #pragma once
 
-#include "core/editor/LabelRegistry.h"
-
 #include "gui/properties/PropertyClipboard.h"
 #include "gui/properties/PropertyPayloads.h"
+
+// TODO v9.3 remove after moving to imtk
+#include <imtk.hpp>
 
 namespace oly::editor::prop
 {
@@ -37,9 +38,9 @@ namespace oly::editor::prop
 	struct ComboPropertyView : public IPropertyView
 	{
 		int& index;
-		LabelSpanRegistry::Handle names;
+		imtk::label_span_registry::handle names;
 		
-		ComboPropertyView(int& index, LabelSpanRegistry::Handle names);
+		ComboPropertyView(int& index, imtk::label_span_registry::handle names);
 
 		RawPropertyPayload Dump() const override;
 		bool CanParse(const RawPropertyPayload& payload) const override;

@@ -7,10 +7,10 @@ namespace oly::editor::prop
 	struct ComboPropertyPayload
 	{
 		int index;
-		LabelSpanRegistry::Handle names;
+		imtk::label_span_registry::handle names;
 	};
 
-	ComboPropertyView::ComboPropertyView(int& index, LabelSpanRegistry::Handle names)
+	ComboPropertyView::ComboPropertyView(int& index, imtk::label_span_registry::handle names)
 		: index(index), names(names)
 	{
 	}

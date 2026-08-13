@@ -16,7 +16,7 @@
 
 namespace oly::editor
 {
-	void DescIO::Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names)
+	void DescIO::Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names)
 	{
 		RowInputData(label, data, def, names);
 	}

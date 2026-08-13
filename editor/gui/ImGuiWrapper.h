@@ -3,8 +3,6 @@
 #include "core/Meta.h"
 #include "core/Types.h"
 
-#include "core/editor/LabelRegistry.h"
-
 #include "gui/DrawResult.h"
 
 #include "desc/OptionalPrimitive.h"
@@ -67,7 +65,7 @@ namespace oly::editor::gui
 	{
 		DrawResult operator()(const char* label, int& data) const;
 		DrawResult operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const;
-		DrawResult operator()(const char* label, int& data, LabelSpanRegistry::Handle names);
+		DrawResult operator()(const char* label, int& data, imtk::label_span_registry::handle names);
 	};
 
 	template<>

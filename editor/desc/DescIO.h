@@ -124,7 +124,7 @@ namespace oly::editor
 			RowInputData(label, data, def);
 		}
 
-		static void Draw(const char* label, int& data, const int& def, LabelSpanRegistry::Handle names);
+		static void Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names);
 		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count);
 		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
@@ -155,7 +155,7 @@ namespace oly::editor
 		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
 			int index = static_cast<int>(data);
-			LabelSpanRegistry::Handle span = LabelSpanRegistry::Intern(std::span<const char* const>(values, N));
+			auto span = imtk::label_span_registry::intern(std::span<const char* const>(values, N));
 			DrawResult result = gui::InputData<int>{}("##", index, span);
 			data = static_cast<E>(index);
 			return result;
