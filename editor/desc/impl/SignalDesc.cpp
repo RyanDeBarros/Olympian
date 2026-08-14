@@ -152,7 +152,7 @@ namespace oly::editor
 		link(std::move(link)),
 		id(IMTK_DATAPATH_SUBLINK(subpaths.id), "", detail::Key::ID, "ID"),
 		binding(IMTK_DATAPATH_SUBLINK(subpaths.binding), detail::SignalBindingType::Key, detail::Key::Binding, "Binding"),
-		variant(KeyDesc(IMTK_DATAPATH_SUBLINK(subpaths.variant)))
+		variant(IMTK_DATAPATH_SUBLINK(subpaths.variant), KeyDesc())
 	{
 	}
 

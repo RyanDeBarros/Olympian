@@ -8,51 +8,38 @@
 namespace oly::editor
 {
 #define GLYPH_BODY_GENERATOR(M) \
-		M(texture_file) \
-		M(texture_slot) \
-		M(location) \
-		M(padding) \
-		M(origin_offset_mode) \
-		M(origin_offset)
+		M((StringField), texture_file) \
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), texture_slot) \
+		M((RectField), location) \
+		M((TopSidePaddingField), padding) \
+		M((EnumField<detail::PositioningMode>), origin_offset_mode) \
+		M((Vec2Field<MakeOpt<float>(), MakeOpt<float>()>), origin_offset)
 
 #define GLYPH_GENERATOR(M) \
-		M(codepoint) \
+		M((StringField), codepoint) \
 		GLYPH_BODY_GENERATOR(M)
 
 	struct GlyphDesc
 	{
 		IMTK_DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
 
-		StringField codepoint;
-		StringField texture_file;
-		IntField<MakeOpt(0), MakeOpt<int>()> texture_slot;
-		RectField location;
-		TopSidePaddingField padding;
-		EnumField<detail::PositioningMode> origin_offset_mode;
-		Vec2Field<MakeOpt<float>(), MakeOpt<float>()> origin_offset;
-
 		GlyphDesc(imtk::datapath_link link = {});
 	};
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \
-		M(space_advance_width) \
-		M(line_height) \
-		M(font_scale) \
-		M(storage)
+		M((FloatField<MakeOpt<float>(), MakeOpt<float>()>), space_advance_width) \
+		M((FloatField<MakeOpt<float>(), MakeOpt<float>()>), line_height) \
+		M((Vec2Field<MakeOpt(0.f), MakeOpt<float>()>), font_scale) \
+		M((EnumField<detail::StorageMode>), storage)
 
 #define RASTER_FONT_GENERATOR(M) \
 		RASTER_FONT_PARTIAL_GENERATOR(M) \
-		M(glyphs)
+		M((imtk::desc::vector<GlyphDesc>), glyphs)
 
 	struct RasterFontDesc
 	{
 		IMTK_DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
 
-		FloatField<MakeOpt<float>(), MakeOpt<float>()> space_advance_width;
-		FloatField<MakeOpt<float>(), MakeOpt<float>()> line_height;
-		Vec2Field<MakeOpt(0.f), MakeOpt<float>()> font_scale;
-		EnumField<detail::StorageMode> storage;
-		imtk::desc::vector<GlyphDesc> glyphs;
 		static const detail::Key glyphs_key;
 
 		RasterFontDesc(imtk::datapath_link link = {});

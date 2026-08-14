@@ -456,7 +456,9 @@ namespace oly::editor
 			if (gui::PropertyGrid::DirtyRow())
 				_stale_preview_texture = true;
 
-			IMTK_DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
+			desc.image_storage.draw();
+			desc.abstract_storage.draw();
+			desc.scale.draw();
 		}
 	}
 	

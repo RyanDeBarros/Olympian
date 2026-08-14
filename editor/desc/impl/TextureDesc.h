@@ -12,112 +12,80 @@
 namespace oly::editor
 {
 #define SPRITESHEET_PARTIAL_GENERATOR(M) \
-		M(col_offset_index) \
-		M(col_offset_pixel) \
-		M(row_offset_index) \
-		M(row_offset_pixel) \
-		M(delay) \
-		M(row_major) \
-		M(row_up)
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), col_offset_index) \
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), col_offset_pixel) \
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), row_offset_index) \
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), row_offset_pixel) \
+		M((FloatField<MakeOpt(0.f), MakeOpt<float>()>), delay) \
+		M((BoolField), row_major) \
+		M((BoolField), row_up)
 
 #define SPRITESHEET_GENERATOR(M) \
-		M(col_type) \
-		M(col_value) \
-		M(row_type) \
-		M(row_value) \
+		M((EnumField<detail::SpritesheetParamType>), col_type) \
+		M((IntField<MakeOpt(1), MakeOpt<int>()>), col_value) \
+		M((EnumField<detail::SpritesheetParamType>), row_type) \
+		M((IntField<MakeOpt(1), MakeOpt<int>()>), row_value) \
 		SPRITESHEET_PARTIAL_GENERATOR(M)
 
 	struct SpritesheetDesc
 	{
 		IMTK_DESCRIPTOR_BODY(SpritesheetDesc, SPRITESHEET_GENERATOR);
 
-		EnumField<detail::SpritesheetParamType> col_type;
-		IntField<MakeOpt(1), MakeOpt<int>()> col_value;
-		EnumField<detail::SpritesheetParamType> row_type;
-		IntField<MakeOpt(1), MakeOpt<int>()> row_value;
-		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_index;
-		IntField<MakeOpt(0), MakeOpt<int>()> col_offset_pixel;
-		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_index;
-		IntField<MakeOpt(0), MakeOpt<int>()> row_offset_pixel;
-		FloatField<MakeOpt(0.f), MakeOpt<float>()> delay;
-		BoolField row_major;
-		BoolField row_up;
-
 		SpritesheetDesc(imtk::datapath_link link = {});
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
-		M(min_filter) \
-		M(mag_filter) \
-		M(wrap_s) \
-		M(wrap_t)
+		M((DisjointEnumField<GLenum>), min_filter) \
+		M((DisjointEnumField<GLenum>), mag_filter) \
+		M((DisjointEnumField<GLenum>), wrap_s) \
+		M((DisjointEnumField<GLenum>), wrap_t)
 
 #define BASE_TEXTURE_GENERATOR(M) \
 		TEXTURE_PARAMS_GENERATOR(M) \
-		M(anim) \
-		M(spritesheet)
+		M((BoolField), anim) \
+		M((SpritesheetDesc), spritesheet)
 
 	struct BaseTextureDesc
 	{
 		IMTK_DESCRIPTOR_BODY(BaseTextureDesc, BASE_TEXTURE_GENERATOR);
 
-		DisjointEnumField<GLenum> min_filter;
-		DisjointEnumField<GLenum> mag_filter;
-		DisjointEnumField<GLenum> wrap_s;
-		DisjointEnumField<GLenum> wrap_t;
-		BoolField anim;
-		SpritesheetDesc spritesheet;
-
 		BaseTextureDesc(GLenum default_filter, imtk::datapath_link link = {});
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
-		M(generate_mipmaps) \
-		M(storage)
+		M((BoolField), generate_mipmaps) \
+		M((EnumField<detail::StorageMode>), storage)
 
 #define RASTER_TEXTURE_GENERATOR(M) \
-		M(base) \
+		M((BaseTextureDesc), base) \
 		RASTER_TEXTURE_PARTIAL_GENERATOR(M)
 
 	struct RasterTextureDesc
 	{
 		IMTK_DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
 
-		BaseTextureDesc base;
-		BoolField generate_mipmaps;
-		EnumField<detail::StorageMode> storage;
-
 		RasterTextureDesc(imtk::datapath_link link = {});
 	};
 
-#define VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M) \
-		M(image_storage) \
-		M(abstract_storage) \
-		M(scale)
-
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
-		M(generate_mipmaps) \
-		VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS(M)
+		M((EnumField<detail::SVGMipmapGenerationMode>), generate_mipmaps) \
+		M((EnumField<detail::StorageMode>), image_storage) \
+		M((EnumField<detail::StorageMode>), abstract_storage) \
+		M((FloatField<MakeOpt(0.f), MakeOpt<float>()>), scale)
 
 #define VECTOR_TEXTURE_GENERATOR(M) \
-		M(base) \
+		M((BaseTextureDesc), base) \
 		VECTOR_TEXTURE_PARTIAL_GENERATOR(M)
 
 	struct VectorTextureDesc
 	{
 		IMTK_DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
 
-		BaseTextureDesc base;
-		EnumField<detail::SVGMipmapGenerationMode> generate_mipmaps;
-		EnumField<detail::StorageMode> image_storage;
-		EnumField<detail::StorageMode> abstract_storage;
-		FloatField<MakeOpt(0.f), MakeOpt<float>()> scale;
-
 		VectorTextureDesc(imtk::datapath_link link = {});
 	};
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
-		M(variant)
+		M((imtk::desc::variant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>>), variant)
 
 	template<typename T>
 	concept TextureSlotDesc = std::is_same_v<T, RasterTextureDesc> || std::is_same_v<T, VectorTextureDesc>;
@@ -126,7 +94,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
 
-		imtk::desc::variant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>> variant;
 		static const detail::Key array_key;
 
 		TextureVariantDesc(imtk::datapath_link link = {});

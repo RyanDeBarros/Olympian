@@ -181,7 +181,7 @@ namespace oly::editor
 
 	void FontDocument::Draw(FontFaceDesc& desc)
 	{
-		IMTK_DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.draw();
 
 		struct CodepointHash
 		{
@@ -359,7 +359,7 @@ namespace oly::editor
 
 	void FontDocument::Load(imtk::toml_node node, FontFaceDesc& desc)
 	{
-		IMTK_LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.load(node);
 
 		const toml::array* array = node[detail::encode_key(desc.kerning_key)].as_array();
 		if (array && !array->empty())
@@ -396,7 +396,7 @@ namespace oly::editor
 
 	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
 	{
-		IMTK_DUMP_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.dump(table);
 		
 		toml::array array;
 		for (auto& d : desc.kerning)

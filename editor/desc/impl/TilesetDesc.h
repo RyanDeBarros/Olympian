@@ -8,50 +8,40 @@
 namespace oly::editor
 {
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
-		M(texture) \
-		M(texture_index) \
-		M(uvs) \
-		M(reflection) \
-		M(rotation)
+		M((StringField), texture) \
+		M((IntField<MakeOpt(0), MakeOpt<int>()>), texture_index) \
+		M((UVRectField), uvs) \
+		M((BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT>), reflection) \
+		M((EnumField<detail::TileRotation>), rotation)
 
 	struct TilesetAssignmentDesc
 	{
 		IMTK_DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
 
-		StringField texture;
-		IntField<MakeOpt(0), MakeOpt<int>()> texture_index;
-		UVRectField uvs;
-		BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT> reflection;
-		EnumField<detail::TileRotation> rotation;
-
 		TilesetAssignmentDesc(imtk::datapath_link link = {});
 	};
 
 #define TILESET_ASSIGNMENT_MAP_GENERATOR(M) \
-		M(map)
+		M((imtk::desc::map<detail::TileConfig, TilesetAssignmentDesc>), map)
 
 	struct TilesetAssignmentMapDesc
 	{
 		IMTK_DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
 
-		imtk::desc::map<detail::TileConfig, TilesetAssignmentDesc> map;
-
 		TilesetAssignmentMapDesc(imtk::datapath_link link = {});
 	};
 
 #define TILESET_PARTIAL_GENERATOR(M) \
-		M(storage)
+		M((EnumField<detail::StorageMode>), storage)
 
 #define TILESET_GENERATOR(M) \
 		TILESET_PARTIAL_GENERATOR(M) \
-		M(assignments)
+		M((TilesetAssignmentMapDesc), assignments)
 
 	struct TilesetDesc
 	{
 		IMTK_DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
 
-		EnumField<detail::StorageMode> storage;
-		TilesetAssignmentMapDesc assignments;
 		static const detail::Key assignments_key;
 
 		TilesetDesc(imtk::datapath_link link = {});

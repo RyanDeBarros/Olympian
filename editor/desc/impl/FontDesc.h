@@ -8,34 +8,26 @@
 namespace oly::editor
 {
 #define KERNING_GENERATOR(M) \
-		M(pair) \
-		M(distance)
+		M((StringArrayField<2>), pair) \
+		M((IntField<MakeOpt<int>(), MakeOpt<int>()>), distance)
 
 	struct KerningDesc
 	{
 		IMTK_DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
-
-		StringArrayField<2> pair;
-		IntField<MakeOpt<int>(), MakeOpt<int>()> distance;
 
 		KerningDesc(imtk::datapath_link link = {});
 
 		friend std::ostream& operator<<(std::ostream& os, const KerningDesc& desc);
 	};
 
-#define FONT_FACE_PARTIAL_GENERATOR(M) \
-		M(storage)
-
 #define FONT_FACE_GENERATOR(M) \
-		FONT_FACE_PARTIAL_GENERATOR(M) \
-		M(kerning)
+		M((EnumField<detail::StorageMode>), storage) \
+		M((imtk::desc::vector<KerningDesc>), kerning)
 
 	struct FontFaceDesc
 	{
 		IMTK_DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
 
-		EnumField<detail::StorageMode> storage;
-		imtk::desc::vector<KerningDesc> kerning;
 		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
@@ -43,49 +35,34 @@ namespace oly::editor
 	};
 
 #define FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
-		M(storage) \
-		M(min_filter) \
-		M(mag_filter) \
-		M(auto_generate_mipmaps)
-
-#define FONT_ATLAS_PARTIAL_GENERATOR(M) \
-		M(font_size) \
-		FONT_ATLAS_NONPREVIEW_GENERATOR(M)
+		M((EnumField<detail::StorageMode>), storage) \
+		M((DisjointEnumField<GLenum>), min_filter) \
+		M((DisjointEnumField<GLenum>), mag_filter) \
+		M((BoolField), auto_generate_mipmaps)
 
 #define FONT_ATLAS_GENERATOR(M) \
-		FONT_ATLAS_PARTIAL_GENERATOR(M) \
-		M(use_common_buffer_preset) \
-		M(common_buffer_preset) \
-		M(common_buffer)
+		M((FloatField<MakeOpt(1.f), MakeOpt<float>()>), font_size) \
+		FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
+		M((BoolField), use_common_buffer_preset) \
+		M((EnumField<detail::CommonBufferPreset>), common_buffer_preset) \
+		M((StringField), common_buffer)
 
 	struct FontAtlasDesc
 	{
 		IMTK_DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
 
-		FloatField<MakeOpt(1.f), MakeOpt<float>()> font_size;
-		EnumField<detail::StorageMode> storage;
-		DisjointEnumField<GLenum> min_filter;
-		DisjointEnumField<GLenum> mag_filter;
-		BoolField auto_generate_mipmaps;
-
-		BoolField use_common_buffer_preset;
-		EnumField<detail::CommonBufferPreset> common_buffer_preset;
-		StringField common_buffer;
-
 		FontAtlasDesc(imtk::datapath_link link = {});
 	};
 
 #define FULL_FONT_GENERATOR(M) \
-		M(font_face) \
-		M(font_atlases)
+		M((FontFaceDesc), font_face) \
+		M((imtk::desc::vector<FontAtlasDesc>), font_atlases)
 
 	struct FullFontDesc
 	{
 		IMTK_DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
 
-		FontFaceDesc font_face;
 		static const detail::Key font_face_key;
-		imtk::desc::vector<FontAtlasDesc> font_atlases;
 		static const detail::Key font_atlas_key;
 
 		FullFontDesc(imtk::datapath_link link = {});
