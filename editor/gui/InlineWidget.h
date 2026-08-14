@@ -1,6 +1,5 @@
 #pragma once
 
-#include "gui/DrawResult.h"
 #include "gui/WidgetComponent.h"
 
 #include <imgui.h>
@@ -11,6 +10,6 @@ namespace oly::editor::gui
 {
 	struct InlineWidget
 	{
-		static DrawResult Draw(const std::span<WidgetComponent> components);
+		static imtk::item_result Draw(const std::span<WidgetComponent> components);
 	};
 }

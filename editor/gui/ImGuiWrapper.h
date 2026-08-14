@@ -3,8 +3,6 @@
 #include "core/Meta.h"
 #include "core/Types.h"
 
-#include "gui/DrawResult.h"
-
 #include "desc/OptionalPrimitive.h"
 
 #include <imtk.hpp>
@@ -46,72 +44,72 @@ namespace oly::editor::gui
 	}
 
 	template<typename T, typename U>
-	DrawResult InputClampedData(const char* label, T& data, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+	imtk::item_result InputClampedData(const char* label, T& data, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 	{
 		const auto og = data;
 		auto result = InputData<T>{}(label, data);
-		result.SetDirty(Clamp(data, og, min, max));
+		result.modified = Clamp(data, og, min, max);
 		return result;
 	}
 
 	template<>
 	struct InputData<bool>
 	{
-		DrawResult operator()(const char* label, bool& data) const;
+		imtk::item_result operator()(const char* label, bool& data) const;
 	};
 
 	template<>
 	struct InputData<int>
 	{
-		DrawResult operator()(const char* label, int& data) const;
-		DrawResult operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const;
-		DrawResult operator()(const char* label, int& data, imtk::label_span_registry::handle names);
+		imtk::item_result operator()(const char* label, int& data) const;
+		imtk::item_result operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const;
+		imtk::item_result operator()(const char* label, int& data, imtk::label_span_registry::handle names);
 	};
 
 	template<>
 	struct InputData<float>
 	{
-		DrawResult operator()(const char* label, float& data) const;
-		DrawResult operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, float& data) const;
+		imtk::item_result operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
 	template<>
 	struct InputData<double>
 	{
-		DrawResult operator()(const char* label, double& data) const;
-		DrawResult operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const;
+		imtk::item_result operator()(const char* label, double& data) const;
+		imtk::item_result operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec2>
 	{
-		DrawResult operator()(const char* label, glm::vec2& data) const;
-		DrawResult operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec2& data) const;
+		imtk::item_result operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec3>
 	{
-		DrawResult operator()(const char* label, glm::vec3& data) const;
-		DrawResult operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec3& data) const;
+		imtk::item_result operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec4>
 	{
-		DrawResult operator()(const char* label, glm::vec4& data) const;
-		DrawResult operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec4& data) const;
+		imtk::item_result operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
 	};
 
 	template<>
 	struct InputData<std::string>
 	{
-		DrawResult operator()(const char* label, std::string& data) const;
+		imtk::item_result operator()(const char* label, std::string& data) const;
 	};
 
 	template<>
 	struct InputData<Color4>
 	{
-		DrawResult operator()(const char* label, Color4& data) const;
+		imtk::item_result operator()(const char* label, Color4& data) const;
 	};
 }

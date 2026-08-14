@@ -14,13 +14,13 @@ namespace oly::editor::gui
 	static PropertyGrid* GRID_INSTANCE = nullptr;
 
 	static std::string KEY_LABEL;
-	static DrawResult KEY_DRAW_RESULT;
+	static imtk::item_state KEY_ITEM_STATE;
 
 	static std::vector<WidgetComponent> VALUE_COMPONENTS;
 	static imtk::prop::view_list VALUE_PROPERTIES;
-	static DrawResult VALUE_DRAW_RESULT;
+	static imtk::item_result VALUE_DRAW_RESULT;
 
-	static DrawResult FULL_DRAW_RESULT;
+	static imtk::item_result FULL_DRAW_RESULT;
 	
 	static std::unordered_set<size_t> SUBROWS_TO_RESET;
 	static std::unordered_set<size_t> ACTIVATED_RESET_SUBROWS;
@@ -47,7 +47,7 @@ namespace oly::editor::gui
 
 		ClearRow();
 
-		KEY_DRAW_RESULT = {};
+		KEY_ITEM_STATE = {};
 		VALUE_DRAW_RESULT = {};
 		FULL_DRAW_RESULT = {};
 		DIRTY_GRID = false;
@@ -74,17 +74,12 @@ namespace oly::editor::gui
 		return GRID_INSTANCE == this;
 	}
 
-	DrawResult PropertyGrid::Key::GetDrawResult()
-	{
-		return KEY_DRAW_RESULT;
-	}
-
 	void PropertyGrid::Key::SetLabel(const std::string_view label)
 	{
 		KEY_LABEL = label;
 	}
 
-	DrawResult PropertyGrid::Value::GetDrawResult()
+	imtk::item_result PropertyGrid::Value::GetDrawResult()
 	{
 		return VALUE_DRAW_RESULT;
 	}
@@ -123,8 +118,8 @@ namespace oly::editor::gui
 		ImGui::TextUnformatted(KEY_LABEL.c_str());
 		KEY_LABEL.clear();
 
-		KEY_DRAW_RESULT = DrawResult().Query();
-		KEY_DRAW_RESULT |= imtk::prop::clipboard::context_menu(VALUE_PROPERTIES);
+		KEY_ITEM_STATE = imtk::item_state::query();
+		DIRTY_GRID |= imtk::prop::clipboard::context_menu(VALUE_PROPERTIES);
 	}
 
 	static void DrawValueCell()
@@ -158,7 +153,7 @@ namespace oly::editor::gui
 		}
 	}
 
-	DrawResult PropertyGrid::GetFullDrawResult()
+	imtk::item_result PropertyGrid::GetFullDrawResult()
 	{
 		return FULL_DRAW_RESULT;
 	}
@@ -169,14 +164,15 @@ namespace oly::editor::gui
 		DrawResetCell();
 		DrawValueCell();
 		DrawKeyCell();
-		FULL_DRAW_RESULT = VALUE_DRAW_RESULT | KEY_DRAW_RESULT;
+		FULL_DRAW_RESULT = VALUE_DRAW_RESULT;
+		FULL_DRAW_RESULT.state |= KEY_ITEM_STATE;
 		DIRTY_GRID |= DirtyRow();
 		ClearRow();
 	}
 
 	bool PropertyGrid::DirtyRow()
 	{
-		return Value::GetDrawResult().IsDirty() || Reset::AnyActivated();
+		return Value::GetDrawResult().modified || Reset::AnyActivated();
 	}
 
 	bool PropertyGrid::DirtyGrid()

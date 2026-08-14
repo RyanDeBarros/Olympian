@@ -256,14 +256,14 @@ namespace oly::editor::gui
 		Apply(op, adapter);
 	}
 
-	DrawResult ListModel::DrawComboHeader(const ComboHeader& header, const char* slot_prefix)
+	imtk::item_result ListModel::DrawComboHeader(const ComboHeader& header, const char* slot_prefix)
 	{
 		return DrawComboHeader(header, [slot_prefix](size_t i) { return slot_prefix + (" " + std::to_string(i)); });
 	}
 
-	DrawResult ListModel::DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter)
+	imtk::item_result ListModel::DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter)
 	{
-		DrawResult result;
+		imtk::item_result result;
 
 		imtk::style_color sc(ImGuiCol_ChildBg, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.75f));
 
@@ -272,7 +272,7 @@ namespace oly::editor::gui
 			ImGui::TextUnformatted(header.prompt);
 			ImGui::SameLine();
 
-			DrawResult subresult;
+			imtk::item_result subresult;
 
 			std::vector<std::string> slot_names;
 			slot_names.reserve(_size);
@@ -286,19 +286,19 @@ namespace oly::editor::gui
 			ImGui::SameLine();
 			subresult = Toolbar::DrawIconButton(IconResource::Plus, header.create_tooltip, "##+");
 			result |= subresult;
-			if (subresult)
+			if (subresult.modified)
 				DeferCreate();
 
 			ImGui::SameLine();
 			subresult = Toolbar::DrawIconButton(IconResource::Minus, header.delete_tooltip, "##-");
 			result |= subresult;
-			if (subresult)
+			if (subresult.modified)
 				DeferDelete();
 
 			ImGui::SameLine();
 			subresult = Toolbar::DrawIconButton(IconResource::Close, header.clear_tooltip, "##x");
 			result |= subresult;
-			if (subresult)
+			if (subresult.modified)
 				DeferClear();
 		}
 

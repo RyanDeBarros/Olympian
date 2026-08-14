@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gui/DynamicList.h"
-#include "gui/EditSession.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/WidgetComponentCommon.h"
 
@@ -52,8 +51,8 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, OptionalPrimitive<T>& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> DrawResult {
-					DrawResult result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
+					imtk::item_result result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
 
 					imtk::id_scope scope(&data.value);
 					if (auto d = imtk::disabled(!data.has_value))
@@ -81,21 +80,21 @@ namespace oly::editor
 		}
 
 		template<typename T, typename... Args>
-		static void RowInputData(const char* label, EditSession<T>& data, const T& def, Args&&... args)
+		static void RowInputData(const char* label, imtk::edit_session<T>& data, const T& def, Args&&... args)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 
-			data.PreEdit();
-			if (data.buffer != def)
+			data.pre_edit();
+			if (data.buffer() != def)
 				gui::PropertyGrid::Reset::Button();
 
-			ValueInputData<T>{}("##", data.buffer, std::forward<Args>(args)...);
+			ValueInputData<T>{}("##", data.buffer(), std::forward<Args>(args)...);
 
 			gui::PropertyGrid::SubmitRow();
-			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
+			data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
 			if (gui::PropertyGrid::Reset::AnyActivated())
-				data.PublishReset(def);
+				data.publish_reset(def);
 		}
 
 		template<typename T, typename U = T>
@@ -105,7 +104,7 @@ namespace oly::editor
 		}
 
 		template<typename T, typename U = T>
-		static void Draw(const char* label, EditSession<T>& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
 		{
 			RowInputData(label, data, def, min, max);
 		}
@@ -117,27 +116,27 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void Draw(const char* label, EditSession<T>& data, const T& def)
+		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def)
 		{
 			RowInputData(label, data, def);
 		}
 
 		static void Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names);
-		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, size_t count);
-		static void Draw(const char* label, EditSession<std::string>* data, const std::string* def, const char** sublabels, size_t count);
+		static void Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, size_t count);
+		static void Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, const char** sublabels, size_t count);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
 
-		static void Draw(const char* label, EditSession<Rect>& data, const Rect& def);
-		static void Draw(const char* label, EditSession<UVRect>& data, const UVRect& def);
-		static void Draw(const char* label, EditSession<TopSidePadding>& data, const TopSidePadding& def);
+		static void Draw(const char* label, imtk::edit_session<Rect>& data, const Rect& def);
+		static void Draw(const char* label, imtk::edit_session<UVRect>& data, const UVRect& def);
+		static void Draw(const char* label, imtk::edit_session<TopSidePadding>& data, const TopSidePadding& def);
 
 		template<Enum E>
 		static void Draw(const char* label, E& data, const E& def)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> DrawResult { return DrawCombo("##", data); }));
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -146,25 +145,25 @@ namespace oly::editor
 		}
 
 		template<Enum E>
-		static DrawResult DrawCombo(const char* label, E& data);
+		static imtk::item_result DrawCombo(const char* label, E& data);
 
 	private:
 		template<Enum E, size_t N>
-		static DrawResult DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
+		static imtk::item_result DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
 			int index = static_cast<int>(data);
 			auto span = imtk::label_span_registry::intern(std::span<const char* const>(values, N));
-			DrawResult result = gui::InputData<int>{}("##", index, span);
+			imtk::item_result result = gui::InputData<int>{}("##", index, span);
 			data = static_cast<E>(index);
 			return result;
 		}
 
 	public:
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
-			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
+			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
-			DrawResult result;
+			imtk::item_result result;
 
 			ui_state.DrawListHeader(data.size());
 
@@ -172,11 +171,11 @@ namespace oly::editor
 				ImGui::SameLine();
 				auto row_result = draw_fn(row);
 				result |= row_result;
-				if (row_result.IsLeftClicked() || row_result.IsFocused())
+				if (row_result.state.left_clicked() || row_result.state.focused())
 					row.OnSelect();
 				});
 
-			result |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
+			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
@@ -203,44 +202,44 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static DrawResult ValueDrawDynamicList(const imtk::datapath_link& link, EditSession<std::vector<T>>& data,
-			const std::function<DrawResult(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
+		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, imtk::edit_session<std::vector<T>>& data,
+			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
-			DrawResult result;
+			imtk::item_result result;
 
-			ui_state.DrawListHeader(data.buffer.size());
+			ui_state.DrawListHeader(data.buffer().size());
 
 			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
 				ImGui::SameLine();
 				auto row_result = draw_fn(row);
 				result |= row_result;
-				if (row_result.IsLeftClicked() || row_result.IsFocused())
+				if (row_result.state.left_clicked() || row_result.state.focused())
 					row.OnSelect();
 				});
 
-			result |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
+			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-					data.CancelEditing();
+					data.cancel_editing();
 					ExecuteDynamicListDeleteAction<T, Printer>(link.compute_path(), op.GetIndex());
 					break;
 
 				case gui::RowOperation::Type::Move:
-					data.CancelEditing();
+					data.cancel_editing();
 					if (op.GetSrcIndex() != op.GetDstIndex())
 						ExecuteDynamicListMoveAction<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
 					break;
 
 				case gui::RowOperation::Type::Resize:
-					data.CancelEditing();
-					if (data.truth.size() != op.GetSize())
-						ExecuteDynamicListResizeAction<T>(link.compute_path(), data.truth.size(), op.GetSize());
+					data.cancel_editing();
+					if (data.truth().size() != op.GetSize())
+						ExecuteDynamicListResizeAction<T>(link.compute_path(), data.truth().size(), op.GetSize());
 					break;
 
 				case gui::RowOperation::Type::PushBack:
-					data.CancelEditing();
-					ExecuteDynamicListInsertAction<T, Printer>(link.compute_path(), data.truth.size());
+					data.cancel_editing();
+					ExecuteDynamicListInsertAction<T, Printer>(link.compute_path(), data.truth().size());
 					break;
 				}
 			});
@@ -250,14 +249,14 @@ namespace oly::editor
 
 		template<typename T, typename Printer = StandardPrinter<T>>
 		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
-			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
@@ -266,19 +265,19 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, EditSession<std::vector<T>>& data, const std::vector<T>& def,
-			std::function<DrawResult(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
+			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			if (data.buffer.size() != def.size())
+			if (data.buffer().size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> DrawResult
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
-			data.PostEdit(gui::PropertyGrid::Value::GetDrawResult());
+			data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
 			if (gui::PropertyGrid::Reset::Activated(0))
 				ui_state.DeferResize(def.size());
 		}
@@ -302,18 +301,18 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void DrawDynamicListRevertButtons(const EditSession<std::vector<T>>& data, const std::vector<T>& def)
+		static void DrawDynamicListRevertButtons(const imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def)
 		{
-			for (size_t i = 0; i < data.buffer.size(); ++i)
+			for (size_t i = 0; i < data.buffer().size(); ++i)
 			{
 				if (i < def.size())
 				{
-					if (data.buffer[i] != def[i])
+					if (data.buffer()[i] != def[i])
 						gui::PropertyGrid::Reset::Button(1 + i);
 				}
 				else
 				{
-					if (data.buffer[i] != T{})
+					if (data.buffer()[i] != T{})
 						gui::PropertyGrid::Reset::Button(1 + i);
 				}
 			}
@@ -335,18 +334,22 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void CheckDynamicListRevertButtons(EditSession<std::vector<T>>& data, const std::vector<T>& def)
+		static void CheckDynamicListRevertButtons(imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def)
 		{
-			for (size_t i = 0; i < data.buffer.size(); ++i)
+			std::vector<T> reset = data.buffer();
+			bool publish = false;
+
+			for (size_t i = 0; i < data.buffer().size(); ++i)
 			{
 				if (gui::PropertyGrid::Reset::Activated(1 + i))
 				{
-					T def_value = i < def.size() ? def[i] : T{};
-					data.buffer[i] = def_value;
-					data.truth[i] = def_value;
-					data.published = true;
+					reset[i] = i < def.size() ? def[i] : T{};
+					publish = true;
 				}
 			}
+
+			if (publish)
+				data.publish_reset(std::move(reset));
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
@@ -355,7 +358,7 @@ namespace oly::editor
 			DrawDynamicListRevertButtons(data, def);
 
 			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
-				DrawResult result;
+				imtk::item_result result;
 
 				ImGui::SameLine();
 				result |= gui::InputData<T>{}("##Item", data[row.Index()]);
@@ -375,7 +378,7 @@ namespace oly::editor
 			DrawDynamicListRevertButtons(data, def);
 
 			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
-				DrawResult result;
+				imtk::item_result result;
 
 				ImGui::SameLine();
 				result |= DrawCombo("##Item", data[row.Index()]);

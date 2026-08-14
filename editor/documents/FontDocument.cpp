@@ -205,51 +205,51 @@ namespace oly::editor
 		Counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
 		for (auto& k : desc.kerning)
 		{
-			k.distance.edit.PreEdit();
-			k.pair.edits[0].PreEdit();
-			k.pair.edits[1].PreEdit();
-			counter.increment({ k.pair.edits[0].buffer, k.pair.edits[1].buffer });
+			k.distance.edit.pre_edit();
+			k.pair.edits[0].pre_edit();
+			k.pair.edits[1].pre_edit();
+			counter.increment({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() });
 		}
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			auto& k = desc.kerning[i];
-			if (k.distance.edit.buffer != k.distance.def || k.pair.edits[0].buffer != k.pair.def[0] || k.pair.edits[1].buffer != k.pair.def[1])
+			if (k.distance.edit.buffer() != k.distance.def || k.pair.edits[0].buffer() != k.pair.def[0] || k.pair.edits[1].buffer() != k.pair.def[1])
 				gui::PropertyGrid::Reset::Button(1 + i);
 		}
 
-		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
+		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> imtk::item_result {
 			DynamicArray<gui::WidgetComponent> components;
 			auto& k = desc.kerning[row.Index()];
 
-			bool dup_warning = counter.count({ k.pair.edits[0].buffer, k.pair.edits[1].buffer }) > 1;
+			bool dup_warning = counter.count({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() }) > 1;
 			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
-				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> DrawResult {
-					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
+				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
+					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer()).has_value();
 					gui::Outline bad_outline;
 					if (bad_codepoint)
 						dup_warning = false;
 
-					DrawResult result;
+					imtk::item_result result;
 
 					if (i == 0)
 					{
 						ImGui::TextUnformatted(k.pair.label);
+						result |= imtk::item_result::query(false);
 						ImGui::SameLine();
-						result.Query();
 					}
 
-					result |= gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
-					k.pair.edits[i].PostEdit(result);
+					result |= gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer());
+					k.pair.edits[i].post_edit(result.state);
 
-					if (dup_warning && result.IsHovered())
+					if (dup_warning && result.state.hovered())
 						ImGui::SetTooltip("Duplicate codepoint pair");
 
 					if (bad_codepoint)
 					{
-						if (result.IsHovered())
+						if (result.state.hovered())
 							ImGui::SetTooltip("Bad codepoint format");
 
 						bad_outline.Draw(Color::Error);
@@ -265,14 +265,13 @@ namespace oly::editor
 				}));
 			}
 
-			components.push_back(comp::Generic([&k]() -> DrawResult {
-				DrawResult result;
+			components.push_back(comp::Generic([&k]() -> imtk::item_result {
 				imtk::controls::vertical_separator();
 				ImGui::TextUnformatted(k.distance.label);
-				result.Query();
+				auto result = imtk::item_result::query(false);
 				ImGui::SameLine();
-				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer);
-				k.distance.edit.PostEdit(result);
+				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer());
+				k.distance.edit.post_edit(result.state);
 				return result;
 			}));
 
@@ -284,22 +283,22 @@ namespace oly::editor
 			KerningDesc& k = desc.kerning[i];
 			if (gui::PropertyGrid::Reset::Activated(1 + i))
 			{
-				k.distance.edit.PublishReset(k.distance.def);
-				k.pair.edits[0].PublishReset(k.pair.def[0]);
-				k.pair.edits[1].PublishReset(k.pair.def[1]);
+				k.distance.edit.publish_reset(k.distance.def);
+				k.pair.edits[0].publish_reset(k.pair.def[0]);
+				k.pair.edits[1].publish_reset(k.pair.def[1]);
 				MarkDirty();
 			}
 
 			bool publish_action = false;
-			publish_action |= k.distance.edit.ConsumeModified();
-			publish_action |= k.pair.edits[0].ConsumeModified();
-			publish_action |= k.pair.edits[1].ConsumeModified();
+			publish_action |= k.distance.edit.consume_modified();
+			publish_action |= k.pair.edits[0].consume_modified();
+			publish_action |= k.pair.edits[1].consume_modified();
 			if (publish_action)
 			{
 				KerningDesc original;
-				original.distance.value = std::move(k.distance.edit.original);
-				original.pair.value[0] = std::move(k.pair.edits[0].original);
-				original.pair.value[1] = std::move(k.pair.edits[1].original);
+				original.distance.value = std::move(k.distance.edit.original());
+				original.pair.value[0] = std::move(k.pair.edits[0].original());
+				original.pair.value[1] = std::move(k.pair.edits[1].original());
 				PushDescriptorSetAction(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}
@@ -323,10 +322,10 @@ namespace oly::editor
 				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
+					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> imtk::item_result {
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-						return false;
+						return imtk::item_result::query(false);
 					}));
 					gui::PropertyGrid::SubmitRow();
 				}

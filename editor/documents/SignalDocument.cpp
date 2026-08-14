@@ -210,7 +210,7 @@ namespace oly::editor
 		desc.id.draw();
 		if (GetIDCounter().count(desc.id.value) > 1)
 		{
-			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+			if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -255,18 +255,18 @@ namespace oly::editor
 		desc.id.draw();
 		if (id_counter.count(desc.id.value) > 1)
 		{
-			if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+			if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
 		}
 
-		desc.signals.edit.PreEdit();
+		desc.signals.edit.pre_edit();
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> DrawResult {
-			auto component = comp::Generic([&]() -> DrawResult {
-				std::string& element = desc.signals.edit.buffer[row.Index()];
+		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> imtk::item_result {
+			auto component = comp::Generic([&]() -> imtk::item_result {
+				std::string& element = desc.signals.edit.buffer()[row.Index()];
 
 				gui::Outline outline;
 				auto result = gui::InputData<std::string>{}("##Item", element);
@@ -274,17 +274,17 @@ namespace oly::editor
 				if (!signal_id_counter.contains(element))
 				{
 					outline.Draw(Color::Warning);
-					if (result.IsHovered())
+					if (result.state.hovered())
 						ImGui::SetTooltip("Signal id is not present in asset");
 				}
 				else if (local_id_counter.count(element) > 1)
 				{
 					outline.Draw(Color::Warning);
-					if (result.IsHovered())
+					if (result.state.hovered())
 						ImGui::SetTooltip("Duplicate signal id listing in route");
 				}
 
-				if (result.IsActivated())
+				if (result.state.activated())
 					row.OnSelect();
 
 				return result;
@@ -300,20 +300,20 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
-			DrawResult result = InputListener::DrawKeyListener(_listen_mode, key);
+			imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
 			ImGui::SameLine();
 			if (key)
 			{
 				if (*key != desc.key.Value())
 				{
 					desc.key.SetValue(*key);
-					result.SetDirty(true);
+					result.modified = true;
 				}
 				else
-					result.SetDirty(false);
+					result.modified = false;
 			}
 			return result;
 		}));
@@ -338,20 +338,20 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::MouseButton> mb;
-			DrawResult result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
+			imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
 			ImGui::SameLine();
 			if (mb)
 			{
 				if (*mb != desc.button.Value())
 				{
 					desc.button.SetValue(*mb);
-					result.SetDirty(true);
+					result.modified = true;
 				}
 				else
-					result.SetDirty(false);
+					result.modified = false;
 			}
 			return result;
 		}));
@@ -376,20 +376,20 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> button;
-			DrawResult result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+			imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
 			ImGui::SameLine();
 			if (button)
 			{
 				if (*button != desc.button.Value())
 				{
 					desc.button.SetValue(*button);
-					result.SetDirty(true);
+					result.modified = true;
 				}
 				else
-					result.SetDirty(false);
+					result.modified = false;
 			}
 			return result;
 		}));
@@ -401,20 +401,20 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> axis;
-			DrawResult result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+			imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
 			ImGui::SameLine();
 			if (axis)
 			{
 				if (*axis != desc.axis.Value())
 				{
 					desc.axis.SetValue(*axis);
-					result.SetDirty(true);
+					result.modified = true;
 				}
 				else
-					result.SetDirty(false);
+					result.modified = false;
 			}
 			return result;
 		}));
@@ -427,20 +427,20 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> DrawResult {
+		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::GamepadAxis2D> axis;
-			DrawResult result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
+			imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
 			ImGui::SameLine();
 			if (axis)
 			{
 				if (*axis != desc.axis.value)
 				{
 					desc.axis.value = *axis;
-					result.SetDirty(true);
+					result.modified = true;
 				}
 				else
-					result.SetDirty(false);
+					result.modified = false;
 			}
 			return result;
 		}));

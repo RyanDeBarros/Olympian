@@ -1,14 +1,12 @@
 #pragma once
 
-#include "gui/DrawResult.h"
-
-#include <functional>
+#include <imtk.hpp>
 
 namespace oly::editor::gui
 {
 	struct WidgetComponent
 	{
-		std::function<DrawResult()> draw;
+		std::function<imtk::item_result()> draw;
 
 		explicit WidgetComponent() = default;
 	};

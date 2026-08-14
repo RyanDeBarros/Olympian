@@ -2,8 +2,6 @@
 
 #include "core/Modifiable.h"
 
-#include "gui/DrawResult.h"
-
 #include "desc/DynamicListUndoActions.h"
 
 #include "util/Counter.h"
@@ -127,8 +125,8 @@ namespace oly::editor::gui
 			const char* clear_tooltip;
 		};
 
-		DrawResult DrawComboHeader(const ComboHeader& header, const char* slot_prefix);
-		DrawResult DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
+		imtk::item_result DrawComboHeader(const ComboHeader& header, const char* slot_prefix);
+		imtk::item_result DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
 	};
 
 	template<typename T, typename Printer = StandardPrinter<T>>

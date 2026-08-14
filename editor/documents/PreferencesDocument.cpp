@@ -185,10 +185,11 @@ namespace oly::editor
 		if (auto subform = Subform("Advanced"))
 		{
 			gui::PropertyGrid::Key::SetLabel("Estimated trash folder size");
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([]() -> DrawResult {
+			gui::PropertyGrid::Value::AddComponent(comp::Generic([]() -> imtk::item_result {
 				std::string buf = std::to_string(fio::Trashcan::EstimatedSize()) + " bytes";
-				ImGui::InputText("##", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-				return DrawResult().Query();
+				imtk::controls::input_text("##", buf, buf.size(), ImGuiInputTextFlags_ReadOnly);
+				// TODO v9.2 utility for read-only text that already uses buf.size() as max (imtk::controls::readonly_text()) + return false, as well as pass string_view instead of string&
+				return imtk::item_result::query(false);
 			}));
 			gui::PropertyGrid::SubmitRow();
 

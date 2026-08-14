@@ -20,14 +20,12 @@ namespace oly::editor::gui
 
 		struct Key
 		{
-			static DrawResult GetDrawResult();
-
 			static void SetLabel(const std::string_view label);
 		};
 
 		struct Value
 		{
-			static DrawResult GetDrawResult();
+			static imtk::item_result GetDrawResult();
 
 			static void AddComponent(WidgetComponent component);
 			static bool CheckProperty(std::unique_ptr<imtk::prop::iview> prop);
@@ -40,7 +38,7 @@ namespace oly::editor::gui
 			static bool AnyActivated();
 		};
 
-		static DrawResult GetFullDrawResult();
+		static imtk::item_result GetFullDrawResult();
 
 		static void SubmitRow();
 		static bool DirtyRow();

@@ -225,7 +225,7 @@ namespace oly::editor
 	void TilesetDocument::DrawGroupEditor()
 	{
 		int type_index = static_cast<int>(_group_editors.current_type);
-		if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }))
+		if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }).modified)
 			_group_editors.current_type = static_cast<GroupEditorType>(type_index);
 
 		GridEditorStateBase* editor = nullptr;
@@ -383,14 +383,14 @@ namespace oly::editor
 			if (auto scope = imtk::id_scope(&desc.texture))
 			{
 				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
-				desc.texture.edit.PreEdit();
-				if (desc.texture.edit.buffer != desc.texture.def)
+				desc.texture.edit.pre_edit();
+				if (desc.texture.edit.buffer() != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> DrawResult {
+				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> imtk::item_result {
 					imtk::id_scope scope(&desc.texture.value);
 
-					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
+					imtk::item_result result = gui::InputData<std::string>{}("", desc.texture.edit.buffer());
 
 					// TODO v9.4 support dropping files directly on grid cells
 					if (auto target = imtk::drag_drop_target())
@@ -405,21 +405,21 @@ namespace oly::editor
 						{
 							if (path->is_resource())
 							{
-								desc.texture.edit.PublishReset(path->get_resource_shorthand());
-								result.SetDirty(true);
+								desc.texture.edit.publish_reset(path->get_resource_shorthand());
+								result.modified = true;
 							}
 							else
 								Notifier::NotifyError("Path is not located in resource folder");
 						}
 					}
 
-					desc.texture.edit.PostEdit(result);
+					desc.texture.edit.post_edit(result.state);
 					return result;
 				}));
 
 				gui::PropertyGrid::SubmitRow();
 				if (gui::PropertyGrid::Reset::AnyActivated())
-					desc.texture.edit.PublishReset(desc.texture.def);
+					desc.texture.edit.publish_reset(desc.texture.def);
 
 				desc.texture.CheckUndoAction();
 			}

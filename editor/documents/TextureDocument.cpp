@@ -483,7 +483,7 @@ namespace oly::editor
 			if (auto d = imtk::disabled(_gif))
 			{
 				desc.anim.draw();
-				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+				if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 

@@ -154,7 +154,7 @@ namespace oly::editor
 
 		style_stack.clear();
 
-		if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+		if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");

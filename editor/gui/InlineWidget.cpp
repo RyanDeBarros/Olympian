@@ -4,9 +4,9 @@
 
 namespace oly::editor::gui
 {
-	DrawResult InlineWidget::Draw(const std::span<WidgetComponent> components)
+	imtk::item_result InlineWidget::Draw(const std::span<WidgetComponent> components)
 	{
-		DrawResult result;
+		imtk::item_result result;
 
 		imtk::style_var cell_padding(ImGuiStyleVar_CellPadding, ImVec2(ImGui::GetStyle().CellPadding.x, 0.f));
 

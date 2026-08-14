@@ -6,22 +6,23 @@
 
 namespace oly::editor
 {
-	static DrawResult _DrawIconButton(bool& selected, ImVec2 size)
+	static imtk::item_result _DrawIconButton(bool& selected, ImVec2 size)
 	{
-		DrawResult result;
+		imtk::item_result result;
 		imtk::id_scope scope(&selected);
 		if (ImGui::InvisibleButton("##IconButton", size))
 		{
 			selected = !selected;
-			result |= true;
-			result.Query();
+			result = imtk::item_result::query(true);
 		}
+		else
+			result = imtk::item_result::query(false);
 		return result;
 	}
 
-	static void _HandleIconHovered(ImVec2 pos, ImVec2 size, const char* tooltip)
+	static void _HandleIconHovered(imtk::item_state state, ImVec2 pos, ImVec2 size, const char* tooltip)
 	{
-		if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+		if (state.hovered())
 		{
 			ImGui::GetWindowDrawList()->AddRectFilled(pos, pos + size, ImGui::GetColorU32(ImGuiCol_HeaderHovered, 0.9f), 6.0f);
 			if (tooltip)
@@ -38,55 +39,48 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(ResourceLoader::GetTexture(icon).id(), start, end, ImVec2(0, 0), ImVec2(1, 1), tint);
 	}
 
-	DrawResult Toolbar::DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip, IconSettings settings)
+	imtk::item_result Toolbar::DrawIconToggleButton(IconResource selected_icon, IconResource deselected_icon, bool& selected, const char* tooltip, IconSettings settings)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		DrawResult result = _DrawIconButton(selected, size);
-		_HandleIconHovered(pos, size, tooltip);
+		imtk::item_result result = _DrawIconButton(selected, size);
+		_HandleIconHovered(result.state, pos, size, tooltip);
 		DrawIconImage(pos, selected ? selected_icon : deselected_icon, settings);
 		return result;
 	}
 
-	DrawResult Toolbar::DrawIconToggleButton(IconResource icon, bool& selected, const char* tooltip, IconSettings settings)
+	imtk::item_result Toolbar::DrawIconToggleButton(IconResource icon, bool& selected, const char* tooltip, IconSettings settings)
 	{
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		DrawResult result = _DrawIconButton(selected, size);
-		_HandleIconHovered(pos, size, tooltip);
+		imtk::item_result result = _DrawIconButton(selected, size);
+		_HandleIconHovered(result.state, pos, size, tooltip);
 		if (!selected)
 			settings.tint_alpha *= 0.3f;
 		DrawIconImage(pos, icon, settings);
 		return result;
 	}
 
-	DrawResult Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const char* str_id, IconSettings settings)
+	imtk::item_result Toolbar::DrawIconButton(IconResource icon, const char* tooltip, const char* str_id, IconSettings settings)
 	{
-		DrawResult result;
 		const ImVec2 pos = ImGui::GetCursorScreenPos();
 		const ImVec2 size = ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		if (ImGui::InvisibleButton(str_id, size))
-		{
-			result |= true;
-			result.Query();
-		}
+		auto result = imtk::item_result::query(ImGui::InvisibleButton(str_id, size));
 
-		_HandleIconHovered(pos, size, tooltip);
+		_HandleIconHovered(result.state, pos, size, tooltip);
 		DrawIconImage(pos, icon, settings);
 		return result;
 	}
 
-	DrawResult Toolbar::DrawHandle(const char* str_id)
+	imtk::item_result Toolbar::DrawHandle(const char* str_id)
 	{
 		DrawIconImage(ImGui::GetCursorScreenPos(), IconResource::Handle, {});
-		DrawResult result = ImGui::InvisibleButton(str_id, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
-		return result.Query();
+		return imtk::item_result::query(ImGui::InvisibleButton(str_id, ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight())));
 	}
 
-	DrawResult Toolbar::IconMenuItem(std::string label, IconResource icon, IconSettings settings)
+	imtk::item_result Toolbar::IconMenuItem(std::string label, IconResource icon, IconSettings settings)
 	{
-		DrawResult result = ImGui::MenuItem(("   " + label).c_str());
-		result.Query();
+		auto result = imtk::item_result(ImGui::MenuItem(("   " + label).c_str()));
 		Toolbar::DrawIconImage(ImGui::GetItemRectMin() + ImVec2(2.f, 0.f), icon, settings);
 		return result;
 	}

@@ -85,7 +85,7 @@ namespace oly::editor
 		inline static const OptionalPrimitive<U> Min = _Min;
 		inline static const OptionalPrimitive<U> Max = _Max;
 
-		EditSession<T> edit;
+		imtk::edit_session<T> edit;
 
 		RangeField(imtk::datapath_link link, T def, detail::Key key, const char* label)
 			: Super(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(this->value)
@@ -118,8 +118,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(this->link.compute_path(), std::move(edit.original), this->value);
+			if (edit.consume_modified())
+				PushFieldSetAction(this->link.compute_path(), edit.original(), this->value);
 		}
 
 		void on_last_process_frame() override
@@ -155,7 +155,7 @@ namespace oly::editor
 
 	struct StringField : public PrimitiveField<std::string>, public imtk::tick_processor
 	{
-		EditSession<std::string> edit;
+		imtk::edit_session<std::string> edit;
 
 		StringField(imtk::datapath_link link, std::string def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), std::move(def), key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
@@ -186,8 +186,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void on_last_process_frame() override
@@ -198,7 +198,7 @@ namespace oly::editor
 
 	struct Color4Field : public PrimitiveField<Color4>, public imtk::tick_processor
 	{
-		EditSession<Color4> edit;
+		imtk::edit_session<Color4> edit;
 
 		Color4Field(imtk::datapath_link link, Color4 def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
@@ -229,8 +229,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void on_last_process_frame() override
@@ -241,7 +241,7 @@ namespace oly::editor
 
 	struct RectField : public PrimitiveField<Rect>, public imtk::tick_processor
 	{
-		EditSession<Rect> edit;
+		imtk::edit_session<Rect> edit;
 
 		RectField(imtk::datapath_link link, Rect def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
@@ -272,8 +272,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void on_last_process_frame() override
@@ -284,7 +284,7 @@ namespace oly::editor
 
 	struct UVRectField : public PrimitiveField<UVRect>, public imtk::tick_processor
 	{
-		EditSession<UVRect> edit;
+		imtk::edit_session<UVRect> edit;
 
 		UVRectField(imtk::datapath_link link, UVRect def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
@@ -315,8 +315,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void on_last_process_frame() override
@@ -327,7 +327,7 @@ namespace oly::editor
 
 	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>, public imtk::tick_processor
 	{
-		EditSession<TopSidePadding> edit;
+		imtk::edit_session<TopSidePadding> edit;
 
 		TopSidePaddingField(imtk::datapath_link link, TopSidePadding def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
@@ -358,8 +358,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void on_last_process_frame() override
@@ -397,7 +397,7 @@ namespace oly::editor
 		using Super = PrimitiveField<std::array<T, N>>;
 
 		const char** sublabels = nullptr;
-		std::array<EditSession<T>, N> edits;
+		std::array<imtk::edit_session<T>, N> edits;
 
 		SessionArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label)
 			: Super(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo),
@@ -413,9 +413,9 @@ namespace oly::editor
 
 	private:
 		template<size_t... Is>
-		static std::array<EditSession<T>, N> _MakeEdits(std::array<T, N>& value, std::index_sequence<Is...>)
+		static std::array<imtk::edit_session<T>, N> _MakeEdits(std::array<T, N>& value, std::index_sequence<Is...>)
 		{
-			return { EditSession<T>{value[Is]}... };
+			return { imtk::edit_session<T>{value[Is]}... };
 		}
 
 	public:
@@ -449,8 +449,8 @@ namespace oly::editor
 		{
 			for (size_t i = 0; i < N; ++i)
 			{
-				if (edits[i].ConsumeModified())
-					PushFieldSetAction(this->link.compute_path() / imtk::datapath::step(i), std::move(edits[i].original), this->value[i]);
+				if (edits[i].consume_modified())
+					PushFieldSetAction(this->link.compute_path() / imtk::datapath::step(i), std::move(edits[i].original()), this->value[i]);
 			}
 		}
 
@@ -493,7 +493,7 @@ namespace oly::editor
 	{
 		using Super = VectorField<std::string>;
 
-		EditSession<std::vector<std::string>> edit;
+		imtk::edit_session<std::vector<std::string>> edit;
 
 		StringVectorField(imtk::datapath_link link, std::vector<std::string> def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(value) {}
 
@@ -512,8 +512,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(this->link.compute_path(), std::move(edit.original), this->value);
+			if (edit.consume_modified())
+				PushFieldSetAction(this->link.compute_path(), edit.original(), this->value);
 		}
 	};
 
@@ -606,7 +606,7 @@ namespace oly::editor
 		imtk::datapath_link link;
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> value;
-		EditSession<OptionalPrimitive<T>> edit;
+		imtk::edit_session<OptionalPrimitive<T>> edit;
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
@@ -649,8 +649,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void load(imtk::toml_node node)
@@ -709,7 +709,7 @@ namespace oly::editor
 		imtk::datapath_link link;
 		OptionalPrimitive<T> def;
 		OptionalPrimitive<T> value;
-		EditSession<OptionalPrimitive<T>> edit;
+		imtk::edit_session<OptionalPrimitive<T>> edit;
 		T nullopt;
 		detail::Key key;
 		const char* label;
@@ -752,8 +752,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.ConsumeModified())
-				PushFieldSetAction(link.compute_path(), std::move(edit.original), value);
+			if (edit.consume_modified())
+				PushFieldSetAction(link.compute_path(), edit.original(), value);
 		}
 
 		void load(imtk::toml_node node)
