@@ -7,8 +7,8 @@
 namespace oly::editor
 {
 #define UNDO_HISTORY_SETTINGS_GENERATOR(M) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), count_limit) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), size_limit) \
+		M((IntField<1, imp::nullpotential>), count_limit) \
+		M((IntField<1, imp::nullpotential>), size_limit) \
 		M((EnumField<MemoryUnit>), size_limit_unit)
 
 	struct UndoHistorySettingsDesc
@@ -34,7 +34,7 @@ namespace oly::editor
 	};
 
 #define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), folder_history_limit)
+		M((IntField<1, imp::nullpotential>), folder_history_limit)
 
 	struct ContentBrowserSettingsDesc
 	{
@@ -44,7 +44,7 @@ namespace oly::editor
 	};
 
 #define TREE_VIEW_ADVANCED_SETTINGS_GENERATOR(M) \
-		M((FloatField<MakeOpt(0.1f), MakeOpt<float>()>), analysis_interval)
+		M((FloatField<0.1f, imp::nullpotential>), analysis_interval)
 
 	struct TreeViewAdvancedSettingsDesc
 	{
@@ -68,7 +68,7 @@ namespace oly::editor
 	};
 
 #define FILESYSTEM_SETTINGS_GENERATOR(M) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), trash_limit) \
+		M((IntField<1, imp::nullpotential>), trash_limit) \
 		M((EnumField<MemoryUnit>), trash_limit_unit)
 
 	struct FilesystemSettingsDesc

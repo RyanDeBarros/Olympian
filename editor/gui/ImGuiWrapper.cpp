@@ -25,7 +25,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<int>::operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const
+	imtk::item_result InputData<int>::operator()(const char* label, int& data, imp::potential<int> min, imp::potential<int> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}
@@ -46,7 +46,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<float>::operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
+	imtk::item_result InputData<float>::operator()(const char* label, float& data, imp::potential<float> min, imp::potential<float> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}
@@ -59,7 +59,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<double>::operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const
+	imtk::item_result InputData<double>::operator()(const char* label, double& data, imp::potential<double> min, imp::potential<double> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}
@@ -72,7 +72,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<glm::vec2>::operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
+	imtk::item_result InputData<glm::vec2>::operator()(const char* label, glm::vec2& data, imp::potential<float> min, imp::potential<float> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}
@@ -85,7 +85,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<glm::vec3>::operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
+	imtk::item_result InputData<glm::vec3>::operator()(const char* label, glm::vec3& data, imp::potential<float> min, imp::potential<float> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}
@@ -98,7 +98,7 @@ namespace oly::editor::gui
 		return result;
 	}
 
-	imtk::item_result InputData<glm::vec4>::operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const
+	imtk::item_result InputData<glm::vec4>::operator()(const char* label, glm::vec4& data, imp::potential<float> min, imp::potential<float> max) const
 	{
 		return InputClampedData(label, data, min, max);
 	}

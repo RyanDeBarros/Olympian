@@ -9,7 +9,7 @@ namespace oly::editor
 {
 #define KERNING_GENERATOR(M) \
 		M((StringArrayField<2>), pair) \
-		M((IntField<MakeOpt<int>(), MakeOpt<int>()>), distance)
+		M((IntField<imp::nullpotential, imp::nullpotential>), distance)
 
 	struct KerningDesc
 	{
@@ -41,7 +41,7 @@ namespace oly::editor
 		M((BoolField), auto_generate_mipmaps)
 
 #define FONT_ATLAS_GENERATOR(M) \
-		M((FloatField<MakeOpt(1.f), MakeOpt<float>()>), font_size) \
+		M((FloatField<1.f, imp::nullpotential>), font_size) \
 		FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
 		M((BoolField), use_common_buffer_preset) \
 		M((EnumField<detail::CommonBufferPreset>), common_buffer_preset) \

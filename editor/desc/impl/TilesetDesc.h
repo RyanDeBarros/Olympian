@@ -9,7 +9,7 @@ namespace oly::editor
 {
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
 		M((StringField), texture) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), texture_index) \
+		M((IntField<imp::potential<int>(0), imp::nullpotential>), texture_index) \
 		M((UVRectField), uvs) \
 		M((BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT>), reflection) \
 		M((EnumField<detail::TileRotation>), rotation)

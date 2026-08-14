@@ -17,7 +17,7 @@ namespace oly::editor
 
 #define WINDOW_HINTS_GENERATOR(M) \
 	M((Color4Field), context_clear_color) \
-	M((IntField<MakeOpt(0), MakeOpt<int>()>), context_swap_interval) \
+	M((IntField<0, imp::nullpotential>), context_swap_interval) \
 	M((BoolField), window_resizable) \
 	M((BoolField), window_visible) \
 	M((BoolField), window_decorated) \
@@ -31,9 +31,9 @@ namespace oly::editor
 	M((BoolField), window_scale_to_monitor) \
 	M((BoolField), window_scale_framebuffer) \
 	M((BoolField), window_mouse_passthrough) \
-	M((CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()>), window_position_x) \
-	M((CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()>), window_position_y) \
-	M((CompactOptionalIntField<MakeOpt(0), MakeOpt<int>()>), window_refresh_rate) \
+	M((CompactOptionalIntField<0, imp::nullpotential>), window_position_x) \
+	M((CompactOptionalIntField<0, imp::nullpotential>), window_position_y) \
+	M((CompactOptionalIntField<0, imp::nullpotential>), window_refresh_rate) \
 	M((BoolField), window_stereo) \
 	M((BoolField), window_srgb_capable) \
 	M((BoolField), window_opengl_forward_compat) \
@@ -47,8 +47,8 @@ namespace oly::editor
 	};
 
 #define WINDOW_PARTIAL_GENERATOR(M) \
-	M((IntField<MakeOpt(1), MakeOpt<int>()>), width) \
-	M((IntField<MakeOpt(1), MakeOpt<int>()>), height) \
+	M((IntField<1, imp::nullpotential>), width) \
+	M((IntField<1, imp::nullpotential>), height) \
 	M((StringField), title)
 
 #define WINDOW_GENERATOR(M) \
@@ -67,7 +67,7 @@ namespace oly::editor
 	};
 
 #define PLATFORM_PARTIAL_GENERATOR(M) \
-	M((IntField<MakeOpt(0), MakeOpt<int>(GLFW_JOYSTICK_LAST)>), gamepads)
+	M((IntField<0, GLFW_JOYSTICK_LAST>), gamepads)
 
 #define PLATFORM_GENERATOR(M) \
 	M((WindowDesc), window) \
@@ -110,8 +110,8 @@ namespace oly::editor
 #define LOGGER_PARTIAL_GENERATOR(M) \
 	M((BoolField), use_logfile) \
 	M((BoolField), use_console) \
-	M((OptionalIntField<MakeOpt(0), MakeOpt<int>()>), max_prior_log_files) \
-	M((OptionalIntField<MakeOpt(0), MakeOpt<int>()>), max_prior_log_bytes)
+	M((OptionalIntField<0, imp::nullpotential>), max_prior_log_files) \
+	M((OptionalIntField<0, imp::nullpotential>), max_prior_log_bytes)
 
 #define LOGGER_GENERATOR(M) \
 	LOGGER_PARTIAL_GENERATOR(M) \
@@ -127,8 +127,8 @@ namespace oly::editor
 	};
 
 #define FRAME_RATE_GENERATOR(M) \
-	M((DoubleField<MakeOpt(0.0), MakeOpt<double>()>), frame_length_clip) \
-	M((DoubleField<MakeOpt(0.0), MakeOpt<double>()>), time_scale)
+	M((DoubleField<0.0, imp::nullpotential>), frame_length_clip) \
+	M((DoubleField<0.0, imp::nullpotential>), time_scale)
 
 	struct FrameRateDesc
 	{

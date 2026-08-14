@@ -3,9 +3,9 @@
 #include "core/Meta.h"
 #include "core/Types.h"
 
-#include "desc/OptionalPrimitive.h"
-
 #include <imtk.hpp>
+
+#include <imp/potential.hpp>
 
 namespace oly::editor::gui
 {
@@ -13,7 +13,7 @@ namespace oly::editor::gui
 	struct InputData;
 
 	template<typename T>
-	bool Clamp(T& data, const T og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	bool Clamp(T& data, const T og, imp::potential<T> min, imp::potential<T> max)
 	{
 		if (max.has_value)
 			data = std::min(data, max.value);
@@ -23,7 +23,7 @@ namespace oly::editor::gui
 	}
 
 	template<typename T>
-	bool Clamp(T* data, const T* og, size_t count, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	bool Clamp(T* data, const T* og, size_t count, imp::potential<T> min, imp::potential<T> max)
 	{
 		bool dirty = false;
 		for (size_t i = 0; i < count; ++i)
@@ -32,19 +32,19 @@ namespace oly::editor::gui
 	}
 
 	template<typename T, glm::length_t L>
-	bool Clamp(glm::vec<L, T>& data, const glm::vec<L, T> og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	bool Clamp(glm::vec<L, T>& data, const glm::vec<L, T> og, imp::potential<T> min, imp::potential<T> max)
 	{
 		return Clamp(glm::value_ptr(data), glm::value_ptr(og), L, min, max);
 	}
 
 	template<typename T, size_t N>
-	bool Clamp(std::array<T, N>& data, const std::array<T, N> og, OptionalPrimitive<T> min, OptionalPrimitive<T> max)
+	bool Clamp(std::array<T, N>& data, const std::array<T, N> og, imp::potential<T> min, imp::potential<T> max)
 	{
 		return Clamp(data.data(), og.data(), N, min, max);
 	}
 
 	template<typename T, typename U>
-	imtk::item_result InputClampedData(const char* label, T& data, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+	imtk::item_result InputClampedData(const char* label, T& data, imp::potential<U> min, imp::potential<U> max)
 	{
 		const auto og = data;
 		auto result = InputData<T>{}(label, data);
@@ -62,7 +62,7 @@ namespace oly::editor::gui
 	struct InputData<int>
 	{
 		imtk::item_result operator()(const char* label, int& data) const;
-		imtk::item_result operator()(const char* label, int& data, OptionalPrimitive<int> min, OptionalPrimitive<int> max) const;
+		imtk::item_result operator()(const char* label, int& data, imp::potential<int> min, imp::potential<int> max) const;
 		imtk::item_result operator()(const char* label, int& data, imtk::label_span_registry::handle names);
 	};
 
@@ -70,35 +70,35 @@ namespace oly::editor::gui
 	struct InputData<float>
 	{
 		imtk::item_result operator()(const char* label, float& data) const;
-		imtk::item_result operator()(const char* label, float& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, float& data, imp::potential<float> min, imp::potential<float> max) const;
 	};
 
 	template<>
 	struct InputData<double>
 	{
 		imtk::item_result operator()(const char* label, double& data) const;
-		imtk::item_result operator()(const char* label, double& data, OptionalPrimitive<double> min, OptionalPrimitive<double> max) const;
+		imtk::item_result operator()(const char* label, double& data, imp::potential<double> min, imp::potential<double> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec2>
 	{
 		imtk::item_result operator()(const char* label, glm::vec2& data) const;
-		imtk::item_result operator()(const char* label, glm::vec2& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec2& data, imp::potential<float> min, imp::potential<float> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec3>
 	{
 		imtk::item_result operator()(const char* label, glm::vec3& data) const;
-		imtk::item_result operator()(const char* label, glm::vec3& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec3& data, imp::potential<float> min, imp::potential<float> max) const;
 	};
 
 	template<>
 	struct InputData<glm::vec4>
 	{
 		imtk::item_result operator()(const char* label, glm::vec4& data) const;
-		imtk::item_result operator()(const char* label, glm::vec4& data, OptionalPrimitive<float> min, OptionalPrimitive<float> max) const;
+		imtk::item_result operator()(const char* label, glm::vec4& data, imp::potential<float> min, imp::potential<float> max) const;
 	};
 
 	template<>

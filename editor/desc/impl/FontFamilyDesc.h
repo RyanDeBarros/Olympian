@@ -8,7 +8,7 @@ namespace oly::editor
 {
 #define STYLE_GENERATOR(M) \
 		M((StringField), font_file) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), atlas_index)
+		M((IntField<0, imp::nullpotential>), atlas_index)
 
 	struct FontStyleDesc
 	{

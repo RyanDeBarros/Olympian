@@ -126,10 +126,10 @@ namespace oly::editor
 		if (data.buffer() != def)
 			gui::PropertyGrid::Reset::Button();
 
-		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1, MakeOpt(0.f), MakeOpt(1.f));
-		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2, MakeOpt(0.f), MakeOpt(1.f));
+		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2, imp::potential<float>(0.f), imp::potential<float>(1.f));
 
 		gui::PropertyGrid::SubmitRow();
 		data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);

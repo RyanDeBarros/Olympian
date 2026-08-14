@@ -12,19 +12,19 @@
 namespace oly::editor
 {
 #define SPRITESHEET_PARTIAL_GENERATOR(M) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), col_offset_index) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), col_offset_pixel) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), row_offset_index) \
-		M((IntField<MakeOpt(0), MakeOpt<int>()>), row_offset_pixel) \
-		M((FloatField<MakeOpt(0.f), MakeOpt<float>()>), delay) \
+		M((IntField<0, imp::nullpotential>), col_offset_index) \
+		M((IntField<0, imp::nullpotential>), col_offset_pixel) \
+		M((IntField<0, imp::nullpotential>), row_offset_index) \
+		M((IntField<0, imp::nullpotential>), row_offset_pixel) \
+		M((FloatField<0.f, imp::nullpotential>), delay) \
 		M((BoolField), row_major) \
 		M((BoolField), row_up)
 
 #define SPRITESHEET_GENERATOR(M) \
 		M((EnumField<detail::SpritesheetParamType>), col_type) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), col_value) \
+		M((IntField<1, imp::nullpotential>), col_value) \
 		M((EnumField<detail::SpritesheetParamType>), row_type) \
-		M((IntField<MakeOpt(1), MakeOpt<int>()>), row_value) \
+		M((IntField<1, imp::nullpotential>), row_value) \
 		SPRITESHEET_PARTIAL_GENERATOR(M)
 
 	struct SpritesheetDesc
@@ -71,7 +71,7 @@ namespace oly::editor
 		M((EnumField<detail::SVGMipmapGenerationMode>), generate_mipmaps) \
 		M((EnumField<detail::StorageMode>), image_storage) \
 		M((EnumField<detail::StorageMode>), abstract_storage) \
-		M((FloatField<MakeOpt(0.f), MakeOpt<float>()>), scale)
+		M((FloatField<0.f, imp::nullpotential>), scale)
 
 #define VECTOR_TEXTURE_GENERATOR(M) \
 		M((BaseTextureDesc), base) \

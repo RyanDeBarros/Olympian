@@ -77,13 +77,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T, typename U, OptionalPrimitive<U> _Min, OptionalPrimitive<U> _Max>
+	template<typename T, typename U, imp::potential<U> _Min, imp::potential<U> _Max>
 	struct RangeField : public PrimitiveField<T>, public imtk::tick_processor
 	{
 		using Super = PrimitiveField<T>;
 
-		inline static const OptionalPrimitive<U> Min = _Min;
-		inline static const OptionalPrimitive<U> Max = _Max;
+		inline static const imp::potential<U> Min = _Min;
+		inline static const imp::potential<U> Max = _Max;
 
 		imtk::edit_session<T> edit;
 
@@ -128,13 +128,13 @@ namespace oly::editor
 		}
 	};
 
-	template<OptionalInt Min, OptionalInt Max>
+	template<imp::potential<int> Min, imp::potential<int> Max>
 	using IntField = RangeField<int, int, Min, Max>;
 
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using FloatField = RangeField<float, float, Min, Max>;
 
-	template<OptionalDouble Min, OptionalDouble Max>
+	template<imp::potential<double> Min, imp::potential<double> Max>
 	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E>
@@ -596,22 +596,22 @@ namespace oly::editor
 		}
 	};
 	
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
+	template<typename T, imp::potential<T> _Min, imp::potential<T> _Max>
 	struct OptionalRangeField : public imtk::tick_processor
 	{
 		using Self = OptionalRangeField<T, _Min, _Max>;
-		inline static const OptionalPrimitive<T> Min = _Min;
-		inline static const OptionalPrimitive<T> Max = _Max;
+		inline static const imp::potential<T> Min = _Min;
+		inline static const imp::potential<T> Max = _Max;
 
 		imtk::datapath_link link;
-		OptionalPrimitive<T> def;
-		OptionalPrimitive<T> value;
-		imtk::edit_session<OptionalPrimitive<T>> edit;
+		imp::potential<T> def;
+		imp::potential<T> value;
+		imtk::edit_session<imp::potential<T>> edit;
 		detail::Key value_key;
 		detail::Key enable_key;
 		const char* label;
 
-		OptionalRangeField(imtk::datapath_link link, OptionalPrimitive<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
+		OptionalRangeField(imtk::datapath_link link, imp::potential<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), value_key(value_key), enable_key(enable_key), label(label)
 		{
 		}
@@ -691,30 +691,30 @@ namespace oly::editor
 		}
 	};
 
-	template<OptionalInt Min, OptionalInt Max>
+	template<imp::potential<int> Min, imp::potential<int> Max>
 	using OptionalIntField = OptionalRangeField<int, Min, Max>;
 
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using OptionalFloatField = OptionalRangeField<float, Min, Max>;
 
-	template<OptionalDouble Min, OptionalDouble Max>
+	template<imp::potential<double> Min, imp::potential<double> Max>
 	using OptionalDoubleField = OptionalRangeField<double, Min, Max>;
 
-	template<typename T, OptionalPrimitive<T> _Min, OptionalPrimitive<T> _Max>
+	template<typename T, imp::potential<T> _Min, imp::potential<T> _Max>
 	struct CompactOptionalRangeField : public imtk::tick_processor
 	{
-		inline static const OptionalPrimitive<T> Min = _Min;
-		inline static const OptionalPrimitive<T> Max = _Max;
+		inline static const imp::potential<T> Min = _Min;
+		inline static const imp::potential<T> Max = _Max;
 
 		imtk::datapath_link link;
-		OptionalPrimitive<T> def;
-		OptionalPrimitive<T> value;
-		imtk::edit_session<OptionalPrimitive<T>> edit;
+		imp::potential<T> def;
+		imp::potential<T> value;
+		imtk::edit_session<imp::potential<T>> edit;
 		T nullopt;
 		detail::Key key;
 		const char* label;
 
-		CompactOptionalRangeField(imtk::datapath_link link, OptionalPrimitive<T> def, T nullopt, detail::Key key, const char* label)
+		CompactOptionalRangeField(imtk::datapath_link link, imp::potential<T> def, T nullopt, detail::Key key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), nullopt(nullopt), key(key), label(label)
 		{
 		}
@@ -798,22 +798,22 @@ namespace oly::editor
 		}
 	};
 
-	template<OptionalInt Min, OptionalInt Max>
+	template<imp::potential<int> Min, imp::potential<int> Max>
 	using CompactOptionalIntField = CompactOptionalRangeField<int, Min, Max>;
 
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using CompactOptionalFloatField = CompactOptionalRangeField<float, Min, Max>;
 
-	template<OptionalFloat Min, OptionalFloat Max, glm::length_t L>
+	template<imp::potential<float> Min, imp::potential<float> Max, glm::length_t L>
 	using VecField = RangeField<glm::vec<L, float>, float, Min, Max>;
 
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using Vec2Field = VecField<Min, Max, 2>;
 	
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using Vec3Field = VecField<Min, Max, 3>;
 	
-	template<OptionalFloat Min, OptionalFloat Max>
+	template<imp::potential<float> Min, imp::potential<float> Max>
 	using Vec4Field = VecField<Min, Max, 4>;
 
 	template<typename E, size_t Count>

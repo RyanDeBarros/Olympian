@@ -46,10 +46,10 @@ namespace oly::editor
 		};
 
 		template<typename T>
-		struct ValueInputData<OptionalPrimitive<T>>
+		struct ValueInputData<imp::potential<T>>
 		{
 			template<typename... Args>
-			void operator()(const char* label, OptionalPrimitive<T>& data, Args&&... args) const
+			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
 			{
 				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
 					imtk::item_result result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
@@ -98,13 +98,13 @@ namespace oly::editor
 		}
 
 		template<typename T, typename U = T>
-		static void Draw(const char* label, T& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		static void Draw(const char* label, T& data, const T& def, imp::potential<U> min, imp::potential<U> max)
 		{
 			RowInputData(label, data, def, min, max);
 		}
 
 		template<typename T, typename U = T>
-		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, OptionalPrimitive<U> min, OptionalPrimitive<U> max)
+		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, imp::potential<U> min, imp::potential<U> max)
 		{
 			RowInputData(label, data, def, min, max);
 		}

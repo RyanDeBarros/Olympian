@@ -30,9 +30,9 @@ namespace oly::editor
 		window_scale_to_monitor(IMTK_DATAPATH_SUBLINK(subpaths.window_scale_to_monitor), false, detail::Key::ScaleToMonitor, "Scale to monitor"),
 		window_scale_framebuffer(IMTK_DATAPATH_SUBLINK(subpaths.window_scale_framebuffer), true, detail::Key::ScaleFramebuffer, "Scale framebuffer"),
 		window_mouse_passthrough(IMTK_DATAPATH_SUBLINK(subpaths.window_mouse_passthrough), false, detail::Key::MousePassthrough, "Mouse passthrough"),
-		window_position_x(IMTK_DATAPATH_SUBLINK(subpaths.window_position_x), OptionalPrimitive<int>(false, 0), GLFW_ANY_POSITION, detail::Key::PositionX, "Position (X)"),
-		window_position_y(IMTK_DATAPATH_SUBLINK(subpaths.window_position_y), OptionalPrimitive<int>(false, 0), GLFW_ANY_POSITION, detail::Key::PositionY, "Position (Y)"),
-		window_refresh_rate(IMTK_DATAPATH_SUBLINK(subpaths.window_refresh_rate), OptionalPrimitive<int>(false, 0), GLFW_DONT_CARE, detail::Key::RefreshRate, "Refresh rate"),
+		window_position_x(IMTK_DATAPATH_SUBLINK(subpaths.window_position_x), imp::nullpotential, GLFW_ANY_POSITION, detail::Key::PositionX, "Position (X)"),
+		window_position_y(IMTK_DATAPATH_SUBLINK(subpaths.window_position_y), imp::nullpotential, GLFW_ANY_POSITION, detail::Key::PositionY, "Position (Y)"),
+		window_refresh_rate(IMTK_DATAPATH_SUBLINK(subpaths.window_refresh_rate), imp::nullpotential, GLFW_DONT_CARE, detail::Key::RefreshRate, "Refresh rate"),
 		window_stereo(IMTK_DATAPATH_SUBLINK(subpaths.window_stereo), false, detail::Key::Stereo, "Stereo"),
 		window_srgb_capable(IMTK_DATAPATH_SUBLINK(subpaths.window_srgb_capable), false, detail::Key::SrgbCapable, "sRGB Capable"),
 		window_opengl_forward_compat(IMTK_DATAPATH_SUBLINK(subpaths.window_opengl_forward_compat), false, detail::Key::OpenglForwardCompat, "OpenGL forward compatible"),
@@ -85,8 +85,8 @@ namespace oly::editor
 		link(std::move(link)),
 		use_logfile(IMTK_DATAPATH_SUBLINK(subpaths.use_logfile), true, detail::Key::UseLogfile, "Use Logfile"),
 		use_console(IMTK_DATAPATH_SUBLINK(subpaths.use_console), true, detail::Key::UseConsole, "Use Console"),
-		max_prior_log_files(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_files), MakeOpt<int>(), detail::Key::MaxPriorLogFiles, detail::Key::EnableMaxPriorLogFiles, "Max Prior Log Files"),
-		max_prior_log_bytes(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_bytes), MakeOpt<int>(), detail::Key::MaxPriorLogBytes, detail::Key::EnableMaxPriorLogBytes, "Max Prior Log Bytes"),
+		max_prior_log_files(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_files), imp::nullpotential, detail::Key::MaxPriorLogFiles, detail::Key::EnableMaxPriorLogFiles, "Max Prior Log Files"),
+		max_prior_log_bytes(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_bytes), imp::nullpotential, detail::Key::MaxPriorLogBytes, detail::Key::EnableMaxPriorLogBytes, "Max Prior Log Bytes"),
 		enable(IMTK_DATAPATH_SUBLINK(subpaths.enable))
 	{
 	}

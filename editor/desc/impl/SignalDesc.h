@@ -13,7 +13,7 @@ namespace oly::editor
 {
 #define MODIFIER_BASE_GENERATOR(M) \
 		M((EnumField<detail::Swizzle>), swizzle) \
-		M((Vec3Field<MakeOpt<float>(), MakeOpt<float>()>), multiplier) \
+		M((Vec3Field<imp::nullpotential, imp::nullpotential>), multiplier) \
 		M((BoolArrayField<3>), invert)
 
 	struct ModifierBaseDesc
@@ -113,7 +113,7 @@ namespace oly::editor
 
 #define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
 		M((DisjointEnumField<GLenum>), axis) \
-		M((FloatField<MakeOpt(0.f), MakeOpt(1.f)>), deadzone)
+		M((FloatField<0.f, 1.f>), deadzone)
 
 #define GAMEPAD_AXIS_1D_GENERATOR(M) \
 		GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
@@ -128,7 +128,7 @@ namespace oly::editor
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
 		M((EnumField<detail::GamepadAxis2D>), axis) \
-		M((FloatField<MakeOpt(0.f), MakeOpt(1.f)>), deadzone)
+		M((FloatField<0.f, 1.f>), deadzone)
 
 #define GAMEPAD_AXIS_2D_GENERATOR(M) \
 		GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
