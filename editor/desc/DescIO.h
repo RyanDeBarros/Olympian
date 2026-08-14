@@ -6,7 +6,6 @@
 #include "gui/WidgetComponentCommon.h"
 
 #include "gui/properties/PropertyGrid.h"
-#include "gui/properties/PropertyViews.h"
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"

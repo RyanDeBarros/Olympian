@@ -4,7 +4,6 @@
 #include "gui/InlineWidget.h"
 #include "gui/WidgetComponentCommon.h"
 #include "gui/properties/PropertyGrid.h"
-#include "gui/properties/PropertyViews.h"
 
 #include <imgui_internal.h>
 
@@ -14,7 +13,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::Checkbox(label, &data)).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<bool>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<bool>>(data));
 		return result;
 	}
 
@@ -22,7 +21,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputInt(label, &data)).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<int>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<int>>(data));
 		return result;
 	}
 
@@ -35,7 +34,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::Combo(label, &data, &imtk::label_span_registry::combo_getter, &names, imtk::label_span_registry::count(names))).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::ComboPropertyView>(data, names));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::combo_view>(data, names));
 		return result;
 	}
 
@@ -43,7 +42,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputFloat(label, &data)).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<float>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<float>>(data));
 		return result;
 	}
 
@@ -56,7 +55,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputDouble(label, &data)).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<double>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<double>>(data));
 		return result;
 	}
 
@@ -69,7 +68,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputFloat2(label, glm::value_ptr(data))).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<glm::vec2>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<glm::vec2>>(data));
 		return result;
 	}
 
@@ -82,7 +81,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputFloat3(label, glm::value_ptr(data))).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<glm::vec3>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<glm::vec3>>(data));
 		return result;
 	}
 
@@ -95,7 +94,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::InputFloat4(label, glm::value_ptr(data))).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<glm::vec4>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<glm::vec4>>(data));
 		return result;
 	}
 
@@ -108,7 +107,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(imtk::controls::input_text(label, data)).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<std::string>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<std::string>>(data));
 		return result;
 	}
 
@@ -116,7 +115,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		DrawResult result = DrawResult(ImGui::ColorEdit4(label, data.ValuePtr())).Query();
-		result |= PropertyGrid::Value::CheckProperty(std::make_unique<prop::PrimitivePropertyView<Color4>>(data));
+		result |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<Color4>>(data));
 		return result;
 	}
 }

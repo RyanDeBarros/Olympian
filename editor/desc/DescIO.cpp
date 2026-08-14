@@ -26,7 +26,7 @@ namespace oly::editor
 		imtk::prop::view_generator generator = [data, count]() {
 			auto view = std::make_unique<imtk::prop::view_list>();
 			for (size_t i = 0; i < count; ++i)
-				view->subviews.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+				view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data[i].buffer));
 			return view;
 		};
 
@@ -42,7 +42,7 @@ namespace oly::editor
 		imtk::prop::view_generator generator = [data, count]() {
 			auto view = std::make_unique<imtk::prop::view_list>();
 			for (size_t i = 0; i < count; ++i)
-				view->subviews.push_back(std::make_unique<prop::PrimitivePropertyView<std::string>>(data[i].buffer));
+				view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data[i].buffer));
 			return view;
 		};
 
