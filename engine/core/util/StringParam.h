@@ -141,6 +141,8 @@ namespace oly
 		float to_float() const;
 	};
 
+	// TODO v9.3 use imp::hetero
+
 	struct StringParamHeteroHash
 	{
 		using is_transparent = void;

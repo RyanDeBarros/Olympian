@@ -40,7 +40,6 @@ namespace oly::editor
 	M(Texture) \
 	M(Tileset)
 
-
 #define ICON_RESOURCE_ENUM(Icon) Icon,
 
 	enum class IconResource : int
@@ -51,7 +50,6 @@ namespace oly::editor
 	struct ResourceLoader
 	{
 		static void LoadAll();
-
 		static imtk::texture GetTexture(IconResource resource);
 	};
 }
