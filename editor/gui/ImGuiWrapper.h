@@ -1,8 +1,5 @@
 #pragma once
 
-#include "core/Meta.h"
-#include "core/Types.h"
-
 #include <imtk.hpp>
 
 #include <imp/potential.hpp>
@@ -105,11 +102,5 @@ namespace oly::editor::gui
 	struct InputData<std::string>
 	{
 		imtk::item_result operator()(const char* label, std::string& data) const;
-	};
-
-	template<>
-	struct InputData<Color4>
-	{
-		imtk::item_result operator()(const char* label, Color4& data) const;
 	};
 }

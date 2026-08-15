@@ -1,7 +1,7 @@
 target_sources(OlympianEditor PRIVATE
 	DynamicList.cpp
-	GUIState.cpp
 	ImGuiWrapper.cpp
+	InputData.cpp
 	ListModel.cpp
 	UnsavedChangesModal.cpp
 )

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "gui/ImGuiWrapper.h"
+#include "gui/InputData.h"
 
 namespace oly::editor::comp
 {

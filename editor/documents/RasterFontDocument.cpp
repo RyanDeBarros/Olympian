@@ -5,7 +5,6 @@
 
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
-#include "gui/GUIState.h"
 
 #include "definitions/Keys.h"
 
@@ -134,25 +133,28 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(GlyphDesc& desc)
 	{
-		auto style_stack = GUIState::InputDataStyleSubstack();
 		const bool empty_codepoint = desc.codepoint.value.empty();
 		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
+		std::string previous_codepoint = desc.codepoint.value;
 
+		imtk::style_stack style_stack;
 		if (empty_codepoint || duplicate_codepoint)
 		{
 			style_stack.push(ImGuiCol_Border, Color::Error);
 			style_stack.push(ImGuiStyleVar_FrameBorderSize, 1.f);
 		}
 
-		std::string previous_codepoint = desc.codepoint.value;
-		desc.codepoint.draw();
+		{
+			auto styles = style_stack.apply();
+			desc.codepoint.draw();
+		}
+		
 		if (imtk::prop::row::dirty())
 		{
 			_codepoint_counter.increment(desc.codepoint.value);
 			_codepoint_counter.decrement(previous_codepoint);
 		}
 
-		style_stack.clear();
 
 		if (imtk::prop::row::get_draw_result().state.hovered())
 		{

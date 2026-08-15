@@ -1,5 +1,7 @@
 #pragma once
 
+#include "core/Types.h"
+
 #include "gui/DynamicList.h"
 #include "gui/ImGuiWrapper.h"
 #include "gui/WidgetComponentCommon.h"
@@ -129,7 +131,7 @@ namespace oly::editor
 		static void Draw(const char* label, imtk::edit_session<UVRect>& data, const UVRect& def);
 		static void Draw(const char* label, imtk::edit_session<TopSidePadding>& data, const TopSidePadding& def);
 
-		template<Enum E>
+		template<typename E> requires std::is_enum_v<E>
 		static void Draw(const char* label, E& data, const E& def)
 		{
 			imtk::id_scope scope(&data);
@@ -142,11 +144,11 @@ namespace oly::editor
 				data = def;
 		}
 
-		template<Enum E>
+		template<typename E> requires std::is_enum_v<E>
 		static imtk::item_result DrawCombo(const char* label, E& data);
 
 	private:
-		template<Enum E, size_t N>
+		template<typename E, size_t N> requires std::is_enum_v<E>
 		static imtk::item_result DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
 		{
 			int index = static_cast<int>(data);
