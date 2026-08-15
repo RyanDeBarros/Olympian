@@ -27,7 +27,7 @@ namespace oly::editor::gui
 		{
 			static imtk::item_result GetDrawResult();
 
-			static void AddComponent(WidgetComponent component);
+			static void AddComponent(std::unique_ptr<imtk::w::widget> component);
 			static bool CheckProperty(std::unique_ptr<imtk::prop::iview> prop);
 		};
 

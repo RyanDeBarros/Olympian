@@ -51,7 +51,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
+				gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
 					imtk::item_result result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
 
 					imtk::id_scope scope(&data.value);
@@ -136,7 +136,7 @@ namespace oly::editor
 		{
 			imtk::id_scope scope(&data);
 			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
+			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
 			if (data != def)
 				gui::PropertyGrid::Reset::Button();
 			gui::PropertyGrid::SubmitRow();
@@ -256,7 +256,7 @@ namespace oly::editor
 			if (data.size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
+			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();
@@ -273,7 +273,7 @@ namespace oly::editor
 			if (data.buffer().size() != def.size())
 				gui::PropertyGrid::Reset::Button(0);
 
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
+			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
 			gui::PropertyGrid::SubmitRow();

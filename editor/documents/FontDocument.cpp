@@ -2,7 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/InlineWidget.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
@@ -219,14 +218,14 @@ namespace oly::editor
 		}
 
 		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> imtk::item_result {
-			DynamicArray<gui::WidgetComponent> components;
+			imtk::w::widget_row components;
 			auto& k = desc.kerning[row.Index()];
 
 			bool dup_warning = counter.count({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() }) > 1;
 			gui::Outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
-				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
+				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
 					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer()).has_value();
 					gui::Outline bad_outline;
 					if (bad_codepoint)
@@ -265,7 +264,7 @@ namespace oly::editor
 				}));
 			}
 
-			components.push_back(comp::Generic([&k]() -> imtk::item_result {
+			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
 				imtk::controls::vertical_separator();
 				ImGui::TextUnformatted(k.distance.label);
 				auto result = imtk::item_result::query(false);
@@ -275,7 +274,7 @@ namespace oly::editor
 				return result;
 			}));
 
-			return gui::InlineWidget::Draw(components);
+			return components.draw();
 		}, desc.kerning_ui_state);
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
@@ -322,7 +321,7 @@ namespace oly::editor
 				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> imtk::item_result {
+					gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&desc]() -> imtk::item_result {
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
 						return imtk::item_result::query(false);

@@ -3,8 +3,6 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/Errors.h"
 
-#include "gui/InlineWidget.h"
-
 #include <array>
 #include <unordered_set>
 
@@ -15,7 +13,7 @@ namespace oly::editor::gui
 	static std::string KEY_LABEL;
 	static imtk::item_state KEY_ITEM_STATE;
 
-	static std::vector<WidgetComponent> VALUE_COMPONENTS;
+	static imtk::w::widget_row VALUE_COMPONENTS;
 	static imtk::prop::view_list VALUE_PROPERTIES;
 	static imtk::item_result VALUE_DRAW_RESULT;
 
@@ -31,7 +29,7 @@ namespace oly::editor::gui
 
 	static void ClearRow()
 	{
-		VALUE_COMPONENTS.clear();
+		VALUE_COMPONENTS.subwidgets.clear();
 		VALUE_PROPERTIES.subviews.clear();
 
 		SUBROWS_TO_RESET.clear();
@@ -39,6 +37,7 @@ namespace oly::editor::gui
 
 	PropertyGrid::PropertyGrid()
 	{
+		// TODO v9.3 use instance_guard
 		if (GRID_INSTANCE)
 			BreakoutError::Throw("PropertyGrid::Instance() called while a property grid instance already exists");
 
@@ -83,9 +82,9 @@ namespace oly::editor::gui
 		return VALUE_DRAW_RESULT;
 	}
 
-	void PropertyGrid::Value::AddComponent(WidgetComponent component)
+	void PropertyGrid::Value::AddComponent(std::unique_ptr<imtk::w::widget> component)
 	{
-		VALUE_COMPONENTS.push_back(std::move(component));
+		VALUE_COMPONENTS.subwidgets.push_back(std::move(component));
 	}
 
 	bool PropertyGrid::Value::CheckProperty(std::unique_ptr<imtk::prop::iview> prop)
@@ -125,7 +124,7 @@ namespace oly::editor::gui
 	{
 		ImGui::TableSetColumnIndex(1);
 		VALUE_DRAW_RESULT = {};
-		VALUE_DRAW_RESULT |= InlineWidget::Draw(VALUE_COMPONENTS);
+		VALUE_DRAW_RESULT |= VALUE_COMPONENTS.draw();
 	}
 
 	static void DrawResetCell()

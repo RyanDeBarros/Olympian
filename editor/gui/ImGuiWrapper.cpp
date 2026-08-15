@@ -1,7 +1,6 @@
 #include "ImGuiWrapper.h"
 
 #include "gui/GUIState.h"
-#include "gui/InlineWidget.h"
 #include "gui/WidgetComponentCommon.h"
 #include "gui/properties/PropertyGrid.h"
 
@@ -13,7 +12,7 @@ namespace oly::editor::gui
 	{
 		auto _ = GUIState::input_data_styles.apply();
 		auto result = imtk::item_result::query(ImGui::Checkbox(label, &data));
-		result.modified |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<bool>>(data));
+		result.modified |= PropertyGrid::Value::CheckProperty(std::make_unique<imtk::prop::simple_view<bool>>(data)); // TODO v9.3 when moving to widget class, add 'bool grid_property' to conditionally check property
 		return result;
 	}
 

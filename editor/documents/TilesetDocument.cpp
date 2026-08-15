@@ -387,7 +387,7 @@ namespace oly::editor
 				if (desc.texture.edit.buffer() != desc.texture.def)
 					gui::PropertyGrid::Reset::Button();
 
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid]() -> imtk::item_result {
+				gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
 					imtk::id_scope scope(&desc.texture.value);
 
 					imtk::item_result result = gui::InputData<std::string>{}("", desc.texture.edit.buffer());

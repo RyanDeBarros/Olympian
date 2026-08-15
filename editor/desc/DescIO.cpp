@@ -1,6 +1,5 @@
 #include "DescIO.h"
 
-#include "gui/InlineWidget.h"
 #include "gui/scopes/Subform.h"
 
 #include "core/MemoryUnit.h"
@@ -72,7 +71,7 @@ namespace oly::editor
 			}
 		}
 
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([&data, sublabels, disabled, count, inline_checkboxes]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&data, sublabels, disabled, count, inline_checkboxes]() -> imtk::item_result {
 			imtk::item_result result;
 			
 			for (size_t i = 0; i < count; ++i)

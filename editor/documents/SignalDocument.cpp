@@ -2,7 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/InlineWidget.h"
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
@@ -265,7 +264,8 @@ namespace oly::editor
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
 		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> imtk::item_result {
-			auto component = comp::Generic([&]() -> imtk::item_result {
+			imtk::w::widget_row components;
+			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&]() -> imtk::item_result {
 				std::string& element = desc.signals.edit.buffer()[row.Index()];
 
 				gui::Outline outline;
@@ -288,9 +288,8 @@ namespace oly::editor
 					row.OnSelect();
 
 				return result;
-			});
-
-			return gui::InlineWidget::Draw(std::span<gui::WidgetComponent>(&component, 1));
+			}));
+			return components.draw();
 		}, desc.signals.ui_state);
 
 		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
@@ -300,7 +299,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
 			imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
@@ -338,7 +337,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::MouseButton> mb;
 			imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
@@ -376,7 +375,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> button;
 			imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
@@ -401,7 +400,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> axis;
 			imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
@@ -427,7 +426,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc]() -> imtk::item_result {
+		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::GamepadAxis2D> axis;
 			imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
