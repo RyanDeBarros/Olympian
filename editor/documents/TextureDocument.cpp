@@ -6,7 +6,6 @@
 
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
-#include "gui/ImGuiWrapper.h"
 
 #include "definitions/Keys.h"
 
@@ -17,10 +16,12 @@ namespace oly::editor
 	SpritesheetPreviewData::SpritesheetPreviewData()
 	{
 		preview.config.icon = Icon(IconResource::Preview);
+		preview.config.str_id = "##Preview";
 		preview.config.selected = true;
 		preview.config.tooltip = "Preview spritesheet";
 
 		playing.config.icon = Icon(IconResource::Pause);
+		playing.config.str_id = "##Playing";
 		playing.config.selected_icon = Icon(IconResource::Play);
 		playing.config.selected = false;
 		playing.config.tooltip = "Play/pause animation";

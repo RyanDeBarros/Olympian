@@ -168,7 +168,7 @@ namespace oly::editor
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
-			gui::InputData<std::string>{}("Display text", _display_text);
+			imtk::w::simple_widget<std::string>(_display_text, { .label = "Display text" }).draw(); // TODO store _display_text as simple_widget<std::string> (NOT simple_widget<std::string&>)
 
 			if (!_preview_font)
 				ReloadFont();
@@ -240,7 +240,7 @@ namespace oly::editor
 						ImGui::SameLine();
 					}
 
-					result |= gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer());
+					result |= imtk::w::simple_widget<std::string>(k.pair.edits[i].buffer(), { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
 					k.pair.edits[i].post_edit(result.state);
 
 					if (dup_warning && result.state.hovered())
@@ -269,7 +269,7 @@ namespace oly::editor
 				ImGui::TextUnformatted(k.distance.label);
 				auto result = imtk::item_result::query(false);
 				ImGui::SameLine();
-				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer());
+				result |= imtk::w::simple_widget<int>(k.distance.edit.buffer()).draw();
 				k.distance.edit.post_edit(result.state);
 				return result;
 			}));

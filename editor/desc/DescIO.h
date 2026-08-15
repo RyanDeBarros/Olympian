@@ -3,8 +3,7 @@
 #include "core/Types.h"
 
 #include "gui/DynamicList.h"
-#include "gui/ImGuiWrapper.h"
-#include "gui/WidgetComponentCommon.h"
+#include "gui/InputData.h"
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
@@ -18,30 +17,21 @@ namespace oly::editor
 		template<typename T>
 		struct ValueInputData
 		{
-			template<typename... Args>
-			void operator()(const char* label, T& data, Args&&... args) const
+			void operator()(const char* label, T& data) const
 			{
-				imtk::prop::value::add_component(comp::InputData<T>(label, data, std::forward<Args>(args)...));
+				auto widget = std::make_unique<imtk::w::simple_widget<T>>(data);
+				widget->config.label = label;
+				imtk::prop::value::add_component(std::move(widget));
 			}
-		};
 
-		template<typename T>
-		struct ValueLabelInputData
-		{
-			template<typename... Args>
-			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
+			template<typename U>
+			void operator()(const char* label, T& data, imp::potential<U> min, imp::potential<U> max) const
 			{
-				imtk::prop::value::add_component(comp::LabelInputData<T>(label, data_label, data, std::forward<Args>(args)...));
-			}
-		};
-
-		template<typename T>
-		struct ValueLabelInputDataSep
-		{
-			template<typename... Args>
-			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
-			{
-				imtk::prop::value::add_component(comp::LabelInputDataSep<T>(label, data_label, data, std::forward<Args>(args)...));
+				auto widget = std::make_unique<imtk::w::simple_widget<T>>(data);
+				widget->config.label = label;
+				widget->config.min = min;
+				widget->config.max = max;
+				imtk::prop::value::add_component(std::move(widget));
 			}
 		};
 
@@ -51,18 +41,31 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
 			{
-				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
-					imtk::item_result result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
+				auto widget = std::make_unique<imtk::w::optional_widget>(std::make_unique<imtk::w::simple_widget<T>>(data.value), data.has_value);
+				widget->enable.config.label = label;
+				imtk::prop::value::add_component(std::move(widget));
+			}
+		};
 
-					imtk::id_scope scope(&data.value);
-					if (auto d = imtk::disabled(!data.has_value))
-					{
-						ImGui::SameLine();
-						result |= gui::InputData<T>{}(label, data.value, std::forward<Args>(args)...);
-					}
+		template<typename T>
+		struct ValueInputDataSep
+		{
+			void operator()(const char* label, T& data) const
+			{
+				auto item = std::make_unique<imtk::w::simple_widget<T>>(data);
+				item->config.label = label;
 
-					return result;
-				}));
+				imtk::prop::value::add_component(std::make_unique<imtk::w::subsequent>(std::move(item)));
+			}
+
+			void operator()(const char* label, T& data, imp::potential<T> min, imp::potential<T> max) const
+			{
+				auto item = std::make_unique<imtk::w::simple_widget<T>>(data);
+				item->config.label = label;
+				item->config.min = min;
+				item->config.max = max;
+
+				imtk::prop::value::add_component(std::make_unique<imtk::w::subsequent>(std::move(item)));
 			}
 		};
 
@@ -71,7 +74,7 @@ namespace oly::editor
 		{
 			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
-			ValueInputData<T>{}("##", data, std::forward<Args>(args)...);
+			ValueInputData<T>{}("", data, std::forward<Args>(args)...);
 			if (data != def)
 				imtk::prop::reset::button();
 			imtk::prop::row::submit();
@@ -89,10 +92,10 @@ namespace oly::editor
 			if (data.buffer() != def)
 				imtk::prop::reset::button();
 
-			ValueInputData<T>{}("##", data.buffer(), std::forward<Args>(args)...);
+			ValueInputData<T>{}("", data.buffer(), std::forward<Args>(args)...);
 
 			imtk::prop::row::submit();
-			data.post_edit(imtk::prop::value::get_draw_result().state);
+			data.post_edit(imtk::prop::value::get_draw_result().state); // TODO v9.3 use simple_widget<edit_session> so that pasting value can publish directly
 			if (imtk::prop::reset::any_activated())
 				data.publish_reset(def);
 		}
@@ -136,7 +139,7 @@ namespace oly::editor
 		{
 			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&data]() -> imtk::item_result { return DrawCombo(data); }));
 			if (data != def)
 				imtk::prop::reset::button();
 			imtk::prop::row::submit();
@@ -144,16 +147,16 @@ namespace oly::editor
 				data = def;
 		}
 
-		template<typename E> requires std::is_enum_v<E>
-		static imtk::item_result DrawCombo(const char* label, E& data);
-
 	private:
+		template<typename E> requires std::is_enum_v<E>
+		static imtk::item_result DrawCombo(E& data);
+
 		template<typename E, size_t N> requires std::is_enum_v<E>
-		static imtk::item_result DrawEnumCombo(const char* label, E& data, const char* const (&values)[N])
+		static imtk::item_result DrawEnumCombo(E& data, const char* const (&values)[N])
 		{
 			int index = static_cast<int>(data);
 			auto span = imtk::label_span_registry::intern(std::span<const char* const>(values, N));
-			imtk::item_result result = gui::InputData<int>{}("##", index, span);
+			auto result = imtk::w::combo_widget(index, span).draw();
 			data = static_cast<E>(index);
 			return result;
 		}
@@ -361,7 +364,7 @@ namespace oly::editor
 				imtk::item_result result;
 
 				ImGui::SameLine();
-				result |= gui::InputData<T>{}("##Item", data[row.Index()]);
+				result |= imtk::w::widget<T>(data[row.Index()]).draw();
 
 				if (ImGui::IsItemActivated())
 					row.OnSelect();
@@ -381,7 +384,7 @@ namespace oly::editor
 				imtk::item_result result;
 
 				ImGui::SameLine();
-				result |= DrawCombo("##Item", data[row.Index()]);
+				result |= DrawCombo(data[row.Index()]);
 
 				if (ImGui::IsItemActivated())
 					row.OnSelect();

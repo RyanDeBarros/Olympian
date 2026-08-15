@@ -17,7 +17,14 @@ namespace oly::editor
 {
 	void DescIO::Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names)
 	{
-		RowInputData(label, data, def, names);
+		imtk::id_scope scope(&data);
+		imtk::prop::key::set_label(label);
+		imtk::prop::value::add_component(std::make_unique<imtk::w::combo_widget>(data, names));
+		if (data != def)
+			imtk::prop::reset::button();
+		imtk::prop::row::submit();
+		if (imtk::prop::reset::any_activated())
+			data = def;
 	}
 
 	void DescIO::Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, size_t count)
@@ -78,7 +85,7 @@ namespace oly::editor
 			{
 				if (auto d = imtk::disabled(disabled && disabled[i]))
 				{
-					result |= gui::InputData<bool>{}(sublabels[i], data[i]);
+					result |= imtk::w::simple_widget<bool>(data[i], { .label = sublabels[i] }).draw();
 					if (inline_checkboxes && i + 1 < count)
 						ImGui::SameLine();
 				}
@@ -105,10 +112,10 @@ namespace oly::editor
 		if (data.buffer() != def)
 			imtk::prop::reset::button();
 
-		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1);
-		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2);
-		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1);
-		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2);
+		ValueInputData<float>{}("x1", data.buffer().x1);
+		ValueInputDataSep<float>{}("x2", data.buffer().x2);
+		ValueInputDataSep<float>{}("y1", data.buffer().y1);
+		ValueInputDataSep<float>{}("y2", data.buffer().y2);
 
 		imtk::prop::row::submit();
 		data.post_edit(imtk::prop::value::get_draw_result().state);
@@ -125,10 +132,10 @@ namespace oly::editor
 		if (data.buffer() != def)
 			imtk::prop::reset::button();
 
-		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueInputData<float>{}("x1", data.buffer().x1, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueInputDataSep<float>{}("x2", data.buffer().x2, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueInputDataSep<float>{}("y1", data.buffer().y1, imp::potential<float>(0.f), imp::potential<float>(1.f));
+		ValueInputDataSep<float>{}("y2", data.buffer().y2, imp::potential<float>(0.f), imp::potential<float>(1.f));
 
 		imtk::prop::row::submit();
 		data.post_edit(imtk::prop::value::get_draw_result().state);
@@ -145,9 +152,9 @@ namespace oly::editor
 		if (data.buffer() != def)
 			imtk::prop::reset::button();
 
-		ValueLabelInputData<float>{}("left", "##left", data.buffer().left);
-		ValueLabelInputDataSep<float>{}("right", "##right", data.buffer().right);
-		ValueLabelInputDataSep<float>{}("top", "##top", data.buffer().top);
+		ValueInputData<float>{}("left", data.buffer().left);
+		ValueInputDataSep<float>{}("right", data.buffer().right);
+		ValueInputDataSep<float>{}("top", data.buffer().top);
 
 		imtk::prop::row::submit();
 		data.post_edit(imtk::prop::value::get_draw_result().state);
@@ -156,80 +163,80 @@ namespace oly::editor
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, MemoryUnit& data)
+	imtk::item_result DescIO::DrawCombo(MemoryUnit& data)
 	{
-		return DrawEnumCombo(label, data, { "B", "KB", "KiB", "MB", "MiB", "GB", "GiB" });
+		return DrawEnumCombo(data, { "B", "KB", "KiB", "MB", "MiB", "GB", "GiB" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::Axis0dConversion& data)
+	imtk::item_result DescIO::DrawCombo(detail::Axis0dConversion& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "To 1D", "To 2D", "To 3D" });
+		return DrawEnumCombo(data, { "None", "To 1D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::Axis1dConversion& data)
+	imtk::item_result DescIO::DrawCombo(detail::Axis1dConversion& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "To 0D", "To 2D", "To 3D" });
+		return DrawEnumCombo(data, { "None", "To 0D", "To 2D", "To 3D" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::Axis2dConversion& data)
+	imtk::item_result DescIO::DrawCombo(detail::Axis2dConversion& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+		return DrawEnumCombo(data, { "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::CommonBufferPreset& data)
+	imtk::item_result DescIO::DrawCombo(detail::CommonBufferPreset& data)
 	{
-		return DrawEnumCombo(label, data, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
+		return DrawEnumCombo(data, { "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::GamepadAxis2D& data)
+	imtk::item_result DescIO::DrawCombo(detail::GamepadAxis2D& data)
 	{
-		return DrawEnumCombo(label, data, { "Left XY", "Right XY" });
+		return DrawEnumCombo(data, { "Left XY", "Right XY" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::PositioningMode& data)
+	imtk::item_result DescIO::DrawCombo(detail::PositioningMode& data)
 	{
-		return DrawEnumCombo(label, data, { "Relative", "Absolute" });
+		return DrawEnumCombo(data, { "Relative", "Absolute" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::SignalBindingType& data)
+	imtk::item_result DescIO::DrawCombo(detail::SignalBindingType& data)
 	{
-		return DrawEnumCombo(label, data, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
+		return DrawEnumCombo(data, { "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::SpritesheetParamType& data)
+	imtk::item_result DescIO::DrawCombo(detail::SpritesheetParamType& data)
 	{
-		return DrawEnumCombo(label, data, { "Index", "Pixel" });
+		return DrawEnumCombo(data, { "Index", "Pixel" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::StorageMode& data)
+	imtk::item_result DescIO::DrawCombo(detail::StorageMode& data)
 	{
-		return DrawEnumCombo(label, data, { "Discard", "Keep" });
+		return DrawEnumCombo(data, { "Discard", "Keep" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::Swizzle& data)
+	imtk::item_result DescIO::DrawCombo(detail::Swizzle& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+		return DrawEnumCombo(data, { "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::SVGMipmapGenerationMode& data)
+	imtk::item_result DescIO::DrawCombo(detail::SVGMipmapGenerationMode& data)
 	{
-		return DrawEnumCombo(label, data, { "Auto", "Off", "Manual" });
+		return DrawEnumCombo(data, { "Auto", "Off", "Manual" });
 	}
 
 	template<>
-	imtk::item_result DescIO::DrawCombo(const char* label, detail::TileRotation& data)
+	imtk::item_result DescIO::DrawCombo(detail::TileRotation& data)
 	{
-		return DrawEnumCombo(label, data, { "None", "90 degrees", "180 degrees", "270 degrees" });
+		return DrawEnumCombo(data, { "None", "90 degrees", "180 degrees", "270 degrees" });
 	}
 }

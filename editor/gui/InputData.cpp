@@ -1,11 +1,14 @@
 #include "InputData.h"
 
-namespace oly::editor::gui
+// TODO v9.3 just put at least Color4 in imtk
+
+imtk::item_result imtk::w::simple_widget<oly::editor::Color4>::draw_impl()
 {
-	imtk::item_result InputData<Color4>::operator()(const char* label, Color4& data) const
-	{
-		auto result = imtk::item_result::query(ImGui::ColorEdit4(label, data.ValuePtr()));
-		result.modified |= imtk::prop::value::check_property(std::make_unique<imtk::prop::simple_view<Color4>>(data));
-		return result;
-	}
+	id_scope scope(&data);
+	auto result = prefix_label(config.label);
+
+	result |= item_result::query(ImGui::ColorEdit4("", data.ValuePtr()));
+
+	result.modified |= check_property(std::make_unique<prop::simple_view<oly::editor::Color4>>(data));
+	return result;
 }

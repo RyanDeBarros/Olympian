@@ -16,8 +16,6 @@
 #include "panels/PanelManager.h"
 #include "panels/TreeViewPanel.h"
 
-#include "gui/ImGuiWrapper.h"
-
 #include "fio/FIOOperation.h"
 
 #include "desc/impl/PreferencesDesc.h"

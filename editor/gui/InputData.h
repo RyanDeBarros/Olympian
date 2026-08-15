@@ -2,13 +2,20 @@
 
 #include "core/Types.h"
 
-#include "gui/ImGuiWrapper.h"
+#include <imtk.hpp>
 
-namespace oly::editor::gui
+template<>
+struct imtk::w::simple_widget<oly::editor::Color4> : public imtk::w::widget
 {
-	template<>
-	struct InputData<Color4>
+	oly::editor::Color4& data;
+	
+	struct config_impl
 	{
-		imtk::item_result operator()(const char* label, Color4& data) const;
-	};
-}
+		std::string label;
+	} config;
+
+	simple_widget(oly::editor::Color4& data, config_impl config = {}) : data(data), config(std::move(config)) {}
+
+protected:
+	item_result draw_impl();
+};

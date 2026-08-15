@@ -2,8 +2,6 @@
 
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/ImGuiWrapper.h"
-
 #include <string>
 
 namespace oly::editor::gui
