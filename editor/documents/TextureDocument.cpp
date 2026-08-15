@@ -6,7 +6,6 @@
 
 #include "gui/scopes/Form.h"
 #include "gui/scopes/Subform.h"
-#include "gui/graphics/Toolbar.h"
 #include "gui/ImGuiWrapper.h"
 
 #include "definitions/Keys.h"
@@ -15,6 +14,18 @@
 
 namespace oly::editor
 {
+	SpritesheetPreviewData::SpritesheetPreviewData()
+	{
+		preview.config.icon = Icon(IconResource::Preview);
+		preview.config.selected = true;
+		preview.config.tooltip = "Preview spritesheet";
+
+		playing.config.icon = Icon(IconResource::Pause);
+		playing.config.selected_icon = Icon(IconResource::Play);
+		playing.config.selected = false;
+		playing.config.tooltip = "Play/pause animation";
+	}
+
 	const char* TextureDocument::GetVersion()
 	{
 		return "1.0";
@@ -146,7 +157,8 @@ namespace oly::editor
 		{
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
-			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", "##Recenter"))
+
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::Recenter), .str_id = "##Recenter", .tooltip = "Reset panning/zoom" }).draw())
 			{
 				_preview_nav = {};
 				if (imtk::svg_texture* svg = _texture.get_svg())
@@ -169,7 +181,7 @@ namespace oly::editor
 				ImGui::InputFloat("Scale", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
 				imtk::controls::vertical_separator();
-				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Refresh), .str_id = "##RefreshSVGScale", .tooltip = "Refresh SVG scale"}).draw())
 				{
 					_preview_nav.svg_scale = scale;
 					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
@@ -181,11 +193,11 @@ namespace oly::editor
 			if (spritesheet_desc)
 			{
 				imtk::controls::vertical_separator();
-				Toolbar::DrawIconToggleButton(IconResource::Preview, _preview_spritesheet, "Preview spritesheet");
+				_spritesheet_preview_data.preview.draw();
 				ImGui::SameLine();
-				Toolbar::DrawIconToggleButton(IconResource::Pause, IconResource::Play, _spritesheet_preview_data.playing, "Play/pause animation");
+				_spritesheet_preview_data.playing.draw();
 				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(IconResource::Stop, "Stop animation", "StopAnimation"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Stop), .str_id = "##StopAnimation", .tooltip = "Stop animation"}).draw())
 					_spritesheet_preview_data = {};
 			}
 			else
@@ -214,7 +226,7 @@ namespace oly::editor
 				_preview_nav.pos += ImGui::GetIO().MouseDelta;
 			ImGui::SetCursorScreenPos(pos);
 
-			if (_spritesheet_preview_data.playing && spritesheet_desc)
+			if (_spritesheet_preview_data.playing.selected() && spritesheet_desc)
 				PlaySpritesheetAnimation(*spritesheet_desc);
 			else
 			{
@@ -226,7 +238,7 @@ namespace oly::editor
 				ImVec2 pos = cursor + offset;
 
 				ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size);
-				if (_preview_spritesheet && spritesheet_desc)
+				if (_spritesheet_preview_data.preview.selected() && spritesheet_desc)
 					DrawSpritesheetOverlay(*spritesheet_desc, pos, size);
 			}
 		}

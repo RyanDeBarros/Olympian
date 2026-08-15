@@ -6,16 +6,21 @@ namespace oly::editor
 {
 	static std::unordered_map<IconResource, imtk::res::icon_id> icon_conversion;
 
-	void ResourceLoader::LoadAll()
+	void LoadAllIcons()
 	{
 #define LOAD_ICON(Icon) icon_conversion[IconResource::Icon] = imtk::res::load_icon("res/icons/" #Icon ".png");
 		ICON_RESOURCE_GENERATOR(LOAD_ICON)
 #undef LOAD_ICON
 	}
 
-	imtk::texture ResourceLoader::GetTexture(IconResource resource)
+	imtk::res::icon_id Icon(IconResource resource)
 	{
-		if (imtk::res::icon_id id = icon_conversion[resource])
+		return icon_conversion[resource];
+	}
+
+	imtk::texture GetIconTexture(IconResource resource)
+	{
+		if (imtk::res::icon_id id = Icon(resource))
 			return imtk::res::icon_texture(id);
 		else
 		{

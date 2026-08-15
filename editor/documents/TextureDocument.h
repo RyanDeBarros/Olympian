@@ -20,9 +20,13 @@ namespace oly::editor
 
 	struct SpritesheetPreviewData
 	{
+		imtk::w::icon_button preview;
+		imtk::w::icon_button playing;
+
 		int active_index = 0;
 		float timer = 0.f;
-		bool playing = false;
+
+		SpritesheetPreviewData();
 	};
 
 	struct SpritesheetInfo
@@ -42,7 +46,7 @@ namespace oly::editor
 		gui::ListModel _slots;
 		imtk::texture _texture;
 		PreviewNav _preview_nav;
-		bool _preview_spritesheet = true;
+		
 		bool _stale_preview_texture = true;
 		SpritesheetPreviewData _spritesheet_preview_data;
 

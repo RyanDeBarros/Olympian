@@ -47,9 +47,7 @@ namespace oly::editor
 		ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
 	};
 
-	struct ResourceLoader
-	{
-		static void LoadAll();
-		static imtk::texture GetTexture(IconResource resource);
-	};
+	extern void LoadAllIcons();
+	extern imtk::res::icon_id Icon(IconResource resource);
+	extern imtk::texture GetIconTexture(IconResource resource);
 }

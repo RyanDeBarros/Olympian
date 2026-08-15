@@ -33,7 +33,9 @@ namespace oly::editor
 
 	struct TreeViewConfig
 	{
-		bool ignore_imports = true;
+		imtk::w::icon_button ignore_imports;
+
+		TreeViewConfig();
 	};
 
 	class TreeViewPanel : public IPanel

@@ -34,7 +34,7 @@ namespace oly::editor
 
     imtk::texture PathInfo::GetIcon(const std::filesystem::path& path)
     {
-        return ResourceLoader::GetTexture(GetIconResource(path));
+        return GetIconTexture(GetIconResource(path));
     }
 
     IconResource PathInfo::GetAssetIcon(detail::Key meta_type)

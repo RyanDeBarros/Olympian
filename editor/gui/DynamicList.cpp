@@ -2,8 +2,6 @@
 
 #include "core/editor/ResourceLoader.h"
 
-#include "gui/graphics/Toolbar.h"
-
 #include <imtk.hpp>
 
 namespace oly::editor::gui
@@ -211,17 +209,17 @@ namespace oly::editor::gui
 		list_size = count;
 		Clamp();
 
-		if (Toolbar::DrawIconButton(IconResource::Plus, "New item", "##Add"))
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::Plus), .str_id = "##Add", .tooltip = "New item" }).draw())
 			DeferPushBack();
 
 		if (auto d = imtk::disabled(list_size == 0))
 		{
 			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Minus, "Remove item (Del)", "##Remove"))
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::Minus), .str_id = "##Remove", .tooltip = "Remove item (Del)" }).draw())
 				DeferDelete();
 
 			ImGui::SameLine();
-			if (Toolbar::DrawIconButton(IconResource::Close, "Clear items", "##Clear"))
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::Close), .str_id = "##Clear", .tooltip = "Clear items" }).draw())
 				DeferResize(0);
 		}
 	}
@@ -254,7 +252,7 @@ namespace oly::editor::gui
 		{
 			_visible = true;
 
-			if (Toolbar::DrawHandle("##Drag"))
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::Handle), .str_id = "##Drag", .tooltip = "Drag item"}).draw())
 				OnSelect();
 
 			if (auto _ = imtk::drag_drop_source())

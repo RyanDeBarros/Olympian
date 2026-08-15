@@ -3,7 +3,6 @@
 #include "core/editor/ResourceLoader.h"
 
 #include "gui/ImGuiWrapper.h"
-#include "gui/graphics/Toolbar.h"
 
 #include <string>
 
@@ -284,19 +283,19 @@ namespace oly::editor::gui
 			active_index = slot;
 
 			ImGui::SameLine();
-			subresult = Toolbar::DrawIconButton(IconResource::Plus, header.create_tooltip, "##+");
+			subresult = imtk::w::icon_button({ .icon = Icon(IconResource::Plus), .str_id = "##+", .tooltip = header.create_tooltip }).draw();
 			result |= subresult;
 			if (subresult.modified)
 				DeferCreate();
 
 			ImGui::SameLine();
-			subresult = Toolbar::DrawIconButton(IconResource::Minus, header.delete_tooltip, "##-");
+			subresult = imtk::w::icon_button({ .icon = Icon(IconResource::Minus), .str_id = "##-", .tooltip = header.delete_tooltip }).draw();
 			result |= subresult;
 			if (subresult.modified)
 				DeferDelete();
 
 			ImGui::SameLine();
-			subresult = Toolbar::DrawIconButton(IconResource::Close, header.clear_tooltip, "##x");
+			subresult = imtk::w::icon_button({ .icon = Icon(IconResource::Close), .str_id = "##x", .tooltip = header.clear_tooltip }).draw();
 			result |= subresult;
 			if (subresult.modified)
 				DeferClear();

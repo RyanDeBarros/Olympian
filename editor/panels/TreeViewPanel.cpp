@@ -14,8 +14,6 @@
 #include "panels/PanelManager.h"
 #include "panels/ContentBrowserPanel.h"
 
-#include "gui/graphics/Toolbar.h"
-
 #include "desc/impl/PreferencesDesc.h"
 
 #include <algorithm>
@@ -175,6 +173,15 @@ namespace oly::editor
 		return true;
 	}
 
+	TreeViewConfig::TreeViewConfig()
+	{
+		ignore_imports.config.selected = true;
+		ignore_imports.config.icon = Icon(IconResource::FilterOff);
+		ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
+		ignore_imports.config.str_id = "##IgnoreImports";
+		ignore_imports.config.tooltip = "Ignore import files";
+	}
+
 	TreeViewPanel& TreeViewPanel::Instance()
 	{
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
@@ -290,7 +297,7 @@ namespace oly::editor
 
 	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
 	{
-		if (_config.ignore_imports && node.is_import)
+		if (_config.ignore_imports.selected() && node.is_import)
 			return false;
 
 		if (node.Name()[0] == '.')
@@ -301,10 +308,10 @@ namespace oly::editor
 
 	void TreeViewPanel::DrawHeader()
 	{
-		Toolbar::DrawIconToggleButton(IconResource::FilterOn, IconResource::FilterOff, _config.ignore_imports, "Ignore import files");
+		_config.ignore_imports.draw();
 		
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::CollapseAll, "Collapse all", "##CollapseAll"))
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
 			_root->CollapseAll();
 		
 		ImGui::Separator();
@@ -352,12 +359,12 @@ namespace oly::editor
 			imtk::id_scope scope(&node);
 			if (node.dropdown_open)
 			{
-				if (Toolbar::DrawIconButton(IconResource::ChevronDown, nullptr, "##Dropdown-Down"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronDown), .str_id = "##Dropdown-Down"}).draw())
 					node.CloseBranch();
 			}
 			else
 			{
-				if (Toolbar::DrawIconButton(IconResource::ChevronRight, nullptr, "##Dropdown-Right"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronRight), .str_id = "##Dropdown-Right"}).draw())
 					node.OpenBranch();
 			}
 			ImGui::SameLine();

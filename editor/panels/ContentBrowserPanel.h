@@ -19,7 +19,7 @@ namespace oly::editor
 	class ContentBrowserPanel : public IPanel
 	{
 		std::filesystem::path _folder;
-		bool _favorited = false;
+		imtk::w::icon_button _favorited;
 		bool _on_res_root = true;
 		std::vector<std::filesystem::path> _selectable_entry_paths;
 		std::vector<std::filesystem::path> _selected_paths;

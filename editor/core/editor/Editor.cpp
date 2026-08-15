@@ -47,7 +47,8 @@ namespace oly::editor
 
 		imtk::set_error_logger([](const char* error) { BreakoutError::Log(error); });
 
-		ResourceLoader::LoadAll();
+		LoadAllIcons();
+
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
 	}
