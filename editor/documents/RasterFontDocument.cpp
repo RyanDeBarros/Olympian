@@ -146,7 +146,7 @@ namespace oly::editor
 
 		std::string previous_codepoint = desc.codepoint.value;
 		desc.codepoint.draw();
-		if (gui::PropertyGrid::DirtyRow())
+		if (imtk::prop::row::dirty())
 		{
 			_codepoint_counter.increment(desc.codepoint.value);
 			_codepoint_counter.decrement(previous_codepoint);
@@ -154,7 +154,7 @@ namespace oly::editor
 
 		style_stack.clear();
 
-		if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
+		if (imtk::prop::row::get_draw_result().state.hovered())
 		{
 			if (empty_codepoint)
 				ImGui::SetTooltip("Codepoint is empty");

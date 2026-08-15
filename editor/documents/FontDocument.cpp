@@ -214,7 +214,7 @@ namespace oly::editor
 		{
 			auto& k = desc.kerning[i];
 			if (k.distance.edit.buffer() != k.distance.def || k.pair.edits[0].buffer() != k.pair.def[0] || k.pair.edits[1].buffer() != k.pair.def[1])
-				gui::PropertyGrid::Reset::Button(1 + i);
+				imtk::prop::reset::button(1 + i);
 		}
 
 		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> imtk::item_result {
@@ -280,7 +280,7 @@ namespace oly::editor
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			KerningDesc& k = desc.kerning[i];
-			if (gui::PropertyGrid::Reset::Activated(1 + i))
+			if (imtk::prop::reset::activated(1 + i))
 			{
 				k.distance.edit.publish_reset(k.distance.def);
 				k.pair.edits[0].publish_reset(k.pair.def[0]);
@@ -306,7 +306,7 @@ namespace oly::editor
 	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
 		desc.font_size.draw();
-		if (gui::PropertyGrid::DirtyRow())
+		if (imtk::prop::row::dirty())
 			DestroyFont();
 
 		IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
@@ -321,12 +321,12 @@ namespace oly::editor
 				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&desc]() -> imtk::item_result {
+					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() -> imtk::item_result {
 						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
 						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
 						return imtk::item_result::query(false);
 					}));
-					gui::PropertyGrid::SubmitRow();
+					imtk::prop::row::submit();
 				}
 			}
 

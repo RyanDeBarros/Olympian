@@ -6,9 +6,9 @@
 
 #include "core/UndoHistory.h"
 
-#include "gui/properties/PropertyGrid.h"
-
 #include "assets/ResourcePath.h"
+
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -65,11 +65,12 @@ namespace oly::editor
 		class PreDrawImpl
 		{
 			IDocument& _doc;
-			gui::PropertyGrid _grid;
 			UndoHistoryActiveScope _uh_scope;
 			ActiveDocument _active_instance;
 
 		public:
+			imtk::prop::grid grid;
+
 			PreDrawImpl(IDocument& doc);
 			PreDrawImpl(const PreDrawImpl&) = delete;
 			PreDrawImpl(PreDrawImpl&&) = delete;

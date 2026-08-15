@@ -155,7 +155,7 @@ namespace oly::editor
 
 	IDocument::PreDrawImpl::~PreDrawImpl()
 	{
-		if (gui::PropertyGrid::DirtyGrid())
+		if (grid.dirty())
 			_doc.MarkDirty();
 	}
 

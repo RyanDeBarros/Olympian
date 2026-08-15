@@ -452,7 +452,7 @@ namespace oly::editor
 		if (auto subform = Subform("Storage", true))
 		{
 			desc.generate_mipmaps.draw();
-			if (gui::PropertyGrid::DirtyRow())
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
 			desc.storage.draw();
@@ -465,7 +465,7 @@ namespace oly::editor
 		if (auto subform = Subform("Storage", true))
 		{
 			desc.generate_mipmaps.draw();
-			if (gui::PropertyGrid::DirtyRow())
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
 			desc.image_storage.draw();
@@ -479,11 +479,11 @@ namespace oly::editor
 		if (auto subform = Subform("Parameters", true))
 		{
 			desc.min_filter.draw();
-			if (gui::PropertyGrid::DirtyRow())
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
 			desc.mag_filter.draw();
-			if (gui::PropertyGrid::DirtyRow())
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
 			desc.wrap_s.draw();
@@ -495,7 +495,7 @@ namespace oly::editor
 			if (auto d = imtk::disabled(_gif))
 			{
 				desc.anim.draw();
-				if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
+				if (imtk::prop::row::get_draw_result().state.hovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 

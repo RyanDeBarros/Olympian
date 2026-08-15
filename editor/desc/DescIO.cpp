@@ -60,18 +60,18 @@ namespace oly::editor
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes)
 	{
 		imtk::id_scope scope(data);
-		gui::PropertyGrid::Key::SetLabel(label);
+		imtk::prop::key::set_label(label);
 
 		for (size_t i = 0; i < count; ++i)
 		{
 			if (data[i] != def[i])
 			{
-				gui::PropertyGrid::Reset::Button();
+				imtk::prop::reset::button();
 				break;
 			}
 		}
 
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&data, sublabels, disabled, count, inline_checkboxes]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&data, sublabels, disabled, count, inline_checkboxes]() -> imtk::item_result {
 			imtk::item_result result;
 			
 			for (size_t i = 0; i < count; ++i)
@@ -87,9 +87,9 @@ namespace oly::editor
 			return result;
 		}));
 
-		gui::PropertyGrid::SubmitRow();
+		imtk::prop::row::submit();
 
-		if (gui::PropertyGrid::Reset::AnyActivated())
+		if (imtk::prop::reset::any_activated())
 		{
 			for (size_t i = 0; i < count; ++i)
 				data[i] = def[i];
@@ -99,59 +99,59 @@ namespace oly::editor
 	void DescIO::Draw(const char* label, imtk::edit_session<Rect>& data, const Rect& def)
 	{
 		imtk::id_scope scope(&data);
-		gui::PropertyGrid::Key::SetLabel(label);
+		imtk::prop::key::set_label(label);
 
 		data.pre_edit();
 		if (data.buffer() != def)
-			gui::PropertyGrid::Reset::Button();
+			imtk::prop::reset::button();
 
 		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1);
 		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2);
 		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1);
 		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2);
 
-		gui::PropertyGrid::SubmitRow();
-		data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
-		if (gui::PropertyGrid::Reset::AnyActivated())
+		imtk::prop::row::submit();
+		data.post_edit(imtk::prop::value::get_draw_result().state);
+		if (imtk::prop::reset::any_activated())
 			data.publish_reset(def);
 	}
 	
 	void DescIO::Draw(const char* label, imtk::edit_session<UVRect>& data, const UVRect& def)
 	{
 		imtk::id_scope scope(&data);
-		gui::PropertyGrid::Key::SetLabel(label);
+		imtk::prop::key::set_label(label);
 
 		data.pre_edit();
 		if (data.buffer() != def)
-			gui::PropertyGrid::Reset::Button();
+			imtk::prop::reset::button();
 
 		ValueLabelInputData<float>{}("x1", "##x1", data.buffer().x1, imp::potential<float>(0.f), imp::potential<float>(1.f));
 		ValueLabelInputDataSep<float>{}("x2", "##x2", data.buffer().x2, imp::potential<float>(0.f), imp::potential<float>(1.f));
 		ValueLabelInputDataSep<float>{}("y1", "##y1", data.buffer().y1, imp::potential<float>(0.f), imp::potential<float>(1.f));
 		ValueLabelInputDataSep<float>{}("y2", "##y2", data.buffer().y2, imp::potential<float>(0.f), imp::potential<float>(1.f));
 
-		gui::PropertyGrid::SubmitRow();
-		data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
-		if (gui::PropertyGrid::Reset::AnyActivated())
+		imtk::prop::row::submit();
+		data.post_edit(imtk::prop::value::get_draw_result().state);
+		if (imtk::prop::reset::any_activated())
 			data.publish_reset(def);
 	}
 	
 	void DescIO::Draw(const char* label, imtk::edit_session<TopSidePadding>& data, const TopSidePadding& def)
 	{
 		imtk::id_scope scope(&data);
-		gui::PropertyGrid::Key::SetLabel(label);
+		imtk::prop::key::set_label(label);
 
 		data.pre_edit();
 		if (data.buffer() != def)
-			gui::PropertyGrid::Reset::Button();
+			imtk::prop::reset::button();
 
 		ValueLabelInputData<float>{}("left", "##left", data.buffer().left);
 		ValueLabelInputDataSep<float>{}("right", "##right", data.buffer().right);
 		ValueLabelInputDataSep<float>{}("top", "##top", data.buffer().top);
 
-		gui::PropertyGrid::SubmitRow();
-		data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
-		if (gui::PropertyGrid::Reset::AnyActivated())
+		imtk::prop::row::submit();
+		data.post_edit(imtk::prop::value::get_draw_result().state);
+		if (imtk::prop::reset::any_activated())
 			data.publish_reset(def);
 	}
 

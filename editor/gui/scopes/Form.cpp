@@ -1,12 +1,12 @@
 #include "Form.h"
 
 #include "core/Errors.h"
-#include "gui/properties/PropertyGrid.h"
 
 namespace oly::editor
 {
 	static Form* ACTIVE_FORM = nullptr;
 
+	// TODO v9.3 move to imtk::prop::form
 	Form::Form()
 	{
 		BeginTable();
@@ -48,12 +48,12 @@ namespace oly::editor
 	{
 		ACTIVE_FORM = this;
 		_scope.push(&ACTIVE_FORM).push(_id_counter++);
-		_draw_content = gui::PropertyGrid::BeginForm(ImGui::GetID("##FormID"));
+		_draw_content = imtk::prop::grid::begin_form(ImGui::GetID("##FormID"));
 	}
 
 	void Form::EndTable()
 	{
-		gui::PropertyGrid::EndForm(_draw_content);
+		imtk::prop::grid::end_form(_draw_content);
 		_draw_content = false;
 
 		_scope.pop_all();

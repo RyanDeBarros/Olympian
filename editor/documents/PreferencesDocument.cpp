@@ -34,7 +34,7 @@ namespace oly::editor
 
 		Draw(_desc.scratch);
 
-		if (gui::PropertyGrid::DirtyGrid())
+		if (pre_draw.grid.dirty())
 			MarkDirty();
 	}
 
@@ -184,14 +184,14 @@ namespace oly::editor
 
 		if (auto subform = Subform("Advanced"))
 		{
-			gui::PropertyGrid::Key::SetLabel("Estimated trash folder size");
-			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([]() -> imtk::item_result {
+			imtk::prop::key::set_label("Estimated trash folder size");
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([]() -> imtk::item_result {
 				std::string buf = std::to_string(fio::Trashcan::EstimatedSize()) + " bytes";
 				imtk::controls::input_text("##", buf, buf.size(), ImGuiInputTextFlags_ReadOnly);
 				// TODO v9.2 utility for read-only text that already uses buf.size() as max (imtk::controls::readonly_text()) + return false, as well as pass string_view instead of string&
 				return imtk::item_result::query(false);
 			}));
-			gui::PropertyGrid::SubmitRow();
+			imtk::prop::row::submit();
 
 			imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 

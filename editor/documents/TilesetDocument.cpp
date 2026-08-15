@@ -382,12 +382,12 @@ namespace oly::editor
 
 			if (auto scope = imtk::id_scope(&desc.texture))
 			{
-				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
+				imtk::prop::key::set_label(desc.texture.label);
 				desc.texture.edit.pre_edit();
 				if (desc.texture.edit.buffer() != desc.texture.def)
-					gui::PropertyGrid::Reset::Button();
+					imtk::prop::reset::button();
 
-				gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
+				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
 					imtk::id_scope scope(&desc.texture.value);
 
 					imtk::item_result result = gui::InputData<std::string>{}("", desc.texture.edit.buffer());
@@ -417,8 +417,8 @@ namespace oly::editor
 					return result;
 				}));
 
-				gui::PropertyGrid::SubmitRow();
-				if (gui::PropertyGrid::Reset::AnyActivated())
+				imtk::prop::row::submit();
+				if (imtk::prop::reset::any_activated())
 					desc.texture.edit.publish_reset(desc.texture.def);
 
 				desc.texture.CheckUndoAction();

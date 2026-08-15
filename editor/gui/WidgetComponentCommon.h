@@ -1,7 +1,5 @@
 #pragma once
 
-#include "WidgetComponent.h"
-
 #include "gui/ImGuiWrapper.h"
 
 namespace oly::editor::comp

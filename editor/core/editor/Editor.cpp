@@ -45,9 +45,13 @@ namespace oly::editor
 			Editor::instance().RequestShutdown();
 		});
 
-		imtk::set_error_logger([](const char* error) { BreakoutError::Log(error); });
 
 		LoadAllIcons();
+
+		imtk::init({
+			.error_logger = [](const char* error) { BreakoutError::Log(error); },
+			.reset_icon = Icon(IconResource::Revert)
+		});
 
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();

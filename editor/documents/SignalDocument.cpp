@@ -209,7 +209,7 @@ namespace oly::editor
 		desc.id.draw();
 		if (GetIDCounter().count(desc.id.value) > 1)
 		{
-			if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
+			if (imtk::prop::row::get_draw_result().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -254,7 +254,7 @@ namespace oly::editor
 		desc.id.draw();
 		if (id_counter.count(desc.id.value) > 1)
 		{
-			if (gui::PropertyGrid::GetFullDrawResult().state.hovered())
+			if (imtk::prop::row::get_draw_result().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
 			dup_outline.Draw(Color::Error);
@@ -299,7 +299,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;
 			imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
@@ -337,7 +337,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::MouseButton> mb;
 			imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
@@ -375,7 +375,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> button;
 			imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
@@ -400,7 +400,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<GLenum> axis;
 			imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
@@ -426,7 +426,7 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::GamepadAxis2D> axis;
 			imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);

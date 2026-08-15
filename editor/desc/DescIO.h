@@ -4,8 +4,6 @@
 #include "gui/ImGuiWrapper.h"
 #include "gui/WidgetComponentCommon.h"
 
-#include "gui/properties/PropertyGrid.h"
-
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
 
@@ -21,7 +19,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, T& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::InputData<T>(label, data, std::forward<Args>(args)...));
+				imtk::prop::value::add_component(comp::InputData<T>(label, data, std::forward<Args>(args)...));
 			}
 		};
 
@@ -31,7 +29,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::LabelInputData<T>(label, data_label, data, std::forward<Args>(args)...));
+				imtk::prop::value::add_component(comp::LabelInputData<T>(label, data_label, data, std::forward<Args>(args)...));
 			}
 		};
 
@@ -41,7 +39,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, const char* data_label, T& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(comp::LabelInputDataSep<T>(label, data_label, data, std::forward<Args>(args)...));
+				imtk::prop::value::add_component(comp::LabelInputDataSep<T>(label, data_label, data, std::forward<Args>(args)...));
 			}
 		};
 
@@ -51,7 +49,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
 			{
-				gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
+				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([label, &data, ... args = std::forward<Args>(args)]() mutable -> imtk::item_result {
 					imtk::item_result result = gui::InputData<bool>{}("##Checkbox", data.has_value);;
 
 					imtk::id_scope scope(&data.value);
@@ -70,12 +68,12 @@ namespace oly::editor
 		static void RowInputData(const char* label, T& data, const T& def, Args&&... args)
 		{
 			imtk::id_scope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
+			imtk::prop::key::set_label(label);
 			ValueInputData<T>{}("##", data, std::forward<Args>(args)...);
 			if (data != def)
-				gui::PropertyGrid::Reset::Button();
-			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::AnyActivated())
+				imtk::prop::reset::button();
+			imtk::prop::row::submit();
+			if (imtk::prop::reset::any_activated())
 				data = def;
 		}
 
@@ -83,17 +81,17 @@ namespace oly::editor
 		static void RowInputData(const char* label, imtk::edit_session<T>& data, const T& def, Args&&... args)
 		{
 			imtk::id_scope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
+			imtk::prop::key::set_label(label);
 
 			data.pre_edit();
 			if (data.buffer() != def)
-				gui::PropertyGrid::Reset::Button();
+				imtk::prop::reset::button();
 
 			ValueInputData<T>{}("##", data.buffer(), std::forward<Args>(args)...);
 
-			gui::PropertyGrid::SubmitRow();
-			data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
-			if (gui::PropertyGrid::Reset::AnyActivated())
+			imtk::prop::row::submit();
+			data.post_edit(imtk::prop::value::get_draw_result().state);
+			if (imtk::prop::reset::any_activated())
 				data.publish_reset(def);
 		}
 
@@ -135,12 +133,12 @@ namespace oly::editor
 		static void Draw(const char* label, E& data, const E& def)
 		{
 			imtk::id_scope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
-			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
+			imtk::prop::key::set_label(label);
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&data]() -> imtk::item_result { return DrawCombo("##", data); }));
 			if (data != def)
-				gui::PropertyGrid::Reset::Button();
-			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::AnyActivated())
+				imtk::prop::reset::button();
+			imtk::prop::row::submit();
+			if (imtk::prop::reset::any_activated())
 				data = def;
 		}
 
@@ -173,7 +171,7 @@ namespace oly::editor
 				result |= row_result;
 				if (row_result.state.left_clicked() || row_result.state.focused())
 					row.OnSelect();
-				});
+			});
 
 			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
 				switch (op.type)
@@ -215,7 +213,7 @@ namespace oly::editor
 				result |= row_result;
 				if (row_result.state.left_clicked() || row_result.state.focused())
 					row.OnSelect();
-				});
+			});
 
 			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
 				switch (op.type)
@@ -252,15 +250,15 @@ namespace oly::editor
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
+			imtk::prop::key::set_label(label);
 			if (data.size() != def.size())
-				gui::PropertyGrid::Reset::Button(0);
+				imtk::prop::reset::button(0);
 
-			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
-			gui::PropertyGrid::SubmitRow();
-			if (gui::PropertyGrid::Reset::Activated(0))
+			imtk::prop::row::submit();
+			if (imtk::prop::reset::activated(0))
 				ui_state.DeferResize(def.size());
 		}
 
@@ -269,16 +267,16 @@ namespace oly::editor
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
-			gui::PropertyGrid::Key::SetLabel(label);
+			imtk::prop::key::set_label(label);
 			if (data.buffer().size() != def.size())
-				gui::PropertyGrid::Reset::Button(0);
+				imtk::prop::reset::button(0);
 
-			gui::PropertyGrid::Value::AddComponent(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
 				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
 
-			gui::PropertyGrid::SubmitRow();
-			data.post_edit(gui::PropertyGrid::Value::GetDrawResult().state);
-			if (gui::PropertyGrid::Reset::Activated(0))
+			imtk::prop::row::submit();
+			data.post_edit(imtk::prop::value::get_draw_result().state);
+			if (imtk::prop::reset::activated(0))
 				ui_state.DeferResize(def.size());
 		}
 
@@ -290,12 +288,12 @@ namespace oly::editor
 				if (i < def.size())
 				{
 					if (data[i] != def[i])
-						gui::PropertyGrid::Reset::Button(1 + i);
+						imtk::prop::reset::button(1 + i);
 				}
 				else
 				{
 					if (data[i] != T{})
-						gui::PropertyGrid::Reset::Button(1 + i);
+						imtk::prop::reset::button(1 + i);
 				}
 			}
 		}
@@ -308,12 +306,12 @@ namespace oly::editor
 				if (i < def.size())
 				{
 					if (data.buffer()[i] != def[i])
-						gui::PropertyGrid::Reset::Button(1 + i);
+						imtk::prop::reset::button(1 + i);
 				}
 				else
 				{
 					if (data.buffer()[i] != T{})
-						gui::PropertyGrid::Reset::Button(1 + i);
+						imtk::prop::reset::button(1 + i);
 				}
 			}
 		}
@@ -323,7 +321,7 @@ namespace oly::editor
 		{
 			for (size_t i = 0; i < data.size(); ++i)
 			{
-				if (gui::PropertyGrid::Reset::Activated(1 + i))
+				if (imtk::prop::reset::activated(1 + i))
 				{
 					if (i < def.size())
 						data[i] = def[i];
@@ -341,7 +339,7 @@ namespace oly::editor
 
 			for (size_t i = 0; i < data.buffer().size(); ++i)
 			{
-				if (gui::PropertyGrid::Reset::Activated(1 + i))
+				if (imtk::prop::reset::activated(1 + i))
 				{
 					reset[i] = i < def.size() ? def[i] : T{};
 					publish = true;

@@ -7,5 +7,4 @@ target_sources(OlympianEditor PRIVATE
 )
 
 add_subdirectory(graphics)
-add_subdirectory(properties)
 add_subdirectory(scopes)

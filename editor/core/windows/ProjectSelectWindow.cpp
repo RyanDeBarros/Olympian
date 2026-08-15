@@ -3,7 +3,6 @@
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "gui/ImGuiWrapper.h"
-#include "gui/properties/PropertyGrid.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
@@ -47,7 +46,7 @@ namespace oly::editor
         {
             style_stack.kill();
 
-            if (auto grid = gui::PropertyGrid())
+            if (auto grid = imtk::prop::grid())
                 DrawOpenExistingGroup();
         }
 	}
