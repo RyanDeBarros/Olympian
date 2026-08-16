@@ -4,9 +4,6 @@
 #include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "fio/Trashcan.h"
 
 // TODO v9.4 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
@@ -129,23 +126,23 @@ namespace oly::editor
 
 	void PreferencesDocument::Draw(PreferencesDesc& desc)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
-			if (auto pause = FormPause())
+			if (auto pause = imtk::prop::form_pause())
 				ImGui::SeparatorText("Editor Preferences");
 
-			if (Form::ValidActiveForm())
+			if (imtk::prop::in_form())
 			{
-				if (auto subform = Subform("Edit"))
+				if (auto subform = imtk::prop::subform("Edit"))
 					Draw(desc.edit);
 
-				if (auto subform = Subform("Content Browser"))
+				if (auto subform = imtk::prop::subform("Content Browser"))
 					Draw(desc.content_browser);
 
-				if (auto subform = Subform("Tree View"))
+				if (auto subform = imtk::prop::subform("Tree View"))
 					Draw(desc.tree_view);
 
-				if (auto subform = Subform("Filesystem"))
+				if (auto subform = imtk::prop::subform("Filesystem"))
 					Draw(desc.filesystem);
 			}
 		}
@@ -153,7 +150,7 @@ namespace oly::editor
 
 	void PreferencesDocument::Draw(EditSettingsDesc& desc)
 	{
-		if (auto subform = Subform("Undo History"))
+		if (auto subform = imtk::prop::subform("Undo History"))
 			Draw(desc.undo_history);
 	}
 	
@@ -169,7 +166,7 @@ namespace oly::editor
 
 	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
 	{
-		if (auto subform = Subform("Advanced##TreeView"))
+		if (auto subform = imtk::prop::subform("Advanced##TreeView"))
 			Draw(desc.advanced);
 	}
 
@@ -182,7 +179,7 @@ namespace oly::editor
 	{
 		IMTK_DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 
-		if (auto subform = Subform("Advanced"))
+		if (auto subform = imtk::prop::subform("Advanced"))
 		{
 			imtk::prop::key::set_label("Estimated trash folder size");
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([]() -> imtk::item_result {
@@ -195,7 +192,7 @@ namespace oly::editor
 
 			imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 
-			if (auto pause = FormPause())
+			if (auto pause = imtk::prop::form_pause())
 			{
 				if (ImGui::Button("Clear trash folder"))
 					clear_trash_popup.open();

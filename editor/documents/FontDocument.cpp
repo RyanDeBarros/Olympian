@@ -2,8 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
@@ -131,7 +129,7 @@ namespace oly::editor
 
 	void FontDocument::DrawFontFace()
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 			Draw(_desc.scratch.font_face);
 	}
 
@@ -145,7 +143,7 @@ namespace oly::editor
 			if (auto scope = imtk::id_scope("##Atlas"))
 				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
 				
-			if (auto form = Form())
+			if (auto form = imtk::prop::form())
 			{
 				if (!_desc.scratch.font_atlases.empty())
 					Draw(_desc.scratch.font_atlases[_atlas_slots.active_index]);
@@ -312,7 +310,7 @@ namespace oly::editor
 
 		IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
-		if (auto subform = Subform("Common buffer"))
+		if (auto subform = imtk::prop::subform("Common buffer"))
 		{
 			desc.use_common_buffer_preset.draw();
 			bool preset = desc.use_common_buffer_preset.value;

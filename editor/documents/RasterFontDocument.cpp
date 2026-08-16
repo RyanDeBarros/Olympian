@@ -3,9 +3,6 @@
 #include "core/editor/Notifier.h"
 #include "core/Colors.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -93,13 +90,13 @@ namespace oly::editor
 
 	void RasterFontDocument::Draw(RasterFontDesc& desc)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			IMTK_DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-			if (auto subform = Subform("Glyphs"))
+			if (auto subform = imtk::prop::subform("Glyphs"))
 			{
-				if (auto pause = FormPause())
+				if (auto pause = imtk::prop::form_pause())
 				{
 					_glyph_model.Update(*ListAdapter());
 
@@ -115,7 +112,7 @@ namespace oly::editor
 					}
 				}
 
-				if (Form::ValidActiveForm())
+				if (imtk::prop::in_form())
 				{
 					if (!desc.glyphs.empty())
 						Draw(desc.glyphs[_glyph_model.active_index]);

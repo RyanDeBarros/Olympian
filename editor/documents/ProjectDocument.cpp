@@ -3,9 +3,6 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/Notifier.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -113,28 +110,28 @@ namespace oly::editor
 
 	void ProjectDocument::Draw(ProjectDesc& desc)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 			Draw(desc.context);
 	}
 	
 	void ProjectDocument::Draw(ContextDesc& desc)
 	{
-		if (auto subform = Subform("Platform"))
+		if (auto subform = imtk::prop::subform("Platform"))
 			Draw(desc.platform);
 
-		if (auto subform = Subform("Collision"))
+		if (auto subform = imtk::prop::subform("Collision"))
 			Draw(desc.collision);
 
-		if (auto subform = Subform("Logger"))
+		if (auto subform = imtk::prop::subform("Logger"))
 			Draw(desc.logger);
 
-		if (auto subform = Subform("Frame Rate"))
+		if (auto subform = imtk::prop::subform("Frame Rate"))
 			Draw(desc.frame_rate);
 	}
 
 	void ProjectDocument::Draw(PlatformDesc& desc)
 	{
-		if (auto subform = Subform("Window"))
+		if (auto subform = imtk::prop::subform("Window"))
 			Draw(desc.window);
 		
 		IMTK_DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
@@ -144,10 +141,10 @@ namespace oly::editor
 	{
 		IMTK_DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
-		if (auto subform = Subform("Viewport"))
+		if (auto subform = imtk::prop::subform("Viewport"))
 			Draw(desc.viewport);
 
-		if (auto subform = Subform("Window hints"))
+		if (auto subform = imtk::prop::subform("Window hints"))
 			Draw(desc.window_hints);
 	}
 
@@ -169,7 +166,7 @@ namespace oly::editor
 	void ProjectDocument::Draw(LoggerDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
-		if (auto subform = Subform("Enable Streams"))
+		if (auto subform = imtk::prop::subform("Enable Streams"))
 			Draw(desc.enable);
 	}
 	

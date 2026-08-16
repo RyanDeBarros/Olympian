@@ -2,9 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "definitions/Keys.h"
 #include "util/Parser.h"
 
@@ -28,7 +25,7 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		imtk::id_scope scope(this);
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			Draw(_desc.scratch, "Regular", detail::FontStyleMode::Regular);
 			Draw(_desc.scratch, "Bold", detail::FontStyleMode::Bold);
@@ -93,7 +90,7 @@ namespace oly::editor
 
 	void FontFamilyDocument::Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
 	{
-		if (auto section = Subform(subform_header))
+		if (auto subform = imtk::prop::subform(subform_header))
 			Draw(desc.styles[style]);
 	}
 

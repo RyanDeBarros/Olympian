@@ -4,7 +4,6 @@
 #include "core/Colors.h"
 #include "core/Errors.h"
 
-#include "gui/scopes/Subform.h"
 #include "gui/graphics/Overlays.h"
 
 #include "documents/TextureDocument.h"
@@ -155,7 +154,7 @@ namespace oly::editor
 		UpdateActiveTextures();
 		imtk::id_scope scope(this);
 
-		if (auto subform = Subform("Advanced"))
+		if (auto subform = imtk::prop::subform("Advanced"))
 			_desc.scratch.storage.draw();
 
 		if (auto _ = imtk::tab_bar("##Editors"))
@@ -376,7 +375,7 @@ namespace oly::editor
 
 	void TilesetDocument::Draw(const detail::TileConfigGrid grid)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 

@@ -4,9 +4,6 @@
 #include "core/editor/ResourceLoader.h"
 #include "core/Colors.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "definitions/Keys.h"
 
 #include <imgui_internal.h>
@@ -435,7 +432,7 @@ namespace oly::editor
 		if (auto scope = imtk::id_scope("##Slot"))
 			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
 
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.active_index]); });
 
@@ -450,7 +447,7 @@ namespace oly::editor
 	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
 		Draw(desc.base);
-		if (auto subform = Subform("Storage", true))
+		if (auto subform = imtk::prop::subform("Storage", true))
 		{
 			desc.generate_mipmaps.draw();
 			if (imtk::prop::row::dirty())
@@ -463,7 +460,7 @@ namespace oly::editor
 	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
 		Draw(desc.base);
-		if (auto subform = Subform("Storage", true))
+		if (auto subform = imtk::prop::subform("Storage", true))
 		{
 			desc.generate_mipmaps.draw();
 			if (imtk::prop::row::dirty())
@@ -477,7 +474,7 @@ namespace oly::editor
 	
 	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
-		if (auto subform = Subform("Parameters", true))
+		if (auto subform = imtk::prop::subform("Parameters", true))
 		{
 			desc.min_filter.draw();
 			if (imtk::prop::row::dirty())
@@ -491,7 +488,7 @@ namespace oly::editor
 			desc.wrap_t.draw();
 		}
 
-		if (auto subform = Subform("Animation", true))
+		if (auto subform = imtk::prop::subform("Animation", true))
 		{
 			if (auto d = imtk::disabled(_gif))
 			{

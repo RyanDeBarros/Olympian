@@ -5,8 +5,6 @@
 #include "desc/impl/TilesetDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/scopes/Form.h"
-
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor

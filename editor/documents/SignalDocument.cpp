@@ -2,8 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
 #include "gui/graphics/Outline.h"
 
 #include "definitions/Keys.h"
@@ -133,7 +131,7 @@ namespace oly::editor
 				});
 		}
 
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			if (!desc.empty())
 				Draw(desc[_signal_slots.active_index]);
@@ -163,7 +161,7 @@ namespace oly::editor
 				});
 		}
 
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
 			if (!desc.empty())
 				Draw(desc[_route_slots.active_index]);
@@ -318,7 +316,7 @@ namespace oly::editor
 		}));
 		desc.key.draw();
 
-		if (auto subform = Subform("Keyboard Mods", true))
+		if (auto subform = imtk::prop::subform("Keyboard Mods", true))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -331,7 +329,7 @@ namespace oly::editor
 			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
 
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
@@ -356,7 +354,7 @@ namespace oly::editor
 		}));
 		desc.button.draw();
 
-		if (auto subform = Subform("Keyboard Mods", true))
+		if (auto subform = imtk::prop::subform("Keyboard Mods", true))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -369,7 +367,7 @@ namespace oly::editor
 			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
 
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
@@ -394,7 +392,7 @@ namespace oly::editor
 		}));
 		desc.button.draw();
 
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
@@ -420,7 +418,7 @@ namespace oly::editor
 		desc.axis.draw();
 
 		desc.deadzone.draw();
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
@@ -446,21 +444,21 @@ namespace oly::editor
 		desc.axis.draw();
 
 		desc.deadzone.draw();
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
 	void SignalDocument::Draw(CursorPosDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 	
 	void SignalDocument::Draw(ScrollDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		if (auto subform = Subform("Modifiers"))
+		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
 	}
 

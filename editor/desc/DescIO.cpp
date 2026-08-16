@@ -1,7 +1,5 @@
 #include "DescIO.h"
 
-#include "gui/scopes/Subform.h"
-
 #include "core/MemoryUnit.h"
 
 #include "definitions/Keys.h"
@@ -36,7 +34,7 @@ namespace oly::editor
 			return view;
 		};
 
-		if (auto subform = Subform(label, generator))
+		if (auto subform = imtk::prop::subform(label, generator))
 		{
 			for (size_t i = 0; i < count; ++i)
 				RowInputData(std::to_string(i).c_str(), data[i], def[i]);
@@ -52,7 +50,7 @@ namespace oly::editor
 			return view;
 		};
 
-		if (auto subform = Subform(label, generator))
+		if (auto subform = imtk::prop::subform(label, generator))
 		{
 			for (size_t i = 0; i < count; ++i)
 				RowInputData(sublabels[i], data[i], def[i]);
