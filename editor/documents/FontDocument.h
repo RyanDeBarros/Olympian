@@ -16,7 +16,7 @@ namespace oly::editor
 		DoubleDescriptor<FullFontDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _atlas_slots;
-		std::string _display_text;
+		imtk::w::simple_widget<std::string> _display_text;
 		ImFont* _preview_font = nullptr;
 		
 	public:

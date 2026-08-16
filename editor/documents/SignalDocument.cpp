@@ -269,7 +269,7 @@ namespace oly::editor
 				std::string& element = desc.signals.edit.buffer()[row.Index()];
 
 				gui::Outline outline;
-				auto result = imtk::w::simple_widget<std::string>(element).draw();
+				auto result = imtk::w::bound_widget<std::string>(element).draw();
 
 				if (!signal_id_counter.contains(element))
 				{

@@ -196,11 +196,11 @@ namespace oly::editor
 		}
 	};
 
-	struct Color4Field : public PrimitiveField<Color4>, public imtk::tick_processor
+	struct Color4Field : public PrimitiveField<imtk::color4>, public imtk::tick_processor
 	{
-		imtk::edit_session<Color4> edit;
+		imtk::edit_session<imtk::color4> edit;
 
-		Color4Field(imtk::datapath_link link, Color4 def, detail::Key key, const char* label)
+		Color4Field(imtk::datapath_link link, imtk::color4 def, detail::Key key, const char* label)
 			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
 		{
 		}

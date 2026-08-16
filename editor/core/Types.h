@@ -1,33 +1,9 @@
 #pragma once
 
-#include <imtk.hpp>
+#include <ostream>
 
 namespace oly::editor
 {
-	struct Color4
-	{
-		static inline const size_t N = 4;
-
-		union
-		{
-			struct { float r, g, b, a; };
-			float v[N];
-		};
-
-		Color4();
-		Color4(float r, float g, float b, float a);
-
-		bool operator==(const Color4&) const;
-		bool operator!=(const Color4&) const;
-
-		float* ValuePtr();
-		const float* ValuePtr() const;
-		float& operator[](size_t i);
-		float operator[](size_t i) const;
-
-		friend std::ostream& operator<<(std::ostream& os, Color4 color);
-	};
-
 	struct Rect
 	{
 		static inline const size_t N = 4;

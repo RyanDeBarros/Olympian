@@ -32,7 +32,8 @@ namespace oly::editor
 			Notifier::NotifyWarning("Asset is not located in resource folder");
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
-		_display_text = "Abc 123";
+		_display_text.value = "Abc 123";
+		_display_text.config().label = "Display text";
 		LoadAsset();
 	}
 
@@ -168,13 +169,13 @@ namespace oly::editor
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
-			imtk::w::simple_widget<std::string>(_display_text, { .label = "Display text" }).draw(); // TODO store _display_text as simple_widget<std::string> (NOT simple_widget<std::string&>)
+			_display_text.draw();
 
 			if (!_preview_font)
 				ReloadFont();
 
 			if (auto _ = imtk::font_scope(_preview_font))
-				ImGui::TextUnformatted(_display_text.c_str());
+				ImGui::TextUnformatted(_display_text.value.c_str());
 		}
 	}
 
@@ -240,7 +241,7 @@ namespace oly::editor
 						ImGui::SameLine();
 					}
 
-					result |= imtk::w::simple_widget<std::string>(k.pair.edits[i].buffer(), { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
+					result |= imtk::w::bound_widget<std::string>(k.pair.edits[i].buffer(), { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
 					k.pair.edits[i].post_edit(result.state);
 
 					if (dup_warning && result.state.hovered())
@@ -269,7 +270,7 @@ namespace oly::editor
 				ImGui::TextUnformatted(k.distance.label);
 				auto result = imtk::item_result::query(false);
 				ImGui::SameLine();
-				result |= imtk::w::simple_widget<int>(k.distance.edit.buffer()).draw();
+				result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();
 				k.distance.edit.post_edit(result.state);
 				return result;
 			}));

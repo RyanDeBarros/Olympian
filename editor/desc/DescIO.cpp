@@ -85,7 +85,7 @@ namespace oly::editor
 			{
 				if (auto d = imtk::disabled(disabled && disabled[i]))
 				{
-					result |= imtk::w::simple_widget<bool>(data[i], { .label = sublabels[i] }).draw();
+					result |= imtk::w::bound_widget<bool>(data[i], { .label = sublabels[i] }).draw();
 					if (inline_checkboxes && i + 1 < count)
 						ImGui::SameLine();
 				}

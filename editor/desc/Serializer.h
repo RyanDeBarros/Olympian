@@ -8,37 +8,6 @@
 #include <set>
 
 template<>
-struct imtk::serializer<oly::editor::Color4>
-{
-	bool load(oly::editor::Color4& obj, imtk::toml_node node) const
-	{
-		if (auto array = node.as_array())
-		{
-			bool fully_loaded = true;
-			for (size_t i = 0; i < std::min(array->size(), oly::editor::Color4::N); ++i)
-			{
-				if (auto v = array->get_as<double>(i))
-					obj[i] = v->get();
-				else
-					fully_loaded = false;
-			}
-			return fully_loaded;
-		}
-		else
-			return false;
-	}
-
-	toml::array dump(const oly::editor::Color4 obj) const
-	{
-		toml::array arr;
-		arr.reserve(oly::editor::Color4::N);
-		for (size_t i = 0; i < oly::editor::Color4::N; ++i)
-			arr.push_back(obj[i]);
-		return arr;
-	}
-};
-
-template<>
 struct imtk::serializer<oly::editor::Rect>
 {
 	bool load(oly::editor::Rect& obj, imtk::toml_node node) const

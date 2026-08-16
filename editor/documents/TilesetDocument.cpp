@@ -390,7 +390,7 @@ namespace oly::editor
 				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
 					imtk::id_scope scope(&desc.texture.value);
 
-					imtk::item_result result = imtk::w::simple_widget<std::string>(desc.texture.edit.buffer()).draw();
+					imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
 
 					// TODO v9.4 support dropping files directly on grid cells
 					if (auto target = imtk::drag_drop_target())

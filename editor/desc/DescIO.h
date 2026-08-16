@@ -3,7 +3,6 @@
 #include "core/Types.h"
 
 #include "gui/DynamicList.h"
-#include "gui/InputData.h"
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
@@ -19,7 +18,7 @@ namespace oly::editor
 		{
 			void operator()(const char* label, T& data) const
 			{
-				auto widget = std::make_unique<imtk::w::simple_widget<T>>(data);
+				auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
 				widget->config.label = label;
 				imtk::prop::value::add_component(std::move(widget));
 			}
@@ -27,7 +26,7 @@ namespace oly::editor
 			template<typename U>
 			void operator()(const char* label, T& data, imp::potential<U> min, imp::potential<U> max) const
 			{
-				auto widget = std::make_unique<imtk::w::simple_widget<T>>(data);
+				auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
 				widget->config.label = label;
 				widget->config.min = min;
 				widget->config.max = max;
@@ -41,7 +40,7 @@ namespace oly::editor
 			template<typename... Args>
 			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
 			{
-				auto widget = std::make_unique<imtk::w::optional_widget>(std::make_unique<imtk::w::simple_widget<T>>(data.value), data.has_value);
+				auto widget = std::make_unique<imtk::w::bound_optional>(std::make_unique<imtk::w::bound_widget<T>>(data.value), data.has_value);
 				widget->enable.config.label = label;
 				imtk::prop::value::add_component(std::move(widget));
 			}
@@ -52,7 +51,7 @@ namespace oly::editor
 		{
 			void operator()(const char* label, T& data) const
 			{
-				auto item = std::make_unique<imtk::w::simple_widget<T>>(data);
+				auto item = std::make_unique<imtk::w::bound_widget<T>>(data);
 				item->config.label = label;
 
 				imtk::prop::value::add_component(std::make_unique<imtk::w::subsequent>(std::move(item)));
@@ -60,7 +59,7 @@ namespace oly::editor
 
 			void operator()(const char* label, T& data, imp::potential<T> min, imp::potential<T> max) const
 			{
-				auto item = std::make_unique<imtk::w::simple_widget<T>>(data);
+				auto item = std::make_unique<imtk::w::bound_widget<T>>(data);
 				item->config.label = label;
 				item->config.min = min;
 				item->config.max = max;
@@ -95,7 +94,7 @@ namespace oly::editor
 			ValueInputData<T>{}("", data.buffer(), std::forward<Args>(args)...);
 
 			imtk::prop::row::submit();
-			data.post_edit(imtk::prop::value::get_draw_result().state); // TODO v9.3 use simple_widget<edit_session> so that pasting value can publish directly
+			data.post_edit(imtk::prop::value::get_draw_result().state); // TODO v9.3 use bound_widget<edit_session> so that pasting value can publish directly
 			if (imtk::prop::reset::any_activated())
 				data.publish_reset(def);
 		}
