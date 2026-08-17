@@ -185,7 +185,7 @@ namespace oly::editor
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([]() -> imtk::item_result {
 				std::string buf = std::to_string(fio::Trashcan::EstimatedSize()) + " bytes";
 				imtk::controls::input_text("##", buf, buf.size(), ImGuiInputTextFlags_ReadOnly);
-				// TODO v9.2 utility for read-only text that already uses buf.size() as max (imtk::controls::readonly_text()) + return false, as well as pass string_view instead of string&
+				// TODO v9.3 utility for read-only text that already uses buf.size() as max (imtk::controls::readonly_text()) + return false, as well as pass string_view instead of string&
 				return imtk::item_result::query(false);
 			}));
 			imtk::prop::row::submit();

@@ -1,7 +1,6 @@
 #include "Logger.h"
 
 #include "core/editor/Editor.h"
-#include "core/Colors.h"
 
 #include <iostream>
 
@@ -12,13 +11,13 @@ namespace oly::editor
         switch (level)
         {
         case LogLevel::Success:
-            return Color::Success;
+            return imtk::col::success;
         case LogLevel::Warning:
-            return Color::Warning;
+            return imtk::col::warning;
         case LogLevel::Error:
-            return Color::Error;
+            return imtk::col::error;
         default:
-            return Color::White;
+            return imtk::col::white;
         }
     }
 

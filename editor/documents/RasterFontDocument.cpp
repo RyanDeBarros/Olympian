@@ -1,7 +1,6 @@
 #include "RasterFontDocument.h"
 
 #include "core/editor/Notifier.h"
-#include "core/Colors.h"
 
 #include "definitions/Keys.h"
 
@@ -137,7 +136,7 @@ namespace oly::editor
 		imtk::style_stack style_stack;
 		if (empty_codepoint || duplicate_codepoint)
 		{
-			style_stack.push(ImGuiCol_Border, Color::Error);
+			style_stack.push(ImGuiCol_Border, imtk::col::error);
 			style_stack.push(ImGuiStyleVar_FrameBorderSize, 1.f);
 		}
 

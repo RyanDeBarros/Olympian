@@ -1,6 +1,5 @@
 #include "ContentBrowserPanel.h"
 
-#include "core/Colors.h"
 #include "core/Errors.h"
 #include "core/PathInfo.h"
 
@@ -497,7 +496,7 @@ namespace oly::editor
 				}
 			}
 
-			ImGui::GetWindowDrawList()->AddText(cursor + label_offset, Color::White, label.c_str());
+			ImGui::GetWindowDrawList()->AddText(cursor + label_offset, imtk::col::white, label.c_str());
 
 			detail::ResourcePath res = path;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-// TODO v9.3 move InputListener to imtk
+// TODO v9.3 move InputListener to imtk: return GLFW values for input enums, and leave conversions here
 
 #include "definitions/enums/GamepadAxis2D.h"
 #include "definitions/enums/KeyInput.h"

@@ -3,5 +3,3 @@ target_sources(OlympianEditor PRIVATE
 	ListModel.cpp
 	UnsavedChangesModal.cpp
 )
-
-add_subdirectory(graphics)

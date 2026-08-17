@@ -2,7 +2,6 @@
 
 #include "core/editor/Notifier.h"
 #include "core/editor/ResourceLoader.h"
-#include "core/Colors.h"
 
 #include "definitions/Keys.h"
 
@@ -310,7 +309,7 @@ namespace oly::editor
 			xpos[i] = i * info.full_width / info.cols;
 
 		for (int x : xpos)
-			dl->AddLine(rect_start + ImVec2(x, 0) * scale, rect_start + ImVec2(x, info.full_height) * scale, Color::White);
+			dl->AddLine(rect_start + ImVec2(x, 0) * scale, rect_start + ImVec2(x, info.full_height) * scale, imtk::col::white);
 
 		std::vector<int> ypos(info.rows + 1);
 
@@ -318,7 +317,7 @@ namespace oly::editor
 			ypos[i] = i * info.full_height / info.rows;
 
 		for (int y : ypos)
-			dl->AddLine(rect_start + ImVec2(0, y) * scale, rect_start + ImVec2(info.full_width, y) * scale, Color::White);
+			dl->AddLine(rect_start + ImVec2(0, y) * scale, rect_start + ImVec2(info.full_width, y) * scale, imtk::col::white);
 
 		const auto DrawDigit = [dl, rect_start, &xpos, &ypos, scale](int x, int y, int digit) {
 			const std::string d = std::to_string(digit);
@@ -341,11 +340,11 @@ namespace oly::editor
 					for (int dy = -1; dy <= 1; ++dy)
 					{
 						if (dx != 0 || dy != 0)
-							dl->AddText(font, font_size, box_start + ImVec2(dx, dy) * 1.5f, Color::Black, d.c_str());
+							dl->AddText(font, font_size, box_start + ImVec2(dx, dy) * 1.5f, imtk::col::black, d.c_str());
 					}
 				}
 
-				dl->AddText(font, font_size, box_start, Color::White, d.c_str());
+				dl->AddText(font, font_size, box_start, imtk::col::white, d.c_str());
 			}
 		};
 

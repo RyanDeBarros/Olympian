@@ -2,8 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/graphics/Outline.h"
-
 #include "definitions/Keys.h"
 
 #include "util/Counter.h"
@@ -221,12 +219,12 @@ namespace oly::editor
 			auto& k = desc.kerning[row.Index()];
 
 			bool dup_warning = counter.count({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() }) > 1;
-			gui::Outline dup_outline;
+			imtk::outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
 					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer()).has_value();
-					gui::Outline bad_outline;
+					imtk::outline bad_outline;
 					if (bad_codepoint)
 						dup_warning = false;
 
@@ -250,13 +248,13 @@ namespace oly::editor
 						if (result.state.hovered())
 							ImGui::SetTooltip("Bad codepoint format");
 
-						bad_outline.Draw(Color::Error);
+						bad_outline.draw(imtk::col::error);
 					}
 
 					if (i == 1)
 					{
 						if (dup_warning)
-							dup_outline.Draw(Color::Error);
+							dup_outline.draw(imtk::col::error);
 					}
 
 					return result;

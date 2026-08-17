@@ -2,8 +2,6 @@
 
 #include "core/editor/Notifier.h"
 
-#include "gui/graphics/Outline.h"
-
 #include "definitions/Keys.h"
 
 #include "util/DynamicArray.h"
@@ -202,7 +200,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(SignalDesc& desc)
 	{
-		gui::Outline dup_outline;
+		imtk::outline dup_outline;
 		
 		desc.id.draw();
 		if (GetIDCounter().count(desc.id.value) > 1)
@@ -210,7 +208,7 @@ namespace oly::editor
 			if (imtk::prop::row::get_draw_result().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.Draw(Color::Error);
+			dup_outline.draw(imtk::col::error);
 		}
 
 		auto initial_binding = desc.binding.value;
@@ -247,7 +245,7 @@ namespace oly::editor
 		Counter<std::string> local_id_counter;
 		local_id_counter.accumulate(desc.signals.value);
 
-		gui::Outline dup_outline;
+		imtk::outline dup_outline;
 
 		desc.id.draw();
 		if (id_counter.count(desc.id.value) > 1)
@@ -255,7 +253,7 @@ namespace oly::editor
 			if (imtk::prop::row::get_draw_result().state.hovered())
 				ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.Draw(Color::Error);
+			dup_outline.draw(imtk::col::error);
 		}
 
 		desc.signals.edit.pre_edit();
@@ -266,18 +264,18 @@ namespace oly::editor
 			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&]() -> imtk::item_result {
 				std::string& element = desc.signals.edit.buffer()[row.Index()];
 
-				gui::Outline outline;
+				imtk::outline outline;
 				auto result = imtk::w::bound_widget<std::string>(element).draw();
 
 				if (!signal_id_counter.contains(element))
 				{
-					outline.Draw(Color::Warning);
+					outline.draw(imtk::col::warning);
 					if (result.state.hovered())
 						ImGui::SetTooltip("Signal id is not present in asset");
 				}
 				else if (local_id_counter.count(element) > 1)
 				{
-					outline.Draw(Color::Warning);
+					outline.draw(imtk::col::warning);
 					if (result.state.hovered())
 						ImGui::SetTooltip("Duplicate signal id listing in route");
 				}
