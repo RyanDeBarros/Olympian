@@ -103,7 +103,7 @@ namespace oly::editor
 					ImGui::TableSetColumnIndex(0);
 					std::string preview = detail::ResourcePath(_folder).get_resource_shorthand();
 					ImGui::SetNextItemWidth(ImGui::CalcTextSize(preview.c_str()).x + 10.f);
-					ImGui::InputText("##Folder", preview.data(), preview.size() + 1, ImGuiInputTextFlags_ReadOnly);
+					imtk::controls::readonly_text("##Folder", preview);
 
 					ImGui::TableSetColumnIndex(1);
 					DrawMainToolbar(fio_queue);
@@ -253,7 +253,7 @@ namespace oly::editor
 		imtk::controls::vertical_separator();
 
 		if (auto _ = imtk::item_width_scope(120.f))
-			imtk::float_control("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 0.1f, 10.f, "%.1f", ImGuiSliderFlags_Logarithmic);
+			imtk::controls::float_popout("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 0.1f, 10.f, "%.1f", ImGuiSliderFlags_Logarithmic);
 	}
 
 	void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
@@ -860,7 +860,7 @@ namespace oly::editor
 			ImGui::TextUnformatted("Folder");
 			ImGui::SameLine();
 			std::string folder = detail::ResourcePath(_import_folder->folder).get_resource_shorthand();
-			ImGui::InputText("##Folder", folder.data(), folder.size() + 1, ImGuiInputTextFlags_ReadOnly);
+			imtk::controls::readonly_text("##Folder", folder);
 
 			if (ImGui::Button("Import direct contents only"))
 			{
@@ -941,7 +941,7 @@ namespace oly::editor
 			ImGui::TextUnformatted("Folder");
 			ImGui::SameLine();
 			std::string folder = detail::ResourcePath(_prune_folder->folder).get_resource_shorthand();
-			ImGui::InputText("##Folder", folder.data(), folder.size() + 1, ImGuiInputTextFlags_ReadOnly);
+			imtk::controls::readonly_text("##Folder", folder);
 
 			if (ImGui::Button("Prune direct contents only"))
 			{

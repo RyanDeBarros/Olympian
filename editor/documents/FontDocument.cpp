@@ -318,11 +318,7 @@ namespace oly::editor
 				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() -> imtk::item_result {
-						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
-						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-						return imtk::item_result::query(false);
-					}));
+					imtk::prop::value::add_component(std::make_unique<imtk::w::readonly_text_owned>(detail::buffer_of(desc.common_buffer_preset.value)));
 					imtk::prop::row::submit();
 				}
 			}
