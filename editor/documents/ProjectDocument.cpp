@@ -134,7 +134,10 @@ namespace oly::editor
 		if (auto subform = imtk::prop::subform("Window"))
 			Draw(desc.window);
 		
-		IMTK_DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+		if (imtk::prop::in_form())
+		{
+			IMTK_DRAW_FIELDS(PLATFORM_PARTIAL_GENERATOR);
+		}
 	}
 	
 	void ProjectDocument::Draw(WindowDesc& desc)

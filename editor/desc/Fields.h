@@ -12,47 +12,59 @@
 
 namespace oly::editor
 {
-	extern detail::Key NullKey();
-
 	template<typename T>
-	struct PrimitiveField
+	struct PrimitiveField : public imtk::tick_processor
 	{
 		imtk::datapath_link link;
 		T def;
 		T value;
+		imtk::edit_session<T> edit;
 		detail::Key key;
 		const char* label;
 
-		PrimitiveField(imtk::datapath_link link, T def, detail::Key key, const char* label) : link(std::move(link)), def(def), value(def), key(key), label(label) {}
+		PrimitiveField(imtk::datapath_link link, T def, detail::Key key, const char* label)
+			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), key(key), label(label)
+		{
+		}
+
+		PrimitiveField(PrimitiveField&& o) noexcept
+			: imtk::tick_processor(std::move(o)), link(std::move(o.link)), def(std::move(o.def)), value(std::move(o.value)), edit(value), key(o.key), label(o.label)
+		{
+		}
+
+		PrimitiveField& operator=(const PrimitiveField&) = delete;
+		PrimitiveField& operator=(PrimitiveField&&) noexcept = default;
 
 		void copy_data(const PrimitiveField& o)
 		{
-			value = o.value;
+			edit.publish_reset(o.value);
 		}
 
 		bool query_dirty(const PrimitiveField& disk) const
 		{
-			return value != disk.value;
+			return edit.buffer() != disk.value;
 		}
 
 		void load(imtk::toml_node node)
 		{
-			value = def;
-			if (key != NullKey())
-				imtk::serializer<T>{}.load(value, node[detail::encode_key(key)]);
+			T val = def;
+			if (key != detail::null_key())
+				imtk::serializer<T>{}.load(val, node[detail::encode_key(key)]);
 			else
-				imtk::serializer<T>{}.load(value, node);
+				imtk::serializer<T>{}.load(val, node);
+			edit.publish_reset(std::move(val));
 		}
 
 		void dump(toml::table& table) const
 		{
-			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value));
+			if (key != detail::null_key())
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
+		// TODO v9.3 what's the point of this if not using key?
 		void dump(toml::array& array) const
 		{
-			array.push_back(imtk::serializer<T>{}.dump(value));
+			array.push_back(imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -62,69 +74,101 @@ namespace oly::editor
 			else
 				return nullptr;
 		}
-	};
 
-	struct BoolField : public PrimitiveField<bool>
-	{
-		using PrimitiveField<bool>::PrimitiveField;
+	protected:
+		void on_last_process_frame() override
+		{
+			CheckUndoAction();
+		}
+
+	public:
+		void CheckUndoAction()
+		{
+			if (auto original = edit.consume_published_from())
+				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
+		}
 
 		void draw()
 		{
-			const auto initial = value;
+			DescIO::Draw(label, edit, def);
+			CheckUndoAction();
+		}
+	};
+
+	struct BoolField
+	{
+		imtk::datapath_link link;
+		bool def;
+		bool value;
+		detail::Key key;
+		const char* label;
+
+		BoolField(imtk::datapath_link link, bool def, detail::Key key, const char* label)
+			: link(std::move(link)), def(def), value(def), key(key), label(label)
+		{
+		}
+
+		void copy_data(const BoolField& o)
+		{
+			value = o.value;
+		}
+
+		bool query_dirty(const BoolField& disk) const
+		{
+			return value != disk.value;
+		}
+
+		void load(imtk::toml_node node)
+		{
+			value = def;
+			if (key != detail::null_key())
+				imtk::serializer<bool>{}.load(value, node[detail::encode_key(key)]);
+			else
+				imtk::serializer<bool>{}.load(value, node);
+		}
+
+		void dump(toml::table& table) const
+		{
+			if (key != detail::null_key())
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<bool>{}.dump(value));
+		}
+
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<bool>{}.dump(value));
+		}
+
+		void* resolve(imtk::datapath_view path, std::type_index type)
+		{
+			if (type == typeid(decltype(value)) && path.empty())
+				return static_cast<void*>(&value);
+			else
+				return nullptr;
+		}
+
+		void draw()
+		{
+			const bool og = value;
 			DescIO::Draw(label, value, def);
-			if (initial != value)
-				PushFieldSetAction(link.compute_path(), initial, value);
+			if (og != value)
+				PushFieldSetAction(link.compute_path(), og, value);
 		}
 	};
 
 	template<typename T, typename U, imp::potential<U> _Min, imp::potential<U> _Max>
-	struct RangeField : public PrimitiveField<T>, public imtk::tick_processor
+	struct RangeField : public PrimitiveField<T>
 	{
 		using Super = PrimitiveField<T>;
 
 		inline static const imp::potential<U> Min = _Min;
 		inline static const imp::potential<U> Max = _Max;
 
-		imtk::edit_session<T> edit;
-
-		RangeField(imtk::datapath_link link, T def, detail::Key key, const char* label)
-			: Super(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(this->value)
-		{
-		}
-
-		RangeField(RangeField&& o) noexcept
-			: Super(std::move(o)), imtk::tick_processor(std::move(o)), edit(this->value)
-		{
-		}
-
-		RangeField& operator=(RangeField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				Super::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
-		}
-
-		// TODO v9.3 copy_data() for fields that have edit sessions that directly copies edit?
+		using Super::Super;
 
 		void draw()
 		{
 			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(this->link.compute_path(), edit.original(), this->value);
-		}
-
-		void on_last_process_frame() override
-		{
-			CheckUndoAction();
+			this->CheckUndoAction();
 		}
 	};
 
@@ -137,321 +181,88 @@ namespace oly::editor
 	template<imp::potential<double> Min, imp::potential<double> Max>
 	using DoubleField = RangeField<double, double, Min, Max>;
 
-	template<typename E>
-	struct EnumField : public PrimitiveField<E>
+	template<typename E> requires (std::is_enum_v<E>)
+	struct EnumField
 	{
-		static_assert(std::is_enum_v<E>);
+		imtk::datapath_link link;
+		E def;
+		E value;
+		detail::Key key;
+		const char* label;
 
-		using PrimitiveField<E>::PrimitiveField;
-
-		void draw()
-		{
-			const auto initial = this->value;
-			DescIO::Draw(this->label, this->value, this->def);
-			if (initial != this->value)
-				PushFieldSetAction(this->link.compute_path(), initial, this->value);
-		}
-	};
-
-	struct StringField : public PrimitiveField<std::string>, public imtk::tick_processor
-	{
-		imtk::edit_session<std::string> edit;
-
-		StringField(imtk::datapath_link link, std::string def, detail::Key key, const char* label)
-			: PrimitiveField(std::move(link), std::move(def), key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
+		EnumField(imtk::datapath_link link, E def, detail::Key key, const char* label)
+			: link(std::move(link)), def(def), value(def), key(key), label(label)
 		{
 		}
 
-		StringField(StringField&& o) noexcept
-			: PrimitiveField(std::move(o)), imtk::tick_processor(std::move(o)), edit(value)
+		void copy_data(const EnumField& o)
 		{
+			value = o.value;
 		}
 
-		StringField& operator=(StringField&& o) noexcept
+		bool query_dirty(const EnumField& disk) const
 		{
-			if (this != &o)
-			{
-				PrimitiveField::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
+			return value != disk.value;
 		}
 
-		void draw()
+		void load(imtk::toml_node node)
 		{
-			DescIO::Draw(label, edit, def);
-			CheckUndoAction();
+			value = def;
+			if (key != detail::null_key())
+				imtk::serializer<E>{}.load(value, node[detail::encode_key(key)]);
+			else
+				imtk::serializer<E>{}.load(value, node);
 		}
 
-		void CheckUndoAction()
+		void dump(toml::table& table) const
 		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
+			if (key != detail::null_key())
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
-		void on_last_process_frame() override
+		void dump(toml::array& array) const
 		{
-			CheckUndoAction();
-		}
-	};
-
-	struct Color4Field : public PrimitiveField<imtk::color4>, public imtk::tick_processor
-	{
-		imtk::edit_session<imtk::color4> edit;
-
-		Color4Field(imtk::datapath_link link, imtk::color4 def, detail::Key key, const char* label)
-			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
-		{
+			array.push_back(imtk::serializer<E>{}.dump(value));
 		}
 
-		Color4Field(Color4Field&& o) noexcept
-			: PrimitiveField(std::move(o)), imtk::tick_processor(std::move(o)), edit(value)
+		void* resolve(imtk::datapath_view path, std::type_index type)
 		{
-		}
-
-		Color4Field& operator=(Color4Field&& o) noexcept
-		{
-			if (this != &o)
-			{
-				PrimitiveField::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
+			if (type == typeid(decltype(value)) && path.empty())
+				return static_cast<void*>(&value);
+			else
+				return nullptr;
 		}
 
 		void draw()
 		{
-			DescIO::Draw(label, edit, def);
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
-		}
-
-		void on_last_process_frame() override
-		{
-			CheckUndoAction();
+			const E og = value;
+			DescIO::Draw(label, value, def);
+			if (og != value)
+				PushFieldSetAction(link.compute_path(), std::move(og), value);
 		}
 	};
 
-	struct RectField : public PrimitiveField<Rect>, public imtk::tick_processor
-	{
-		imtk::edit_session<Rect> edit;
-
-		RectField(imtk::datapath_link link, Rect def, detail::Key key, const char* label)
-			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
-		{
-		}
-
-		RectField(RectField&& o) noexcept
-			: PrimitiveField(std::move(o)), imtk::tick_processor(std::move(o)), edit(value)
-		{
-		}
-
-		RectField& operator=(RectField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				PrimitiveField::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
-		}
-
-		void draw()
-		{
-			DescIO::Draw(label, edit, def);
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
-		}
-
-		void on_last_process_frame() override
-		{
-			CheckUndoAction();
-		}
-	};
-
-	struct UVRectField : public PrimitiveField<UVRect>, public imtk::tick_processor
-	{
-		imtk::edit_session<UVRect> edit;
-
-		UVRectField(imtk::datapath_link link, UVRect def, detail::Key key, const char* label)
-			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
-		{
-		}
-
-		UVRectField(UVRectField&& o) noexcept
-			: PrimitiveField(std::move(o)), imtk::tick_processor(std::move(o)), edit(value)
-		{
-		}
-
-		UVRectField& operator=(UVRectField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				PrimitiveField::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
-		}
-
-		void draw()
-		{
-			DescIO::Draw(label, edit, def);
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
-		}
-
-		void on_last_process_frame() override
-		{
-			CheckUndoAction();
-		}
-	};
-
-	struct TopSidePaddingField : public PrimitiveField<TopSidePadding>, public imtk::tick_processor
-	{
-		imtk::edit_session<TopSidePadding> edit;
-
-		TopSidePaddingField(imtk::datapath_link link, TopSidePadding def, detail::Key key, const char* label)
-			: PrimitiveField(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo), edit(value)
-		{
-		}
-
-		TopSidePaddingField(TopSidePaddingField&& o) noexcept
-			: PrimitiveField(std::move(o)), imtk::tick_processor(std::move(o)), edit(value)
-		{
-		}
-
-		TopSidePaddingField& operator=(TopSidePaddingField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				PrimitiveField::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
-		}
-
-		void draw()
-		{
-			DescIO::Draw(label, edit, def);
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
-		}
-
-		void on_last_process_frame() override
-		{
-			CheckUndoAction();
-		}
-	};
+	using StringField = PrimitiveField<std::string>;
+	using Color4Field = PrimitiveField<imtk::color4>;
+	using RectField = PrimitiveField<Rect>;
+	using UVRectField = PrimitiveField<UVRect>;
+	using TopSidePaddingField = PrimitiveField<TopSidePadding>;
 
 	template<typename T, size_t N>
 	struct ArrayField : public PrimitiveField<std::array<T, N>>
 	{
 		using Super = PrimitiveField<std::array<T, N>>;
 
-		const char** sublabels;
-		bool inline_checkboxes;
-
-		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
-			: Super(std::move(link), def, key, label), sublabels(sublabels), inline_checkboxes(inline_checkboxes) {}
-
-		void draw()
-		{
-			const auto initial = this->value;
-			DescIO::Draw(this->label, this->value.data(), this->def.data(), sublabels, N, inline_checkboxes);
-			if (initial != this->value)
-				PushFieldSetAction(this->link.compute_path(), initial, this->value);
-		}
-	};
-
-	template<size_t N>
-	using BoolArrayField = ArrayField<bool, N>;
-
-	template<typename T, size_t N>
-	struct SessionArrayField : public PrimitiveField<std::array<T, N>>, public imtk::tick_processor
-	{
-		using Super = PrimitiveField<std::array<T, N>>;
-
 		const char** sublabels = nullptr;
-		std::array<imtk::edit_session<T>, N> edits;
 
-		SessionArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label)
-			: Super(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo),
-			edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
+		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label)
+			: Super(std::move(link), def, key, label)
 		{
 		}
 
-		SessionArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: Super(std::move(link), def, key, label), imtk::tick_processor(imtk::tick_process_phase::check_undo),
-			edits(_MakeEdits(this->value, std::make_index_sequence<N>{})), sublabels(sublabels)
+		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+			: Super(std::move(link), def, key, label), sublabels(sublabels)
 		{
-		}
-
-	private:
-		template<size_t... Is>
-		static std::array<imtk::edit_session<T>, N> _MakeEdits(std::array<T, N>& value, std::index_sequence<Is...>)
-		{
-			return { imtk::edit_session<T>{value[Is]}... };
-		}
-
-	public:
-		SessionArrayField(SessionArrayField&& o) noexcept
-			: Super(std::move(o)), imtk::tick_processor(std::move(o)), edits(_MakeEdits(this->value, std::make_index_sequence<N>{}))
-		{
-		}
-
-		SessionArrayField& operator=(SessionArrayField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				Super::operator=(std::move(o));
-				imtk::tick_processor::operator=(std::move(o));
-			}
-
-			return *this;
-		}
-
-		void draw()
-		{
-			if (sublabels)
-				DescIO::Draw(this->label, edits.data(), this->def.data(), sublabels, N);
-			else
-				DescIO::Draw(this->label, edits.data(), this->def.data(), N);
-
-			CheckUndoAction();
-		}
-
-		void CheckUndoAction()
-		{
-			for (size_t i = 0; i < N; ++i)
-			{
-				if (edits[i].consume_modified())
-					PushFieldSetAction(this->link.compute_path() / imtk::datapath::step(i), std::move(edits[i].original()), this->value[i]);
-			}
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -472,14 +283,87 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		void on_last_process_frame() override
+		void draw()
 		{
-			CheckUndoAction();
+			DescIO::Draw(this->label, this->edit, this->def, sublabels);
+			this->CheckUndoAction();
 		}
 	};
 
 	template<size_t N>
-	using StringArrayField = SessionArrayField<std::string, N>;
+	struct BoolArrayField
+	{
+		imtk::datapath_link link;
+		std::array<bool, N> def;
+		std::array<bool, N> value;
+		detail::Key key;
+		const char* label;
+		const char** sublabels = nullptr;
+		bool inline_checkboxes;
+
+		BoolArrayField(imtk::datapath_link link, std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
+			: link(std::move(link)), def(def), value(def), key(key), label(label), sublabels(sublabels), inline_checkboxes(inline_checkboxes)
+		{
+		}
+
+		void copy_data(const BoolArrayField& o)
+		{
+			value = o.value;
+		}
+
+		bool query_dirty(const BoolArrayField& disk) const
+		{
+			return value != disk.value;
+		}
+
+		void load(imtk::toml_node node)
+		{
+			if (key != detail::null_key())
+				imtk::serializer<std::array<bool, N>>{}.load(value, node[detail::encode_key(key)]);
+			else
+				imtk::serializer<std::array<bool, N>>{}.load(value, node);
+		}
+
+		void dump(toml::table& table) const
+		{
+			if (key != detail::null_key())
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<std::array<bool, N>>{}.dump(value));
+		}
+
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<std::array<bool, N>>{}.dump(value));
+		}
+
+		void* resolve(imtk::datapath_view path, std::type_index type)
+		{
+			if (path.empty())
+				return typeid(decltype(this->value)) == type ? static_cast<void*>(&this->value) : nullptr;
+
+			int index = path.step();
+			if (index >= 0 && index < N)
+			{
+				path = path.next();
+				if (type == typeid(this->value[index]) && path.empty())
+					return static_cast<void*>(&this->value[index]);
+				else
+					return nullptr;
+			}
+			else
+				return nullptr;
+		}
+
+		void draw()
+		{
+			const std::array<bool, N> og = value;
+			DescIO::Draw(label, value.data(), def.data(), sublabels, N, inline_checkboxes);
+			if (og != value)
+				PushFieldSetAction(link.compute_path(), og, value);
+		}
+	};
+
+	template<size_t N>
+	using StringArrayField = ArrayField<std::string, N>;
 
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
@@ -489,33 +373,7 @@ namespace oly::editor
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 	};
 
-	struct StringVectorField : public VectorField<std::string>
-	{
-		using Super = VectorField<std::string>;
-
-		imtk::edit_session<std::vector<std::string>> edit;
-
-		StringVectorField(imtk::datapath_link link, std::vector<std::string> def, detail::Key key, const char* label) : Super(std::move(link), def, key, label), edit(value) {}
-
-		StringVectorField(StringVectorField&& o) noexcept
-			: Super(std::move(o)), edit(value)
-		{
-		}
-
-		StringVectorField& operator=(StringVectorField&& o) noexcept
-		{
-			if (this != &o)
-				Super::operator=(std::move(o));
-
-			return *this;
-		}
-
-		void CheckUndoAction()
-		{
-			if (edit.consume_modified())
-				PushFieldSetAction(this->link.compute_path(), edit.original(), this->value);
-		}
-	};
+	using StringVectorField = VectorField<std::string>;
 
 	template<typename E>
 	struct DisjointEnumField
@@ -541,6 +399,11 @@ namespace oly::editor
 		void copy_data(const DisjointEnumField& o)
 		{
 			index = o.index;
+		}
+
+		bool query_dirty(const DisjointEnumField<E>& disk) const
+		{
+			return index != disk.index;
 		}
 
 		void draw()
@@ -589,11 +452,6 @@ namespace oly::editor
 			else
 				return nullptr;
 		}
-
-		bool query_dirty(const DisjointEnumField<E>& disk) const
-		{
-			return index != disk.index;
-		}
 	};
 	
 	template<typename T, imp::potential<T> _Min, imp::potential<T> _Max>
@@ -616,29 +474,44 @@ namespace oly::editor
 		{
 		}
 
-		OptionalRangeField(OptionalRangeField&& o)
+		OptionalRangeField(OptionalRangeField&& o) noexcept
 			: imtk::tick_processor(std::move(o)), link(std::move(o.link)), def(std::move(o.def)), value(std::move(o.value)), edit(value), value_key(o.value_key), enable_key(o.enable_key), label(o.label)
 		{
 		}
 
-		OptionalRangeField& operator=(OptionalRangeField&& o)
-		{
-			if (this != &o)
-			{
-				imtk::tick_processor::operator=(std::move(o));
-				def = std::move(o.def);
-				value = std::move(o.value);
-				value_key = o.value_key;
-				enable_key = o.enable_key;
-				label = o.label;
-			}
-
-			return *this;
-		}
+		OptionalRangeField& operator=(const OptionalRangeField&) = delete;
+		OptionalRangeField& operator=(OptionalRangeField&&) noexcept = default;
 
 		void copy_data(const OptionalRangeField& o)
 		{
-			value = o.value;
+			edit.publish_reset(o.value);
+		}
+
+		bool query_dirty(const OptionalRangeField& disk) const
+		{
+			return edit.buffer() != disk.value;
+		}
+
+		void load(imtk::toml_node node)
+		{
+			imp::potential<T> val = def;
+			
+			if (enable_key != detail::null_key() && value_key != detail::null_key())
+			{
+				imtk::serializer<T>{}.load(val.value, node[detail::encode_key(value_key)]);
+				imtk::serializer<bool>{}.load(val.has_value, node[detail::encode_key(enable_key)]);
+			}
+
+			edit.publish_reset(std::move(val));
+		}
+
+		void dump(toml::table& table) const
+		{
+			if (enable_key != detail::null_key() && value_key != detail::null_key())
+			{
+				table.insert_or_assign(detail::encode_key(enable_key), imtk::serializer<bool>{}.dump(edit.truth().has_value));
+				table.insert_or_assign(detail::encode_key(value_key), imtk::serializer<T>{}.dump(edit.truth().value));
+			}
 		}
 
 		void draw()
@@ -649,27 +522,8 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
-		}
-
-		void load(imtk::toml_node node)
-		{
-			value = def;
-			if (enable_key != NullKey() && value_key != NullKey())
-			{
-				imtk::serializer<T>{}.load(value.value, node[detail::encode_key(value_key)]);
-				imtk::serializer<bool>{}.load(value.has_value, node[detail::encode_key(enable_key)]);
-			}
-		}
-
-		void dump(toml::table& table) const
-		{
-			if (enable_key != NullKey() && value_key != NullKey())
-			{
-				table.insert_or_assign(detail::encode_key(enable_key), imtk::serializer<bool>{}.dump(value.has_value));
-				table.insert_or_assign(detail::encode_key(value_key), imtk::serializer<T>{}.dump(value.value));
-			}
+			if (auto original = edit.consume_published_from())
+				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -680,14 +534,10 @@ namespace oly::editor
 				return nullptr;
 		}
 
+	protected:
 		void on_last_process_frame() override
 		{
 			CheckUndoAction();
-		}
-
-		bool query_dirty(const OptionalRangeField& disk) const
-		{
-			return value != disk.value;
 		}
 	};
 
@@ -724,24 +574,17 @@ namespace oly::editor
 		{
 		}
 
-		CompactOptionalRangeField& operator=(CompactOptionalRangeField&& o) noexcept
-		{
-			if (this != &o)
-			{
-				imtk::tick_processor::operator=(std::move(o));
-				std::move(def) = std::move(o.def);
-				std::move(value) = std::move(o.value);
-				nullopt = o.nullopt;
-				key = o.key;
-				label = o.label;
-			}
-
-			return *this;
-		}
+		CompactOptionalRangeField& operator=(const CompactOptionalRangeField&) = delete;
+		CompactOptionalRangeField& operator=(CompactOptionalRangeField&&) noexcept = default;
 
 		void copy_data(const CompactOptionalRangeField& o)
 		{
-			value = o.value;
+			edit.publish_reset(o.value);
+		}
+
+		bool query_dirty(const CompactOptionalRangeField& disk) const
+		{
+			return edit.buffer() != disk.value;
 		}
 
 		void draw()
@@ -752,31 +595,34 @@ namespace oly::editor
 
 		void CheckUndoAction()
 		{
-			if (edit.consume_modified())
-				PushFieldSetAction(link.compute_path(), edit.original(), value);
+			if (auto original = edit.consume_published_from())
+				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
 		}
 
 		void load(imtk::toml_node node)
 		{
-			value = def;
-			if (key != NullKey())
+			imp::potential<T> val = def;
+
+			if (key != detail::null_key())
 			{
 				T temp = def.value;
 				if (imtk::serializer<T>{}.load(temp, node[detail::encode_key(key)]))
 				{
-					value.has_value = temp != nullopt;
-					if (value.has_value)
-						value.value = temp;
+					val.has_value = temp != nullopt;
+					if (val.has_value)
+						val.value = temp;
 				}
 				else
-					value.has_value = false;
+					val.has_value = false;
 			}
+
+			edit.publish_reset(std::move(val));
 		}
 
 		void dump(toml::table& table) const
 		{
-			if (key != NullKey())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value.has_value ? value.value : nullopt));
+			if (key != detail::null_key())
+				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
 		}
 
 		void* resolve(imtk::datapath_view path, std::type_index type)
@@ -790,11 +636,6 @@ namespace oly::editor
 		void on_last_process_frame() override
 		{
 			CheckUndoAction();
-		}
-
-		bool query_dirty(const CompactOptionalRangeField& disk) const
-		{
-			return value != disk.value;
 		}
 	};
 

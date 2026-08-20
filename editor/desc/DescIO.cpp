@@ -25,38 +25,6 @@ namespace oly::editor
 			data = def;
 	}
 
-	void DescIO::Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, size_t count)
-	{
-		imtk::prop::view_generator generator = [data, count]() {
-			auto view = std::make_unique<imtk::prop::view_list>();
-			for (size_t i = 0; i < count; ++i)
-				view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data[i].buffer()));
-			return view;
-		};
-
-		if (auto subform = imtk::prop::subform(label, generator))
-		{
-			for (size_t i = 0; i < count; ++i)
-				RowInputData(std::to_string(i).c_str(), data[i], def[i]);
-		}
-	}
-
-	void DescIO::Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, const char** sublabels, size_t count)
-	{
-		imtk::prop::view_generator generator = [data, count]() {
-			auto view = std::make_unique<imtk::prop::view_list>();
-			for (size_t i = 0; i < count; ++i)
-				view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data[i].buffer()));
-			return view;
-		};
-
-		if (auto subform = imtk::prop::subform(label, generator))
-		{
-			for (size_t i = 0; i < count; ++i)
-				RowInputData(sublabels[i], data[i], def[i]);
-		}
-	}
-
 	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes)
 	{
 		Draw(label, data, def, sublabels, nullptr, count, inline_checkboxes);
@@ -99,65 +67,6 @@ namespace oly::editor
 			for (size_t i = 0; i < count; ++i)
 				data[i] = def[i];
 		}
-	}
-
-	void DescIO::Draw(const char* label, imtk::edit_session<Rect>& data, const Rect& def)
-	{
-		imtk::id_scope scope(&data);
-		imtk::prop::key::set_label(label);
-
-		data.pre_edit();
-		if (data.buffer() != def)
-			imtk::prop::reset::button();
-
-		ValueInputData<float>{}("x1", data.buffer().x1);
-		ValueInputDataSep<float>{}("x2", data.buffer().x2);
-		ValueInputDataSep<float>{}("y1", data.buffer().y1);
-		ValueInputDataSep<float>{}("y2", data.buffer().y2);
-
-		imtk::prop::row::submit();
-		data.post_edit(imtk::prop::value::get_draw_result().state);
-		if (imtk::prop::reset::any_activated())
-			data.publish_reset(def);
-	}
-	
-	void DescIO::Draw(const char* label, imtk::edit_session<UVRect>& data, const UVRect& def)
-	{
-		imtk::id_scope scope(&data);
-		imtk::prop::key::set_label(label);
-
-		data.pre_edit();
-		if (data.buffer() != def)
-			imtk::prop::reset::button();
-
-		ValueInputData<float>{}("x1", data.buffer().x1, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueInputDataSep<float>{}("x2", data.buffer().x2, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueInputDataSep<float>{}("y1", data.buffer().y1, imp::potential<float>(0.f), imp::potential<float>(1.f));
-		ValueInputDataSep<float>{}("y2", data.buffer().y2, imp::potential<float>(0.f), imp::potential<float>(1.f));
-
-		imtk::prop::row::submit();
-		data.post_edit(imtk::prop::value::get_draw_result().state);
-		if (imtk::prop::reset::any_activated())
-			data.publish_reset(def);
-	}
-	
-	void DescIO::Draw(const char* label, imtk::edit_session<TopSidePadding>& data, const TopSidePadding& def)
-	{
-		imtk::id_scope scope(&data);
-		imtk::prop::key::set_label(label);
-
-		data.pre_edit();
-		if (data.buffer() != def)
-			imtk::prop::reset::button();
-
-		ValueInputData<float>{}("left", data.buffer().left);
-		ValueInputDataSep<float>{}("right", data.buffer().right);
-		ValueInputDataSep<float>{}("top", data.buffer().top);
-
-		imtk::prop::row::submit();
-		data.post_edit(imtk::prop::value::get_draw_result().state);
-		if (imtk::prop::reset::any_activated())
-			data.publish_reset(def);
 	}
 
 	template<>

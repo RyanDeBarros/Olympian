@@ -128,7 +128,7 @@ namespace oly::editor
 	{
 		if (auto form = imtk::prop::form())
 		{
-			if (auto pause = imtk::prop::form_pause())
+			if (auto pause = imtk::prop::form::pause())
 				ImGui::SeparatorText("Editor Preferences");
 
 			if (imtk::prop::in_form())
@@ -187,7 +187,7 @@ namespace oly::editor
 
 			imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 
-			if (auto pause = imtk::prop::form_pause())
+			if (auto pause = imtk::prop::form::pause())
 			{
 				if (ImGui::Button("Clear trash folder"))
 					clear_trash_popup.open();

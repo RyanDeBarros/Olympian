@@ -314,7 +314,7 @@ namespace oly::editor
 		}));
 		desc.key.draw();
 
-		if (auto subform = imtk::prop::subform("Keyboard Mods", true))
+		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)
@@ -352,7 +352,7 @@ namespace oly::editor
 		}));
 		desc.button.draw();
 
-		if (auto subform = imtk::prop::subform("Keyboard Mods", true))
+		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
 			bool disabled_required_mods[desc.required_mods.Count]{};
 			for (size_t i = 0; i < desc.required_mods.Count; ++i)

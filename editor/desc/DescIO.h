@@ -3,6 +3,7 @@
 #include "core/Types.h"
 
 #include "gui/DynamicList.h"
+#include "gui/Widgets.h"
 
 #include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
@@ -14,124 +15,110 @@ namespace oly::editor
 	struct DescIO
 	{
 		template<typename T>
-		struct ValueInputData
+		static void RowInputData(std::string_view label, T& data, const T& def, std::unique_ptr<imtk::w::widget>&& widget)
 		{
-			void operator()(const char* label, T& data) const
-			{
-				auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
-				widget->config.label = label;
-				imtk::prop::value::add_component(std::move(widget));
-			}
-
-			template<typename U>
-			void operator()(const char* label, T& data, imp::potential<U> min, imp::potential<U> max) const
-			{
-				auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
-				widget->config.label = label;
-				widget->config.min = min;
-				widget->config.max = max;
-				imtk::prop::value::add_component(std::move(widget));
-			}
-		};
-
-		template<typename T>
-		struct ValueInputData<imp::potential<T>>
-		{
-			template<typename... Args>
-			void operator()(const char* label, imp::potential<T>& data, Args&&... args) const
-			{
-				auto widget = std::make_unique<imtk::w::bound_optional>(std::make_unique<imtk::w::bound_widget<T>>(data.value), data.has_value);
-				widget->enable.config.label = label;
-				imtk::prop::value::add_component(std::move(widget));
-			}
-		};
-
-		template<typename T>
-		struct ValueInputDataSep
-		{
-			void operator()(const char* label, T& data) const
-			{
-				auto item = std::make_unique<imtk::w::bound_widget<T>>(data);
-				item->config.label = label;
-
-				imtk::prop::value::add_component(std::make_unique<imtk::w::subsequent>(std::move(item)));
-			}
-
-			void operator()(const char* label, T& data, imp::potential<T> min, imp::potential<T> max) const
-			{
-				auto item = std::make_unique<imtk::w::bound_widget<T>>(data);
-				item->config.label = label;
-				item->config.min = min;
-				item->config.max = max;
-
-				imtk::prop::value::add_component(std::make_unique<imtk::w::subsequent>(std::move(item)));
-			}
-		};
-
-		template<typename T, typename... Args>
-		static void RowInputData(const char* label, T& data, const T& def, Args&&... args)
-		{
-			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
-			ValueInputData<T>{}("", data, std::forward<Args>(args)...);
+
 			if (data != def)
 				imtk::prop::reset::button();
+
+			imtk::prop::value::add_component(std::move(widget));
+			
 			imtk::prop::row::submit();
 			if (imtk::prop::reset::any_activated())
 				data = def;
 		}
 
-		template<typename T, typename... Args>
-		static void RowInputData(const char* label, imtk::edit_session<T>& data, const T& def, Args&&... args)
+		template<typename T>
+		static void RowInputData(std::string_view label, imtk::edit_session<T>& data, const T& def, std::unique_ptr<imtk::w::widget>&& widget)
 		{
-			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
 
-			data.pre_edit();
 			if (data.buffer() != def)
 				imtk::prop::reset::button();
 
-			ValueInputData<T>{}("", data.buffer(), std::forward<Args>(args)...);
+			imtk::prop::value::add_component(std::move(widget));
 
 			imtk::prop::row::submit();
-			data.post_edit(imtk::prop::value::get_draw_result().state); // TODO v9.3 use bound_widget<edit_session> so that pasting value can publish directly
 			if (imtk::prop::reset::any_activated())
 				data.publish_reset(def);
-		}
-
-		template<typename T, typename U = T>
-		static void Draw(const char* label, T& data, const T& def, imp::potential<U> min, imp::potential<U> max)
-		{
-			RowInputData(label, data, def, min, max);
-		}
-
-		template<typename T, typename U = T>
-		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, imp::potential<U> min, imp::potential<U> max)
-		{
-			RowInputData(label, data, def, min, max);
 		}
 
 		template<typename T>
 		static void Draw(const char* label, T& data, const T& def)
 		{
-			RowInputData(label, data, def);
+			RowInputData(label, data, def, std::make_unique<imtk::w::bound_widget<T>>(data));
 		}
 
 		template<typename T>
 		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def)
 		{
-			RowInputData(label, data, def);
+			RowInputData(label, data, def, std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(data));
 		}
 
+		template<typename T, typename U = T>
+		static void Draw(const char* label, T& data, const T& def, imp::potential<U> min, imp::potential<U> max)
+		{
+			auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
+			widget->config.min = min;
+			widget->config.max = max;
+			RowInputData(label, data, def, std::move(widget));
+		}
+
+		template<typename T, typename U = T>
+		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, imp::potential<U> min, imp::potential<U> max)
+		{
+			auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(data);
+			widget->config.min = min;
+			widget->config.max = max;
+			RowInputData(label, data, def, std::move(widget));
+		}
+
+		template<typename T, typename U = T>
+		static void Draw(const char* label, imtk::edit_session<imp::potential<T>>& data, const imp::potential<T>& def, imp::potential<U> min, imp::potential<U> max)
+		{
+			auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<imp::potential<T>>>>(data);
+			widget->subwidget.config.min = min;
+			widget->subwidget.config.max = max;
+			RowInputData(label, data, def, std::move(widget));
+		}
+
+		// TODO v9.3 use std::string_view label everywhere
 		static void Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names);
-		static void Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, size_t count);
-		static void Draw(const char* label, imtk::edit_session<std::string>* data, const std::string* def, const char** sublabels, size_t count);
+
+		template<size_t N>
+		static void Draw(const char* label, imtk::edit_session<std::array<std::string, N>>& data, const std::array<std::string, N>& def, const char** sublabels)
+		{
+			imtk::prop::view_generator generator = [&data]() {
+				auto view = std::make_unique<imtk::prop::view_list>();
+				view->subviews.reserve(N);
+				for (size_t i = 0; i < N; ++i)
+					view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data.buffer()[i]));
+				return view;
+			};
+
+			if (auto subform = imtk::prop::subform(label, generator))
+			{
+				imtk::item_state list_state;
+				data.pre_edit();
+
+				for (size_t i = 0; i < N; ++i)
+				{
+					auto widget = std::make_unique<imtk::w::bound_widget<std::string>>(data.buffer()[i]);
+					if (sublabels && sublabels[i])
+						RowInputData(sublabels[i], data.buffer()[i], def[i], std::move(widget));
+					else
+						RowInputData(std::to_string(i), data.buffer()[i], def[i], std::move(widget));
+
+					list_state |= imtk::prop::value::get_draw_result().state;
+				}
+
+				data.post_edit(list_state);
+			}
+		}
+
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
 		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
-
-		static void Draw(const char* label, imtk::edit_session<Rect>& data, const Rect& def);
-		static void Draw(const char* label, imtk::edit_session<UVRect>& data, const UVRect& def);
-		static void Draw(const char* label, imtk::edit_session<TopSidePadding>& data, const TopSidePadding& def);
 
 		template<typename E> requires std::is_enum_v<E>
 		static void Draw(const char* label, E& data, const E& def)
@@ -266,6 +253,7 @@ namespace oly::editor
 				ui_state.DeferResize(def.size());
 		}
 
+		// TODO v9.3 use std::vector<imtk::edit_session<T>> instead
 		template<typename T, typename Printer = StandardPrinter<T>>
 		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)

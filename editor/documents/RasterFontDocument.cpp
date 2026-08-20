@@ -95,7 +95,7 @@ namespace oly::editor
 
 			if (auto subform = imtk::prop::subform("Glyphs"))
 			{
-				if (auto pause = imtk::prop::form_pause())
+				if (auto pause = imtk::prop::form::pause())
 				{
 					_glyph_model.Update(*ListAdapter());
 
@@ -207,6 +207,7 @@ namespace oly::editor
 		}
 	};
 
+	// TODO v9.3 return std::string_view instead of const std::string& ?
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
 		return std::make_unique<gui::ListCallbackAdapter>(gui::MakeVectorAdapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),

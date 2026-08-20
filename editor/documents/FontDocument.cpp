@@ -202,15 +202,14 @@ namespace oly::editor
 		for (auto& k : desc.kerning)
 		{
 			k.distance.edit.pre_edit();
-			k.pair.edits[0].pre_edit();
-			k.pair.edits[1].pre_edit();
-			counter.increment({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() });
+			k.pair.edit.pre_edit();
+			counter.increment({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] });
 		}
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			auto& k = desc.kerning[i];
-			if (k.distance.edit.buffer() != k.distance.def || k.pair.edits[0].buffer() != k.pair.def[0] || k.pair.edits[1].buffer() != k.pair.def[1])
+			if (k.distance.edit.buffer() != k.distance.def || k.pair.edit.buffer()[0] != k.pair.def[0] || k.pair.edit.buffer()[1] != k.pair.def[1])
 				imtk::prop::reset::button(1 + i);
 		}
 
@@ -218,12 +217,12 @@ namespace oly::editor
 			imtk::w::widget_row components;
 			auto& k = desc.kerning[row.Index()];
 
-			bool dup_warning = counter.count({ k.pair.edits[0].buffer(), k.pair.edits[1].buffer() }) > 1;
+			bool dup_warning = counter.count({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] }) > 1;
 			imtk::outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
-					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer()).has_value();
+					bool bad_codepoint = !stocdpt(k.pair.edit.buffer()[i]).has_value();
 					imtk::outline bad_outline;
 					if (bad_codepoint)
 						dup_warning = false;
@@ -237,8 +236,7 @@ namespace oly::editor
 						ImGui::SameLine();
 					}
 
-					result |= imtk::w::bound_widget<std::string>(k.pair.edits[i].buffer(), { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
-					k.pair.edits[i].post_edit(result.state);
+					result |= imtk::w::bound_widget<std::string>(k.pair.edit.buffer()[i], { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
 
 					if (dup_warning && result.state.hovered())
 						ImGui::SetTooltip("Duplicate codepoint pair");
@@ -267,11 +265,13 @@ namespace oly::editor
 				auto result = imtk::item_result::query(false);
 				ImGui::SameLine();
 				result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();
-				k.distance.edit.post_edit(result.state);
 				return result;
 			}));
 
-			return components.draw();
+			auto result = components.draw();
+			k.pair.edit.post_edit(result.state);
+			k.distance.edit.post_edit(result.state);
+			return result;
 		}, desc.kerning_ui_state);
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
@@ -280,21 +280,17 @@ namespace oly::editor
 			if (imtk::prop::reset::activated(1 + i))
 			{
 				k.distance.edit.publish_reset(k.distance.def);
-				k.pair.edits[0].publish_reset(k.pair.def[0]);
-				k.pair.edits[1].publish_reset(k.pair.def[1]);
+				k.pair.edit.publish_reset(k.pair.def);
 				MarkDirty();
 			}
 
-			bool publish_action = false;
-			publish_action |= k.distance.edit.consume_modified();
-			publish_action |= k.pair.edits[0].consume_modified();
-			publish_action |= k.pair.edits[1].consume_modified();
-			if (publish_action)
+			auto og_distance = k.distance.edit.consume_published_from();
+			auto og_pair = k.pair.edit.consume_published_from();
+			if (og_distance || og_pair)
 			{
 				KerningDesc original;
-				original.distance.value = std::move(k.distance.edit.original());
-				original.pair.value[0] = std::move(k.pair.edits[0].original());
-				original.pair.value[1] = std::move(k.pair.edits[1].original());
+				original.distance.value = og_distance ? *og_distance : k.distance.value;
+				original.pair.value = og_pair ? *og_pair : k.pair.value;
 				PushDescriptorSetAction(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}

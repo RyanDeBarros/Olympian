@@ -180,6 +180,8 @@ namespace oly::editor
 		ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
 		ignore_imports.config.str_id = "##IgnoreImports";
 		ignore_imports.config.tooltip = "Ignore import files";
+
+		// TODO v9.4 option to "Sync with open asset" (open in tree view and have it selected - selection outline around single-clicked item)
 	}
 
 	TreeViewPanel& TreeViewPanel::Instance()
