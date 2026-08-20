@@ -29,7 +29,8 @@ namespace oly
 				_map.emplace(std::move(obj), by);
 		}
 
-		bool decrement(const T& obj)
+		template<typename U = T>
+		bool decrement(const U& obj)
 		{
 			auto it = _map.find(obj);
 			if (it != _map.end())

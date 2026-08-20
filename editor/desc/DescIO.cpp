@@ -13,7 +13,7 @@
 
 namespace oly::editor
 {
-	void DescIO::Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names)
+	void DescIO::Draw(std::string_view label, int& data, const int& def, imtk::label_span_registry::handle names)
 	{
 		imtk::id_scope scope(&data);
 		imtk::prop::key::set_label(label);
@@ -25,12 +25,12 @@ namespace oly::editor
 			data = def;
 	}
 
-	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes)
+	void DescIO::Draw(std::string_view label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes)
 	{
 		Draw(label, data, def, sublabels, nullptr, count, inline_checkboxes);
 	}
 
-	void DescIO::Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes)
+	void DescIO::Draw(std::string_view label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes)
 	{
 		imtk::id_scope scope(data);
 		imtk::prop::key::set_label(label);

@@ -207,7 +207,6 @@ namespace oly::editor
 		}
 	};
 
-	// TODO v9.3 return std::string_view instead of const std::string& ?
 	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
 	{
 		return std::make_unique<gui::ListCallbackAdapter>(gui::MakeVectorAdapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),

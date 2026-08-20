@@ -45,19 +45,19 @@ namespace oly::editor
 		}
 
 		template<typename T>
-		static void Draw(const char* label, T& data, const T& def)
+		static void Draw(std::string_view label, T& data, const T& def)
 		{
 			RowInputData(label, data, def, std::make_unique<imtk::w::bound_widget<T>>(data));
 		}
 
 		template<typename T>
-		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def)
+		static void Draw(std::string_view label, imtk::edit_session<T>& data, const T& def)
 		{
 			RowInputData(label, data, def, std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(data));
 		}
 
 		template<typename T, typename U = T>
-		static void Draw(const char* label, T& data, const T& def, imp::potential<U> min, imp::potential<U> max)
+		static void Draw(std::string_view label, T& data, const T& def, imp::potential<U> min, imp::potential<U> max)
 		{
 			auto widget = std::make_unique<imtk::w::bound_widget<T>>(data);
 			widget->config.min = min;
@@ -66,28 +66,27 @@ namespace oly::editor
 		}
 
 		template<typename T, typename U = T>
-		static void Draw(const char* label, imtk::edit_session<T>& data, const T& def, imp::potential<U> min, imp::potential<U> max)
+		static void Draw(std::string_view label, imtk::edit_session<T>& data, const T& def, imp::potential<U> min, imp::potential<U> max)
 		{
 			auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(data);
-			widget->config.min = min;
-			widget->config.max = max;
-			RowInputData(label, data, def, std::move(widget));
-		}
-
-		template<typename T, typename U = T>
-		static void Draw(const char* label, imtk::edit_session<imp::potential<T>>& data, const imp::potential<T>& def, imp::potential<U> min, imp::potential<U> max)
-		{
-			auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<imp::potential<T>>>>(data);
 			widget->subwidget.config.min = min;
 			widget->subwidget.config.max = max;
 			RowInputData(label, data, def, std::move(widget));
 		}
 
-		// TODO v9.3 use std::string_view label everywhere
-		static void Draw(const char* label, int& data, const int& def, imtk::label_span_registry::handle names);
+		template<typename T, typename U = T>
+		static void Draw(std::string_view label, imtk::edit_session<imp::potential<T>>& data, const imp::potential<T>& def, imp::potential<U> min, imp::potential<U> max)
+		{
+			auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<imp::potential<T>>>>(data);
+			widget->subwidget.value.config.min = min;
+			widget->subwidget.value.config.max = max;
+			RowInputData(label, data, def, std::move(widget));
+		}
+
+		static void Draw(std::string_view label, int& data, const int& def, imtk::label_span_registry::handle names);
 
 		template<size_t N>
-		static void Draw(const char* label, imtk::edit_session<std::array<std::string, N>>& data, const std::array<std::string, N>& def, const char** sublabels)
+		static void Draw(std::string_view label, imtk::edit_session<std::array<std::string, N>>& data, const std::array<std::string, N>& def, const char** sublabels)
 		{
 			imtk::prop::view_generator generator = [&data]() {
 				auto view = std::make_unique<imtk::prop::view_list>();
@@ -117,11 +116,11 @@ namespace oly::editor
 			}
 		}
 
-		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
-		static void Draw(const char* label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
+		static void Draw(std::string_view label, bool* data, const bool* def, const char** sublabels, size_t count, bool inline_checkboxes);
+		static void Draw(std::string_view label, bool* data, const bool* def, const char** sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
 
 		template<typename E> requires std::is_enum_v<E>
-		static void Draw(const char* label, E& data, const E& def)
+		static void Draw(std::string_view label, E& data, const E& def)
 		{
 			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
@@ -237,7 +236,7 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
+		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
@@ -255,7 +254,7 @@ namespace oly::editor
 
 		// TODO v9.3 use std::vector<imtk::edit_session<T>> instead
 		template<typename T, typename Printer = StandardPrinter<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, const char* label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
+		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
 			imtk::id_scope scope(&data);
@@ -343,7 +342,7 @@ namespace oly::editor
 		}
 
 		template<typename T> requires (!std::is_enum_v<T>)
-		static void Draw(const imtk::datapath_link& link, const char* label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
+		static void Draw(const imtk::datapath_link& link, std::string_view label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
@@ -363,7 +362,7 @@ namespace oly::editor
 		}
 
 		template<typename E> requires (std::is_enum_v<E>)
-		static void Draw(const imtk::datapath_link& link, const char* label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
+		static void Draw(const imtk::datapath_link& link, std::string_view label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
 		{
 			DrawDynamicListRevertButtons(data, def);
 
