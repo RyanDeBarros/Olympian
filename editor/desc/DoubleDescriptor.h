@@ -2,7 +2,7 @@
 
 #include "desc/FieldSetAction.h"
 
-#include "util/TypeErasedBox.h"
+#include <imp/box.hpp>
 
 namespace oly::editor
 {
@@ -12,9 +12,9 @@ namespace oly::editor
 		virtual void* resolve(imtk::datapath_view path, std::type_index type) = 0;
 		virtual void describe(std::ostream& os, imtk::datapath_view path) const = 0;
 		virtual bool query_dirty() = 0;
-		virtual TypeErasedBox CopyScratch() const = 0;
-		virtual std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const = 0;
-		virtual bool ScratchUndoActionQuery(TypeErasedBox original, std::unique_ptr<UndoAction>& action) const = 0;
+		virtual imp::box CopyScratch() const = 0;
+		virtual std::unique_ptr<UndoAction> ScratchUndoAction(imp::box original) const = 0;
+		virtual bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<UndoAction>& action) const = 0;
 	};
 
 	template<typename Descriptor>
@@ -41,26 +41,26 @@ namespace oly::editor
 			return scratch.query_dirty(disk);
 		}
 
-		TypeErasedBox CopyScratch() const
+		imp::box CopyScratch() const
 		{
-			return TypeErasedBox(imtk::desc::clone_data(scratch));
+			return imp::make_box<Descriptor>(imtk::desc::clone_data(scratch));
 		}
 
-		std::unique_ptr<UndoAction> ScratchUndoAction(TypeErasedBox original) const override
+		std::unique_ptr<UndoAction> ScratchUndoAction(imp::box original) const override
 		{
-			if (auto og = original.consume_unique<Descriptor>())
+			if (auto og = original.consume<Descriptor>())
 				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 			else
 				return nullptr;
 		}
 
-		bool ScratchUndoActionQuery(TypeErasedBox original, std::unique_ptr<UndoAction>& action) const override
+		bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<UndoAction>& action) const override
 		{
 			if (auto og = original.as<Descriptor>())
 			{
 				if (scratch.query_dirty(*og))
 				{
-					if (auto og = original.consume_unique<Descriptor>())
+					if (auto og = original.consume<Descriptor>())
 						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 					else
 						action = nullptr;

@@ -6,7 +6,7 @@ Olympian Engine is a game engine written with C++ OpenGL to make future graphics
 
 To access the web documentation, run `mkdocs/Serve.py`.
 
-The editor GUI is partially built off of [imgui-toolkit](https://github.com/RyanDeBarros/imgui-toolkit), a library I'm building in conjunction with the editor.
+The editor GUI is partially built off of [imgui-toolkit](https://github.com/RyanDeBarros/imgui-toolkit), a library I'm building in conjunction with the editor. Additionally, both the editor and engine use [Imperious](https://github.com/RyanDeBarros/Imperious), a utility library I'm developing alongside this project.
 
 ## Licensing
 
