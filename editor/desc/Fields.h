@@ -67,12 +67,9 @@ namespace oly::editor
 			array.push_back(imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 	protected:
@@ -138,12 +135,9 @@ namespace oly::editor
 			array.push_back(imtk::serializer<bool>{}.dump(value));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 		void draw()
@@ -225,12 +219,9 @@ namespace oly::editor
 			array.push_back(imtk::serializer<E>{}.dump(value));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 		void draw()
@@ -265,19 +256,16 @@ namespace oly::editor
 		{
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
-				return typeid(decltype(this->value)) == type ? static_cast<void*>(&this->value) : nullptr;
+				return imp::matches_type(type, &this->value);
 
 			int index = path.step();
 			if (index >= 0 && index < N)
 			{
 				path = path.next();
-				if (type == typeid(this->value[index]) && path.empty())
-					return static_cast<void*>(&this->value[index]);
-				else
-					return nullptr;
+				return path.empty() ? imp::matches_type(type, &this->value[index]) : nullptr;
 			}
 			else
 				return nullptr;
@@ -335,19 +323,16 @@ namespace oly::editor
 			array.push_back(imtk::serializer<std::array<bool, N>>{}.dump(value));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
-				return typeid(decltype(this->value)) == type ? static_cast<void*>(&this->value) : nullptr;
+				return imp::matches_type(type, &this->value);
 
 			int index = path.step();
 			if (index >= 0 && index < N)
 			{
 				path = path.next();
-				if (type == typeid(this->value[index]) && path.empty())
-					return static_cast<void*>(&this->value[index]);
-				else
-					return nullptr;
+				return path.empty() ? imp::matches_type(type, &this->value[index]) : nullptr;
 			}
 			else
 				return nullptr;
@@ -445,12 +430,9 @@ namespace oly::editor
 			return -1;
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(index)) && path.empty())
-				return static_cast<void*>(&index);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &index) : nullptr;
 		}
 	};
 	
@@ -526,12 +508,9 @@ namespace oly::editor
 				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 	protected:
@@ -625,12 +604,9 @@ namespace oly::editor
 				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 		void on_last_process_frame() override
@@ -737,12 +713,9 @@ namespace oly::editor
 			table.insert_or_assign(detail::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
-		void* resolve(imtk::datapath_view path, std::type_index type)
+		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			if (type == typeid(decltype(value)) && path.empty())
-				return static_cast<void*>(&value);
-			else
-				return nullptr;
+			return path.empty() ? imp::matches_type(type, &value) : nullptr;
 		}
 
 		bool query_dirty(const BitsetField<E, Count>& disk) const
