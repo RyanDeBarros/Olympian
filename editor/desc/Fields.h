@@ -247,7 +247,7 @@ namespace oly::editor
 
 			value = static_cast<E>(int_value);
 			if (og != value)
-				PushFieldSetAction(link.compute_path(), std::move(og), value);
+				PushFieldSetAction(link.compute_path(), og, value);
 		}
 
 		static imtk::label_span_registry::handle ComboNames();

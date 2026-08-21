@@ -26,7 +26,7 @@
 #include "definitions/Keys.h"
 
 namespace oly::editor
-{
+{	
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
 		_logger(std::make_unique<Logger>()),
@@ -34,6 +34,11 @@ namespace oly::editor
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
 		_project_info(std::make_unique<ProjectInfo>())
 	{
+		imtk::init({
+			.error_logger = [](const char* error) { BreakoutError::Log(error); },
+			.reset_icon = Icon(IconResource::Revert)
+		});
+
 		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
@@ -45,13 +50,7 @@ namespace oly::editor
 			Editor::instance().RequestShutdown();
 		});
 
-
 		LoadAllIcons();
-
-		imtk::init({
-			.error_logger = [](const char* error) { BreakoutError::Log(error); },
-			.reset_icon = Icon(IconResource::Revert)
-		});
 
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();

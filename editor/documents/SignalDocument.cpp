@@ -295,25 +295,30 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		// TODO v9.3 here and elsewhere using InputListener, the widgets need to be combined - ImGui::SameLine() in this generic widget should force the next item next to it, instead of in the next column. imtk::w::input_listener should take care of this (put in experimental or similar folder since it shouldn't be part of the core widgets).
-		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-			_stop_listening = false;
-			std::optional<detail::KeyInput> key;
-			imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
-			ImGui::SameLine();
-			if (key)
-			{
-				if (*key != desc.key.Value())
+		const auto initial = desc.key.index;
+		if (auto row = imtk::prop::make_row_scope(desc.key.label, desc.key.index, desc.key.def_index))
+		{
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+				_stop_listening = false;
+				std::optional<detail::KeyInput> key;
+				imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
+				ImGui::SameLine();
+				if (key)
 				{
-					desc.key.SetValue(*key);
-					result.modified = true;
+					if (*key != desc.key.Value())
+					{
+						desc.key.SetValue(*key);
+						result.modified = true;
+					}
+					else
+						result.modified = false;
 				}
-				else
-					result.modified = false;
-			}
-			return result;
-		}));
-		desc.key.draw();
+				return result | imtk::w::combo_widget(desc.key.index, desc.key.names).draw();
+			}));
+		}
+		
+		if (initial != desc.key.index)
+			PushFieldSetAction(desc.key.link.compute_path(), initial, desc.key.index);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
@@ -334,24 +339,30 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-			_stop_listening = false;
-			std::optional<detail::MouseButton> mb;
-			imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
-			ImGui::SameLine();
-			if (mb)
-			{
-				if (*mb != desc.button.Value())
+		const auto initial = desc.button.index;
+		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index, desc.button.def_index))
+		{
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+				_stop_listening = false;
+				std::optional<detail::MouseButton> mb;
+				imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
+				ImGui::SameLine();
+				if (mb)
 				{
-					desc.button.SetValue(*mb);
-					result.modified = true;
+					if (*mb != desc.button.Value())
+					{
+						desc.button.SetValue(*mb);
+						result.modified = true;
+					}
+					else
+						result.modified = false;
 				}
-				else
-					result.modified = false;
-			}
-			return result;
-		}));
-		desc.button.draw();
+				return result | imtk::w::combo_widget(desc.button.index, desc.button.names).draw();
+			}));
+		}
+
+		if (initial != desc.button.index)
+			PushFieldSetAction(desc.button.link.compute_path(), initial, desc.button.index);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
@@ -372,24 +383,30 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-			_stop_listening = false;
-			std::optional<GLenum> button;
-			imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
-			ImGui::SameLine();
-			if (button)
-			{
-				if (*button != desc.button.Value())
+		const auto initial = desc.button.index;
+		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index, desc.button.def_index))
+		{
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+				_stop_listening = false;
+				std::optional<GLenum> button;
+				imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+				ImGui::SameLine();
+				if (button)
 				{
-					desc.button.SetValue(*button);
-					result.modified = true;
+					if (*button != desc.button.Value())
+					{
+						desc.button.SetValue(*button);
+						result.modified = true;
+					}
+					else
+						result.modified = false;
 				}
-				else
-					result.modified = false;
-			}
-			return result;
-		}));
-		desc.button.draw();
+				return result | imtk::w::combo_widget(desc.button.index, desc.button.names).draw();
+			}));
+		}
+
+		if (initial != desc.button.index)
+			PushFieldSetAction(desc.button.link.compute_path(), initial, desc.button.index);
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(desc.modifier);
@@ -397,24 +414,30 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-			_stop_listening = false;
-			std::optional<GLenum> axis;
-			imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
-			ImGui::SameLine();
-			if (axis)
-			{
-				if (*axis != desc.axis.Value())
+		const auto initial = desc.axis.index;
+		if (auto row = imtk::prop::make_row_scope(desc.axis.label, desc.axis.index, desc.axis.def_index))
+		{
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+				_stop_listening = false;
+				std::optional<GLenum> axis;
+				imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+				ImGui::SameLine();
+				if (axis)
 				{
-					desc.axis.SetValue(*axis);
-					result.modified = true;
+					if (*axis != desc.axis.Value())
+					{
+						desc.axis.SetValue(*axis);
+						result.modified = true;
+					}
+					else
+						result.modified = false;
 				}
-				else
-					result.modified = false;
-			}
-			return result;
-		}));
-		desc.axis.draw();
+				return result | imtk::w::combo_widget(desc.axis.index, desc.axis.names).draw();
+			}));
+		}
+
+		if (initial != desc.axis.index)
+			PushFieldSetAction(desc.axis.link.compute_path(), initial, desc.axis.index);
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
@@ -423,24 +446,34 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
 	{
-		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-			_stop_listening = false;
-			std::optional<detail::GamepadAxis2D> axis;
-			imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
-			ImGui::SameLine();
-			if (axis)
-			{
-				if (*axis != desc.axis.value)
+		const detail::GamepadAxis2D og = desc.axis.value;
+		int int_value = static_cast<int>(desc.axis.value);
+		const int int_default = static_cast<int>(desc.axis.def);
+
+		if (auto row = imtk::prop::row_scope(desc.axis.label, int_value, int_default))
+		{
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
+				_stop_listening = false;
+				std::optional<detail::GamepadAxis2D> axis;
+				imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
+				ImGui::SameLine();
+				if (axis)
 				{
-					desc.axis.value = *axis;
-					result.modified = true;
+					if (static_cast<int>(*axis) != int_value)
+					{
+						int_value = static_cast<int>(*axis);
+						result.modified = true;
+					}
+					else
+						result.modified = false;
 				}
-				else
-					result.modified = false;
-			}
-			return result;
-		}));
-		desc.axis.draw();
+				return result | imtk::w::combo_widget(int_value, desc.axis.ComboNames()).draw();
+			}));
+		}
+
+		desc.axis.value = static_cast<detail::GamepadAxis2D>(int_value);
+		if (og != desc.axis.value)
+			PushFieldSetAction(desc.axis.link.compute_path(), og, desc.axis.value);
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))

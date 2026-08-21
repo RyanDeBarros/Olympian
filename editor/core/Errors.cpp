@@ -16,11 +16,6 @@ namespace oly::editor
 
 	void BreakoutError::Throw(std::string_view message)
 	{
-		if (!NOTIFY_STACK.empty() && NOTIFY_STACK.top())
-			Notifier::NotifyError(std::string(message));
-		else
-			Logger::LogError(std::string(message));
-
 		Log(message.data());
 		throw BreakoutError(message.data());
 	}
