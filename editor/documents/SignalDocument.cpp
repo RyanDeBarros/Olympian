@@ -212,7 +212,7 @@ namespace oly::editor
 		}
 
 		auto initial_binding = desc.binding.value;
-		DescIO::Draw(desc.binding.label, desc.binding.value, desc.binding.def);
+		desc.binding.draw();
 
 		switch (desc.binding.value)
 		{
@@ -295,6 +295,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
+		// TODO v9.3 here and elsewhere using InputListener, the widgets need to be combined - ImGui::SameLine() in this generic widget should force the next item next to it, instead of in the next column. imtk::w::input_listener should take care of this (put in experimental or similar folder since it shouldn't be part of the core widgets).
 		imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 			_stop_listening = false;
 			std::optional<detail::KeyInput> key;

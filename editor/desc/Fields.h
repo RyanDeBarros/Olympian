@@ -87,7 +87,9 @@ namespace oly::editor
 
 		void draw()
 		{
-			DescIO::Draw(label, edit, def);
+			if (auto row = imtk::prop::make_row_scope(label, edit, def))
+				imtk::prop::value::add_component(std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(edit));
+
 			CheckUndoAction();
 		}
 	};
@@ -143,7 +145,10 @@ namespace oly::editor
 		void draw()
 		{
 			const bool og = value;
-			DescIO::Draw(label, value, def);
+			
+			if (auto row = imtk::prop::make_row_scope(label, value, def))
+				imtk::prop::value::add_component(std::make_unique<imtk::w::bound_widget<bool>>(value));
+
 			if (og != value)
 				PushFieldSetAction(link.compute_path(), og, value);
 		}
@@ -161,7 +166,14 @@ namespace oly::editor
 
 		void draw()
 		{
-			DescIO::Draw(this->label, this->edit, this->def, Min, Max);
+			if (auto row = imtk::prop::make_row_scope(this->label, this->edit, this->def))
+			{
+				auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<T>>>(this->edit);
+				widget->subwidget.config.min = Min;
+				widget->subwidget.config.max = Max;
+				imtk::prop::value::add_component(std::move(widget));
+			}
+
 			this->CheckUndoAction();
 		}
 	};
@@ -227,10 +239,18 @@ namespace oly::editor
 		void draw()
 		{
 			const E og = value;
-			DescIO::Draw(label, value, def);
+			int int_value = static_cast<int>(value);
+			const int int_default = static_cast<int>(def);
+
+			if (auto row = imtk::prop::row_scope(label, int_value, int_default))
+				imtk::prop::value::add_component(std::make_unique<imtk::w::combo_widget>(int_value, ComboNames()));
+
+			value = static_cast<E>(int_value);
 			if (og != value)
 				PushFieldSetAction(link.compute_path(), std::move(og), value);
 		}
+
+		static imtk::label_span_registry::handle ComboNames();
 	};
 
 	using StringField = PrimitiveField<std::string>;
@@ -244,7 +264,7 @@ namespace oly::editor
 	{
 		using Super = PrimitiveField<std::array<T, N>>;
 
-		const char** sublabels = nullptr;
+		imtk::label_span_registry::handle sublabels = {};
 
 		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label)
 			: Super(std::move(link), def, key, label)
@@ -252,7 +272,7 @@ namespace oly::editor
 		}
 
 		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
-			: Super(std::move(link), def, key, label), sublabels(sublabels)
+			: Super(std::move(link), def, key, label), sublabels(imtk::label_span_registry::intern(std::span<const char* const>(sublabels, N)))
 		{
 		}
 
@@ -286,11 +306,12 @@ namespace oly::editor
 		std::array<bool, N> value;
 		detail::Key key;
 		const char* label;
-		const char** sublabels = nullptr;
+		imtk::label_span_registry::handle sublabels = {};
 		bool inline_checkboxes;
 
 		BoolArrayField(imtk::datapath_link link, std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
-			: link(std::move(link)), def(def), value(def), key(key), label(label), sublabels(sublabels), inline_checkboxes(inline_checkboxes)
+			: link(std::move(link)), def(def), value(def), key(key), label(label),
+			sublabels(imtk::label_span_registry::intern(std::span<const char* const>(sublabels, N))), inline_checkboxes(inline_checkboxes)
 		{
 		}
 
@@ -341,7 +362,7 @@ namespace oly::editor
 		void draw()
 		{
 			const std::array<bool, N> og = value;
-			DescIO::Draw(label, value.data(), def.data(), sublabels, N, inline_checkboxes);
+			DescIO::Draw(label, value.data(), def.data(), sublabels, nullptr, N, inline_checkboxes);
 			if (og != value)
 				PushFieldSetAction(link.compute_path(), og, value);
 		}
@@ -370,7 +391,7 @@ namespace oly::editor
 		detail::Key key;
 		const char* label;
 		const E* values;
-		imtk::label_span_registry::handle names;
+		imtk::label_span_registry::handle names = {};
 		size_t count;
 
 		template<size_t Count>
@@ -394,7 +415,10 @@ namespace oly::editor
 		void draw()
 		{
 			const auto initial = index;
-			DescIO::Draw(label, index, def_index, names);
+
+			if (auto row = imtk::prop::make_row_scope(label, index, def_index))
+				imtk::prop::value::add_component(std::make_unique<imtk::w::combo_widget>(index, names));
+
 			if (initial != index)
 				PushFieldSetAction(link.compute_path(), initial, index);
 		}
@@ -498,7 +522,14 @@ namespace oly::editor
 
 		void draw()
 		{
-			DescIO::Draw(label, edit, def, Min, Max);
+			if (auto row = imtk::prop::make_row_scope(label, edit, def))
+			{
+				auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<imp::potential<T>>>>(edit);
+				widget->subwidget.value.config.min = Min;
+				widget->subwidget.value.config.max = Max;
+				imtk::prop::value::add_component(std::move(widget));
+			}
+
 			CheckUndoAction();
 		}
 
@@ -568,7 +599,14 @@ namespace oly::editor
 
 		void draw()
 		{
-			DescIO::Draw(label, edit, def, Min, Max);
+			if (auto row = imtk::prop::make_row_scope(label, edit, def))
+			{
+				auto widget = std::make_unique<imtk::w::bound_widget<imtk::edit_session<imp::potential<T>>>>(edit);
+				widget->subwidget.value.config.min = Min;
+				widget->subwidget.value.config.max = Max;
+				imtk::prop::value::add_component(std::move(widget));
+			}
+
 			CheckUndoAction();
 		}
 
@@ -644,13 +682,14 @@ namespace oly::editor
 		detail::Key key;
 		const char* label;
 		const E* values;
-		const char** names;
+		imtk::label_span_registry::handle names = {};
 		bool inline_checkboxes;
 
 		static const inline size_t Count = Count;
 
 		BitsetField(imtk::datapath_link link, E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
-			: link(std::move(link)), def(def), value(def), key(key), label(label), values(values), names(names), inline_checkboxes(inline_checkboxes)
+			: link(std::move(link)), def(def), value(def), key(key), label(label), values(values),
+			names(imtk::label_span_registry::intern(std::span<const char* const>(names, Count))), inline_checkboxes(inline_checkboxes)
 		{
 			SetFlags();
 		}

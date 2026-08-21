@@ -236,7 +236,7 @@ namespace oly::editor
 						ImGui::SameLine();
 					}
 
-					result |= imtk::w::bound_widget<std::string>(k.pair.edit.buffer()[i], { .label = k.pair.sublabels ? k.pair.sublabels[i] : "" }).draw();
+					result |= imtk::w::bound_widget<std::string>(k.pair.edit.buffer()[i], { .label = k.pair.sublabels ? imtk::label_span_registry::string(k.pair.sublabels, i) : "" }).draw();
 
 					if (dup_warning && result.state.hovered())
 						ImGui::SetTooltip("Duplicate codepoint pair");
