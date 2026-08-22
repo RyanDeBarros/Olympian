@@ -42,8 +42,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
 
-		static const detail::Key assignments_key;
-
 		TilesetDesc(imtk::datapath_link link = {});
 	};
 }

@@ -11,11 +11,9 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key FontFamilyDesc::styles_key = detail::Key::Style;
-
 	FontFamilyDesc::FontFamilyDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		styles(IMTK_DATAPATH_SUBLINK(subpaths.styles))
+		styles(detail::Key::Style, IMTK_DATAPATH_SUBLINK(subpaths.styles))
 	{
 	}
 }

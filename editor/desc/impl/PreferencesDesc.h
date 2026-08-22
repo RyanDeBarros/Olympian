@@ -22,13 +22,11 @@ namespace oly::editor
 	};
 
 #define EDIT_SETTINGS_GENERATOR(M) \
-		M((UndoHistorySettingsDesc), undo_history)
+		M((imtk::desc::sub<UndoHistorySettingsDesc>), undo_history)
 
 	struct EditSettingsDesc
 	{
 		IMTK_DESCRIPTOR_BODY(EditSettingsDesc, EDIT_SETTINGS_GENERATOR);
-
-		static const detail::Key undo_history_key; // TODO v9.3 some way of attaching key directly - perhaps with imtk::subdesc<UndoHistorySettingsDesc> and doing undo_history(link, imtk::subdesc_key<detail::Key::UndoHistory>) in constructor in cpp. Then can simply do undo_history.key or use */-> to access subdesc
 
 		EditSettingsDesc(imtk::datapath_link link = {});
 	};
@@ -56,13 +54,11 @@ namespace oly::editor
 	};
 
 #define TREE_VIEW_SETTINGS_GENERATOR(M) \
-		M((TreeViewAdvancedSettingsDesc), advanced)
+		M((imtk::desc::sub<TreeViewAdvancedSettingsDesc>), advanced)
 
 	struct TreeViewSettingsDesc
 	{
 		IMTK_DESCRIPTOR_BODY(TreeViewSettingsDesc, TREE_VIEW_SETTINGS_GENERATOR);
-
-		static const detail::Key advanced_key;
 
 		TreeViewSettingsDesc(imtk::datapath_link link = {});
 	};
@@ -81,19 +77,14 @@ namespace oly::editor
 	};
 
 #define PREFERENCES_GENERATOR(M) \
-		M((EditSettingsDesc), edit) \
-		M((ContentBrowserSettingsDesc), content_browser) \
-		M((TreeViewSettingsDesc), tree_view) \
-		M((FilesystemSettingsDesc), filesystem)
+		M((imtk::desc::sub<EditSettingsDesc>), edit) \
+		M((imtk::desc::sub<ContentBrowserSettingsDesc>), content_browser) \
+		M((imtk::desc::sub<TreeViewSettingsDesc>), tree_view) \
+		M((imtk::desc::sub<FilesystemSettingsDesc>), filesystem)
 
 	struct PreferencesDesc
 	{
 		IMTK_DESCRIPTOR_BODY(PreferencesDesc, PREFERENCES_GENERATOR);
-
-		static const detail::Key edit_key;
-		static const detail::Key content_browser_key;
-		static const detail::Key tree_view_key;
-		static const detail::Key filesystem_key;
 
 		PreferencesDesc(imtk::datapath_link link = {});
 	};

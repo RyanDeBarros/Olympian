@@ -3,6 +3,7 @@
 #include "core/editor/Notifier.h"
 #include "core/editor/ResourceLoader.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 #include <imgui_internal.h>
@@ -521,7 +522,7 @@ namespace oly::editor
 		else
 			desc.variant.set<imtk::desc::vector<RasterTextureDesc>>();
 
-		const toml::array* array = node[detail::encode_key(desc.array_key)].as_array();
+		const toml::array* array = desc.variant.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
@@ -577,7 +578,7 @@ namespace oly::editor
 			for (auto& desc : d)
 				Dump(array.emplace_back<toml::table>(), desc);
 		});
-		table.insert_or_assign(detail::encode_key(desc.array_key), std::move(array));
+		desc.variant.dump_into(table, std::move(array));
 	}
 
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
@@ -648,11 +649,13 @@ namespace oly::editor
 		if (err.empty())
 		{
 			imtk::toml_node node = imtk::toml_node(table);
-			const toml::array* array = node[detail::encode_key(TextureVariantDesc::array_key)].as_array();
+
+			TextureVariantDesc desc;
+
+			const toml::array* array = desc.variant.subnode(node).as_array();
 			if (!array || slot >= array->size() || !array->get(slot))
 				return TextureSettingsLoadResult::BadSlot;
-			
-			TextureVariantDesc desc;
+
 			bool gif = path.extension_matches(".gif");
 			bool svg = path.extension_matches(".svg");
 			Load(node, desc, svg, gif);
@@ -669,7 +672,7 @@ namespace oly::editor
 				else
 					generate_mipmaps = d.generate_mipmaps.value;
 			});
-
+			
 			if (!path.is_resource())
 				return TextureSettingsLoadResult::NotAResource;
 

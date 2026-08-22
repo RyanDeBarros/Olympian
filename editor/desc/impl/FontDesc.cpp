@@ -17,12 +17,10 @@ namespace oly::editor
 		return os << "KerningDesc[pair=(\"" << desc.pair.value[0] << "\",\"" << desc.pair.value[1] << "\"), distance=" << desc.distance.value << "]";
 	}
 
-	const detail::Key FontFaceDesc::kerning_key = detail::Key::Kerning;
-
 	FontFaceDesc::FontFaceDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		storage(IMTK_DATAPATH_SUBLINK(subpaths.storage), detail::StorageMode::Keep, detail::Key::Storage, "Storage"),
-		kerning(IMTK_DATAPATH_SUBLINK(subpaths.kerning))
+		kerning(detail::Key::Kerning, IMTK_DATAPATH_SUBLINK(subpaths.kerning))
 	{
 	}
 
@@ -39,13 +37,10 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key FullFontDesc::font_face_key = detail::Key::FontFace;
-	const detail::Key FullFontDesc::font_atlas_key = detail::Key::FontAtlasArray;
-
 	FullFontDesc::FullFontDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		font_face(IMTK_DATAPATH_SUBLINK(subpaths.font_face)),
-		font_atlases(IMTK_DATAPATH_SUBLINK(subpaths.font_atlases))
+		font_face(detail::Key::FontFace, IMTK_DATAPATH_SUBLINK(subpaths.font_face)),
+		font_atlases(detail::Key::FontAtlasArray, IMTK_DATAPATH_SUBLINK(subpaths.font_atlases))
 	{
 	}
 }

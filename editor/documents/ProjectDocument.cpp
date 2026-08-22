@@ -3,6 +3,7 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/Notifier.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -111,28 +112,28 @@ namespace oly::editor
 	void ProjectDocument::Draw(ProjectDesc& desc)
 	{
 		if (auto form = imtk::prop::form())
-			Draw(desc.context);
+			Draw(*desc.context);
 	}
 	
 	void ProjectDocument::Draw(ContextDesc& desc)
 	{
 		if (auto subform = imtk::prop::subform("Platform"))
-			Draw(desc.platform);
+			Draw(*desc.platform);
 
 		if (auto subform = imtk::prop::subform("Collision"))
-			Draw(desc.collision);
+			Draw(*desc.collision);
 
 		if (auto subform = imtk::prop::subform("Logger"))
-			Draw(desc.logger);
+			Draw(*desc.logger);
 
 		if (auto subform = imtk::prop::subform("Frame Rate"))
-			Draw(desc.frame_rate);
+			Draw(*desc.frame_rate);
 	}
 
 	void ProjectDocument::Draw(PlatformDesc& desc)
 	{
 		if (auto subform = imtk::prop::subform("Window"))
-			Draw(desc.window);
+			Draw(*desc.window);
 		
 		if (imtk::prop::in_form())
 		{
@@ -145,10 +146,10 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		if (auto subform = imtk::prop::subform("Viewport"))
-			Draw(desc.viewport);
+			Draw(*desc.viewport);
 
 		if (auto subform = imtk::prop::subform("Window hints"))
-			Draw(desc.window_hints);
+			Draw(*desc.window_hints);
 	}
 
 	void ProjectDocument::Draw(ViewportDesc& desc)
@@ -170,7 +171,7 @@ namespace oly::editor
 	{
 		IMTK_DRAW_FIELDS(LOGGER_PARTIAL_GENERATOR);
 		if (auto subform = imtk::prop::subform("Enable Streams"))
-			Draw(desc.enable);
+			Draw(*desc.enable);
 	}
 	
 	void ProjectDocument::Draw(LoggerEnableDesc& desc)
@@ -185,30 +186,30 @@ namespace oly::editor
 
 	void ProjectDocument::Load(imtk::toml_node node, ProjectDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.context_key)], desc.context);
+		Load(desc.context.subnode(node), *desc.context);
 	}
-	
+
 	void ProjectDocument::Load(imtk::toml_node node, ContextDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.platform_key)], desc.platform);
-		Load(node[detail::encode_key(desc.collision_key)], desc.collision);
-		Load(node[detail::encode_key(desc.logger_key)], desc.logger);
-		Load(node[detail::encode_key(desc.frame_rate_key)], desc.frame_rate);
+		Load(desc.platform.subnode(node), *desc.platform);
+		Load(desc.collision.subnode(node), *desc.collision);
+		Load(desc.logger.subnode(node), *desc.logger);
+		Load(desc.frame_rate.subnode(node), *desc.frame_rate);
 	}
 
 	void ProjectDocument::Load(imtk::toml_node node, PlatformDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 
-		Load(node[detail::encode_key(desc.window_key)], desc.window);
+		Load(desc.window.subnode(node), *desc.window);
 	}
 
 	void ProjectDocument::Load(imtk::toml_node node, WindowDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
-		Load(node[detail::encode_key(desc.viewport_key)], desc.viewport);
-		Load(node[detail::encode_key(desc.window_hints_key)], desc.window_hints);
+		Load(desc.viewport.subnode(node), *desc.viewport);
+		Load(desc.window_hints.subnode(node), *desc.window_hints);
 	}
 
 	void ProjectDocument::Load(imtk::toml_node node, ViewportDesc& desc)
@@ -230,7 +231,7 @@ namespace oly::editor
 	{
 		IMTK_LOAD_FIELDS(LOGGER_PARTIAL_GENERATOR);
 
-		Load(node[detail::encode_key(desc.enable_key)], desc.enable);
+		Load(desc.enable.subnode(node), *desc.enable);
 	}
 	
 	void ProjectDocument::Load(imtk::toml_node node, LoggerEnableDesc& desc)
@@ -246,27 +247,27 @@ namespace oly::editor
 	void ProjectDocument::Dump(toml::table& table, ProjectDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.context);
-		table.insert_or_assign(detail::encode_key(desc.context_key), std::move(subtable));
+		Dump(subtable, *desc.context);
+		desc.context.dump_into(table, std::move(subtable));
 	}
-	
+
 	void ProjectDocument::Dump(toml::table& table, ContextDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.platform);
-		table.insert_or_assign(detail::encode_key(desc.platform_key), std::move(subtable));
+		Dump(subtable, *desc.platform);
+		desc.platform.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.collision);
-		table.insert_or_assign(detail::encode_key(desc.collision_key), std::move(subtable));
+		Dump(subtable, *desc.collision);
+		desc.collision.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.logger);
-		table.insert_or_assign(detail::encode_key(desc.logger_key), std::move(subtable));
+		Dump(subtable, *desc.logger);
+		desc.logger.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.frame_rate);
-		table.insert_or_assign(detail::encode_key(desc.frame_rate_key), std::move(subtable));
+		Dump(subtable, *desc.frame_rate);
+		desc.frame_rate.dump_into(table, std::move(subtable));
 	}
 
 	void ProjectDocument::Dump(toml::table& table, PlatformDesc& desc)
@@ -274,8 +275,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(PLATFORM_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.window);
-		table.insert_or_assign(detail::encode_key(desc.window_key), std::move(subtable));
+		Dump(subtable, *desc.window);
+		desc.window.dump_into(table, std::move(subtable));
 	}
 
 	void ProjectDocument::Dump(toml::table& table, WindowDesc& desc)
@@ -283,11 +284,11 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(WINDOW_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.viewport);
-		table.insert_or_assign(detail::encode_key(desc.viewport_key), std::move(subtable));
+		Dump(subtable, *desc.viewport);
+		desc.viewport.dump_into(table, std::move(subtable));
 		subtable.clear();
-		Dump(subtable, desc.window_hints);
-		table.insert_or_assign(detail::encode_key(desc.window_hints_key), std::move(subtable));
+		Dump(subtable, *desc.window_hints);
+		desc.window_hints.dump_into(table, std::move(subtable));
 	}
 
 	void ProjectDocument::Dump(toml::table& table, ViewportDesc& desc)
@@ -310,8 +311,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(LOGGER_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.enable);
-		table.insert_or_assign(detail::encode_key(desc.enable_key), std::move(subtable));
+		Dump(subtable, *desc.enable);
+		desc.enable.dump_into(table, std::move(subtable));
 	}
 	
 	void ProjectDocument::Dump(toml::table& table, LoggerEnableDesc& desc)

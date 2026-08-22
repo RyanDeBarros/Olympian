@@ -163,9 +163,11 @@ namespace oly::editor
 		void Draw(const detail::TileConfigGrid grid);
 
 		void Load(imtk::toml_node node, TilesetDesc& desc);
+		void Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc);
 		void Load(imtk::toml_node node, TilesetAssignmentDesc& desc);
 		
 		void Dump(toml::table& table, TilesetDesc& desc);
+		void Dump(toml::table& table, TilesetAssignmentMapDesc& desc);
 		void Dump(toml::table& table, TilesetAssignmentDesc& desc);
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);

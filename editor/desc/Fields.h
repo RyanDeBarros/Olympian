@@ -4,8 +4,6 @@
 #include "desc/Serializer.h"
 #include "desc/FieldSetAction.h"
 
-#include "assets/TranslateKey.h"
-
 #include "gui/DynamicList.h"
 
 #include <array>
@@ -19,10 +17,10 @@ namespace oly::editor
 		T def;
 		T value;
 		imtk::edit_session<T> edit;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 
-		PrimitiveField(imtk::datapath_link link, T def, detail::Key key, const char* label)
+		PrimitiveField(imtk::datapath_link link, T def, imtk::key key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), key(key), label(label)
 		{
 		}
@@ -48,8 +46,8 @@ namespace oly::editor
 		void load(imtk::toml_node node)
 		{
 			T val = def;
-			if (key != detail::null_key())
-				imtk::serializer<T>{}.load(val, node[detail::encode_key(key)]);
+			if (key != imtk::key::null())
+				imtk::serializer<T>{}.load(val, node[imtk::encode_key(key)]);
 			else
 				imtk::serializer<T>{}.load(val, node);
 			edit.publish_reset(std::move(val));
@@ -57,8 +55,8 @@ namespace oly::editor
 
 		void dump(toml::table& table) const
 		{
-			if (key != detail::null_key())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(edit.truth()));
+			if (key != imtk::key::null())
+				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
 		// TODO v9.3 what's the point of this if not using key?
@@ -99,10 +97,10 @@ namespace oly::editor
 		imtk::datapath_link link;
 		bool def;
 		bool value;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 
-		BoolField(imtk::datapath_link link, bool def, detail::Key key, const char* label)
+		BoolField(imtk::datapath_link link, bool def, imtk::key key, const char* label)
 			: link(std::move(link)), def(def), value(def), key(key), label(label)
 		{
 		}
@@ -120,16 +118,16 @@ namespace oly::editor
 		void load(imtk::toml_node node)
 		{
 			value = def;
-			if (key != detail::null_key())
-				imtk::serializer<bool>{}.load(value, node[detail::encode_key(key)]);
+			if (key != imtk::key::null())
+				imtk::serializer<bool>{}.load(value, node[imtk::encode_key(key)]);
 			else
 				imtk::serializer<bool>{}.load(value, node);
 		}
 
 		void dump(toml::table& table) const
 		{
-			if (key != detail::null_key())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<bool>{}.dump(value));
+			if (key != imtk::key::null())
+				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<bool>{}.dump(value));
 		}
 
 		void dump(toml::array& array) const
@@ -193,10 +191,10 @@ namespace oly::editor
 		imtk::datapath_link link;
 		E def;
 		E value;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 
-		EnumField(imtk::datapath_link link, E def, detail::Key key, const char* label)
+		EnumField(imtk::datapath_link link, E def, imtk::key key, const char* label)
 			: link(std::move(link)), def(def), value(def), key(key), label(label)
 		{
 		}
@@ -214,16 +212,16 @@ namespace oly::editor
 		void load(imtk::toml_node node)
 		{
 			value = def;
-			if (key != detail::null_key())
-				imtk::serializer<E>{}.load(value, node[detail::encode_key(key)]);
+			if (key != imtk::key::null())
+				imtk::serializer<E>{}.load(value, node[imtk::encode_key(key)]);
 			else
 				imtk::serializer<E>{}.load(value, node);
 		}
 
 		void dump(toml::table& table) const
 		{
-			if (key != detail::null_key())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<E>{}.dump(value));
+			if (key != imtk::key::null())
+				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
 		void dump(toml::array& array) const
@@ -266,12 +264,12 @@ namespace oly::editor
 
 		imtk::label_span_registry::handle sublabels = {};
 
-		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label)
+		ArrayField(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label)
 			: Super(std::move(link), def, key, label)
 		{
 		}
 
-		ArrayField(imtk::datapath_link link, std::array<T, N> def, detail::Key key, const char* label, const char* (&sublabels)[N])
+		ArrayField(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label, const char* (&sublabels)[N])
 			: Super(std::move(link), def, key, label), sublabels(imtk::label_span_registry::intern(std::span<const char* const>(sublabels, N)))
 		{
 		}
@@ -304,12 +302,12 @@ namespace oly::editor
 		imtk::datapath_link link;
 		std::array<bool, N> def;
 		std::array<bool, N> value;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 		imtk::label_span_registry::handle sublabels = {};
 		bool inline_checkboxes;
 
-		BoolArrayField(imtk::datapath_link link, std::array<bool, N> def, detail::Key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
+		BoolArrayField(imtk::datapath_link link, std::array<bool, N> def, imtk::key key, const char* label, const char* (&sublabels)[N], bool inline_checkboxes)
 			: link(std::move(link)), def(def), value(def), key(key), label(label),
 			sublabels(imtk::label_span_registry::intern(std::span<const char* const>(sublabels, N))), inline_checkboxes(inline_checkboxes)
 		{
@@ -327,16 +325,16 @@ namespace oly::editor
 
 		void load(imtk::toml_node node)
 		{
-			if (key != detail::null_key())
-				imtk::serializer<std::array<bool, N>>{}.load(value, node[detail::encode_key(key)]);
+			if (key != imtk::key::null())
+				imtk::serializer<std::array<bool, N>>{}.load(value, node[imtk::encode_key(key)]);
 			else
 				imtk::serializer<std::array<bool, N>>{}.load(value, node);
 		}
 
 		void dump(toml::table& table) const
 		{
-			if (key != detail::null_key())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<std::array<bool, N>>{}.dump(value));
+			if (key != imtk::key::null())
+				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<std::array<bool, N>>{}.dump(value));
 		}
 
 		void dump(toml::array& array) const
@@ -388,14 +386,14 @@ namespace oly::editor
 		E def;
 		int index;
 		int def_index;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 		const E* values;
 		imtk::label_span_registry::handle names = {};
 		size_t count;
 
 		template<size_t Count>
-		DisjointEnumField(imtk::datapath_link link, E def, detail::Key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
+		DisjointEnumField(imtk::datapath_link link, E def, imtk::key key, const char* label, const E (&values)[Count], const char* (&names)[Count])
 			: link(std::move(link)), def(def), key(key), label(label), values(values), names(imtk::label_span_registry::intern(std::span<const char*>(names, Count))), count(Count)
 		{
 			SetValue(def);
@@ -425,12 +423,12 @@ namespace oly::editor
 
 		void load(imtk::toml_node node)
 		{
-			index = Index(static_cast<E>(node[detail::encode_key(key)].value_or(def)));
+			index = Index(static_cast<E>(node[imtk::encode_key(key)].value_or(def)));
 		}
 		
 		void dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), Value());
+			table.insert_or_assign(imtk::encode_key(key), Value());
 		}
 
 		E Value() const
@@ -471,11 +469,11 @@ namespace oly::editor
 		imp::potential<T> def;
 		imp::potential<T> value;
 		imtk::edit_session<imp::potential<T>> edit;
-		detail::Key value_key;
-		detail::Key enable_key;
+		imtk::key value_key;
+		imtk::key enable_key;
 		const char* label;
 
-		OptionalRangeField(imtk::datapath_link link, imp::potential<T> def, detail::Key value_key, detail::Key enable_key, const char* label)
+		OptionalRangeField(imtk::datapath_link link, imp::potential<T> def, imtk::key value_key, imtk::key enable_key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), value_key(value_key), enable_key(enable_key), label(label)
 		{
 		}
@@ -502,10 +500,10 @@ namespace oly::editor
 		{
 			imp::potential<T> val = def;
 			
-			if (enable_key != detail::null_key() && value_key != detail::null_key())
+			if (enable_key != imtk::key::null() && value_key != imtk::key::null())
 			{
-				imtk::serializer<T>{}.load(val.value, node[detail::encode_key(value_key)]);
-				imtk::serializer<bool>{}.load(val.has_value, node[detail::encode_key(enable_key)]);
+				imtk::serializer<T>{}.load(val.value, node[imtk::encode_key(value_key)]);
+				imtk::serializer<bool>{}.load(val.has_value, node[imtk::encode_key(enable_key)]);
 			}
 
 			edit.publish_reset(std::move(val));
@@ -513,10 +511,10 @@ namespace oly::editor
 
 		void dump(toml::table& table) const
 		{
-			if (enable_key != detail::null_key() && value_key != detail::null_key())
+			if (enable_key != imtk::key::null() && value_key != imtk::key::null())
 			{
-				table.insert_or_assign(detail::encode_key(enable_key), imtk::serializer<bool>{}.dump(edit.truth().has_value));
-				table.insert_or_assign(detail::encode_key(value_key), imtk::serializer<T>{}.dump(edit.truth().value));
+				table.insert_or_assign(imtk::encode_key(enable_key), imtk::serializer<bool>{}.dump(edit.truth().has_value));
+				table.insert_or_assign(imtk::encode_key(value_key), imtk::serializer<T>{}.dump(edit.truth().value));
 			}
 		}
 
@@ -571,10 +569,10 @@ namespace oly::editor
 		imp::potential<T> value;
 		imtk::edit_session<imp::potential<T>> edit;
 		T nullopt;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 
-		CompactOptionalRangeField(imtk::datapath_link link, imp::potential<T> def, T nullopt, detail::Key key, const char* label)
+		CompactOptionalRangeField(imtk::datapath_link link, imp::potential<T> def, T nullopt, imtk::key key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), nullopt(nullopt), key(key), label(label)
 		{
 		}
@@ -620,10 +618,10 @@ namespace oly::editor
 		{
 			imp::potential<T> val = def;
 
-			if (key != detail::null_key())
+			if (key != imtk::key::null())
 			{
 				T temp = def.value;
-				if (imtk::serializer<T>{}.load(temp, node[detail::encode_key(key)]))
+				if (imtk::serializer<T>{}.load(temp, node[imtk::encode_key(key)]))
 				{
 					val.has_value = temp != nullopt;
 					if (val.has_value)
@@ -638,8 +636,8 @@ namespace oly::editor
 
 		void dump(toml::table& table) const
 		{
-			if (key != detail::null_key())
-				table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
+			if (key != imtk::key::null())
+				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
@@ -679,7 +677,7 @@ namespace oly::editor
 		bool value_flags[Count];
 		E def;
 		E value;
-		detail::Key key;
+		imtk::key key;
 		const char* label;
 		const E* values;
 		imtk::label_span_registry::handle names = {};
@@ -687,7 +685,7 @@ namespace oly::editor
 
 		static const inline size_t Count = Count;
 
-		BitsetField(imtk::datapath_link link, E def, detail::Key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
+		BitsetField(imtk::datapath_link link, E def, imtk::key key, const char* label, const E(&values)[Count], const char* (&names)[Count], bool inline_checkboxes)
 			: link(std::move(link)), def(def), value(def), key(key), label(label), values(values),
 			names(imtk::label_span_registry::intern(std::span<const char* const>(names, Count))), inline_checkboxes(inline_checkboxes)
 		{
@@ -744,12 +742,12 @@ namespace oly::editor
 		void load(imtk::toml_node node)
 		{
 			value = def;
-			imtk::serializer<E>{}.load(value, node[detail::encode_key(key)]);
+			imtk::serializer<E>{}.load(value, node[imtk::encode_key(key)]);
 		}
 
 		void dump(toml::table& table) const
 		{
-			table.insert_or_assign(detail::encode_key(key), imtk::serializer<E>{}.dump(value));
+			table.insert_or_assign(imtk::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)

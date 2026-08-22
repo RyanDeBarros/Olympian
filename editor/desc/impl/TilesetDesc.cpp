@@ -17,11 +17,9 @@ namespace oly::editor
 
 	TilesetAssignmentMapDesc::TilesetAssignmentMapDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		map(IMTK_DATAPATH_SUBLINK(subpaths.map))
+		map(detail::Key::AssignmentArray, IMTK_DATAPATH_SUBLINK(subpaths.map))
 	{
 	}
-
-	const detail::Key TilesetDesc::assignments_key = detail::Key::AssignmentArray;
 
 	TilesetDesc::TilesetDesc(imtk::datapath_link link) :
 		link(std::move(link)),

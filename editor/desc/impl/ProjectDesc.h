@@ -53,15 +53,12 @@ namespace oly::editor
 
 #define WINDOW_GENERATOR(M) \
 	WINDOW_PARTIAL_GENERATOR(M) \
-	M((ViewportDesc), viewport) \
-	M((WindowHintsDesc), window_hints)
+	M((imtk::desc::sub<ViewportDesc>), viewport) \
+	M((imtk::desc::sub<WindowHintsDesc>), window_hints)
 
 	struct WindowDesc
 	{
 		IMTK_DESCRIPTOR_BODY(WindowDesc, WINDOW_GENERATOR);
-
-		static const detail::Key viewport_key;
-		static const detail::Key window_hints_key;
 
 		WindowDesc(imtk::datapath_link link = {});
 	};
@@ -70,14 +67,12 @@ namespace oly::editor
 	M((IntField<0, GLFW_JOYSTICK_LAST>), gamepads)
 
 #define PLATFORM_GENERATOR(M) \
-	M((WindowDesc), window) \
+	M((imtk::desc::sub<WindowDesc>), window) \
 	PLATFORM_PARTIAL_GENERATOR(M)
 
 	struct PlatformDesc
 	{
 		IMTK_DESCRIPTOR_BODY(PlatformDesc, PLATFORM_GENERATOR);
-
-		static const detail::Key window_key;
 
 		PlatformDesc(imtk::datapath_link link = {});
 	};
@@ -115,13 +110,11 @@ namespace oly::editor
 
 #define LOGGER_GENERATOR(M) \
 	LOGGER_PARTIAL_GENERATOR(M) \
-	M((LoggerEnableDesc), enable)
+	M((imtk::desc::sub<LoggerEnableDesc>), enable)
 
 	struct LoggerDesc
 	{
 		IMTK_DESCRIPTOR_BODY(LoggerDesc, LOGGER_GENERATOR);
-
-		static const detail::Key enable_key;
 
 		LoggerDesc(imtk::datapath_link link = {});
 	};
@@ -138,31 +131,24 @@ namespace oly::editor
 	};
 
 #define CONTEXT_GENERATOR(M) \
-	M((PlatformDesc), platform) \
-	M((CollisionDesc), collision) \
-	M((LoggerDesc), logger) \
-	M((FrameRateDesc), frame_rate)
+	M((imtk::desc::sub<PlatformDesc>), platform) \
+	M((imtk::desc::sub<CollisionDesc>), collision) \
+	M((imtk::desc::sub<LoggerDesc>), logger) \
+	M((imtk::desc::sub<FrameRateDesc>), frame_rate)
 
 	struct ContextDesc
 	{
 		IMTK_DESCRIPTOR_BODY(ContextDesc, CONTEXT_GENERATOR);
 
-		static const detail::Key platform_key;
-		static const detail::Key collision_key;
-		static const detail::Key logger_key;
-		static const detail::Key frame_rate_key;
-
 		ContextDesc(imtk::datapath_link link = {});
 	};
 
 #define PROJECT_GENERATOR(M) \
-	M((ContextDesc), context)
+	M((imtk::desc::sub<ContextDesc>), context)
 
 	struct ProjectDesc
 	{
 		IMTK_DESCRIPTOR_BODY(ProjectDesc, PROJECT_GENERATOR);
-
-		static const detail::Key context_key;
 
 		ProjectDesc(imtk::datapath_link link = {});
 	};

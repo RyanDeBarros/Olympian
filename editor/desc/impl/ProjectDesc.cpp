@@ -40,24 +40,19 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key WindowDesc::viewport_key = detail::Key::Viewport;
-	const detail::Key WindowDesc::window_hints_key = detail::Key::WindowHint;
-
 	WindowDesc::WindowDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		width(IMTK_DATAPATH_SUBLINK(subpaths.width), 1440, detail::Key::Width, "Width"),
 		height(IMTK_DATAPATH_SUBLINK(subpaths.height), 1080, detail::Key::Height, "Height"),
 		title(IMTK_DATAPATH_SUBLINK(subpaths.title), ProjectInfo::Instance().ProjectName(), detail::Key::Title, "Title"),
-		viewport(IMTK_DATAPATH_SUBLINK(subpaths.viewport)),
-		window_hints(IMTK_DATAPATH_SUBLINK(subpaths.window_hints))
+		viewport(detail::Key::Viewport, IMTK_DATAPATH_SUBLINK(subpaths.viewport)),
+		window_hints(detail::Key::WindowHint, IMTK_DATAPATH_SUBLINK(subpaths.window_hints))
 	{
 	}
 
-	const detail::Key PlatformDesc::window_key = detail::Key::Window;
-
 	PlatformDesc::PlatformDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		window(IMTK_DATAPATH_SUBLINK(subpaths.window)),
+		window(detail::Key::Window, IMTK_DATAPATH_SUBLINK(subpaths.window)),
 		gamepads(IMTK_DATAPATH_SUBLINK(subpaths.gamepads), 1, detail::Key::Gamepads, "# Gamepads")
 	{
 	}
@@ -79,15 +74,13 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key LoggerDesc::enable_key = detail::Key::Enable;
-
 	LoggerDesc::LoggerDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		use_logfile(IMTK_DATAPATH_SUBLINK(subpaths.use_logfile), true, detail::Key::UseLogfile, "Use Logfile"),
 		use_console(IMTK_DATAPATH_SUBLINK(subpaths.use_console), true, detail::Key::UseConsole, "Use Console"),
 		max_prior_log_files(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_files), imp::nullpotential, detail::Key::MaxPriorLogFiles, detail::Key::EnableMaxPriorLogFiles, "Max Prior Log Files"),
 		max_prior_log_bytes(IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_bytes), imp::nullpotential, detail::Key::MaxPriorLogBytes, detail::Key::EnableMaxPriorLogBytes, "Max Prior Log Bytes"),
-		enable(IMTK_DATAPATH_SUBLINK(subpaths.enable))
+		enable(detail::Key::Enable, IMTK_DATAPATH_SUBLINK(subpaths.enable))
 	{
 	}
 
@@ -98,25 +91,18 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key ContextDesc::platform_key = detail::Key::Platform;
-	const detail::Key ContextDesc::collision_key = detail::Key::Collision;
-	const detail::Key ContextDesc::logger_key = detail::Key::Logger;
-	const detail::Key ContextDesc::frame_rate_key = detail::Key::FrameRate;
-
 	ContextDesc::ContextDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		platform(IMTK_DATAPATH_SUBLINK(subpaths.platform)),
-		collision(IMTK_DATAPATH_SUBLINK(subpaths.collision)),
-		logger(IMTK_DATAPATH_SUBLINK(subpaths.logger)),
-		frame_rate(IMTK_DATAPATH_SUBLINK(subpaths.frame_rate))
+		platform(detail::Key::Platform, IMTK_DATAPATH_SUBLINK(subpaths.platform)),
+		collision(detail::Key::Collision, IMTK_DATAPATH_SUBLINK(subpaths.collision)),
+		logger(detail::Key::Logger, IMTK_DATAPATH_SUBLINK(subpaths.logger)),
+		frame_rate(detail::Key::FrameRate, IMTK_DATAPATH_SUBLINK(subpaths.frame_rate))
 	{
 	}
 
-	const detail::Key ProjectDesc::context_key = detail::Key::Context;
-
 	ProjectDesc::ProjectDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		context(IMTK_DATAPATH_SUBLINK(subpaths.context))
+		context(detail::Key::Context, IMTK_DATAPATH_SUBLINK(subpaths.context))
 	{
 	}
 }

@@ -24,8 +24,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(FontFamilyDesc, FONT_FAMILY_GENERATOR);
 
-		static const detail::Key styles_key;
-
 		FontFamilyDesc(imtk::datapath_link link = {});
 	};
 }

@@ -36,7 +36,9 @@ namespace oly::editor
 	{
 		imtk::init({
 			.error_logger = [](const char* error) { BreakoutError::Log(error); },
-			.reset_icon = Icon(IconResource::Revert)
+			.reset_icon = Icon(IconResource::Revert),
+			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
+			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); }
 		});
 
 		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");

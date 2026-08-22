@@ -44,7 +44,7 @@ namespace oly::editor
 		key(IMTK_DATAPATH_SUBLINK(subpaths.key), detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
 		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
 		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier))
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
@@ -53,7 +53,7 @@ namespace oly::editor
 		button(IMTK_DATAPATH_SUBLINK(subpaths.button), detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
 		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
 		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier))
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
@@ -96,7 +96,7 @@ namespace oly::editor
 	GamepadButtonDesc::GamepadButtonDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		button(IMTK_DATAPATH_SUBLINK(subpaths.button), GLFW_GAMEPAD_BUTTON_A, detail::Key::Button, "Button", GAMEPAD_BUTTON_VALUES, GAMEPAD_BUTTON_NAMES),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier))
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
@@ -121,7 +121,7 @@ namespace oly::editor
 	GamepadAxis1DDesc::GamepadAxis1DDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		axis(IMTK_DATAPATH_SUBLINK(subpaths.axis), GLFW_GAMEPAD_AXIS_LEFT_X, detail::Key::Axis1D, "Axis", GAMEPAD_AXIS_1D_VALUES, GAMEPAD_AXIS_1D_NAMES),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier)),
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier)),
 		deadzone(IMTK_DATAPATH_SUBLINK(subpaths.deadzone), 0.f, detail::Key::Deadzone, "Deadzone")
 	{
 	}
@@ -129,24 +129,22 @@ namespace oly::editor
 	GamepadAxis2DDesc::GamepadAxis2DDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		axis(IMTK_DATAPATH_SUBLINK(subpaths.axis), detail::GamepadAxis2D::LeftXY, detail::Key::Axis2D, "Axis"),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier)),
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier)),
 		deadzone(IMTK_DATAPATH_SUBLINK(subpaths.deadzone), 0.f, detail::Key::Deadzone, "Deadzone")
 	{
 	}
 
 	CursorPosDesc::CursorPosDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier))
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
 	ScrollDesc::ScrollDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		modifier(IMTK_DATAPATH_SUBLINK(subpaths.modifier))
+		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
-
-	const detail::Key SignalDesc::modifier_key = detail::Key::Modifier;
 
 	SignalDesc::SignalDesc(imtk::datapath_link link) :
 		link(std::move(link)),
@@ -163,13 +161,10 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key SignalFullDesc::signals_key = detail::Key::SignalArray;
-	const detail::Key SignalFullDesc::routes_key = detail::Key::RoutingArray;
-
 	SignalFullDesc::SignalFullDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		signals(IMTK_DATAPATH_SUBLINK(subpaths.signals)),
-		routes(IMTK_DATAPATH_SUBLINK(subpaths.routes))
+		signals(detail::Key::SignalArray, IMTK_DATAPATH_SUBLINK(subpaths.signals)),
+		routes(detail::Key::RoutingArray, IMTK_DATAPATH_SUBLINK(subpaths.routes))
 	{
 	}
 }

@@ -52,11 +52,9 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key TextureVariantDesc::array_key = detail::Key::TextureArray;
-
 	TextureVariantDesc::TextureVariantDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		variant(IMTK_DATAPATH_SUBLINK(subpaths.variant))
+		variant(detail::Key::TextureArray, IMTK_DATAPATH_SUBLINK(subpaths.variant))
 	{
 	}
 

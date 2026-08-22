@@ -28,7 +28,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
 
-		static const detail::Key kerning_key;
 		gui::DynamicListState kerning_ui_state;
 
 		FontFaceDesc(imtk::datapath_link link = {});
@@ -55,15 +54,12 @@ namespace oly::editor
 	};
 
 #define FULL_FONT_GENERATOR(M) \
-		M((FontFaceDesc), font_face) \
+		M((imtk::desc::sub<FontFaceDesc>), font_face) \
 		M((imtk::desc::vector<FontAtlasDesc>), font_atlases)
 
 	struct FullFontDesc
 	{
 		IMTK_DESCRIPTOR_BODY(FullFontDesc, FULL_FONT_GENERATOR);
-
-		static const detail::Key font_face_key;
-		static const detail::Key font_atlas_key;
 
 		FullFontDesc(imtk::datapath_link link = {});
 	};

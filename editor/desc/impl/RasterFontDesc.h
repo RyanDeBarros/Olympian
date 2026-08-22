@@ -40,8 +40,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(RasterFontDesc, RASTER_FONT_GENERATOR);
 
-		static const detail::Key glyphs_key;
-
 		RasterFontDesc(imtk::datapath_link link = {});
 	};
 }

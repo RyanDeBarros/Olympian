@@ -8,6 +8,7 @@
 #include "panels/ContentBrowserPanel.h"
 #include "panels/TreeViewPanel.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 #include "util/Parser.h"
 
@@ -431,13 +432,18 @@ namespace oly::editor
 	{
 		IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
 
-		desc.assignments.map.clear();
-		if (auto table = node[detail::encode_key(desc.assignments_key)].as_table())
+		Load(node, desc.assignments);
+	}
+
+	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc)
+	{
+		desc.map.clear();
+		if (auto table = desc.map.subnode(node).as_table())
 		{
 			for (auto&& [key, node] : *table)
 			{
 				if (auto config = stoi(key.str()))
-					Load(imtk::toml_node(node), desc.assignments.map[*config]);
+					Load(imtk::toml_node(node), desc.map[*config]);
 			}
 		}
 	}
@@ -451,14 +457,19 @@ namespace oly::editor
 	{
 		IMTK_DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
 
+		Dump(table, desc.assignments);
+	}
+
+	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentMapDesc& desc)
+	{
 		toml::table subtable;
-		for (auto& [config, subdesc] : desc.assignments.map)
+		for (auto& [config, subdesc] : desc.map)
 		{
 			toml::table dump;
 			Dump(dump, subdesc);
 			subtable.insert_or_assign(std::to_string(config), std::move(dump));
 		}
-		table.insert_or_assign(detail::encode_key(desc.assignments_key), std::move(subtable));
+		desc.map.dump_into(table, std::move(subtable));
 	}
 
 	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)

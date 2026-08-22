@@ -85,16 +85,11 @@ namespace oly::editor
 	};
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
-		M((imtk::desc::variant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>>), variant)
-
-	template<typename T>
-	concept TextureSlotDesc = std::is_same_v<T, RasterTextureDesc> || std::is_same_v<T, VectorTextureDesc>;
+		M((imtk::desc::subvariant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>>), variant)
 
 	struct TextureVariantDesc
 	{
 		IMTK_DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
-
-		static const detail::Key array_key;
 
 		TextureVariantDesc(imtk::datapath_link link = {});
 

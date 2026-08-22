@@ -22,11 +22,9 @@ namespace oly::editor
 		return MemorySize(size_limit.value, size_limit_unit.value);
 	}
 
-	const detail::Key EditSettingsDesc::undo_history_key = detail::Key::UndoHistory;
-
 	EditSettingsDesc::EditSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		undo_history(IMTK_DATAPATH_SUBLINK(subpaths.undo_history))
+		undo_history(detail::Key::UndoHistory, IMTK_DATAPATH_SUBLINK(subpaths.undo_history))
 	{
 	}
 
@@ -47,11 +45,9 @@ namespace oly::editor
 		return analysis_interval.value;
 	}
 
-	const detail::Key TreeViewSettingsDesc::advanced_key = detail::Key::Advanced;
-
 	TreeViewSettingsDesc::TreeViewSettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		advanced(IMTK_DATAPATH_SUBLINK(subpaths.advanced))
+		advanced(detail::Key::Advanced, IMTK_DATAPATH_SUBLINK(subpaths.advanced))
 	{
 	}
 
@@ -67,17 +63,12 @@ namespace oly::editor
 		return MemorySize(trash_limit.value, trash_limit_unit.value);
 	}
 
-	const detail::Key PreferencesDesc::edit_key = detail::Key::Edit;
-	const detail::Key PreferencesDesc::content_browser_key = detail::Key::ContentBrowser;
-	const detail::Key PreferencesDesc::tree_view_key = detail::Key::TreeView;
-	const detail::Key PreferencesDesc::filesystem_key = detail::Key::Filesystem;
-
 	PreferencesDesc::PreferencesDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		edit(IMTK_DATAPATH_SUBLINK(subpaths.edit)),
-		content_browser(IMTK_DATAPATH_SUBLINK(subpaths.content_browser)),
-		tree_view(IMTK_DATAPATH_SUBLINK(subpaths.tree_view)),
-		filesystem(IMTK_DATAPATH_SUBLINK(subpaths.filesystem))
+		edit(detail::Key::Edit, IMTK_DATAPATH_SUBLINK(subpaths.edit)),
+		content_browser(detail::Key::ContentBrowser, IMTK_DATAPATH_SUBLINK(subpaths.content_browser)),
+		tree_view(detail::Key::TreeView, IMTK_DATAPATH_SUBLINK(subpaths.tree_view)),
+		filesystem(detail::Key::Filesystem, IMTK_DATAPATH_SUBLINK(subpaths.filesystem))
 	{
 	}
 }

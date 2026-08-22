@@ -2,6 +2,7 @@
 
 #include "core/editor/Notifier.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -168,7 +169,7 @@ namespace oly::editor
 		IMTK_LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
 		desc.glyphs.clear();
-		if (auto array = node[detail::encode_key(desc.glyphs_key)].as_array())
+		if (auto array = desc.glyphs.subnode(node).as_array())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
@@ -191,7 +192,7 @@ namespace oly::editor
 		array.reserve(desc.glyphs.size());
 		for (auto& subdesc : desc.glyphs)
 			Dump(array.emplace_back<toml::table>(), subdesc);
-		table.insert_or_assign(detail::encode_key(desc.glyphs_key), std::move(array));
+		desc.glyphs.dump_into(table, std::move(array));
 	}
 
 	void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)

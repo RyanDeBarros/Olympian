@@ -41,7 +41,7 @@ namespace oly::editor
 
 	void TreeViewNode::Update()
 	{
-		const float update_interval = Editor::GetPreferences().tree_view.advanced.AnalysisInterval();
+		const float update_interval = Editor::GetPreferences().tree_view->advanced->AnalysisInterval();
 		timer += ImGui::GetIO().DeltaTime;
 		if (timer >= update_interval)
 		{

@@ -44,10 +44,10 @@ namespace oly::editor
 	}
 
 	ContentBrowserPanel::ContentBrowserPanel()
-		: _folder_history(Editor::GetPreferences().content_browser.folder_history_limit.value)
+		: _folder_history(Editor::GetPreferences().content_browser->folder_history_limit.value)
 	{
 		_listener = Editor::OnPreferencesChanged().subscribe([this]() { _folder_history.set_limit(
-			Editor::GetPreferences().content_browser.folder_history_limit.value
+			Editor::GetPreferences().content_browser->folder_history_limit.value
 		); });
 
 		_favorited.config.selected = false;

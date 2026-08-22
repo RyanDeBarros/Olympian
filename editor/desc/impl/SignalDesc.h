@@ -72,7 +72,7 @@ namespace oly::editor
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
-		M((Modifier0dDesc), modifier)
+		M((imtk::desc::sub<Modifier0dDesc>), modifier)
 
 	struct KeyDesc
 	{
@@ -88,7 +88,7 @@ namespace oly::editor
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
-		M((Modifier0dDesc), modifier)
+		M((imtk::desc::sub<Modifier0dDesc>), modifier)
 
 	struct MouseButtonDesc
 	{
@@ -102,7 +102,7 @@ namespace oly::editor
 
 #define GAMEPAD_BUTTON_GENERATOR(M) \
 		GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
-		M((Modifier0dDesc), modifier)
+		M((imtk::desc::sub<Modifier0dDesc>), modifier)
 
 	struct GamepadButtonDesc
 	{
@@ -117,7 +117,7 @@ namespace oly::editor
 
 #define GAMEPAD_AXIS_1D_GENERATOR(M) \
 		GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
-		M((Modifier1dDesc), modifier)
+		M((imtk::desc::sub<Modifier1dDesc>), modifier)
 
 	struct GamepadAxis1DDesc
 	{
@@ -132,7 +132,7 @@ namespace oly::editor
 
 #define GAMEPAD_AXIS_2D_GENERATOR(M) \
 		GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
-		M((Modifier2dDesc), modifier)
+		M((imtk::desc::sub<Modifier2dDesc>), modifier)
 
 	struct GamepadAxis2DDesc
 	{
@@ -145,7 +145,7 @@ namespace oly::editor
 
 #define CURSOR_POS_GENERATOR(M) \
 		CURSOR_POS_PARTIAL_GENERATOR(M) \
-		M((Modifier2dDesc), modifier)
+		M((imtk::desc::sub<Modifier2dDesc>), modifier)
 
 	struct CursorPosDesc
 	{
@@ -158,7 +158,7 @@ namespace oly::editor
 
 #define SCROLL_GENERATOR(M) \
 		SCROLL_PARTIAL_GENERATOR(M) \
-		M((Modifier2dDesc), modifier)
+		M((imtk::desc::sub<Modifier2dDesc>), modifier)
 
 	struct ScrollDesc
 	{
@@ -188,8 +188,6 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
 
-		static const detail::Key modifier_key;
-
 		SignalDesc(imtk::datapath_link link = {});
 	};
 
@@ -211,9 +209,6 @@ namespace oly::editor
 	struct SignalFullDesc
 	{
 		IMTK_DESCRIPTOR_BODY(SignalFullDesc, SIGNAL_FULL_GENERATOR);
-
-		static const detail::Key signals_key;
-		static const detail::Key routes_key;
 
 		SignalFullDesc(imtk::datapath_link link = {});
 	};

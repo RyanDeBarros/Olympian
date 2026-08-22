@@ -2,6 +2,7 @@
 
 #include "core/editor/Notifier.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 #include "util/Parser.h"
 
@@ -103,7 +104,7 @@ namespace oly::editor
 	{
 		desc.styles.clear();
 
-		if (auto table = node[detail::encode_key(desc.styles_key)].as_table())
+		if (auto table = desc.styles.subnode(node).as_table())
 		{
 			for (auto&& [key, subnode] : *table)
 			{
@@ -127,7 +128,7 @@ namespace oly::editor
 			Dump(inner, subdesc);
 			subtable.insert_or_assign(std::to_string(style), std::move(inner));
 		}
-		table.insert_or_assign(detail::encode_key(desc.styles_key), std::move(subtable));
+		desc.styles.dump_into(table, std::move(subtable));
 	}
 
 	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)

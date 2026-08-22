@@ -124,13 +124,13 @@ namespace oly::editor
 	{
 		const size_t initial_undo_count = _undo.size();
 
-		const size_t count_limit = Editor::GetPreferences().edit.undo_history.CountLimit();
+		const size_t count_limit = Editor::GetPreferences().edit->undo_history->CountLimit();
 		if (_redo.size() >= count_limit)
 			PruneUndoCount(0);
 		else
 			PruneUndoCount(count_limit - _redo.size());
 
-		const size_t size_limit = Editor::GetPreferences().edit.undo_history.SizeLimit();
+		const size_t size_limit = Editor::GetPreferences().edit->undo_history->SizeLimit();
 		if (_redo_stack_size >= size_limit)
 			PruneUndoSize(0);
 		else

@@ -167,6 +167,8 @@ endif()
 target_compile_definitions(OlympianEditor PUBLIC
 	GLEW_STATIC
 	IMGUI_DEFINE_MATH_OPERATORS
+    IMTK_KEY_TYPE=oly::detail::Key
+    IMTK_KEY_DECL_PATH="assets/KeyDecl.h"
 )
 
 target_link_libraries(OlympianEditor PRIVATE

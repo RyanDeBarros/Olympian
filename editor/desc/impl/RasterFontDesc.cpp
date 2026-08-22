@@ -16,15 +16,13 @@ namespace oly::editor
 	{
 	}
 
-	const detail::Key RasterFontDesc::glyphs_key = detail::Key::GlyphArray;
-
 	RasterFontDesc::RasterFontDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		space_advance_width(IMTK_DATAPATH_SUBLINK(subpaths.space_advance_width), 5.f, detail::Key::SpaceAdvanceWidth, "Space advance width"),
 		line_height(IMTK_DATAPATH_SUBLINK(subpaths.line_height), 8.f, detail::Key::LineHeight, "Line height"),
 		font_scale(IMTK_DATAPATH_SUBLINK(subpaths.font_scale), glm::vec2(1.f), detail::Key::FontScale, "Font scale"),
 		storage(IMTK_DATAPATH_SUBLINK(subpaths.storage), detail::StorageMode::Keep, detail::Key::Storage, "Storage"),
-		glyphs(IMTK_DATAPATH_SUBLINK(subpaths.glyphs))
+		glyphs(detail::Key::GlyphArray, IMTK_DATAPATH_SUBLINK(subpaths.glyphs))
 	{
 	}
 }

@@ -2,6 +2,7 @@
 
 #include "core/editor/Notifier.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 #include "util/DynamicArray.h"
@@ -334,7 +335,7 @@ namespace oly::editor
 		}
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
@@ -378,7 +379,7 @@ namespace oly::editor
 		}
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
@@ -409,7 +410,7 @@ namespace oly::editor
 			PushFieldSetAction(desc.button.link.compute_path(), initial, desc.button.index);
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
@@ -441,7 +442,7 @@ namespace oly::editor
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
@@ -477,21 +478,21 @@ namespace oly::editor
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(CursorPosDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 	
 	void SignalDocument::Draw(ScrollDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
 		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(desc.modifier);
+			Draw(*desc.modifier);
 	}
 
 	void SignalDocument::Draw(Modifier0dDesc& desc)
@@ -519,7 +520,7 @@ namespace oly::editor
 
 	void SignalDocument::Load(imtk::toml_node node, SignalFullDesc& desc)
 	{
-		const toml::array* signal_array = node[detail::encode_key(desc.signals_key)].as_array();
+		const toml::array* signal_array = desc.signals.subnode(node).as_array();
 		if (signal_array && !signal_array->empty())
 		{
 			for (size_t i = 0; i < signal_array->size(); ++i)
@@ -529,7 +530,7 @@ namespace oly::editor
 				Load(imtk::toml_node(*signal_array->get(i)), desc.signals[i]);
 		}
 
-		const toml::array* route_array = node[detail::encode_key(desc.routes_key)].as_array();
+		const toml::array* route_array = desc.routes.subnode(node).as_array();
 		if (route_array && !route_array->empty())
 		{
 			for (size_t i = 0; i < route_array->size(); ++i)
@@ -544,11 +545,7 @@ namespace oly::editor
 	{
 		IMTK_LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
 
-		detail::SignalBindingType type = detail::SignalBindingType::Key;
-		if (auto v = node[detail::encode_key(desc.modifier_key)].value<int64_t>())
-			type = static_cast<detail::SignalBindingType>(*v);
-
-		switch (type)
+		switch (desc.binding.value)
 		{
 #define SWITCH_CASE(T) \
 		case detail::SignalBindingType::T: \
@@ -573,43 +570,43 @@ namespace oly::editor
 	void SignalDocument::Load(imtk::toml_node node, KeyDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 
 	void SignalDocument::Load(imtk::toml_node node, MouseButtonDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 
 	void SignalDocument::Load(imtk::toml_node node, GamepadButtonDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 	
 	void SignalDocument::Load(imtk::toml_node node, GamepadAxis1DDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 	
 	void SignalDocument::Load(imtk::toml_node node, GamepadAxis2DDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 	
 	void SignalDocument::Load(imtk::toml_node node, CursorPosDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 	
 	void SignalDocument::Load(imtk::toml_node node, ScrollDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		Load(node[detail::encode_key(SignalDesc::modifier_key)], desc.modifier);
+		Load(desc.modifier.subnode(node), *desc.modifier);
 	}
 	
 	void SignalDocument::Load(imtk::toml_node node, Modifier0dDesc& desc)
@@ -640,12 +637,12 @@ namespace oly::editor
 		toml::array signal_array;
 		for (auto& d : desc.signals)
 			Dump(signal_array.emplace_back<toml::table>(), d);
-		table.insert_or_assign(detail::encode_key(desc.signals_key), std::move(signal_array));
+		desc.signals.dump_into(table, std::move(signal_array));
 
 		toml::array route_array;
 		for (auto& d : desc.routes)
 			Dump(route_array.emplace_back<toml::table>(), d);
-		table.insert_or_assign(detail::encode_key(desc.routes_key), std::move(route_array));
+		desc.routes.dump_into(table, std::move(route_array));
 	}
 
 	void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
@@ -664,8 +661,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, MouseButtonDesc& desc)
@@ -673,8 +670,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, GamepadButtonDesc& desc)
@@ -682,8 +679,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, GamepadAxis1DDesc& desc)
@@ -691,8 +688,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, GamepadAxis2DDesc& desc)
@@ -700,8 +697,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, CursorPosDesc& desc)
@@ -709,8 +706,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, ScrollDesc& desc)
@@ -718,8 +715,8 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
 
 		toml::table subtable;
-		Dump(subtable, desc.modifier);
-		table.insert_or_assign(detail::encode_key(SignalDesc::modifier_key), std::move(subtable));
+		Dump(subtable, *desc.modifier);
+		desc.modifier.dump_into(table, std::move(subtable));
 	}
 	
 	void SignalDocument::Dump(toml::table& table, Modifier0dDesc& desc)

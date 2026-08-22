@@ -17,7 +17,7 @@ namespace oly::detail
 		return std::string(bytes.begin(), std::find(bytes.begin(), bytes.end(), '\0'));
 	}
 
-	Key decode_key(const std::string& code)
+	Key decode_key(std::string_view code)
 	{
 		unsigned long long value = 0;
 

@@ -6,6 +6,8 @@
 
 #include "fio/Trashcan.h"
 
+#include "assets/TranslateKey.h"
+
 // TODO v9.4 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
 
 namespace oly::editor
@@ -134,16 +136,16 @@ namespace oly::editor
 			if (imtk::prop::in_form())
 			{
 				if (auto subform = imtk::prop::subform("Edit"))
-					Draw(desc.edit);
+					Draw(*desc.edit);
 
 				if (auto subform = imtk::prop::subform("Content Browser"))
-					Draw(desc.content_browser);
+					Draw(*desc.content_browser);
 
 				if (auto subform = imtk::prop::subform("Tree View"))
-					Draw(desc.tree_view);
+					Draw(*desc.tree_view);
 
 				if (auto subform = imtk::prop::subform("Filesystem"))
-					Draw(desc.filesystem);
+					Draw(*desc.filesystem);
 			}
 		}
 	}
@@ -151,7 +153,7 @@ namespace oly::editor
 	void PreferencesDocument::Draw(EditSettingsDesc& desc)
 	{
 		if (auto subform = imtk::prop::subform("Undo History"))
-			Draw(desc.undo_history);
+			Draw(*desc.undo_history);
 	}
 	
 	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
@@ -167,7 +169,7 @@ namespace oly::editor
 	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
 	{
 		if (auto subform = imtk::prop::subform("Advanced##TreeView"))
-			Draw(desc.advanced);
+			Draw(*desc.advanced);
 	}
 
 	void PreferencesDocument::Draw(TreeViewAdvancedSettingsDesc& desc)
@@ -213,15 +215,15 @@ namespace oly::editor
 
 	void PreferencesDocument::Load(imtk::toml_node node, PreferencesDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
-		Load(node[detail::encode_key(desc.content_browser_key)], desc.content_browser);
-		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
-		Load(node[detail::encode_key(desc.filesystem_key)], desc.filesystem);
+		Load(desc.edit.subnode(node), *desc.edit);
+		Load(desc.content_browser.subnode(node), *desc.content_browser);
+		Load(desc.tree_view.subnode(node), *desc.tree_view);
+		Load(desc.filesystem.subnode(node), *desc.filesystem);
 	}
 
 	void PreferencesDocument::Load(imtk::toml_node node, EditSettingsDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.undo_history_key)], desc.undo_history);
+		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
 	void PreferencesDocument::Load(imtk::toml_node node, UndoHistorySettingsDesc& desc)
@@ -236,7 +238,7 @@ namespace oly::editor
 
 	void PreferencesDocument::Load(imtk::toml_node node, TreeViewSettingsDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.advanced_key)], desc.advanced);
+		Load(desc.advanced.subnode(node), *desc.advanced);
 	}
 
 	void PreferencesDocument::Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc)
@@ -254,27 +256,27 @@ namespace oly::editor
 		toml::table subtable;
 
 		subtable.clear();
-		Dump(subtable, desc.edit);
-		table.insert_or_assign(detail::encode_key(desc.edit_key), std::move(subtable));
+		Dump(subtable, *desc.edit);
+		desc.edit.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.content_browser);
-		table.insert_or_assign(detail::encode_key(desc.content_browser_key), std::move(subtable));
+		Dump(subtable, *desc.content_browser);
+		desc.content_browser.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.tree_view);
-		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
+		Dump(subtable, *desc.tree_view);
+		desc.tree_view.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.filesystem);
-		table.insert_or_assign(detail::encode_key(desc.filesystem_key), std::move(subtable));
+		Dump(subtable, *desc.filesystem);
+		desc.filesystem.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, EditSettingsDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.undo_history);
-		table.insert_or_assign(detail::encode_key(desc.undo_history_key), std::move(subtable));
+		Dump(subtable, *desc.undo_history);
+		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
@@ -290,8 +292,8 @@ namespace oly::editor
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.advanced);
-		table.insert_or_assign(detail::encode_key(desc.advanced_key), std::move(subtable));
+		Dump(subtable, *desc.advanced);
+		desc.advanced.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)

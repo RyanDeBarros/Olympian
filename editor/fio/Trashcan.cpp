@@ -257,7 +257,7 @@ namespace oly::editor::fio
 		ManifestIO manifest;
 		manifest->Add(trash_folder);
 
-		manifest->Prune(Editor::GetPreferences().filesystem.TrashLimit());
+		manifest->Prune(Editor::GetPreferences().filesystem->TrashLimit());
 
 		return true;
 	}

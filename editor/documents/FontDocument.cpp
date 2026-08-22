@@ -2,6 +2,7 @@
 
 #include "core/editor/Notifier.h"
 
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 #include "util/Counter.h"
@@ -128,7 +129,7 @@ namespace oly::editor
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = imtk::prop::form())
-			Draw(_desc.scratch.font_face);
+			Draw(*_desc.scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
@@ -326,9 +327,9 @@ namespace oly::editor
 
 	void FontDocument::Load(imtk::toml_node node, FullFontDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.font_face_key)], desc.font_face);
+		Load(desc.font_face.subnode(node), *desc.font_face);
 
-		const toml::array* array = node[detail::encode_key(desc.font_atlas_key)].as_array();
+		const toml::array* array = desc.font_atlases.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
@@ -348,7 +349,7 @@ namespace oly::editor
 	{
 		desc.storage.load(node);
 
-		const toml::array* array = node[detail::encode_key(desc.kerning_key)].as_array();
+		const toml::array* array = desc.kerning.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
@@ -372,13 +373,13 @@ namespace oly::editor
 	void FontDocument::Dump(toml::table& table, FullFontDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.font_face);
-		table.insert_or_assign(detail::encode_key(desc.font_face_key), std::move(subtable));
+		Dump(subtable, *desc.font_face);
+		desc.font_face.dump_into(table, std::move(subtable));
 
 		toml::array array;
 		for (auto& d : desc.font_atlases)
 			Dump(array.emplace_back<toml::table>(), d);
-		table.insert_or_assign(detail::encode_key(desc.font_atlas_key), std::move(array));
+		desc.font_atlases.dump_into(table, std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
@@ -388,7 +389,7 @@ namespace oly::editor
 		toml::array array;
 		for (auto& d : desc.kerning)
 			Dump(array.emplace_back<toml::table>(), d);
-		table.insert_or_assign(detail::encode_key(desc.kerning_key), std::move(array));
+		desc.kerning.dump_into(table, std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, KerningDesc& desc)
