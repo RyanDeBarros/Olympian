@@ -20,12 +20,12 @@ namespace oly::editor
 		throw BreakoutError(message.data());
 	}
 
-	void BreakoutError::Log(const char* error)
+	void BreakoutError::Log(std::string_view error)
 	{
 		if (!NOTIFY_STACK.empty() && NOTIFY_STACK.top())
-			Notifier::NotifyError(error);
+			Notifier::NotifyError(std::string(error));
 		else
-			Logger::LogError(error);
+			Logger::LogError(std::string(error));
 	}
 
 	BreakoutError::NotifyScope::NotifyScope(bool notify)

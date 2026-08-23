@@ -28,7 +28,7 @@ namespace oly::editor
 		Main
 	};
 
-	class Editor : public imtk::instance_guard<Editor>
+	class Editor : public imp::instance_guard<Editor>
 	{
 		std::unique_ptr<imtk::os_window> _os_window;
 		AppState _app_state = AppState::ProjectSelect;

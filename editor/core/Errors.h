@@ -12,7 +12,7 @@ namespace oly::editor
 
 		[[noreturn]] static void Throw(std::string_view message);
 
-		static void Log(const char* error);
+		static void Log(std::string_view error);
 
 		struct NotifyScope
 		{

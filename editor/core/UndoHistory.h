@@ -4,11 +4,10 @@
 #include <optional>
 #include <vector>
 
-#include <imtk.hpp>
-
 #include <imp/functional_event.hpp>
+#include <imp/instance_stack.hpp>
 
-// TODO v9.3 move to imp, not imtk. must move instance_guard/stack to imp first though
+// TODO v9.3 move to imp, not imtk
 
 namespace oly::editor
 {
@@ -61,7 +60,7 @@ namespace oly::editor
 		virtual void OnRedoPreFail() {};
 	};
 
-	struct ActiveUndoHistory : public imtk::instance_stack<ActiveUndoHistory>
+	struct ActiveUndoHistory : public imp::instance_stack<ActiveUndoHistory>
 	{
 		UndoHistory& uh_instance;
 

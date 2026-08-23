@@ -35,7 +35,7 @@ namespace oly::editor
 		_project_info(std::make_unique<ProjectInfo>())
 	{
 		imtk::init({
-			.error_logger = [](const char* error) { BreakoutError::Log(error); },
+			.error_logger = [](std::string_view error) { BreakoutError::Log(error); },
 			.reset_icon = Icon(IconResource::Revert),
 			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
 			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); }
@@ -76,17 +76,20 @@ namespace oly::editor
 		_os_window->begin_frame();
 		imtk::begin_frame();
 
-		_shortcut_manager->PollShortcuts();
+		// TODO v9.4 likewise with breakout errors, use imtk::handle_error at each entry point (panel, document, etc.)
+		imtk::handle_error([this]() {
+			_shortcut_manager->PollShortcuts();
 
-		switch (_app_state)
-		{
-		case AppState::ProjectSelect:
-			_project_select_window->Draw();
-			break;
-		case AppState::Main:
-			_main_window->Draw();
-			break;
-		}
+			switch (_app_state)
+			{
+			case AppState::ProjectSelect:
+				_project_select_window->Draw();
+				break;
+			case AppState::Main:
+				_main_window->Draw();
+				break;
+			}
+		});
 
 		imtk::end_frame();
 		_os_window->end_frame();
