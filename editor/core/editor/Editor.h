@@ -1,11 +1,11 @@
 #pragma once
 
-#include "util/FunctionalEvent.h"
-
 #include "assets/KeyDecl.h"
 #include "assets/ResourcePath.h"
 
 #include <imtk.hpp>
+
+#include <imp/functional_event.hpp>
 
 // TODO v9.3 remove once fio stuff is added to imtk
 #include <filesystem>
@@ -41,13 +41,13 @@ namespace oly::editor
 		std::unique_ptr<ProjectInfo> _project_info;
 		std::unique_ptr<PreferencesDesc> _preferences_desc;
 		std::unique_ptr<LiveSettings> _live_settings;
-		FunctionalEvent<> _on_preferences_changed;
+		imp::functional_event<> _on_preferences_changed;
 
 	public:
 		Editor();
 		~Editor();
 
-		static FunctionalEvent<>& OnPreferencesChanged();
+		static imp::functional_event<>& OnPreferencesChanged();
 
 		bool ShouldClose() const;
 		void Tick();

@@ -60,7 +60,7 @@ namespace oly::editor
 
 	Editor::~Editor() = default;
 
-	FunctionalEvent<>& Editor::OnPreferencesChanged()
+	imp::functional_event<>& Editor::OnPreferencesChanged()
 	{
 		return instance()._on_preferences_changed;
 	}

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "util/FunctionalEvent.h"
-
 #include <memory>
 #include <optional>
 #include <vector>
 
 #include <imtk.hpp>
+
+#include <imp/functional_event.hpp>
 
 // TODO v9.3 move to imp, not imtk. must move instance_guard/stack to imp first though
 
@@ -73,7 +73,7 @@ namespace oly::editor
 		std::optional<size_t> _clean_marker;
 
 	public:
-		FunctionalEvent<> on_potential_clean;
+		imp::functional_event<> on_potential_clean;
 
 		using UndoHistory::UndoHistory;
 

@@ -8,11 +8,12 @@
 #include "assets/ResourcePath.h"
 #include "assets/KeyDecl.h"
 #include "util/TimelineQueue.h"
-#include "util/FunctionalEvent.h"
 
-#include <set>
+#include <imp/functional_event.hpp>
 
 #include <imtk.hpp>
+
+#include <set>
 
 namespace oly::editor
 {
@@ -27,7 +28,7 @@ namespace oly::editor
 		TimelineQueue<std::filesystem::path> _folder_history;
 		UndoHistory _undo_history;
 		std::string _rename_buffer;
-		FunctionalEvent<>::Handle _listener;
+		imp::functional_event<>::handle _listener;
 
 		struct NewAssetInfo
 		{
