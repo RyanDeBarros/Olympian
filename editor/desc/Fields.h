@@ -40,7 +40,7 @@ namespace oly::editor
 
 		bool query_dirty(const PrimitiveField& disk) const
 		{
-			return edit.buffer() != disk.value;
+			return value != disk.value;
 		}
 
 		void load(imtk::toml_node node)
@@ -493,7 +493,7 @@ namespace oly::editor
 
 		bool query_dirty(const OptionalRangeField& disk) const
 		{
-			return edit.buffer() != disk.value;
+			return value != disk.value;
 		}
 
 		void load(imtk::toml_node node)
@@ -592,7 +592,7 @@ namespace oly::editor
 
 		bool query_dirty(const CompactOptionalRangeField& disk) const
 		{
-			return edit.buffer() != disk.value;
+			return value != disk.value;
 		}
 
 		void draw()

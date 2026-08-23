@@ -1,29 +1,19 @@
 #include "UndoHistory.h"
 
-#include "core/editor/Editor.h"
-#include "core/Errors.h"
-
-#include "desc/impl/PreferencesDesc.h"
-
 #include <stack>
 
 // TODO LATER popup inside document window to view list of undo actions so you can click on a certain action to rollback/forward to
 
 namespace oly::editor
 {
-	static std::stack<UndoHistory*> UNDO_HISTORY_STACK;
-
-	UndoHistory::UndoHistory()
+	UndoHistory::UndoHistory(size_t count_limit, size_t size_limit)
+		: _count_limit(count_limit), _size_limit(size_limit)
 	{
-		_listener = Editor::OnPreferencesChanged().subscribe([this]() { Prune(); });
 	}
 
 	UndoHistory& UndoHistory::ActiveInstance()
 	{
-		if (UNDO_HISTORY_STACK.empty())
-			BreakoutError::Throw("UndoHistory::ActiveInstance(): live undo history stack is empty");
-		else
-			return *UNDO_HISTORY_STACK.top();
+		return ActiveUndoHistory::instance().uh_instance;
 	}
 
 	void UndoHistory::Execute(std::unique_ptr<UndoAction>&& action)
@@ -42,9 +32,6 @@ namespace oly::editor
 		_undo.push_back(std::move(action));
 		_redo.clear();
 
-		if (_clean_marker && *_clean_marker >= _undo.size())
-			_clean_marker.reset();
-
 		Prune();
 	}
 
@@ -62,20 +49,11 @@ namespace oly::editor
 			if (action->Backward())
 			{
 				_redo.push_back(std::move(action));
-
-				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() + 1 == *_clean_marker))
-					ActiveDocument::Get().query_dirty();
+				OnUndoPostSuccess();
 			}
 			else
 			{
-				if (_clean_marker)
-				{
-					if (*_clean_marker <= _undo.size())
-						_clean_marker.reset();
-					else
-						_clean_marker = *_clean_marker - (_undo.size() + 1);
-				}
-
+				OnUndoPreFail();
 				_undo_stack_size = 0;
 				_undo.clear();
 			}
@@ -98,15 +76,11 @@ namespace oly::editor
 			if (action->Forward())
 			{
 				_undo.push_back(std::move(action));
-
-				if (_clean_marker && (_undo.size() == *_clean_marker || _undo.size() == *_clean_marker + 1))
-					ActiveDocument::Get().query_dirty();
+				OnRedoPostSuccess();
 			}
 			else
 			{
-				if (_clean_marker && *_clean_marker > _undo.size())
-					_clean_marker.reset();
-
+				OnRedoPreFail();
 				_redo_stack_size = 0;
 				_redo.clear();
 			}
@@ -115,36 +89,17 @@ namespace oly::editor
 		}
 	}
 
-	void UndoHistory::MarkClean()
-	{
-		_clean_marker = _undo.size();
-	}
-
 	void UndoHistory::Prune()
 	{
-		const size_t initial_undo_count = _undo.size();
-
-		const size_t count_limit = Editor::GetPreferences().edit->undo_history->CountLimit();
-		if (_redo.size() >= count_limit)
+		if (_redo.size() >= _count_limit)
 			PruneUndoCount(0);
 		else
-			PruneUndoCount(count_limit - _redo.size());
+			PruneUndoCount(_count_limit - _redo.size());
 
-		const size_t size_limit = Editor::GetPreferences().edit->undo_history->SizeLimit();
-		if (_redo_stack_size >= size_limit)
+		if (_redo_stack_size >= _size_limit)
 			PruneUndoSize(0);
 		else
-			PruneUndoSize(size_limit - _redo_stack_size);
-
-		if (_clean_marker)
-		{
-			size_t delta = initial_undo_count - _undo.size();
-
-			if (*_clean_marker >= delta)
-				_clean_marker = *_clean_marker - delta;
-			else
-				_clean_marker.reset();
-		}
+			PruneUndoSize(_size_limit - _redo_stack_size);
 	}
 
 	void UndoHistory::Clear()
@@ -154,9 +109,13 @@ namespace oly::editor
 
 		_redo_stack_size = 0;
 		_redo.clear();
+	}
 
-		if (_clean_marker && *_clean_marker > 0)
-			_clean_marker.reset();
+	void UndoHistory::SetLimits(size_t count_limit, size_t size_limit)
+	{
+		_count_limit = count_limit;
+		_size_limit = size_limit;
+		Prune();
 	}
 
 	void UndoHistory::PruneUndoCount(size_t count_limit)
@@ -171,7 +130,7 @@ namespace oly::editor
 			if (_undo.size() > count_limit)
 			{
 				const size_t amount = _undo.size() - count_limit;
-				
+
 				for (size_t i = 0; i < amount; ++i)
 					_undo_stack_size -= _undo[i]->EmpiricalSize();
 
@@ -198,13 +157,80 @@ namespace oly::editor
 		}
 	}
 
-	UndoHistoryActiveScope::UndoHistoryActiveScope(UndoHistory& undo_history)
+	size_t UndoHistory::UndoCount() const
 	{
-		UNDO_HISTORY_STACK.push(&undo_history);
+		return _undo.size();
 	}
 
-	UndoHistoryActiveScope::~UndoHistoryActiveScope()
+	ActiveUndoHistory::ActiveUndoHistory(UndoHistory& undo_history)
+		: uh_instance(undo_history)
 	{
-		UNDO_HISTORY_STACK.pop();
+	}
+
+	void CheckpointUndoHistory::Push(std::unique_ptr<UndoAction>&& action)
+	{
+		if (_clean_marker && *_clean_marker > UndoCount())
+			_clean_marker.reset();
+
+		UndoHistory::Push(std::move(action));
+	}
+
+	void CheckpointUndoHistory::Prune()
+	{
+		const size_t initial_undo_count = UndoCount();
+
+		UndoHistory::Prune();
+
+		if (_clean_marker)
+		{
+			size_t delta = initial_undo_count - UndoCount();
+
+			if (*_clean_marker >= delta)
+				_clean_marker = *_clean_marker - delta;
+			else
+				_clean_marker.reset();
+		}
+	}
+
+	void CheckpointUndoHistory::Clear()
+	{
+		UndoHistory::Clear();
+
+		if (_clean_marker && *_clean_marker > 0)
+			_clean_marker.reset();
+	}
+
+	void CheckpointUndoHistory::MarkClean()
+	{
+		_clean_marker = UndoCount();
+	}
+
+	void CheckpointUndoHistory::OnUndoPostSuccess()
+	{
+		if (_clean_marker && (UndoCount() == *_clean_marker || UndoCount() + 1 == *_clean_marker))
+			on_potential_clean.invoke();
+	}
+	
+	void CheckpointUndoHistory::OnUndoPreFail()
+	{
+		if (_clean_marker)
+		{
+			if (*_clean_marker <= UndoCount())
+				_clean_marker.reset();
+			else
+				_clean_marker = *_clean_marker - (UndoCount() + 1);
+		}
+	}
+	
+	void CheckpointUndoHistory::OnRedoPostSuccess()
+	{
+		if (_clean_marker && (UndoCount() == *_clean_marker || UndoCount() == *_clean_marker + 1))
+			on_potential_clean.invoke();
+	}
+	
+	void CheckpointUndoHistory::OnRedoPreFail()
+	{
+		if (_clean_marker && *_clean_marker > UndoCount())
+			_clean_marker.reset();
 	}
 }

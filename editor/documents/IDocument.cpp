@@ -1,19 +1,27 @@
 #include "IDocument.h"
 
+#include "core/editor/Editor.h"
+
 #include "desc/DoubleDescriptor.h"
+#include "desc/impl/PreferencesDesc.h"
 
 #include <imgui.h>
 
 namespace oly::editor
 {
 	IDocument::IDocument(detail::ResourcePath&& oly_path)
-		: imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path))
+		: imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path)),
+		_undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
 	{
+		_preferences_listener = Editor::OnPreferencesChanged().subscribe([this]() {
+			_undo_history.SetLimits(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit());
+		});
+
+		_uh_listener = _undo_history.on_potential_clean.subscribe([this]() { query_dirty(); });
 	}
 
 	void IDocument::Init()
 	{
-		_undo_history.emplace();
 		InitImpl();
 		_initialized = true;
 	}
@@ -47,9 +55,9 @@ namespace oly::editor
 		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
 		{
 			if (action)
-				_undo_history->Push(std::move(action));
+				_undo_history.Push(std::move(action));
 			else
-				_undo_history->Clear();
+				_undo_history.Clear();
 		}
 	}
 
@@ -62,9 +70,9 @@ namespace oly::editor
 		if (_initialized)
 		{
 			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
-				_undo_history->Push(std::move(action));
+				_undo_history.Push(std::move(action));
 			else
-				_undo_history->Clear();
+				_undo_history.Clear();
 		}
 	}
 
@@ -123,7 +131,7 @@ namespace oly::editor
 	void IDocument::MarkClean()
 	{
 		_dirty = false;
-		_undo_history->MarkClean();
+		_undo_history.MarkClean();
 	}
 
 	bool IDocument::IsDirty() const
@@ -139,17 +147,17 @@ namespace oly::editor
 	void IDocument::Undo()
 	{
 		ActiveDocument active(*this);
-		_undo_history->Undo();
+		_undo_history.Undo();
 	}
 
 	void IDocument::Redo()
 	{
 		ActiveDocument active(*this);
-		_undo_history->Redo();
+		_undo_history.Redo();
 	}
 
 	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
-		_doc(doc), _uh_scope(*doc._undo_history), _active_instance(doc)
+		_doc(doc), _uh(doc._undo_history), _active_instance(doc)
 	{
 	}
 

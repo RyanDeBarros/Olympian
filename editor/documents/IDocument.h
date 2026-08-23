@@ -18,9 +18,12 @@ namespace oly::editor
 	{
 	protected:
 		detail::ResourcePath _oly_path;
-		std::optional<UndoHistory> _undo_history;
 
 	private:
+		CheckpointUndoHistory _undo_history;
+		FunctionalEvent<>::Handle _preferences_listener;
+		FunctionalEvent<>::Handle _uh_listener;
+
 		bool _dirty = false;
 		bool _initialized = false;
 
@@ -65,7 +68,7 @@ namespace oly::editor
 		class PreDrawImpl
 		{
 			IDocument& _doc;
-			UndoHistoryActiveScope _uh_scope;
+			ActiveUndoHistory _uh;
 			ActiveDocument _active_instance;
 
 		public:
