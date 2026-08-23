@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/Modifiable.h"
-
 #include "desc/DynamicListUndoActions.h"
 
 #include "util/Counter.h"
+
+#include <imp/modifiable.hpp>
 
 #include <array>
 #include <memory>
@@ -67,7 +67,7 @@ namespace oly::editor::gui
 
 		void Validate(bool valid);
 		bool UpdateIndex(ListPolicy policy, size_t& idx) const;
-		bool UpdateIndex(ListPolicy policy, Modifiable<size_t>& idx) const;
+		bool UpdateIndex(ListPolicy policy, imp::modifiable<size_t>& idx) const;
 		bool UpdateIndex(ListPolicy policy, ListOp& op) const;
 	};
 
@@ -90,7 +90,7 @@ namespace oly::editor::gui
 		std::vector<ListOp> _pending_ops;
 
 	public:
-		Modifiable<size_t> active_index = 0;
+		imp::modifiable<size_t> active_index = 0;
 		ListPolicy policy = ListPolicy::None;
 
 		void Init(IListAdapter& adapter);

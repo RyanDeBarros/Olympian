@@ -64,13 +64,13 @@ namespace oly::editor::gui
 
 	bool ListOp::UpdateIndex(ListPolicy policy, size_t& idx) const
 	{
-		Modifiable<size_t> m(idx);
+		imp::modifiable<size_t> m(idx);
 		bool v = UpdateIndex(policy, m);
 		idx = m;
 		return v;
 	}
 
-	bool ListOp::UpdateIndex(ListPolicy policy, Modifiable<size_t>& idx) const
+	bool ListOp::UpdateIndex(ListPolicy policy, imp::modifiable<size_t>& idx) const
 	{
 		switch (type)
 		{

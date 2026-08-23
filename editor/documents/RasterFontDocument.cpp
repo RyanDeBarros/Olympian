@@ -123,7 +123,7 @@ namespace oly::editor
 				if (_glyph_model.ConsumeOps(*ListAdapter()))
 					MarkDirty();
 
-				_glyph_model.active_index.ConsumeModified();
+				_glyph_model.active_index.consume_modified();
 			}
 		}
 	}

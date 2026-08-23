@@ -150,7 +150,7 @@ namespace oly::editor
 				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
 					MarkDirty();
 
-				if (_atlas_slots.active_index.ConsumeModified())
+				if (_atlas_slots.active_index.consume_modified())
 					DestroyFont();
 			}
 

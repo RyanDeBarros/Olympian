@@ -138,7 +138,7 @@ namespace oly::editor
 			if (_signal_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
-			_signal_slots.active_index.ConsumeModified();
+			_signal_slots.active_index.consume_modified();
 		}
 	}
 
@@ -168,7 +168,7 @@ namespace oly::editor
 			if (_route_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
-			_route_slots.active_index.ConsumeModified();
+			_route_slots.active_index.consume_modified();
 		}
 	}
 

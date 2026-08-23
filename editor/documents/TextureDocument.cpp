@@ -439,7 +439,7 @@ namespace oly::editor
 			if (_slots.ConsumeOps(*ListAdapter()))
 				MarkDirty();
 
-			if (_slots.active_index.ConsumeModified())
+			if (_slots.active_index.consume_modified())
 				_stale_preview_texture = true;
 		}
 	}
