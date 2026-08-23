@@ -19,14 +19,14 @@ namespace oly::editor::fio
 		return std::nullopt;
 	}
 
-	bool RenamePathAction::Forward()
+	bool RenamePathAction::forward()
 	{
 		std::error_code ec;
 		auto aux_old_path = GetAuxPath(old_path);
 		std::filesystem::rename(old_path, new_path, ec);
 
 		std::stringstream ss;
-		ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << old_path.generic_string() << "\" to \"" << new_path.generic_string() << "\"";
+		ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << old_path.generic_string() << "\" to \"" << new_path.generic_string() << "\"";
 
 		if (ec)
 		{
@@ -44,7 +44,7 @@ namespace oly::editor::fio
 			std::filesystem::rename(aux_old_path->get_absolute(), aux_new_path.get_absolute(), ec);
 
 			std::stringstream ss;
-			ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << aux_old_path->string() << "\" to \"" << aux_new_path.string() << "\"";
+			ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_old_path->string() << "\" to \"" << aux_new_path.string() << "\"";
 
 			if (ec)
 			{
@@ -60,14 +60,14 @@ namespace oly::editor::fio
 		return true;
 	}
 
-	bool RenamePathAction::Backward()
+	bool RenamePathAction::backward()
 	{
 		std::error_code ec;
 		auto aux_new_path = GetAuxPath(new_path);
 		std::filesystem::rename(new_path, old_path, ec);
 
 		std::stringstream ss;
-		ss << "fio::RenameFile::Backward() " << (ec ? "fail" : "success") << ": \"" << new_path.generic_string() << "\" to \"" << old_path.generic_string() << "\"";
+		ss << "fio::RenameFile::backward() " << (ec ? "fail" : "success") << ": \"" << new_path.generic_string() << "\" to \"" << old_path.generic_string() << "\"";
 
 		if (ec)
 		{
@@ -85,7 +85,7 @@ namespace oly::editor::fio
 			std::filesystem::rename(aux_new_path->get_absolute(), aux_old_path.get_absolute(), ec);
 
 			std::stringstream ss;
-			ss << "fio::RenameFile::Forward() " << (ec ? "fail" : "success") << ": \"" << aux_new_path->string() << "\" to \"" << aux_old_path.string() << "\"";
+			ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_new_path->string() << "\" to \"" << aux_old_path.string() << "\"";
 
 			if (ec)
 			{
@@ -101,25 +101,25 @@ namespace oly::editor::fio
 		return true;
 	}
 
-	size_t RenamePathAction::EmpiricalSize() const
+	size_t RenamePathAction::empirical_size() const
 	{
 		return sizeof(*this);
 	}
 
-	bool DeletePathAction::Forward()
+	bool DeletePathAction::forward()
 	{
 		_aux_path = GetAuxPath(del_path);
 
 		if (!Trashcan::Delete(del_path))
 		{
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Forward() failed to delete \"" << del_path.get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::forward() failed to delete \"" << del_path.get_resource_shorthand() << "\"";
 			Logger::LogError(ss.str());
 			return false;
 		}
 
 		std::stringstream ss;
-		ss << "fio::DeletePathAction::Forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
+		ss << "fio::DeletePathAction::forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
 		Logger::LogSuccess(ss.str());
 
 		if (_aux_path)
@@ -127,91 +127,91 @@ namespace oly::editor::fio
 			if (!Trashcan::Delete(*_aux_path))
 			{
 				std::stringstream ss;
-				ss << "fio::DeletePathAction::Forward() failed to delete \"" << _aux_path->get_resource_shorthand() << "\"";
+				ss << "fio::DeletePathAction::forward() failed to delete \"" << _aux_path->get_resource_shorthand() << "\"";
 				Logger::LogError(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Forward() success: deleted \"" << _aux_path->get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::forward() success: deleted \"" << _aux_path->get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 		}
 
 		return true;
 	}
 
-	bool DeletePathAction::Backward()
+	bool DeletePathAction::backward()
 	{
 		if (_aux_path)
 		{
 			if (!Trashcan::Restore(*_aux_path))
 			{
 				std::stringstream ss;
-				ss << "fio::DeletePathAction::Backward() failed to restore \"" << _aux_path->get_resource_shorthand() << "\"";
+				ss << "fio::DeletePathAction::backward() failed to restore \"" << _aux_path->get_resource_shorthand() << "\"";
 				Logger::LogError(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Backward() success: restored \"" << _aux_path->get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::backward() success: restored \"" << _aux_path->get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 		}
 
 		if (!Trashcan::Restore(del_path))
 		{
 			std::stringstream ss;
-			ss << "fio::DeletePathAction::Backward() failed to restore \"" << del_path.get_resource_shorthand() << "\"";
+			ss << "fio::DeletePathAction::backward() failed to restore \"" << del_path.get_resource_shorthand() << "\"";
 			Logger::LogError(ss.str());
 			return false;
 		}
 
 		std::stringstream ss;
-		ss << "fio::DeletePathAction::Backward() success: restored \"" << del_path.get_resource_shorthand() << "\"";
+		ss << "fio::DeletePathAction::backward() success: restored \"" << del_path.get_resource_shorthand() << "\"";
 		Logger::LogSuccess(ss.str());
 
 		return true;
 	}
 
-	size_t DeletePathAction::EmpiricalSize() const
+	size_t DeletePathAction::empirical_size() const
 	{
 		return sizeof(*this);
 	}
 
-	bool CreateAssetAction::Forward()
+	bool CreateAssetAction::forward()
 	{
 		if (Trashcan::Restore(asset_path))
 		{
 			std::stringstream ss;
-			ss << "fio::CreateAssetAction::Forward() success: restored \"" << asset_path.get_resource_shorthand() << "\"";
+			ss << "fio::CreateAssetAction::forward() success: restored \"" << asset_path.get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 
 			return true;
 		}
 
 		std::stringstream ss;
-		ss << "fio::CreateAssetAction::Forward() failed to restore \"" << asset_path.get_resource_shorthand() << "\"";
+		ss << "fio::CreateAssetAction::forward() failed to restore \"" << asset_path.get_resource_shorthand() << "\"";
 		Logger::LogError(ss.str());
 		return false;
 	}
 
-	bool CreateAssetAction::Backward()
+	bool CreateAssetAction::backward()
 	{
 		if (Trashcan::Delete(asset_path))
 		{
 			std::stringstream ss;
-			ss << "fio::CreateAssetAction::Backward() success: deleted \"" << asset_path.get_resource_shorthand() << "\"";
+			ss << "fio::CreateAssetAction::backward() success: deleted \"" << asset_path.get_resource_shorthand() << "\"";
 			Logger::LogSuccess(ss.str());
 
 			return true;
 		}
 
 		std::stringstream ss;
-		ss << "fio::CreateAssetAction::Backward() failed to delete \"" << asset_path.get_resource_shorthand() << "\"";
+		ss << "fio::CreateAssetAction::backward() failed to delete \"" << asset_path.get_resource_shorthand() << "\"";
 		Logger::LogError(ss.str());
 		return false;
 	}
 
-	size_t CreateAssetAction::EmpiricalSize() const
+	size_t CreateAssetAction::empirical_size() const
 	{
 		return sizeof(*this);
 	}

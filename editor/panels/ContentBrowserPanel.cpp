@@ -51,7 +51,7 @@ namespace oly::editor
 		_listener = Editor::OnPreferencesChanged().subscribe([this]() {
 			const auto& pref = Editor::GetPreferences();
 			_folder_history.set_limit(pref.content_browser->folder_history_limit.value);
-			_undo_history.SetLimits(pref.edit->undo_history->CountLimit(), pref.edit->undo_history->SizeLimit());
+			_undo_history.set_limits(pref.edit->undo_history->CountLimit(), pref.edit->undo_history->SizeLimit());
 		});
 
 		_favorited.config.selected = false;
@@ -90,10 +90,10 @@ namespace oly::editor
 			if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
 			{
 				if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-					_undo_history.Undo();
+					_undo_history.undo();
 
 				if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-					_undo_history.Redo();
+					_undo_history.redo();
 			}
 
 			if (auto _ = imtk::child("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
@@ -239,7 +239,7 @@ namespace oly::editor
 
 		if (auto d = imtk::disabled(_folder_history.empty_forwards()))
 		{
-			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleRight), .str_id = "##FolderHistoryForward", .tooltip = "Forward" }).draw())
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleRight), .str_id = "##FolderHistoryForward", .tooltip = "forward" }).draw())
 			{
 				_folder_history.move_forward();
 				if (auto f = _folder_history.get_present())

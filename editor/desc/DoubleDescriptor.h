@@ -13,8 +13,8 @@ namespace oly::editor
 		virtual void describe(std::ostream& os, imtk::datapath_view path) const = 0;
 		virtual bool query_dirty() = 0;
 		virtual imp::box CopyScratch() const = 0;
-		virtual std::unique_ptr<UndoAction> ScratchUndoAction(imp::box original) const = 0;
-		virtual bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<UndoAction>& action) const = 0;
+		virtual std::unique_ptr<imp::undo_action> ScratchUndoAction(imp::box original) const = 0;
+		virtual bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<imp::undo_action>& action) const = 0;
 	};
 
 	template<typename Descriptor>
@@ -46,7 +46,7 @@ namespace oly::editor
 			return imp::make_box<Descriptor>(imtk::desc::clone_data(scratch));
 		}
 
-		std::unique_ptr<UndoAction> ScratchUndoAction(imp::box original) const override
+		std::unique_ptr<imp::undo_action> ScratchUndoAction(imp::box original) const override
 		{
 			if (auto og = original.consume<Descriptor>())
 				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
@@ -54,7 +54,7 @@ namespace oly::editor
 				return nullptr;
 		}
 
-		bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<UndoAction>& action) const override
+		bool ScratchUndoActionQuery(imp::box original, std::unique_ptr<imp::undo_action>& action) const override
 		{
 			if (auto og = original.as<Descriptor>())
 			{

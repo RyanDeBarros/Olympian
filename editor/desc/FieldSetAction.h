@@ -1,18 +1,19 @@
 #pragma once
 
 #include "core/Printer.h"
-#include "core/UndoHistory.h"
 #include "core/editor/Logger.h"
 
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
+
+#include <imp/undo_history.hpp>
 
 #include <sstream>
 
 namespace oly::editor
 {
 	template<typename T, typename Printer = StandardPrinter<T>>
-	struct FieldSetAction : public UndoAction
+	struct FieldSetAction : public imp::undo_action
 	{
 		imtk::datapath path;
 		T initial_value;
@@ -23,7 +24,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
@@ -48,7 +49,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
@@ -73,7 +74,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const
+		size_t empirical_size() const
 		{
 			return sizeof(*this);
 		}
@@ -82,11 +83,11 @@ namespace oly::editor
 	template<typename T, typename Printer = StandardPrinter<T>>
 	void PushFieldSetAction(imtk::datapath_view path, T initial_value, T final_value)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<FieldSetAction<T, Printer>>(path, std::move(initial_value), std::move(final_value)));
+		imp::undo_history::active_instance().push(std::make_unique<FieldSetAction<T, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}
 
 	template<typename Desc, typename Printer = StandardPrinter<Desc>>
-	struct DescriptorSetAction : public UndoAction
+	struct DescriptorSetAction : public imp::undo_action
 	{
 		imtk::datapath path;
 		Desc initial_value;
@@ -97,7 +98,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
@@ -122,7 +123,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
@@ -147,7 +148,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const
+		size_t empirical_size() const
 		{
 			return sizeof(*this);
 		}
@@ -156,6 +157,6 @@ namespace oly::editor
 	template<typename Desc, typename Printer = StandardPrinter<Desc>>
 	void PushDescriptorSetAction(imtk::datapath_view path, Desc initial_value, Desc final_value)
 	{
-		UndoHistory::ActiveInstance().Push(std::make_unique<DescriptorSetAction<Desc, Printer>>(path, std::move(initial_value), std::move(final_value)));
+		imp::undo_history::active_instance().push(std::make_unique<DescriptorSetAction<Desc, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}
 }

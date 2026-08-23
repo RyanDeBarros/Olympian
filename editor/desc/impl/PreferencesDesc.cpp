@@ -4,7 +4,7 @@
 
 namespace oly::editor
 {
-	UndoHistorySettingsDesc::UndoHistorySettingsDesc(imtk::datapath_link link) :
+	undo_historySettingsDesc::undo_historySettingsDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		count_limit(IMTK_DATAPATH_SUBLINK(subpaths.count_limit), 500, detail::Key::UndoHistoryCountLimit, "Count limit"),
 		size_limit(IMTK_DATAPATH_SUBLINK(subpaths.size_limit), 32, detail::Key::UndoHistorySizeLimit, "Size limit"),
@@ -12,12 +12,12 @@ namespace oly::editor
 	{
 	}
 
-	size_t UndoHistorySettingsDesc::CountLimit() const
+	size_t undo_historySettingsDesc::CountLimit() const
 	{
 		return count_limit.value;
 	}
 
-	size_t UndoHistorySettingsDesc::SizeLimit() const
+	size_t undo_historySettingsDesc::SizeLimit() const
 	{
 		return MemorySize(size_limit.value, size_limit_unit.value);
 	}

@@ -11,18 +11,18 @@ namespace oly::editor
 		M((IntField<1, imp::nullpotential>), size_limit) \
 		M((EnumField<MemoryUnit>), size_limit_unit)
 
-	struct UndoHistorySettingsDesc
+	struct undo_historySettingsDesc
 	{
-		IMTK_DESCRIPTOR_BODY(UndoHistorySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(undo_historySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
 
-		UndoHistorySettingsDesc(imtk::datapath_link link = {});
+		undo_historySettingsDesc(imtk::datapath_link link = {});
 
 		size_t CountLimit() const;
 		size_t SizeLimit() const;
 	};
 
 #define EDIT_SETTINGS_GENERATOR(M) \
-		M((imtk::desc::sub<UndoHistorySettingsDesc>), undo_history)
+		M((imtk::desc::sub<undo_historySettingsDesc>), undo_history)
 
 	struct EditSettingsDesc
 	{

@@ -14,7 +14,7 @@ namespace oly::editor
 		_undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
 	{
 		_preferences_listener = Editor::OnPreferencesChanged().subscribe([this]() {
-			_undo_history.SetLimits(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit());
+			_undo_history.set_limits(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit());
 		});
 
 		_uh_listener = _undo_history.on_potential_clean.subscribe([this]() { query_dirty(); });
@@ -51,13 +51,13 @@ namespace oly::editor
 		ResetAssetImpl();
 		query_dirty();
 
-		std::unique_ptr<UndoAction> action;
+		std::unique_ptr<imp::undo_action> action;
 		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
 		{
 			if (action)
-				_undo_history.Push(std::move(action));
+				_undo_history.push(std::move(action));
 			else
-				_undo_history.Clear();
+				_undo_history.clear();
 		}
 	}
 
@@ -70,9 +70,9 @@ namespace oly::editor
 		if (_initialized)
 		{
 			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
-				_undo_history.Push(std::move(action));
+				_undo_history.push(std::move(action));
 			else
-				_undo_history.Clear();
+				_undo_history.clear();
 		}
 	}
 
@@ -131,7 +131,7 @@ namespace oly::editor
 	void IDocument::MarkClean()
 	{
 		_dirty = false;
-		_undo_history.MarkClean();
+		_undo_history.mark_clean();
 	}
 
 	bool IDocument::IsDirty() const
@@ -147,13 +147,13 @@ namespace oly::editor
 	void IDocument::Undo()
 	{
 		ActiveDocument active(*this);
-		_undo_history.Undo();
+		_undo_history.undo();
 	}
 
 	void IDocument::Redo()
 	{
 		ActiveDocument active(*this);
-		_undo_history.Redo();
+		_undo_history.redo();
 	}
 
 	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :

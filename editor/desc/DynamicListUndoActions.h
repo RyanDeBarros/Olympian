@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/Printer.h"
-#include "core/UndoHistory.h"
 #include "core/editor/Logger.h"
 
 #include "documents/ActiveDocument.h"
@@ -9,12 +8,14 @@
 
 #include "util/FixedArray.h"
 
+#include <imp/undo_history.hpp>
+
 #include <sstream>
 
 namespace oly::editor
 {
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	struct DynamicListDeleteAction : public UndoAction
+	struct DynamicListDeleteAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
 
@@ -27,7 +28,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -54,7 +55,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -80,7 +81,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -89,11 +90,11 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicListDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicListDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	struct DynamicListInsertAction : public UndoAction
+	struct DynamicListInsertAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
 
@@ -106,7 +107,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -132,7 +133,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -159,7 +160,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -168,11 +169,11 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicListInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicListInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
 	}
 
 	template<typename ElementType>
-	struct DynamicListMoveAction : public UndoAction
+	struct DynamicListMoveAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
 
@@ -185,7 +186,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -207,7 +208,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -229,7 +230,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -238,11 +239,11 @@ namespace oly::editor
 	template<typename ElementType>
 	void ExecuteDynamicListMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListMoveAction<ElementType>>(list_path, src_index, dst_index));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicListMoveAction<ElementType>>(list_path, src_index, dst_index));
 	}
 
 	template<typename ElementType>
-	struct DynamicListResizeAction : public UndoAction
+	struct DynamicListResizeAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
 
@@ -256,7 +257,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -287,7 +288,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -318,7 +319,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this) + erased.length() * sizeof(ElementType);
 		}
@@ -327,11 +328,11 @@ namespace oly::editor
 	template<typename ElementType>
 	void ExecuteDynamicListResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicListResizeAction<ElementType>>(list_path, initial_size, final_size));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicListResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	struct DynamicVectorDescDeleteAction : public UndoAction
+	struct DynamicVectorDescDeleteAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
 
@@ -344,7 +345,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -371,7 +372,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -397,7 +398,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -406,11 +407,11 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicVectorDescDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
 
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
-	struct DynamicVectorDescInsertAction : public UndoAction
+	struct DynamicVectorDescInsertAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
 
@@ -423,7 +424,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -449,7 +450,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -476,7 +477,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -485,11 +486,11 @@ namespace oly::editor
 	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
 	void ExecuteDynamicVectorDescInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
 	}
 
 	template<typename ElementType>
-	struct DynamicVectorDescMoveAction : public UndoAction
+	struct DynamicVectorDescMoveAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
 
@@ -502,7 +503,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -524,7 +525,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -546,7 +547,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this);
 		}
@@ -555,11 +556,11 @@ namespace oly::editor
 	template<typename ElementType>
 	void ExecuteDynamicVectorDescMoveAction(imtk::datapath_view list_path, size_t src_index, size_t dst_index)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescMoveAction<ElementType>>(list_path, src_index, dst_index));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescMoveAction<ElementType>>(list_path, src_index, dst_index));
 	}
 
 	template<typename ElementType>
-	struct DynamicVectorDescResizeAction : public UndoAction
+	struct DynamicVectorDescResizeAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
 
@@ -573,7 +574,7 @@ namespace oly::editor
 		{
 		}
 
-		bool Forward() override
+		bool forward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -604,7 +605,7 @@ namespace oly::editor
 			return success;
 		}
 
-		bool Backward() override
+		bool backward() override
 		{
 			bool success = false;
 			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
@@ -635,7 +636,7 @@ namespace oly::editor
 			return success;
 		}
 
-		size_t EmpiricalSize() const override
+		size_t empirical_size() const override
 		{
 			return sizeof(*this) + erased.length() * sizeof(ElementType);
 		}
@@ -646,6 +647,6 @@ namespace oly::editor
 	template<typename ElementType>
 	void ExecuteDynamicVectorDescResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 	{
-		UndoHistory::ActiveInstance().Execute(std::make_unique<DynamicVectorDescResizeAction<ElementType>>(list_path, initial_size, final_size));
+		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}
 }

@@ -33,7 +33,7 @@ namespace oly::editor
 
 		void Draw(PreferencesDesc& desc);
 		void Draw(EditSettingsDesc& desc);
-		void Draw(UndoHistorySettingsDesc& desc);
+		void Draw(undo_historySettingsDesc& desc);
 		void Draw(ContentBrowserSettingsDesc& desc);
 		void Draw(TreeViewSettingsDesc& desc);
 		void Draw(TreeViewAdvancedSettingsDesc& desc);
@@ -41,7 +41,7 @@ namespace oly::editor
 
 		void Load(imtk::toml_node node, PreferencesDesc& desc);
 		void Load(imtk::toml_node node, EditSettingsDesc& desc);
-		void Load(imtk::toml_node node, UndoHistorySettingsDesc& desc);
+		void Load(imtk::toml_node node, undo_historySettingsDesc& desc);
 		void Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc);
 		void Load(imtk::toml_node node, TreeViewSettingsDesc& desc);
 		void Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc);
@@ -49,7 +49,7 @@ namespace oly::editor
 
 		void Dump(toml::table& table, PreferencesDesc& desc);
 		void Dump(toml::table& table, EditSettingsDesc& desc);
-		void Dump(toml::table& table, UndoHistorySettingsDesc& desc);
+		void Dump(toml::table& table, undo_historySettingsDesc& desc);
 		void Dump(toml::table& table, ContentBrowserSettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewSettingsDesc& desc);
 		void Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc);

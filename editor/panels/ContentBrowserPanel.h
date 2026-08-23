@@ -2,16 +2,16 @@
 
 #include "panels/IPanel.h"
 
-#include "core/UndoHistory.h"
 #include "core/SpecialUndoActions.h"
 
 #include "assets/ResourcePath.h"
 #include "assets/KeyDecl.h"
 #include "util/TimelineQueue.h"
 
-#include <imp/functional_event.hpp>
-
 #include <imtk.hpp>
+
+#include <imp/functional_event.hpp>
+#include <imp/undo_history.hpp>
 
 #include <set>
 
@@ -26,7 +26,7 @@ namespace oly::editor
 		std::vector<std::filesystem::path> _selected_paths;
 		std::optional<std::filesystem::path> _active_selected_path;
 		TimelineQueue<std::filesystem::path> _folder_history;
-		UndoHistory _undo_history;
+		imp::undo_history _undo_history;
 		std::string _rename_buffer;
 		imp::functional_event<>::handle _listener;
 

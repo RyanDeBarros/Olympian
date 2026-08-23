@@ -156,7 +156,7 @@ namespace oly::editor
 			Draw(*desc.undo_history);
 	}
 	
-	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Draw(undo_historySettingsDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
@@ -226,7 +226,7 @@ namespace oly::editor
 		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
-	void PreferencesDocument::Load(imtk::toml_node node, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, undo_historySettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
@@ -279,7 +279,7 @@ namespace oly::editor
 		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
-	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Dump(toml::table& table, undo_historySettingsDesc& desc)
 	{
 		IMTK_DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}

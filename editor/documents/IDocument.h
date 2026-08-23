@@ -4,11 +4,11 @@
 
 #include "documents/ActiveDocument.h"
 
-#include "core/UndoHistory.h"
-
 #include "assets/ResourcePath.h"
 
 #include <imtk.hpp>
+
+#include <imp/undo_history.hpp>
 
 namespace oly::editor
 {
@@ -20,7 +20,7 @@ namespace oly::editor
 		detail::ResourcePath _oly_path;
 
 	private:
-		CheckpointUndoHistory _undo_history;
+		imp::checkpoint_undo_history _undo_history;
 		imp::functional_event<>::handle _preferences_listener;
 		imp::functional_event<>::handle _uh_listener;
 
@@ -68,7 +68,7 @@ namespace oly::editor
 		class PreDrawImpl
 		{
 			IDocument& _doc;
-			ActiveUndoHistory _uh;
+			imp::active_undo_history _uh;
 			ActiveDocument _active_instance;
 
 		public:

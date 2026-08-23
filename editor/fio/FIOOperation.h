@@ -1,22 +1,22 @@
 #pragma once
 
-#include "core/UndoHistory.h"
-
 #include "assets/ResourcePath.h"
+
+#include <imp/undo_history.hpp>
 
 namespace oly::editor::fio
 {
-	struct RenamePathAction : public UndoAction
+	struct RenamePathAction : public imp::undo_action
 	{
 		std::filesystem::path old_path;
 		std::filesystem::path new_path;
 
-		bool Forward() override;
-		bool Backward() override;
-		size_t EmpiricalSize() const override;
+		bool forward() override;
+		bool backward() override;
+		size_t empirical_size() const override;
 	};
 
-	struct DeletePathAction : public UndoAction
+	struct DeletePathAction : public imp::undo_action
 	{
 		detail::ResourcePath del_path;
 
@@ -24,17 +24,17 @@ namespace oly::editor::fio
 		std::optional<detail::ResourcePath> _aux_path;
 
 	public:
-		bool Forward() override;
-		bool Backward() override;
-		size_t EmpiricalSize() const override;
+		bool forward() override;
+		bool backward() override;
+		size_t empirical_size() const override;
 	};
 
-	struct CreateAssetAction : public UndoAction
+	struct CreateAssetAction : public imp::undo_action
 	{
 		detail::ResourcePath asset_path;
 
-		bool Forward() override;
-		bool Backward() override;
-		size_t EmpiricalSize() const override;
+		bool forward() override;
+		bool backward() override;
+		size_t empirical_size() const override;
 	};
 }

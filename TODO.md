@@ -59,6 +59,7 @@
 * Graphics API expansion/separation
 	* GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
 	* Separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
+* In editor, popup inside document window / content browser panel to view list of undo actions so you can click on a certain action to rollback/forward to
 
 ## Tech debt
 
