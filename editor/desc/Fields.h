@@ -59,12 +59,6 @@ namespace oly::editor
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
-		// TODO v9.3 what's the point of this if not using key?
-		void dump(toml::array& array) const
-		{
-			array.push_back(imtk::serializer<T>{}.dump(edit.truth()));
-		}
-
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			return path.empty() ? imp::matches_type(type, &value) : nullptr;
@@ -128,11 +122,6 @@ namespace oly::editor
 		{
 			if (key != imtk::key::null())
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<bool>{}.dump(value));
-		}
-
-		void dump(toml::array& array) const
-		{
-			array.push_back(imtk::serializer<bool>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
@@ -222,11 +211,6 @@ namespace oly::editor
 		{
 			if (key != imtk::key::null())
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<E>{}.dump(value));
-		}
-
-		void dump(toml::array& array) const
-		{
-			array.push_back(imtk::serializer<E>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
@@ -335,11 +319,6 @@ namespace oly::editor
 		{
 			if (key != imtk::key::null())
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<std::array<bool, N>>{}.dump(value));
-		}
-
-		void dump(toml::array& array) const
-		{
-			array.push_back(imtk::serializer<std::array<bool, N>>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)

@@ -156,14 +156,17 @@ namespace oly::editor
 			Draw(*desc.undo_history);
 	}
 	
-	void PreferencesDocument::Draw(undo_historySettingsDesc& desc)
+	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
 	{
 		IMTK_DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Draw(ContentBrowserSettingsDesc& desc)
 	{
-		IMTK_DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		if (auto subform = imtk::prop::subform("Undo History"))
+			Draw(*desc.undo_history);
 	}
 
 	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
@@ -226,14 +229,16 @@ namespace oly::editor
 		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
-	void PreferencesDocument::Load(imtk::toml_node node, undo_historySettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, UndoHistorySettingsDesc& desc)
 	{
 		IMTK_LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc)
 	{
-		IMTK_LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
 	void PreferencesDocument::Load(imtk::toml_node node, TreeViewSettingsDesc& desc)
@@ -279,14 +284,18 @@ namespace oly::editor
 		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
-	void PreferencesDocument::Dump(toml::table& table, undo_historySettingsDesc& desc)
+	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
 	{
 		IMTK_DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, ContentBrowserSettingsDesc& desc)
 	{
-		IMTK_DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, *desc.undo_history);
+		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)

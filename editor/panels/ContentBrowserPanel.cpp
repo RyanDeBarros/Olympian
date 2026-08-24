@@ -45,13 +45,12 @@ namespace oly::editor
 
 	ContentBrowserPanel::ContentBrowserPanel()
 		: _folder_history(Editor::GetPreferences().content_browser->folder_history_limit.value),
-		// TODO v9.3 separate undo history settings for content browser panel?
-		_undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
+		_undo_history(Editor::GetPreferences().content_browser->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
 	{
 		_listener = Editor::OnPreferencesChanged().subscribe([this]() {
 			const auto& pref = Editor::GetPreferences();
 			_folder_history.set_limit(pref.content_browser->folder_history_limit.value);
-			_undo_history.set_limits(pref.edit->undo_history->CountLimit(), pref.edit->undo_history->SizeLimit());
+			_undo_history.set_limits(pref.content_browser->undo_history->CountLimit(), pref.edit->undo_history->SizeLimit());
 		});
 
 		_favorited.config.selected = false;

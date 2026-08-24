@@ -22,7 +22,7 @@ namespace imtk::w
 		id_scope scope(&data);
 		item_result result;
 	
-		// TODO v9.3 do this for glm::vec2/3/4 for individual properties for each float box
+		// TODO v9.3 do this for glm::vec2/3/4 for individual properties for each float box ?
 
 		if (auto s = prop::grid::subproperty_scope())
 		{

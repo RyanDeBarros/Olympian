@@ -11,18 +11,18 @@ namespace oly::editor
 		M((IntField<1, imp::nullpotential>), size_limit) \
 		M((EnumField<MemoryUnit>), size_limit_unit)
 
-	struct undo_historySettingsDesc
+	struct UndoHistorySettingsDesc
 	{
-		IMTK_DESCRIPTOR_BODY(undo_historySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(UndoHistorySettingsDesc, UNDO_HISTORY_SETTINGS_GENERATOR);
 
-		undo_historySettingsDesc(imtk::datapath_link link = {});
+		UndoHistorySettingsDesc(imtk::datapath_link link = {});
 
 		size_t CountLimit() const;
 		size_t SizeLimit() const;
 	};
 
 #define EDIT_SETTINGS_GENERATOR(M) \
-		M((imtk::desc::sub<undo_historySettingsDesc>), undo_history)
+		M((imtk::desc::sub<UndoHistorySettingsDesc>), undo_history)
 
 	struct EditSettingsDesc
 	{
@@ -31,8 +31,12 @@ namespace oly::editor
 		EditSettingsDesc(imtk::datapath_link link = {});
 	};
 
-#define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
+#define CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR(M) \
 		M((IntField<1, imp::nullpotential>), folder_history_limit)
+
+#define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
+		CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR(M) \
+		M((imtk::desc::sub<UndoHistorySettingsDesc>), undo_history)
 
 	struct ContentBrowserSettingsDesc
 	{
