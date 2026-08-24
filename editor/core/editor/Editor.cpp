@@ -34,14 +34,16 @@ namespace oly::editor
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
 		_project_info(std::make_unique<ProjectInfo>())
 	{
-		imtk::init({
+		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
+
+		LoadAllIcons();
+
+		imtk::post_window_init({
 			.error_logger = [](std::string_view error) { BreakoutError::Log(error); },
 			.reset_icon = Icon(IconResource::Revert),
 			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
 			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); }
 		});
-
-		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
 			ShortcutManager::Instance().HandlePathDrop(count, paths);
@@ -51,8 +53,6 @@ namespace oly::editor
 			glfwSetWindowShouldClose(w, GLFW_FALSE);
 			Editor::instance().RequestShutdown();
 		});
-
-		LoadAllIcons();
 
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
