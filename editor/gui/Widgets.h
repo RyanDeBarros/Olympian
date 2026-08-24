@@ -4,88 +4,50 @@
 
 #include <imtk.hpp>
 
-template<>
-struct imtk::w::bound_widget<oly::editor::Rect> : public widget
+namespace imtk::w
 {
-	oly::editor::Rect& data;
-
-	struct config_impl
+	template<>
+	struct bound_widget<oly::editor::Rect> : public widget
 	{
-		struct sub_config
-		{
-			imp::potential<float> min = imp::nullpotential;
-			imp::potential<float> max = imp::nullpotential;
+		oly::editor::Rect& data;
+		bound_widget<float> x1;
+		bound_widget<float> x2;
+		bound_widget<float> y1;
+		bound_widget<float> y2;
 
-			float step = 0.f;
-			float step_fast = 0.f;
-			const char* format = "%.3f";
-			ImGuiInputTextFlags flags = 0;
-		};
+		bound_widget(oly::editor::Rect& data);
 
-		sub_config cfg_x1;
-		sub_config cfg_x2;
-		sub_config cfg_y1;
-		sub_config cfg_y2;
-	} config;
+	protected:
+		item_result draw_impl() override;
+	};
 
-	bound_widget(oly::editor::Rect& data, config_impl config = {}) : data(data), config(std::move(config)) {}
-
-protected:
-	item_result draw_impl() override;
-};
-
-template<>
-struct imtk::w::bound_widget<oly::editor::UVRect> : public widget
-{
-	oly::editor::UVRect& data;
-
-	struct config_impl
+	template<>
+	struct bound_widget<oly::editor::UVRect> : public widget
 	{
-		struct sub_config
-		{
-			float step = 0.f;
-			float step_fast = 0.f;
-			const char* format = "%.3f";
-			ImGuiInputTextFlags flags = 0;
-		};
+		oly::editor::UVRect& data;
+		bound_widget<float> x1;
+		bound_widget<float> x2;
+		bound_widget<float> y1;
+		bound_widget<float> y2;
 
-		sub_config cfg_x1;
-		sub_config cfg_x2;
-		sub_config cfg_y1;
-		sub_config cfg_y2;
-	} config;
+		bound_widget(oly::editor::UVRect& data);
 
-	bound_widget(oly::editor::UVRect& data, config_impl config = {}) : data(data), config(std::move(config)) {}
+	protected:
+		item_result draw_impl() override;
+	};
 
-protected:
-	item_result draw_impl() override;
-};
-
-template<>
-struct imtk::w::bound_widget<oly::editor::TopSidePadding> : public widget
-{
-	oly::editor::TopSidePadding& data;
-
-	struct config_impl
+	template<>
+	struct bound_widget<oly::editor::TopSidePadding> : public widget
 	{
-		struct sub_config
-		{
-			imp::potential<float> min = imp::nullpotential;
-			imp::potential<float> max = imp::nullpotential;
+		oly::editor::TopSidePadding& data;
+		bound_widget<float> left;
+		bound_widget<float> right;
+		bound_widget<float> top;
 
-			float step = 0.f;
-			float step_fast = 0.f;
-			const char* format = "%.3f";
-			ImGuiInputTextFlags flags = 0;
-		};
+		bound_widget(oly::editor::TopSidePadding& data);
 
-		sub_config cfg_left;
-		sub_config cfg_right;
-		sub_config cfg_top;
-	} config;
+	protected:
+		item_result draw_impl() override;
+	};
+}
 
-	bound_widget(oly::editor::TopSidePadding& data, config_impl config = {}) : data(data), config(std::move(config)) {}
-
-protected:
-	item_result draw_impl() override;
-};
