@@ -1,7 +1,6 @@
 #include "LogPanel.h"
 
 #include "core/windows/MainWindow.h"
-#include "core/Errors.h"
 #include "panels/PanelManager.h"
 
 #include <imtk.hpp>
@@ -13,7 +12,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<LogPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of LogPanel");
+			imtk::breakout_error::throw_("No instance of LogPanel");
 	}
 
 	void LogPanel::InitImpl()

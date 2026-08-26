@@ -1,6 +1,5 @@
 #include "PreferencesPanel.h"
 
-#include "core/Errors.h"
 #include "core/editor/Editor.h"
 #include "core/windows/MainWindow.h"
 #include "panels/PanelManager.h"
@@ -21,7 +20,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<PreferencesPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of PreferencesPanel");
+			imtk::breakout_error::throw_("No instance of PreferencesPanel");
 	}
 
 	void PreferencesPanel::InitImpl()

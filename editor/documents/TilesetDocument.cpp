@@ -1,7 +1,5 @@
 #include "TilesetDocument.h"
 
-#include "core/Errors.h"
-
 #include "documents/TextureDocument.h"
 
 #include "panels/ContentBrowserPanel.h"
@@ -502,7 +500,7 @@ namespace oly::editor
 				active.texture = {};
 			else
 			{
-				BreakoutError::NotifyScope notify(true);
+				imtk::breakout_error::notify_scope ns(true);
 				try
 				{
 					std::string filepath = detail::ResourcePath(desc.texture.value).string();
@@ -538,8 +536,9 @@ namespace oly::editor
 						}
 					}
 				}
-				catch (const BreakoutError& e)
+				catch (const imtk::breakout_error& e)
 				{
+					e.log();
 					active.error = TextureError::CannotLoad;
 				}
 			}

@@ -1,6 +1,5 @@
 #include "ContentBrowserPanel.h"
 
-#include "core/Errors.h"
 #include "core/PathInfo.h"
 
 #include "core/editor/Editor.h"
@@ -61,7 +60,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<ContentBrowserPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of ContentBrowserPanel");
+			imtk::breakout_error::throw_("No instance of ContentBrowserPanel");
 	}
 
 	void ContentBrowserPanel::InitImpl()

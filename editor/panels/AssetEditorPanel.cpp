@@ -4,7 +4,6 @@
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"
-#include "core/Errors.h"
 
 #include "panels/PanelManager.h"
 #include "panels/ContentBrowserPanel.h"
@@ -32,7 +31,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of AssetEditorPanel");
+			imtk::breakout_error::throw_("No instance of AssetEditorPanel");
 	}
 
 	void AssetEditorPanel::InitImpl()

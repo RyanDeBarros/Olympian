@@ -1,7 +1,6 @@
 #include "ActiveDocument.h"
 
 #include "documents/IDocument.h"
-#include "core/Errors.h"
 
 namespace oly::editor
 {
@@ -11,7 +10,7 @@ namespace oly::editor
 	ActiveDocument::ActiveDocument(IDocument& doc)
 	{
 		if (ACTIVE_INSTANCE)
-			BreakoutError::Throw("ActiveDocument::ActiveDocument(): active document already exists");
+			imtk::breakout_error::throw_("ActiveDocument::ActiveDocument(): active document already exists");
 
 		ACTIVE_INSTANCE = this;
 		ACTIVE_DOCUMENT = &doc;
@@ -37,6 +36,6 @@ namespace oly::editor
 		if (ACTIVE_DOCUMENT)
 			return *ACTIVE_DOCUMENT;
 		else
-			BreakoutError::Throw("ActiveDocument::Get(): no active document");
+			imtk::breakout_error::throw_("ActiveDocument::Get(): no active document");
 	}
 }

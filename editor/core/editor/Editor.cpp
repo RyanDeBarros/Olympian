@@ -1,6 +1,5 @@
 #include "Editor.h"
 
-#include "core/Errors.h"
 #include "core/windows/ProjectSelectWindow.h"
 #include "core/windows/MainWindow.h"
 
@@ -36,7 +35,6 @@ namespace oly::editor
 		LoadAllIcons();
 
 		imtk::post_window_init({
-			.error_logger = [](std::string_view error) { BreakoutError::Log(error); },
 			.reset_icon = Icon(IconResource::Revert),
 			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
 			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); }
@@ -74,7 +72,7 @@ namespace oly::editor
 		imtk::begin_frame();
 
 		// TODO v9.4 likewise with breakout errors, use imtk::handle_error at each entry point (panel, document, etc.)
-		imtk::handle_error([this]() {
+		imtk::handle_errors([this]() {
 			_shortcut_manager->PollShortcuts();
 
 			switch (_app_state)

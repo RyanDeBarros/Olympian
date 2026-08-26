@@ -1,7 +1,5 @@
 #include "ResourceLoader.h"
 
-#include "core/Errors.h"
-
 namespace oly::editor
 {
 	static std::unordered_map<IconResource, imtk::res::icon_id> icon_conversion;
@@ -26,11 +24,11 @@ namespace oly::editor
 		{
 			switch (resource)
 			{
-#define THROW_MISSING_ICON(Icon) case IconResource::Icon: BreakoutError::Throw("Texture not available for resource: \"" "res/icons/" #Icon ".png\"");
+#define THROW_MISSING_ICON(Icon) case IconResource::Icon: imtk::breakout_error::throw_("Texture not available for resource: \"" "res/icons/" #Icon ".png\"");
 				ICON_RESOURCE_GENERATOR(THROW_MISSING_ICON)
 #undef THROW_MISSING_ICON
 			default:
-				BreakoutError::Throw("Texture not available for unknown resource: " + std::to_string(static_cast<int>(resource)));
+				imtk::breakout_error::throw_("Texture not available for unknown resource: " + std::to_string(static_cast<int>(resource)));
 			}
 		}
 	}

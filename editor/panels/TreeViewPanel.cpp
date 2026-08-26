@@ -6,7 +6,6 @@
 
 #include "core/windows/MainWindow.h"
 
-#include "core/Errors.h"
 #include "core/PathInfo.h"
 
 #include "panels/PanelManager.h"
@@ -187,7 +186,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of TreeViewPanel");
+			imtk::breakout_error::throw_("No instance of TreeViewPanel");
 	}
 
 	void TreeViewPanel::InitImpl()

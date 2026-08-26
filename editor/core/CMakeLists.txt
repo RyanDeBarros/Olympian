@@ -1,11 +1,9 @@
 target_sources(OlympianEditor PRIVATE
 	SpecialUndoActions.cpp
-	Errors.cpp
 	InputListener.cpp
 	MemoryUnit.cpp
 	PathInfo.cpp
 	Types.cpp
-	
 )
 
 add_subdirectory(editor)
