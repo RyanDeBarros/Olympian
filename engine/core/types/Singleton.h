@@ -2,6 +2,8 @@
 
 #include <type_traits>
 
+// TODO v9.3 use imp::singleton instead
+
 namespace oly
 {
 	template<typename T>

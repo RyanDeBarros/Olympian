@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/Printer.h"
-#include "core/editor/Logger.h"
 
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
@@ -44,7 +43,7 @@ namespace oly::editor
 				Printer{}(ss, final_value);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -69,7 +68,7 @@ namespace oly::editor
 				Printer{}(ss, initial_value);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -118,7 +117,7 @@ namespace oly::editor
 				Printer{}(ss, final_value);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -143,7 +142,7 @@ namespace oly::editor
 				Printer{}(ss, initial_value);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}

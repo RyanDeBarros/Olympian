@@ -1,7 +1,5 @@
 #include "SignalDocument.h"
 
-#include "core/editor/Notifier.h"
-
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
@@ -30,7 +28,7 @@ namespace oly::editor
 	void SignalDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		LoadAsset();
 	}
@@ -67,7 +65,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load signal - corrupted asset: " + _oly_path.string());
+				imtk::notify_error("cannot load signal - corrupted asset: " + _oly_path.string());
 
 			MarkClean();
 		}

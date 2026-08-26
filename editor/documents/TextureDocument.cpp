@@ -1,6 +1,5 @@
 #include "TextureDocument.h"
 
-#include "core/editor/Notifier.h"
 #include "core/editor/ResourceLoader.h"
 
 #include "assets/TranslateKey.h"
@@ -32,7 +31,7 @@ namespace oly::editor
 	void TextureDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
@@ -69,7 +68,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(imtk::toml_node(table), _desc.disk, _svg, _gif);
 			else
-				Notifier::NotifyError("cannot load texture - corrupted asset: " + GetSourcePath().string());
+				imtk::notify_error("cannot load texture - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}

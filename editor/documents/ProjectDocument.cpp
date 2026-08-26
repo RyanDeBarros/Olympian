@@ -1,7 +1,6 @@
 #include "ProjectDocument.h"
 
 #include "core/editor/ProjectInfo.h"
-#include "core/editor/Notifier.h"
 
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
@@ -62,7 +61,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load project file - corrupted asset: " + GetOlyPath().string());
+				imtk::notify_error("cannot load project file - corrupted asset: " + GetOlyPath().string());
 
 			MarkClean();
 		}

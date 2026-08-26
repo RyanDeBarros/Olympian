@@ -1,9 +1,8 @@
 #include "Errors.h"
 
-#include "core/editor/Logger.h"
-#include "core/editor/Notifier.h"
-
 #include <stack>
+
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -23,9 +22,9 @@ namespace oly::editor
 	void BreakoutError::Log(std::string_view error)
 	{
 		if (!NOTIFY_STACK.empty() && NOTIFY_STACK.top())
-			Notifier::NotifyError(std::string(error));
+			imtk::notify_error(std::string(error));
 		else
-			Logger::LogError(std::string(error));
+			imtk::log_error(std::string(error));
 	}
 
 	BreakoutError::NotifyScope::NotifyScope(bool notify)

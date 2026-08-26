@@ -1,7 +1,5 @@
 #include "FontDocument.h"
 
-#include "core/editor/Notifier.h"
-
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
@@ -26,7 +24,7 @@ namespace oly::editor
 	void FontDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
 		_display_text.value = "Abc 123";
@@ -61,7 +59,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load font - corrupted asset: " + GetSourcePath().string());
+				imtk::notify_error("cannot load font - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}

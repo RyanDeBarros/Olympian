@@ -1,7 +1,6 @@
 #include "PathInfo.h"
 
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/Logger.h"
 
 #include "core/Macros.h"
 
@@ -88,7 +87,7 @@ namespace oly::editor
             ILFree(pidl);
         }
         else
-            Logger::LogError("Failed to reveal path " + path.generic_string());
+            imtk::log_error("Failed to reveal path " + path.generic_string());
 
 #elif OLY_OS_APPLE
         std::string cmd;

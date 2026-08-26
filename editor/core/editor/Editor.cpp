@@ -5,8 +5,6 @@
 #include "core/windows/MainWindow.h"
 
 #include "core/editor/LiveSettings.h"
-#include "core/editor/Logger.h"
-#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/ShortcutManager.h"
@@ -29,7 +27,6 @@ namespace oly::editor
 {	
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
-		_logger(std::make_unique<Logger>()),
 		_main_window(std::make_unique<MainWindow>()),
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
 		_project_info(std::make_unique<ProjectInfo>())
@@ -152,11 +149,6 @@ namespace oly::editor
 		return *instance()._project_select_window;
 	}
 
-	Logger& Editor::GetLogger()
-	{
-		return *instance()._logger;
-	}
-
 	MainWindow& Editor::GetMainWindow()
 	{
 		return *instance()._main_window;
@@ -213,7 +205,7 @@ namespace oly::editor
 			break;
 		}
 
-		Notifier::NotifyError(std::move(message));
+		imtk::notify_error(std::move(message));
 	}
 
 	bool Editor::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)

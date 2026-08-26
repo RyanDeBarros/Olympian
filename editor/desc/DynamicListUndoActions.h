@@ -1,7 +1,6 @@
 #pragma once
 
 #include "core/Printer.h"
-#include "core/editor/Logger.h"
 
 #include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
@@ -50,7 +49,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -76,7 +75,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -128,7 +127,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -155,7 +154,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -203,7 +202,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -225,7 +224,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -283,7 +282,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -314,7 +313,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -367,7 +366,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -393,7 +392,7 @@ namespace oly::editor
 				Printer{}(ss, deleted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -445,7 +444,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -472,7 +471,7 @@ namespace oly::editor
 				Printer{}(ss, inserted_element);
 			}
 			ss << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -520,7 +519,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -542,7 +541,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -600,7 +599,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}
@@ -631,7 +630,7 @@ namespace oly::editor
 
 			std::stringstream ss;
 			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
-			Logger::Log(success ? LogLevel::Success : LogLevel::Error, ss.str());
+			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
 		}

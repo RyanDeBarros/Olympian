@@ -1,7 +1,6 @@
 #include "AssetEditorPanel.h"
 
 #include "core/windows/MainWindow.h"
-#include "core/editor/Logger.h"
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"

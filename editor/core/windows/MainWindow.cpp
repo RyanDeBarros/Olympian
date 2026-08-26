@@ -2,7 +2,6 @@
 
 #include "core/editor/Editor.h"
 #include "core/windows/MainMenuBar.h"
-#include "core/editor/Logger.h"
 
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
@@ -33,6 +32,11 @@ namespace oly::editor
 
     void MainWindow::Init()
     {
+        _notif_handle = imtk::on_receive_notification().subscribe([this](imtk::notification notif) {
+            imtk::log(notif.level, notif.message);
+            _notifications.push_back(std::move(notif));
+        });
+
         _panel_manager->Add<AssetEditorPanel>().Open();
         _panel_manager->Add<ContentBrowserPanel>().Open();
         _panel_manager->Add<LogPanel>().Open();
@@ -123,35 +127,28 @@ namespace oly::editor
         return *_main_menu_bar;
     }
 
-    void MainWindow::PushNotification(Notification notif)
-    {
-        Logger::Log(notif.level, notif.message);
-        _notifications.push_back(std::move(notif));
-    }
-
     void MainWindow::DrawNotifications()
     {
         for (size_t i = 0; i < _notifications.size(); ++i)
         {
-            Notification& notif = _notifications[i];
+            auto& notif = _notifications[i];
 
-            float alpha = std::clamp(1.f - notif.age / notif.timer, 0.f, 1.f);
-            imtk::style_var alpha_var(ImGuiStyleVar_Alpha, alpha);
-            ImGuiWindowFlags flags =
-                ImGuiWindowFlags_AlwaysAutoResize |
-                ImGuiWindowFlags_NoDecoration |
-                ImGuiWindowFlags_NoInputs;
+            // TODO v9.3 notif.age_alpha()
+            imtk::style_var alpha_var(ImGuiStyleVar_Alpha, notif.age_alpha());
+            ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
+                                     ImGuiWindowFlags_NoDecoration |
+                                     ImGuiWindowFlags_NoInputs;
 
             if (auto _ = imtk::window("##notif" + std::to_string(i), flags))
             {
-                if (auto _ = imtk::style_color(ImGuiCol_Text, LogLevelColor(notif.level)))
+                if (auto _ = imtk::style_color(ImGuiCol_Text, imtk::log_level_color(notif.level)))
                     ImGui::TextUnformatted(notif.message.c_str());
             }
 
-            notif.age += ImGui::GetIO().DeltaTime;
+            notif.update();
         }
         
-        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const Notification& notif) { return notif.age >= notif.timer; });
+        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const imtk::notification& notif) { return notif.expired(); });
         _notifications.erase(it, _notifications.end());
     }
 }

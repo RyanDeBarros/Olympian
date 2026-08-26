@@ -1,7 +1,5 @@
 #include "InputListener.h"
 
-#include "core/editor/Notifier.h"
-
 namespace oly::editor
 {
 	std::optional<detail::KeyInput> InputListener::ConvertKey(ImGuiKey key)
@@ -357,7 +355,7 @@ namespace oly::editor
 				if (auto k = ConvertKey(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -375,7 +373,7 @@ namespace oly::editor
 				if (auto b = ConvertMouseButton(mb))
 					return *b;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -393,7 +391,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadButton(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -411,7 +409,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis1D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -429,7 +427,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis2D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}

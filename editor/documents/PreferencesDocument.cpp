@@ -1,7 +1,6 @@
 #include "PreferencesDocument.h"
 
 #include "core/editor/Editor.h"
-#include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
 #include "fio/Trashcan.h"
@@ -70,7 +69,7 @@ namespace oly::editor
 			}
 			catch (const toml::parse_error& e)
 			{
-				Logger::LogWarning("Cannot load editor preferences: " + std::string(e.what()));
+				imtk::log_warning("Cannot load editor preferences: " + std::string(e.what()));
 			}
 		}
 

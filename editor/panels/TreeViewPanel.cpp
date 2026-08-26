@@ -1,8 +1,6 @@
 #include "TreeViewPanel.h"
 
 #include "core/editor/Editor.h"
-#include "core/editor/Logger.h"
-#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 
@@ -116,7 +114,7 @@ namespace oly::editor
 		{
 			if (ec)
 			{
-				Logger::LogError("TreeViewNode::RefreshSubnodes(): " + ec.message());
+				imtk::log_error("TreeViewNode::RefreshSubnodes(): " + ec.message());
 				subnodes.clear();
 				return;
 			}
@@ -254,13 +252,13 @@ namespace oly::editor
 		{
 			if (!folder.is_directory())
 			{
-				Notifier::NotifyError("\"" + folder.string() + "\" is not a folder");
+				imtk::notify_error("\"" + folder.string() + "\" is not a folder");
 				return;
 			}
 
 			if (!folder.resource_parents(parts))
 			{
-				Notifier::NotifyError("\"" + folder.string() + "\" is not located in the project resource folder");
+				imtk::notify_error("\"" + folder.string() + "\" is not located in the project resource folder");
 				return;
 			}
 
@@ -288,7 +286,7 @@ namespace oly::editor
 
 			if (!found)
 			{
-				Notifier::NotifyError("Could not locate \"" + folder.string() + "\" in tree view");
+				imtk::notify_error("Could not locate \"" + folder.string() + "\" in tree view");
 				return;
 			}
 		}

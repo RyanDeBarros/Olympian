@@ -35,7 +35,6 @@ namespace oly::editor
 
 		std::unique_ptr<ProjectSelectWindow> _project_select_window;
 
-		std::unique_ptr<Logger> _logger;
 		std::unique_ptr<MainWindow> _main_window;
 		std::unique_ptr<ShortcutManager> _shortcut_manager;
 		std::unique_ptr<ProjectInfo> _project_info;

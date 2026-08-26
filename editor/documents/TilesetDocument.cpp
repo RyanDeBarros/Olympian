@@ -1,6 +1,5 @@
 #include "TilesetDocument.h"
 
-#include "core/editor/Notifier.h"
 #include "core/Errors.h"
 
 #include "documents/TextureDocument.h"
@@ -137,7 +136,7 @@ namespace oly::editor
 	void TilesetDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		_individual_editor = {};
 		_group_editors = {};
@@ -176,7 +175,7 @@ namespace oly::editor
 			if (err.empty())
 				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load tileset - corrupted asset: " + _oly_path.string());
+				imtk::notify_error("cannot load tileset - corrupted asset: " + _oly_path.string());
 
 			MarkClean();
 		}
@@ -406,7 +405,7 @@ namespace oly::editor
 								result.modified = true;
 							}
 							else
-								Notifier::NotifyError("Path is not located in resource folder");
+								imtk::notify_error("Path is not located in resource folder");
 						}
 					}
 

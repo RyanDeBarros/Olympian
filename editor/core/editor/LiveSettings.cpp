@@ -1,6 +1,5 @@
 #include "LiveSettings.h"
 
-#include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
 #include "definitions/Keys.h"
@@ -31,7 +30,7 @@ namespace oly::editor
 			}
 			catch (const toml::parse_error& e)
 			{
-				Logger::LogWarning("Cannot load editor live settings: " + std::string(e.what()));
+				imtk::log_warning("Cannot load editor live settings: " + std::string(e.what()));
 			}
 		}
 

@@ -1,7 +1,6 @@
 #include "FIOOperation.h"
 
 #include "core/PathInfo.h"
-#include "core/editor/Logger.h"
 #include "fio/Trashcan.h"
 #include "documents/DocumentManager.h"
 
@@ -31,7 +30,7 @@ namespace oly::editor::fio
 		if (ec)
 		{
 			ss << ": " << ec.message();
-			Logger::LogError(ss.str());
+			imtk::log_error(ss.str());
 			return false;
 		}
 
@@ -49,14 +48,14 @@ namespace oly::editor::fio
 			if (ec)
 			{
 				ss << ": " << ec.message();
-				Logger::LogError(ss.str());
+				imtk::log_error(ss.str());
 				return false;
 			}
 
 			DocumentManager::Instance().NotifyRename(*aux_old_path, aux_new_path);
 		}
 
-		Logger::LogSuccess(ss.str());
+		imtk::log_success(ss.str());
 		return true;
 	}
 
@@ -72,7 +71,7 @@ namespace oly::editor::fio
 		if (ec)
 		{
 			ss << ": " << ec.message();
-			Logger::LogError(ss.str());
+			imtk::log_error(ss.str());
 			return false;
 		}
 
@@ -90,14 +89,14 @@ namespace oly::editor::fio
 			if (ec)
 			{
 				ss << ": " << ec.message();
-				Logger::LogError(ss.str());
+				imtk::log_error(ss.str());
 				return false;
 			}
 
 			DocumentManager::Instance().NotifyRename(*aux_new_path, aux_old_path);
 		}
 
-		Logger::LogSuccess(ss.str());
+		imtk::log_success(ss.str());
 		return true;
 	}
 
@@ -114,13 +113,13 @@ namespace oly::editor::fio
 		{
 			std::stringstream ss;
 			ss << "fio::DeletePathAction::forward() failed to delete \"" << del_path.get_resource_shorthand() << "\"";
-			Logger::LogError(ss.str());
+			imtk::log_error(ss.str());
 			return false;
 		}
 
 		std::stringstream ss;
 		ss << "fio::DeletePathAction::forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
-		Logger::LogSuccess(ss.str());
+		imtk::log_success(ss.str());
 
 		if (_aux_path)
 		{
@@ -128,13 +127,13 @@ namespace oly::editor::fio
 			{
 				std::stringstream ss;
 				ss << "fio::DeletePathAction::forward() failed to delete \"" << _aux_path->get_resource_shorthand() << "\"";
-				Logger::LogError(ss.str());
+				imtk::log_error(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
 			ss << "fio::DeletePathAction::forward() success: deleted \"" << _aux_path->get_resource_shorthand() << "\"";
-			Logger::LogSuccess(ss.str());
+			imtk::log_success(ss.str());
 		}
 
 		return true;
@@ -148,26 +147,26 @@ namespace oly::editor::fio
 			{
 				std::stringstream ss;
 				ss << "fio::DeletePathAction::backward() failed to restore \"" << _aux_path->get_resource_shorthand() << "\"";
-				Logger::LogError(ss.str());
+				imtk::log_error(ss.str());
 				return false;
 			}
 
 			std::stringstream ss;
 			ss << "fio::DeletePathAction::backward() success: restored \"" << _aux_path->get_resource_shorthand() << "\"";
-			Logger::LogSuccess(ss.str());
+			imtk::log_success(ss.str());
 		}
 
 		if (!Trashcan::Restore(del_path))
 		{
 			std::stringstream ss;
 			ss << "fio::DeletePathAction::backward() failed to restore \"" << del_path.get_resource_shorthand() << "\"";
-			Logger::LogError(ss.str());
+			imtk::log_error(ss.str());
 			return false;
 		}
 
 		std::stringstream ss;
 		ss << "fio::DeletePathAction::backward() success: restored \"" << del_path.get_resource_shorthand() << "\"";
-		Logger::LogSuccess(ss.str());
+		imtk::log_success(ss.str());
 
 		return true;
 	}
@@ -183,14 +182,14 @@ namespace oly::editor::fio
 		{
 			std::stringstream ss;
 			ss << "fio::CreateAssetAction::forward() success: restored \"" << asset_path.get_resource_shorthand() << "\"";
-			Logger::LogSuccess(ss.str());
+			imtk::log_success(ss.str());
 
 			return true;
 		}
 
 		std::stringstream ss;
 		ss << "fio::CreateAssetAction::forward() failed to restore \"" << asset_path.get_resource_shorthand() << "\"";
-		Logger::LogError(ss.str());
+		imtk::log_error(ss.str());
 		return false;
 	}
 
@@ -200,14 +199,14 @@ namespace oly::editor::fio
 		{
 			std::stringstream ss;
 			ss << "fio::CreateAssetAction::backward() success: deleted \"" << asset_path.get_resource_shorthand() << "\"";
-			Logger::LogSuccess(ss.str());
+			imtk::log_success(ss.str());
 
 			return true;
 		}
 
 		std::stringstream ss;
 		ss << "fio::CreateAssetAction::backward() failed to delete \"" << asset_path.get_resource_shorthand() << "\"";
-		Logger::LogError(ss.str());
+		imtk::log_error(ss.str());
 		return false;
 	}
 
