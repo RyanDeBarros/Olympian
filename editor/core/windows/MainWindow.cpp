@@ -133,7 +133,6 @@ namespace oly::editor
         {
             auto& notif = _notifications[i];
 
-            // TODO v9.3 notif.age_alpha()
             imtk::style_var alpha_var(ImGuiStyleVar_Alpha, notif.age_alpha());
             ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
                                      ImGuiWindowFlags_NoDecoration |

@@ -9,7 +9,7 @@
 
 #include <imtk.hpp>
 
-#include <imp/functional_event.hpp>
+#include <imp/event.hpp>
 #include <imp/timeline_queue.hpp>
 #include <imp/undo_history.hpp>
 
@@ -28,7 +28,7 @@ namespace oly::editor
 		imp::timeline_queue<std::filesystem::path> _folder_history;
 		imp::undo_history _undo_history;
 		std::string _rename_buffer;
-		imp::functional_event<>::handle _listener;
+		imp::event_listener _listener;
 
 		struct NewAssetInfo
 		{

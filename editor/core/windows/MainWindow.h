@@ -21,8 +21,7 @@ namespace oly::editor
 
 		std::unique_ptr<MainMenuBar> _main_menu_bar;
 
-		// TODO v9.3 rename imp::functional_event to imp::event and imp::functional_event<...>::handle to just imp::event_listener
-		imp::functional_event<imtk::notification>::handle _notif_handle;
+		imp::event_listener _notif_handle;
 		std::vector<imtk::notification> _notifications;
 
 	public:

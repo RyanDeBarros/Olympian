@@ -55,7 +55,7 @@ namespace oly::editor
 
 	Editor::~Editor() = default;
 
-	imp::functional_event<>& Editor::OnPreferencesChanged()
+	imp::event<>& Editor::OnPreferencesChanged()
 	{
 		return instance()._on_preferences_changed;
 	}
@@ -65,13 +65,12 @@ namespace oly::editor
 		return _os_window->should_close();
 	}
 
-	// TODO v9.4 handle breakout errors - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
+	// TODO v9.3 using imtk::handle_error throughout project - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();
 		imtk::begin_frame();
 
-		// TODO v9.4 likewise with breakout errors, use imtk::handle_error at each entry point (panel, document, etc.)
 		imtk::handle_errors([this]() {
 			_shortcut_manager->PollShortcuts();
 

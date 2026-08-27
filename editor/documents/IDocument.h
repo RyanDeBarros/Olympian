@@ -21,8 +21,8 @@ namespace oly::editor
 
 	private:
 		imp::checkpoint_undo_history _undo_history;
-		imp::functional_event<>::handle _preferences_listener;
-		imp::functional_event<>::handle _uh_listener;
+		imp::event_listener _preferences_listener;
+		imp::event_listener _uh_listener;
 
 		bool _dirty = false;
 		bool _initialized = false;
