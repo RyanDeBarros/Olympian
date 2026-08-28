@@ -2,7 +2,6 @@
 
 #include "desc/DescIO.h"
 #include "desc/Serializer.h"
-#include "desc/FieldSetAction.h"
 
 #include "gui/DynamicList.h"
 
@@ -76,7 +75,7 @@ namespace oly::editor
 		void CheckUndoAction()
 		{
 			if (auto original = edit.consume_published_from())
-				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
+				imtk::field::push_set_action(link.compute_path(), std::move(*original), edit.truth());
 		}
 
 		void draw()
@@ -139,7 +138,7 @@ namespace oly::editor
 				imtk::prop::value::add_component(std::make_unique<imtk::w::bound_widget<bool>>(value));
 
 			if (og != value)
-				PushFieldSetAction(link.compute_path(), og, value);
+				imtk::field::push_set_action(link.compute_path(), og, value);
 		}
 	};
 
@@ -231,7 +230,7 @@ namespace oly::editor
 
 			value = static_cast<E>(int_value);
 			if (og != value)
-				PushFieldSetAction(link.compute_path(), og, value);
+				imtk::field::push_set_action(link.compute_path(), og, value);
 		}
 
 		static imtk::label_span_registry::handle ComboNames();
@@ -359,7 +358,7 @@ namespace oly::editor
 			}
 			
 			if (og != value)
-				PushFieldSetAction(link.compute_path(), og, value);
+				imtk::field::push_set_action(link.compute_path(), og, value);
 		}
 	};
 
@@ -415,7 +414,7 @@ namespace oly::editor
 				imtk::prop::value::add_component(std::make_unique<imtk::w::combo_widget>(index, names));
 
 			if (initial != index)
-				PushFieldSetAction(link.compute_path(), initial, index);
+				imtk::field::push_set_action(link.compute_path(), initial, index);
 		}
 
 		void load(imtk::toml_node node)
@@ -531,7 +530,7 @@ namespace oly::editor
 		void CheckUndoAction()
 		{
 			if (auto original = edit.consume_published_from())
-				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
+				imtk::field::push_set_action(link.compute_path(), std::move(*original), edit.truth());
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
@@ -608,7 +607,7 @@ namespace oly::editor
 		void CheckUndoAction()
 		{
 			if (auto original = edit.consume_published_from())
-				PushFieldSetAction(link.compute_path(), std::move(*original), edit.truth());
+				imtk::field::push_set_action(link.compute_path(), std::move(*original), edit.truth());
 		}
 
 		void load(imtk::toml_node node)
@@ -733,7 +732,7 @@ namespace oly::editor
 
 			SetEnum();
 			if (initial != value)
-				PushFieldSetAction(link.compute_path(), initial, value);
+				imtk::field::push_set_action(link.compute_path(), initial, value);
 		}
 
 		void SetFlags()

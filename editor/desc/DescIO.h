@@ -5,7 +5,6 @@
 #include "gui/DynamicList.h"
 #include "gui/Widgets.h"
 
-#include "desc/FieldSetAction.h"
 #include "desc/DynamicListUndoActions.h"
 
 #include <imtk.hpp>

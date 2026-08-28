@@ -290,7 +290,7 @@ namespace oly::editor
 				KerningDesc original;
 				original.distance.value = og_distance ? *og_distance : k.distance.value;
 				original.pair.value = og_pair ? *og_pair : k.pair.value;
-				PushDescriptorSetAction(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
+				imtk::desc::push_set_action(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}
 	}

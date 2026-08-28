@@ -1,6 +1,6 @@
 #pragma once
 
-#include "desc/FieldSetAction.h"
+#include <imtk.hpp>
 
 #include <imp/box.hpp>
 
@@ -47,7 +47,7 @@ namespace oly::editor
 		std::unique_ptr<imp::undo_action> ScratchUndoAction(imp::box original) const override
 		{
 			if (auto og = original.consume<Descriptor>())
-				return std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
+				return std::make_unique<imtk::desc::set_action<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 			else
 				return nullptr;
 		}
@@ -59,7 +59,7 @@ namespace oly::editor
 				if (scratch.query_dirty(*og))
 				{
 					if (auto og = original.consume<Descriptor>())
-						action = std::make_unique<DescriptorSetAction<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
+						action = std::make_unique<imtk::desc::set_action<Descriptor, void>>(imtk::datapath_view(), std::move(*og), imtk::desc::clone_data(scratch));
 					else
 						action = nullptr;
 

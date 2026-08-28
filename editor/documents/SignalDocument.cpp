@@ -223,7 +223,7 @@ namespace oly::editor
 				SignalDesc initial_desc = imtk::desc::clone_data(desc); \
 				initial_desc.binding.value = initial_binding; \
 				desc.variant.set<T##Desc>(); \
-				PushDescriptorSetAction<SignalDesc, BriefDescPrinter>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
+				imtk::desc::push_set_action<SignalDesc, BriefDescPrinter>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
 			} \
 			break; \
 		}
@@ -317,7 +317,7 @@ namespace oly::editor
 		}
 		
 		if (initial != desc.key.index)
-			PushFieldSetAction(desc.key.link.compute_path(), initial, desc.key.index);
+			imtk::field::push_set_action(desc.key.link.compute_path(), initial, desc.key.index);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
@@ -361,7 +361,7 @@ namespace oly::editor
 		}
 
 		if (initial != desc.button.index)
-			PushFieldSetAction(desc.button.link.compute_path(), initial, desc.button.index);
+			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
@@ -405,7 +405,7 @@ namespace oly::editor
 		}
 
 		if (initial != desc.button.index)
-			PushFieldSetAction(desc.button.link.compute_path(), initial, desc.button.index);
+			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index);
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(*desc.modifier);
@@ -436,7 +436,7 @@ namespace oly::editor
 		}
 
 		if (initial != desc.axis.index)
-			PushFieldSetAction(desc.axis.link.compute_path(), initial, desc.axis.index);
+			imtk::field::push_set_action(desc.axis.link.compute_path(), initial, desc.axis.index);
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
@@ -472,7 +472,7 @@ namespace oly::editor
 
 		desc.axis.value = static_cast<detail::GamepadAxis2D>(int_value);
 		if (og != desc.axis.value)
-			PushFieldSetAction(desc.axis.link.compute_path(), og, desc.axis.value);
+			imtk::field::push_set_action(desc.axis.link.compute_path(), og, desc.axis.value);
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
