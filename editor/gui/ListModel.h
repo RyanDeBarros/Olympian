@@ -129,7 +129,7 @@ namespace oly::editor::gui
 		imtk::item_result DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
 	};
 
-	template<typename T, typename Printer = StandardPrinter<T>>
+	template<typename T, typename Printer = imtk::standard_printer<T>>
 	struct VectorAdapter : public IListAdapter
 	{
 		const imtk::desc::vector<T>& v;
@@ -173,7 +173,7 @@ namespace oly::editor::gui
 	template<typename T>
 	std::unique_ptr<IListAdapter> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
 	{
-		return std::make_unique<VectorAdapter<T, StandardPrinter<T>>>(vector);
+		return std::make_unique<VectorAdapter<T, imtk::standard_printer<T>>>(vector);
 	}
 
 	template<typename Printer, typename T>

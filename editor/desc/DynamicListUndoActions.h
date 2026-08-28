@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/Printer.h"
-
 #include "documents/IDocument.h"
 
 #include "util/FixedArray.h"
@@ -12,7 +10,7 @@
 
 namespace oly::editor
 {
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	struct DynamicListDeleteAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
@@ -85,13 +83,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	void ExecuteDynamicListDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
 		imp::undo_history::active_instance().execute(std::make_unique<DynamicListDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	struct DynamicListInsertAction : public imp::undo_action
 	{
 		using ListType = std::vector<ElementType>;
@@ -164,7 +162,7 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	void ExecuteDynamicListInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
 		imp::undo_history::active_instance().execute(std::make_unique<DynamicListInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));
@@ -329,7 +327,7 @@ namespace oly::editor
 		imp::undo_history::active_instance().execute(std::make_unique<DynamicListResizeAction<ElementType>>(list_path, initial_size, final_size));
 	}
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	struct DynamicVectorDescDeleteAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
@@ -402,13 +400,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	void ExecuteDynamicVectorDescDeleteAction(imtk::datapath_view list_path, size_t delete_index)
 	{
 		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescDeleteAction<ElementType, Printer>>(list_path, delete_index, ElementType{}));
 	}
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	struct DynamicVectorDescInsertAction : public imp::undo_action
 	{
 		using ListType = imtk::desc::vector<ElementType>;
@@ -481,7 +479,7 @@ namespace oly::editor
 		}
 	};
 
-	template<typename ElementType, typename Printer = StandardPrinter<ElementType>>
+	template<typename ElementType, typename Printer = imtk::standard_printer<ElementType>>
 	void ExecuteDynamicVectorDescInsertAction(imtk::datapath_view list_path, size_t insert_index)
 	{
 		imp::undo_history::active_instance().execute(std::make_unique<DynamicVectorDescInsertAction<ElementType, Printer>>(list_path, insert_index, ElementType{}));

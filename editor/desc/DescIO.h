@@ -47,7 +47,7 @@ namespace oly::editor
 			}
 		}
 
-		template<typename T, typename Printer = StandardPrinter<T>>
+		template<typename T, typename Printer = imtk::standard_printer<T>>
 		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
 			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
@@ -89,7 +89,7 @@ namespace oly::editor
 			return result;
 		}
 
-		template<typename T, typename Printer = StandardPrinter<T>>
+		template<typename T, typename Printer = imtk::standard_printer<T>>
 		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, imtk::edit_session<std::vector<T>>& data,
 			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
 		{
@@ -135,7 +135,7 @@ namespace oly::editor
 			return result;
 		}
 
-		template<typename T, typename Printer = StandardPrinter<T>>
+		template<typename T, typename Printer = imtk::standard_printer<T>>
 		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
@@ -152,7 +152,7 @@ namespace oly::editor
 				ui_state.DeferResize(def.size());
 		}
 
-		template<typename T, typename Printer = StandardPrinter<T>>
+		template<typename T, typename Printer = imtk::standard_printer<T>>
 		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{

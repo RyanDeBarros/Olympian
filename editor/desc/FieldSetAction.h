@@ -1,8 +1,6 @@
 #pragma once
 
-#include "core/Printer.h"
-
-#include "documents/IDocument.h"
+#include <imtk.hpp>
 
 #include <imp/undo_history.hpp>
 
@@ -10,7 +8,7 @@
 
 namespace oly::editor
 {
-	template<typename T, typename Printer = StandardPrinter<T>>
+	template<typename T, typename Printer = imtk::standard_printer<T>>
 	struct FieldSetAction : public imp::undo_action
 	{
 		imtk::datapath path;
@@ -78,13 +76,13 @@ namespace oly::editor
 		}
 	};
 
-	template<typename T, typename Printer = StandardPrinter<T>>
+	template<typename T, typename Printer = imtk::standard_printer<T>>
 	void PushFieldSetAction(imtk::datapath_view path, T initial_value, T final_value)
 	{
 		imp::undo_history::active_instance().push(std::make_unique<FieldSetAction<T, Printer>>(path, std::move(initial_value), std::move(final_value)));
 	}
 
-	template<typename Desc, typename Printer = StandardPrinter<Desc>>
+	template<typename Desc, typename Printer = imtk::standard_printer<Desc>>
 	struct DescriptorSetAction : public imp::undo_action
 	{
 		imtk::datapath path;
@@ -152,7 +150,7 @@ namespace oly::editor
 		}
 	};
 
-	template<typename Desc, typename Printer = StandardPrinter<Desc>>
+	template<typename Desc, typename Printer = imtk::standard_printer<Desc>>
 	void PushDescriptorSetAction(imtk::datapath_view path, Desc initial_value, Desc final_value)
 	{
 		imp::undo_history::active_instance().push(std::make_unique<DescriptorSetAction<Desc, Printer>>(path, std::move(initial_value), std::move(final_value)));
