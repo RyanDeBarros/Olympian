@@ -10,6 +10,8 @@
 
 namespace oly::editor
 {
+	// TODO v9.3 separate data structure from draw behaviour?
+
 	template<typename T>
 	struct PrimitiveField : public imtk::tick_processor
 	{
@@ -345,18 +347,15 @@ namespace oly::editor
 
 			if (auto row = imtk::prop::make_row_scope(label, data_group, def_group))
 			{
-				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this]() -> imtk::item_result {
-					imtk::item_result result;
+				std::vector<std::unique_ptr<imtk::w::widget>> widgets;
 
-					for (size_t i = 0; i < N; ++i)
-					{
-						result |= imtk::w::bound_widget<bool>(value[i], { .label = imtk::label_span_registry::string(sublabels, i) }).draw();
-						if (inline_checkboxes && i + 1 < N)
-							ImGui::SameLine();
-					}
+				for (size_t i = 0; i < N; ++i)
+					widgets.push_back(imtk::w::unique_bound_widget(value[i], { .label = imtk::label_span_registry::string(sublabels, i) }));
 
-					return result;
-				}));
+				if (inline_checkboxes)
+					imtk::prop::value::add_component(std::make_unique<imtk::w::widget_row>(std::move(widgets)));
+				else
+					imtk::prop::value::add_component(std::make_unique<imtk::w::vertical_list>(std::move(widgets)));
 			}
 			
 			if (og != value)
@@ -716,38 +715,20 @@ namespace oly::editor
 
 			if (auto row = imtk::prop::make_row_scope(label, data_group, def_group))
 			{
+				std::vector<std::unique_ptr<imtk::w::widget>> widgets;
+
+				for (size_t i = 0; i < Count; ++i)
+				{
+					widgets.push_back(std::make_unique<imtk::w::disabler>(
+						imtk::w::unique_bound_widget(value_flags[i], { .label = imtk::label_span_registry::string(names, i) }),
+						disabled && disabled[i]
+					));
+				}
+
 				if (inline_checkboxes)
-				{
-					auto widget_row = std::make_unique<imtk::w::widget_row>();
-
-					for (size_t i = 0; i < Count; ++i)
-					{
-						// TODO v9.3 imtk::w::disable_widget
-						widget_row->subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([this, disabled, i]() -> imtk::item_result {
-							if (auto d = imtk::disabled(disabled && disabled[i]))
-								return imtk::w::bound_widget<bool>(value_flags[i], { .label = imtk::label_span_registry::string(names, i) }).draw();
-							else
-								return {};
-						}));
-					}
-
-					imtk::prop::value::add_component(std::move(widget_row));
-				}
+					imtk::prop::value::add_component(std::make_unique<imtk::w::widget_row>(std::move(widgets)));
 				else
-				{
-					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, disabled]() -> imtk::item_result {
-						imtk::item_result result;
-
-						for (size_t i = 0; i < Count; ++i)
-						{
-							// TODO v9.3 imtk::w::disable_widget_array that has a widget_list instead of generic widget
-							if (auto d = imtk::disabled(disabled && disabled[i]))
-								result |= imtk::w::bound_widget<bool>(value_flags[i], { .label = imtk::label_span_registry::string(names, i) }).draw();
-						}
-
-						return result;
-					}));
-				}
+					imtk::prop::value::add_component(std::make_unique<imtk::w::vertical_list>(std::move(widgets)));
 			}
 
 			SetEnum();
