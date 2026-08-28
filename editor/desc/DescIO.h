@@ -47,8 +47,6 @@ namespace oly::editor
 			}
 		}
 
-		static void Draw(std::string_view label, bool* data, const bool* def, imtk::label_span_registry::handle sublabels, const bool* disabled, size_t count, bool inline_checkboxes);
-
 		template<typename T, typename Printer = StandardPrinter<T>>
 		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
 			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
@@ -172,6 +170,7 @@ namespace oly::editor
 				ui_state.DeferResize(def.size());
 		}
 
+		// TODO v9.3 replace with imtk::prop::multi_row_scope
 		template<typename T>
 		static void DrawDynamicListRevertButtons(const std::vector<T>& data, const std::vector<T>& def)
 		{

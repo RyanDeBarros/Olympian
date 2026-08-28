@@ -449,7 +449,7 @@ namespace oly::editor
 		int int_value = static_cast<int>(desc.axis.value);
 		const int int_default = static_cast<int>(desc.axis.def);
 
-		if (auto row = imtk::prop::row_scope(desc.axis.label, int_value, int_default))
+		if (auto row = imtk::prop::make_row_scope(desc.axis.label, int_value, int_default))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
 				_stop_listening = false;

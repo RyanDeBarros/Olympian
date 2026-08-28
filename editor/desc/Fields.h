@@ -6,7 +6,7 @@
 
 #include "gui/DynamicList.h"
 
-#include <array>
+#include <imp/group.hpp>
 
 namespace oly::editor
 {
@@ -224,7 +224,7 @@ namespace oly::editor
 			int int_value = static_cast<int>(value);
 			const int int_default = static_cast<int>(def);
 
-			if (auto row = imtk::prop::row_scope(label, int_value, int_default))
+			if (auto row = imtk::prop::make_row_scope(label, int_value, int_default))
 				imtk::prop::value::add_component(std::make_unique<imtk::w::combo_widget>(int_value, ComboNames()));
 
 			value = static_cast<E>(int_value);
@@ -339,7 +339,26 @@ namespace oly::editor
 		void draw()
 		{
 			const std::array<bool, N> og = value;
-			DescIO::Draw(label, value.data(), def.data(), sublabels, nullptr, N, inline_checkboxes);
+
+			imp::group<bool> data_group(value);
+			imp::group<const bool> def_group(def);
+
+			if (auto row = imtk::prop::make_row_scope(label, data_group, def_group))
+			{
+				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this]() -> imtk::item_result {
+					imtk::item_result result;
+
+					for (size_t i = 0; i < N; ++i)
+					{
+						result |= imtk::w::bound_widget<bool>(value[i], { .label = imtk::label_span_registry::string(sublabels, i) }).draw();
+						if (inline_checkboxes && i + 1 < N)
+							ImGui::SameLine();
+					}
+
+					return result;
+				}));
+			}
+			
 			if (og != value)
 				PushFieldSetAction(link.compute_path(), og, value);
 		}
@@ -691,7 +710,46 @@ namespace oly::editor
 		{
 			const auto initial = value;
 			SetFlags();
-			DescIO::Draw(label, value_flags, def_flags, names, disabled, Count, inline_checkboxes);
+
+			imp::group<bool> data_group(value_flags, Count);
+			imp::group<const bool> def_group(def_flags, Count);
+
+			if (auto row = imtk::prop::make_row_scope(label, data_group, def_group))
+			{
+				if (inline_checkboxes)
+				{
+					auto widget_row = std::make_unique<imtk::w::widget_row>();
+
+					for (size_t i = 0; i < Count; ++i)
+					{
+						// TODO v9.3 imtk::w::disable_widget
+						widget_row->subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([this, disabled, i]() -> imtk::item_result {
+							if (auto d = imtk::disabled(disabled && disabled[i]))
+								return imtk::w::bound_widget<bool>(value_flags[i], { .label = imtk::label_span_registry::string(names, i) }).draw();
+							else
+								return {};
+						}));
+					}
+
+					imtk::prop::value::add_component(std::move(widget_row));
+				}
+				else
+				{
+					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, disabled]() -> imtk::item_result {
+						imtk::item_result result;
+
+						for (size_t i = 0; i < Count; ++i)
+						{
+							// TODO v9.3 imtk::w::disable_widget_array that has a widget_list instead of generic widget
+							if (auto d = imtk::disabled(disabled && disabled[i]))
+								result |= imtk::w::bound_widget<bool>(value_flags[i], { .label = imtk::label_span_registry::string(names, i) }).draw();
+						}
+
+						return result;
+					}));
+				}
+			}
+
 			SetEnum();
 			if (initial != value)
 				PushFieldSetAction(link.compute_path(), initial, value);
