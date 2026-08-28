@@ -1,9 +1,5 @@
 #pragma once
 
-#include <string>
-
-#include "documents/ActiveDocument.h"
-
 #include "assets/ResourcePath.h"
 
 #include <imtk.hpp>
@@ -14,7 +10,7 @@ namespace oly::editor
 {
 	struct IDoubleDescriptor;
 
-	class IDocument : public imtk::tick_processor
+	class IDocument : public imtk::tick_processor, public imtk::data_accessor
 	{
 	protected:
 		detail::ResourcePath _oly_path;
@@ -47,9 +43,8 @@ namespace oly::editor
 		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
 		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
 
-		void* resolve(imtk::datapath_view path, std::type_index type);
-		void describe(std::ostream& os, imtk::datapath_view path) const;
-		std::string PathString(imtk::datapath_view path) const;
+		void* resolve(imtk::datapath_view path, imp::type_erasure type) override;
+		void describe(std::ostream& os, imtk::datapath_view path) const override;
 		void on_last_process_frame() override;
 
 		const detail::ResourcePath& GetOlyPath() const;
@@ -69,7 +64,7 @@ namespace oly::editor
 		{
 			IDocument& _doc;
 			imp::active_undo_history _uh;
-			ActiveDocument _active_instance;
+			imtk::active_data_accessor _active_instance;
 
 		public:
 			imtk::prop::grid grid;

@@ -2,7 +2,6 @@
 
 #include "core/Printer.h"
 
-#include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
 
 #include <imp/undo_history.hpp>
@@ -26,7 +25,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
+			if (void* var = imtk::active_data_accessor::resolve(path, imp::erase_type<T>()))
 			{
 				T& ref = *static_cast<T*>(var);
 				ref = final_value;
@@ -34,7 +33,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(path);
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", from=";
@@ -51,7 +50,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(path, typeid(T)))
+			if (void* var = imtk::active_data_accessor::resolve(path, imp::erase_type<T>()))
 			{
 				T& ref = *static_cast<T*>(var);
 				ref = initial_value;
@@ -59,7 +58,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(path);
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", from=";
@@ -100,7 +99,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
+			if (void* var = imtk::active_data_accessor::resolve(path, imp::erase_type<Desc>()))
 			{
 				Desc& ref = *static_cast<Desc*>(var);
 				ref.copy_data(final_value);
@@ -108,7 +107,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(path);
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", from=";
@@ -125,7 +124,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(path, typeid(Desc)))
+			if (void* var = imtk::active_data_accessor::resolve(path, imp::erase_type<Desc>()))
 			{
 				Desc& ref = *static_cast<Desc*>(var);
 				ref.copy_data(initial_value);
@@ -133,7 +132,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(path);
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(path);
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", from=";

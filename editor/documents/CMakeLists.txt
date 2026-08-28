@@ -1,5 +1,4 @@
 target_sources(OlympianEditor PRIVATE
-	ActiveDocument.cpp
 	DocumentManager.cpp
 	FontDocument.cpp
 	FontFamilyDocument.cpp

@@ -2,7 +2,6 @@
 
 #include "core/Printer.h"
 
-#include "documents/ActiveDocument.h"
 #include "documents/IDocument.h"
 
 #include "util/FixedArray.h"
@@ -30,7 +29,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index < ref_vector.size())
@@ -42,7 +41,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", delete@index=" << delete_index;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", delete@index=" << delete_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", delete@element=";
@@ -57,7 +56,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index <= ref_vector.size())
@@ -68,7 +67,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-insert@index=" << delete_index;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", re-insert@index=" << delete_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", re-insert@element=";
@@ -109,7 +108,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index <= ref_vector.size())
@@ -120,7 +119,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", insert@index=" << insert_index;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", insert@index=" << insert_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", insert@element=";
@@ -135,7 +134,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index < ref_vector.size())
@@ -147,7 +146,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-delete@index=" << insert_index;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", re-delete@index=" << insert_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", re-delete@element=";
@@ -188,7 +187,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (src_index < ref_vector.size() && dst_index < ref_vector.size())
@@ -201,7 +200,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -210,7 +209,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (src_index < ref_vector.size() && dst_index < ref_vector.size())
@@ -223,7 +222,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -259,7 +258,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -281,7 +280,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -290,7 +289,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -312,7 +311,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -347,7 +346,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index < ref_vector.size())
@@ -359,7 +358,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", delete@index=" << delete_index;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", delete@index=" << delete_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", delete@element=";
@@ -374,7 +373,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (delete_index <= ref_vector.size())
@@ -385,7 +384,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-insert@index=" << delete_index;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", re-insert@index=" << delete_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", re-insert@element=";
@@ -426,7 +425,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index <= ref_vector.size())
@@ -437,7 +436,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", insert@index=" << insert_index;
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", insert@index=" << insert_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", insert@element=";
@@ -452,7 +451,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (insert_index < ref_vector.size())
@@ -464,7 +463,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", re-delete@index=" << insert_index;
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", re-delete@index=" << insert_index;
 			if constexpr (!std::is_void_v<Printer>)
 			{
 				ss << ", re-delete@element=";
@@ -505,7 +504,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (std::max(src_index, dst_index) < ref_vector.size())
@@ -518,7 +517,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_index=" << src_index << ", to_index=" << dst_index << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -527,7 +526,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 				if (std::max(src_index, dst_index) < ref_vector.size())
@@ -540,7 +539,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_index=" << dst_index << ", to_index=" << src_index << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -576,7 +575,7 @@ namespace oly::editor
 		bool forward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -598,7 +597,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
+			ss << "Redo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_size=" << initial_size << ", to_size=" << final_size << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;
@@ -607,7 +606,7 @@ namespace oly::editor
 		bool backward() override
 		{
 			bool success = false;
-			if (void* var = ActiveDocument::Get().resolve(list_path, typeid(ListType)))
+			if (void* var = imtk::active_data_accessor::resolve(list_path, imp::erase_type<ListType>()))
 			{
 				auto& ref_vector = *static_cast<ListType*>(var);
 
@@ -629,7 +628,7 @@ namespace oly::editor
 			}
 
 			std::stringstream ss;
-			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << ActiveDocument::Get().PathString(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
+			ss << "Undo action " << (success ? "success" : "fail") << ": [path=" << imtk::active_data_accessor::description(list_path) << ", from_size=" << final_size << ", to_size=" << initial_size << "]";
 			imtk::log(success ? imtk::log_level::success : imtk::log_level::error, ss.str());
 
 			return success;

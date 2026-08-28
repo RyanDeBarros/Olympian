@@ -6,11 +6,9 @@
 
 namespace oly::editor
 {
-	struct IDoubleDescriptor
+	struct IDoubleDescriptor : public imtk::data_accessor
 	{
 		virtual ~IDoubleDescriptor() = default;
-		virtual void* resolve(imtk::datapath_view path, std::type_index type) = 0;
-		virtual void describe(std::ostream& os, imtk::datapath_view path) const = 0;
 		virtual bool query_dirty() = 0;
 		virtual imp::box CopyScratch() const = 0;
 		virtual std::unique_ptr<imp::undo_action> ScratchUndoAction(imp::box original) const = 0;
@@ -26,7 +24,7 @@ namespace oly::editor
 		DoubleDescriptor() = default;
 		DoubleDescriptor(Descriptor scratch, Descriptor disk) : scratch(std::move(scratch)), disk(std::move(disk)) {}
 
-		void* resolve(imtk::datapath_view path, std::type_index type) override
+		void* resolve(imtk::datapath_view path, imp::type_erasure type) override
 		{
 			return scratch.resolve(path, type);
 		}

@@ -2,7 +2,8 @@
 
 #include <memory>
 #include <unordered_map>
-#include <typeindex>
+
+#include <imp/type_erasure.hpp>
 
 namespace oly::editor
 {
@@ -10,7 +11,7 @@ namespace oly::editor
 
 	class PanelManager
 	{
-		std::unordered_map<std::type_index, std::unique_ptr<IPanel>> _panels;
+		std::unordered_map<imp::type_erasure, std::unique_ptr<IPanel>> _panels;
 
 	public:
 		void Init();
@@ -19,18 +20,18 @@ namespace oly::editor
 		template<typename T>
 		T& Add()
 		{
-			IPanel& panel = Add(typeid(T), std::make_unique<T>());
+			IPanel& panel = Add(imp::erase_type<T>(), std::make_unique<T>());
 			return static_cast<T&>(panel);
 		}
 
-		IPanel& Add(std::type_index index, std::unique_ptr<IPanel>&& panel);
+		IPanel& Add(imp::type_erasure index, std::unique_ptr<IPanel>&& panel);
 
 		template<typename T>
 		T* Get()
 		{
-			return static_cast<T*>(Get(typeid(T)));
+			return static_cast<T*>(Get(imp::erase_type<T>()));
 		}
 
-		IPanel* Get(std::type_index index);
+		IPanel* Get(imp::type_erasure index);
 	};
 }

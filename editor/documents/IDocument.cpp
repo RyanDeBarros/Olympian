@@ -86,7 +86,7 @@ namespace oly::editor
 		return _oly_path.exists();
 	}
 
-	void* IDocument::resolve(imtk::datapath_view path, std::type_index type)
+	void* IDocument::resolve(imtk::datapath_view path, imp::type_erasure type)
 	{
 		return GetDoubleDescriptor().resolve(path, type);
 	}
@@ -96,13 +96,6 @@ namespace oly::editor
 		GetDoubleDescriptor().describe(os, path);
 	}
 	
-	std::string IDocument::PathString(imtk::datapath_view path) const
-	{
-		std::stringstream ss;
-		describe(ss, path);
-		return ss.str();
-	}
-
 	void IDocument::on_last_process_frame()
 	{
 		query_dirty();
@@ -146,13 +139,13 @@ namespace oly::editor
 
 	void IDocument::Undo()
 	{
-		ActiveDocument active(*this);
+		imtk::active_data_accessor active(*this);
 		_undo_history.undo();
 	}
 
 	void IDocument::Redo()
 	{
-		ActiveDocument active(*this);
+		imtk::active_data_accessor active(*this);
 		_undo_history.redo();
 	}
 
