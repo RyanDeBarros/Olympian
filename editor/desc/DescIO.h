@@ -1,9 +1,6 @@
 #pragma once
 
-#include "core/Types.h"
-
 #include "gui/DynamicList.h"
-#include "gui/Widgets.h"
 
 #include <imtk.hpp>
 
