@@ -10,7 +10,8 @@
 #include "core/InputListener.h"
 
 #include "assets/MetaSplitter.h"
-#include "util/Counter.h"
+
+#include <imp/counter.hpp>
 
 namespace oly::editor
 {
@@ -40,9 +41,9 @@ namespace oly::editor
 	private:
 		void Draw(imtk::desc::vector<SignalDesc>& desc);
 		void Draw(imtk::desc::vector<RouteDesc>& desc);
-		Counter<std::string> GetSignalIDCounter() const;
-		Counter<std::string> GetRouteIDCounter() const;
-		Counter<std::string> GetIDCounter() const;
+		imp::counter<std::string> GetSignalIDCounter() const;
+		imp::counter<std::string> GetRouteIDCounter() const;
+		imp::counter<std::string> GetIDCounter() const;
 
 		void Draw(SignalDesc& desc);
 		void Draw(RouteDesc& desc);

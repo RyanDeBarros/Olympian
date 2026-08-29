@@ -16,7 +16,7 @@ namespace oly::editor
 		DoubleDescriptor<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
 		gui::ListModel _glyph_model;
-		Counter<std::string> _codepoint_counter;
+		imp::counter<std::string> _codepoint_counter;
 
 	public:
 		using IDocument::IDocument;

@@ -2,7 +2,8 @@
 
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -106,7 +107,7 @@ namespace oly::editor
 		{
 			for (auto&& [key, subnode] : *table)
 			{
-				if (auto style = stoi(key.str()))
+				if (auto style = imp::stoi(key.str()))
 					Load(imtk::toml_node(subnode), desc.styles[static_cast<detail::FontStyleMode>(*style)]);
 			}
 		}

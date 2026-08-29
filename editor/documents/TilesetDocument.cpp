@@ -7,7 +7,8 @@
 
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -439,7 +440,7 @@ namespace oly::editor
 		{
 			for (auto&& [key, node] : *table)
 			{
-				if (auto config = stoi(key.str()))
+				if (auto config = imp::stoi(key.str()))
 					Load(imtk::toml_node(node), desc.map[*config]);
 			}
 		}

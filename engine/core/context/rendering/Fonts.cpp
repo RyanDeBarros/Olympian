@@ -11,7 +11,8 @@
 #include "definitions/Keys.h"
 #include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 // TODO v10 put actual loading logic in load/overload methods
 
@@ -282,7 +283,7 @@ namespace oly::context
 			{
 				for (auto&& [key, node] : *styles->as_table())
 				{
-					auto style = stoi(key.str());
+					auto style = imp::stoi(key.str());
 					if (!style)
 						continue;
 

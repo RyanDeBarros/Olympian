@@ -3,8 +3,6 @@
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
-#include "util/DynamicArray.h"
-
 namespace oly::editor
 {
 	struct BriefDescPrinter
@@ -170,9 +168,9 @@ namespace oly::editor
 		}
 	}
 
-	Counter<std::string> SignalDocument::GetSignalIDCounter() const
+	imp::counter<std::string> SignalDocument::GetSignalIDCounter() const
 	{
-		Counter<std::string> id_counter;
+		imp::counter<std::string> id_counter;
 
 		for (const auto& subdesc : _desc.scratch.signals)
 			id_counter.increment(subdesc.id.value);
@@ -180,9 +178,9 @@ namespace oly::editor
 		return id_counter;
 	}
 	
-	Counter<std::string> SignalDocument::GetRouteIDCounter() const
+	imp::counter<std::string> SignalDocument::GetRouteIDCounter() const
 	{
-		Counter<std::string> id_counter;
+		imp::counter<std::string> id_counter;
 
 		for (const auto& subdesc : _desc.scratch.routes)
 			id_counter.increment(subdesc.id.value);
@@ -190,9 +188,9 @@ namespace oly::editor
 		return id_counter;
 	}
 
-	Counter<std::string> SignalDocument::GetIDCounter() const
+	imp::counter<std::string> SignalDocument::GetIDCounter() const
 	{
-		Counter<std::string> id_counter = GetSignalIDCounter();
+		imp::counter<std::string> id_counter = GetSignalIDCounter();
 		id_counter.accumulate(GetRouteIDCounter());
 		return id_counter;
 	}
@@ -241,7 +239,7 @@ namespace oly::editor
 		auto signal_id_counter = GetSignalIDCounter();
 		auto id_counter = GetIDCounter();
 
-		Counter<std::string> local_id_counter;
+		imp::counter<std::string> local_id_counter;
 		local_id_counter.accumulate(desc.signals.value);
 
 		imtk::outline dup_outline;

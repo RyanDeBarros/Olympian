@@ -4,7 +4,8 @@
 #include "core/util/Logger.h"
 
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::rendering
 {
@@ -101,7 +102,7 @@ namespace oly::rendering
 				try
 				{
 					const size_t a_idx = _a_idx++;
-					auto config = stoi(key.str());
+					auto config = imp::stoi(key.str());
 					if (!config)
 						continue;
 

@@ -2,9 +2,8 @@
 
 #include "documents/IDocument.h"
 
-#include "util/FixedArray.h"
-
 #include <imp/undo_history.hpp>
+#include <imp/fixed_array.hpp>
 
 #include <sstream>
 
@@ -246,7 +245,7 @@ namespace oly::editor
 		imtk::datapath list_path;
 		size_t initial_size;
 		size_t final_size;
-		FixedArray<ElementType> erased;
+		imp::fixed_array<ElementType> erased;
 
 		DynamicListResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 			: list_path(list_path), initial_size(initial_size), final_size(final_size), erased(std::max(initial_size, final_size) - std::min(initial_size, final_size))
@@ -563,7 +562,7 @@ namespace oly::editor
 		imtk::datapath list_path;
 		size_t initial_size;
 		size_t final_size;
-		FixedArray<ElementType> erased;
+		imp::fixed_array<ElementType> erased;
 
 		DynamicVectorDescResizeAction(imtk::datapath_view list_path, size_t initial_size, size_t final_size)
 			: list_path(list_path), initial_size(initial_size), final_size(final_size), erased(std::max(initial_size, final_size) - std::min(initial_size, final_size))

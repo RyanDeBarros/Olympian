@@ -177,6 +177,7 @@ target_link_libraries(OlympianEditor PRIVATE
     glm::glm
 	libglew_static
     tomlplusplus::tomlplusplus
+    imperious
 )
 
 target_link_libraries(OlympianEditor PUBLIC OlympianDetail)

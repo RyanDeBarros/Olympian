@@ -2,8 +2,7 @@
 
 #include "desc/DynamicListUndoActions.h"
 
-#include "util/Counter.h"
-
+#include <imp/counter.hpp>
 #include <imp/modifiable.hpp>
 
 #include <array>
@@ -226,7 +225,7 @@ namespace oly::editor::gui
 	};
 
 	template<typename T, typename Getter, typename Hash = std::hash<T>, typename Equals = std::equal_to<T>>
-	std::function<void(ListOp)> MakeCounterCallback(Counter<T, Hash, Equals>& counter, Getter getter)
+	std::function<void(ListOp)> MakeCounterCallback(imp::counter<T, Hash, Equals>& counter, Getter getter)
 	{
 		return [&counter, getter = std::move(getter)](ListOp op) {
 			switch (op.type)

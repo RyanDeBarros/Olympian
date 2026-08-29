@@ -7,7 +7,8 @@
 #include "core/cmath/ColoredGeometry.h"
 
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::assets
 {
@@ -277,7 +278,7 @@ namespace oly::assets::internal
 		if (!try_parse(node, str))
 			return false;
 
-		if (auto val = stocdpt(str))
+		if (auto val = imp::stocdpt(str))
 		{
 			v = utf::Codepoint(*val);
 			return true;

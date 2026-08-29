@@ -3,11 +3,9 @@
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
-#include "util/Counter.h"
-#include "util/Parser.h"
-#include "util/DynamicArray.h"
-
+#include <imp/counter.hpp>
 #include <imp/hash.hpp>
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -182,7 +180,7 @@ namespace oly::editor
 		{
 			size_t operator()(const std::string& str) const
 			{
-				if (auto v = stocdpt(str))
+				if (auto v = imp::stocdpt(str))
 					return std::hash<int>{}(*v);
 				else
 					return 0;
@@ -193,11 +191,11 @@ namespace oly::editor
 		{
 			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
 			{
-				return stocdpt(lhs[0]) == stocdpt(rhs[0]) && stocdpt(lhs[1]) == stocdpt(rhs[1]);
+				return imp::stocdpt(lhs[0]) == imp::stocdpt(rhs[0]) && imp::stocdpt(lhs[1]) == imp::stocdpt(rhs[1]);
 			}
 		};
 
-		Counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
+		imp::counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
 		for (auto& k : desc.kerning)
 		{
 			k.distance.edit.pre_edit();
@@ -221,7 +219,7 @@ namespace oly::editor
 			for (size_t i = 0; i < 2; ++i)
 			{
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
-					bool bad_codepoint = !stocdpt(k.pair.edit.buffer()[i]).has_value();
+					bool bad_codepoint = !imp::stocdpt(k.pair.edit.buffer()[i]).has_value();
 					imtk::outline bad_outline;
 					if (bad_codepoint)
 						dup_warning = false;
