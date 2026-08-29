@@ -5,8 +5,6 @@
 #include "gui/DynamicList.h"
 #include "gui/Widgets.h"
 
-#include "desc/DynamicListUndoActions.h"
-
 #include <imtk.hpp>
 
 namespace oly::editor
@@ -66,21 +64,21 @@ namespace oly::editor
 				switch (op.type)
 				{
 				case gui::RowOperation::Type::Delete:
-					ExecuteDynamicVectorDescDeleteAction<T, Printer>(link.compute_path(), op.GetIndex());
+					imtk::desc::execute_vector_delete_action<T, Printer>(link.compute_path(), op.GetIndex());
 					break;
 
 				case gui::RowOperation::Type::Move:
 					if (op.GetSrcIndex() != op.GetDstIndex())
-						ExecuteDynamicVectorDescMoveAction<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
+						imtk::desc::execute_vector_move_action<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
 					break;
 
 				case gui::RowOperation::Type::Resize:
 					if (data.size() != op.GetSize())
-						ExecuteDynamicVectorDescResizeAction<T>(link.compute_path(), data.size(), op.GetSize());
+						imtk::desc::execute_vector_resize_action<T>(link.compute_path(), data.size(), op.GetSize());
 					break;
 
 				case gui::RowOperation::Type::PushBack:
-					ExecuteDynamicVectorDescInsertAction<T, Printer>(link.compute_path(), data.size());
+					imtk::desc::execute_vector_insert_action<T, Printer>(link.compute_path(), data.size());
 					break;
 				}
 			});
@@ -109,24 +107,24 @@ namespace oly::editor
 				{
 				case gui::RowOperation::Type::Delete:
 					data.cancel_editing();
-					ExecuteDynamicListDeleteAction<T, Printer>(link.compute_path(), op.GetIndex());
+					imtk::field::execute_list_delete_action<T, Printer>(link.compute_path(), op.GetIndex());
 					break;
 
 				case gui::RowOperation::Type::Move:
 					data.cancel_editing();
 					if (op.GetSrcIndex() != op.GetDstIndex())
-						ExecuteDynamicListMoveAction<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
+						imtk::field::execute_list_move_action<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
 					break;
 
 				case gui::RowOperation::Type::Resize:
 					data.cancel_editing();
 					if (data.truth().size() != op.GetSize())
-						ExecuteDynamicListResizeAction<T>(link.compute_path(), data.truth().size(), op.GetSize());
+						imtk::field::execute_list_resize_action<T>(link.compute_path(), data.truth().size(), op.GetSize());
 					break;
 
 				case gui::RowOperation::Type::PushBack:
 					data.cancel_editing();
-					ExecuteDynamicListInsertAction<T, Printer>(link.compute_path(), data.truth().size());
+					imtk::field::execute_list_insert_action<T, Printer>(link.compute_path(), data.truth().size());
 					break;
 				}
 			});

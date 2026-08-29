@@ -1,13 +1,9 @@
 #pragma once
 
-#include "desc/DynamicListUndoActions.h"
+#include <imtk.hpp>
 
 #include <imp/counter.hpp>
 #include <imp/modifiable.hpp>
-
-#include <array>
-#include <memory>
-#include <string>
 
 namespace oly::editor::gui
 {
@@ -142,30 +138,30 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			ExecuteDynamicVectorDescInsertAction<T, Printer>(v.link.compute_path(), v.size());
+			imtk::desc::execute_vector_insert_action<T, Printer>(v.link.compute_path(), v.size());
 		}
 
 		void Erase(size_t i) override
 		{
-			ExecuteDynamicVectorDescDeleteAction<T, Printer>(v.link.compute_path(), i);
+			imtk::desc::execute_vector_delete_action<T, Printer>(v.link.compute_path(), i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
 			if (old_size != new_size)
-				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), old_size, new_size);
+				imtk::desc::execute_vector_resize_action<T>(v.link.compute_path(), old_size, new_size);
 		}
 
 		void Clear() override
 		{
 			if (!v.empty())
-				ExecuteDynamicVectorDescResizeAction<T>(v.link.compute_path(), v.size(), 0);
+				imtk::desc::execute_vector_resize_action<T>(v.link.compute_path(), v.size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
 			if (src != dst)
-				ExecuteDynamicVectorDescMoveAction<T>(v.link.compute_path(), src, dst);
+				imtk::desc::execute_vector_move_action<T>(v.link.compute_path(), src, dst);
 		}
 	};
 
