@@ -6,101 +6,6 @@
 
 namespace oly::editor::gui
 {
-	bool RowOperation::UpdateIndex(size_t& idx) const
-	{
-		switch (type)
-		{
-		case Type::Delete:
-			if (idx == GetIndex())
-				return false;
-
-			if (idx > GetIndex())
-				--idx;
-
-			break;
-
-		case Type::Move:
-		{
-			size_t min = std::min(GetSrcIndex(), GetDstIndex());
-			size_t max = std::max(GetSrcIndex(), GetDstIndex());
-
-			if (idx >= min && idx <= max)
-			{
-				if (idx == GetSrcIndex())
-					idx = GetDstIndex();
-				else if (GetSrcIndex() < GetDstIndex())
-					--idx;
-				else
-					++idx;
-			}
-
-			break;
-		}
-
-		case Type::Resize:
-			if (idx >= GetSize())
-				return false;
-
-			break;
-
-		case Type::PushBack:
-			break;
-		}
-
-		return true;
-	}
-
-	void RowOperation::UpdateRowOp(RowOperation& op) const
-	{
-		op.SetValid(op.valid && UpdateIndex(op.index1) && UpdateIndex(op.index2));
-	}
-
-	RowOperation RowOperation::MakeDelete(size_t index)
-	{
-		return RowOperation{ .type = Type::Delete, .index1 = index, .index2 = index };
-	}
-
-	RowOperation RowOperation::MakeMove(size_t src, size_t dst)
-	{
-		return RowOperation{ .type = Type::Move, .index1 = src, .index2 = dst };
-	}
-
-	RowOperation RowOperation::MakeResize(size_t size)
-	{
-		return RowOperation{ .type = Type::Resize, .index1 = size, .index2 = size };
-	}
-
-	RowOperation RowOperation::MakePushBack()
-	{
-		return RowOperation{ .type = Type::PushBack, .index1 = 0, .index2 = 0 };
-	}
-
-	size_t RowOperation::GetIndex() const
-	{
-		return index1;
-	}
-
-	size_t RowOperation::GetSrcIndex() const
-	{
-		return index1;
-	}
-
-	size_t RowOperation::GetDstIndex() const
-	{
-		return index2;
-	}
-
-	size_t RowOperation::GetSize() const
-	{
-		return index2;
-	}
-
-	void RowOperation::SetValid(bool valid)
-	{
-		if (type != Type::Resize && type != Type::PushBack)
-			this->valid = valid;
-	}
-
 	struct DynamicListStatePayload : public imtk::drag_droppable_pod<DynamicListStatePayload>
 	{
 		const DynamicListState* identity;
@@ -111,10 +16,7 @@ namespace oly::editor::gui
 		{
 		}
 	};
-}
 
-namespace oly::editor::gui
-{
 	void DynamicListState::Clamp()
 	{
 		if (index >= list_size)
@@ -128,7 +30,7 @@ namespace oly::editor::gui
 
 	void DynamicListState::DeferPushBack()
 	{
-		row_ops.push_back(RowOperation::MakePushBack());
+		row_ops.push_back(imtk::list_op::make_append_op());
 	}
 
 	void DynamicListState::DeferDelete()
@@ -136,60 +38,60 @@ namespace oly::editor::gui
 		if (!simul_selected.count(index))
 		{
 			if (index < list_size)
-				row_ops.push_back(RowOperation::MakeDelete(index));
+				row_ops.push_back(imtk::list_op::make_delete_op(index));
 		}
 
 		for (size_t idx : simul_selected_ordered)
 		{
 			if (idx < list_size)
-				row_ops.push_back(RowOperation::MakeDelete(idx));
+				row_ops.push_back(imtk::list_op::make_delete_op(idx));
 		}
 	}
 
 	void DynamicListState::DeferResize(size_t count)
 	{
-		row_ops.push_back(RowOperation::MakeResize(count));
+		row_ops.push_back(imtk::list_op::make_resize_op(list_size, count));
 	}
 
-	bool DynamicListState::VisitRowOps(std::function<void(const RowOperation& op)> fn)
+	bool DynamicListState::VisitRowOps(std::function<void(const imtk::list_op& op)> fn)
 	{
 		bool any = false;
 
 		for (auto it = row_ops.begin(); it != row_ops.end(); ++it)
 		{
-			if (!it->valid)
+			if (!it->valid())
 				continue;
 
 			any = true;
 
 			fn(*it);
 
-			switch (it->type)
+			switch (it->type())
 			{
-			case RowOperation::Type::Delete:
+			case imtk::list_op_type::delete_:
 				--list_size;
 				break;
 				
-			case RowOperation::Type::Move:
+			case imtk::list_op_type::move_:
 				break;
 
-			case RowOperation::Type::Resize:
-				list_size = it->GetSize();
+			case imtk::list_op_type::resize_:
+				list_size = it->get_new_size();
 				break;
 
-			case RowOperation::Type::PushBack:
+			case imtk::list_op_type::append_:
 				++list_size;
 				SetLast();
 				break;
 			}
 
-			if (!it->UpdateIndex(index))
+			if (!it->update_index(policy, index))
 				Clamp();
 
 			std::unordered_set<size_t> keep_selected;
 			for (auto ut = simul_selected_ordered.begin(); ut != simul_selected_ordered.end(); )
 			{
-				if (it->UpdateIndex(*ut))
+				if (it->update_index(policy, *ut))
 					keep_selected.insert(*ut++);
 				else
 					ut = simul_selected_ordered.erase(ut);
@@ -197,7 +99,7 @@ namespace oly::editor::gui
 			simul_selected = std::move(keep_selected);
 
 			for (auto ut = std::next(it); ut != row_ops.end(); ++ut)
-				it->UpdateRowOp(*ut);
+				it->update_op(policy, *ut);
 		}
 
 		row_ops.clear();
@@ -268,7 +170,7 @@ namespace oly::editor::gui
 				if (auto payload = target.accept<DynamicListStatePayload>())
 				{
 					if ((*payload)->identity == &_state && (*payload)->index != _index)
-						_state.row_ops.push_back(RowOperation::MakeMove((*payload)->index, _index));
+						_state.row_ops.push_back(imtk::list_op::make_move_op((*payload)->index, _index));
 				}
 			}
 		}

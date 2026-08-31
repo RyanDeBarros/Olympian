@@ -3,69 +3,9 @@
 #include <imtk.hpp>
 
 #include <imp/counter.hpp>
-#include <imp/modifiable.hpp>
 
 namespace oly::editor::gui
 {
-	enum class ListPolicy
-	{
-		None = 0,
-		MinimumOne = 1
-	};
-
-	inline ListPolicy operator&(ListPolicy lhs, ListPolicy rhs)
-	{
-		using T = std::underlying_type_t<ListPolicy>;
-		return static_cast<ListPolicy>(static_cast<T>(lhs) & static_cast<T>(rhs));
-	}
-
-	inline ListPolicy operator|(ListPolicy lhs, ListPolicy rhs)
-	{
-		using T = std::underlying_type_t<ListPolicy>;
-		return static_cast<ListPolicy>(static_cast<T>(lhs) | static_cast<T>(rhs));
-	}
-
-	inline ListPolicy& operator|=(ListPolicy& lhs, ListPolicy rhs)
-	{
-		lhs = lhs | rhs;
-		return lhs;
-	}
-
-	enum class ListOpType
-	{
-		Create,
-		Delete,
-		Resize,
-		Clear,
-		Move
-	};
-
-	struct ListOp
-	{
-		ListOpType type;
-		bool valid = true;
-
-		size_t index1 = 0;
-		size_t index2 = 0;
-
-		static ListOp MakeCreateOp();
-		static ListOp MakeDeleteOp(size_t index);
-		static ListOp MakeResizeOp(size_t old_size, size_t new_size);
-		static ListOp MakeClearOp();
-		static ListOp MakeMoveOp(size_t src, size_t dst);
-
-		size_t GetIndex() const;
-		size_t GetSrcIndex() const;
-		size_t GetDstIndex() const;
-		size_t GetOldSize() const;
-		size_t GetNewSize() const;
-
-		void Validate(bool valid);
-		bool UpdateIndex(ListPolicy policy, size_t& idx) const;
-		bool UpdateIndex(ListPolicy policy, imp::modifiable<size_t>& idx) const;
-		bool UpdateIndex(ListPolicy policy, ListOp& op) const;
-	};
-
 	struct IListAdapter
 	{
 		virtual ~IListAdapter() = default;
@@ -74,7 +14,6 @@ namespace oly::editor::gui
 		virtual void PushBack() = 0;
 		virtual void Erase(size_t index) = 0;
 		virtual void Resize(size_t old_size, size_t new_size) = 0;
-		virtual void Clear() = 0;
 		virtual void Move(size_t src, size_t dst) = 0;
 	};
 
@@ -82,11 +21,11 @@ namespace oly::editor::gui
 	{
 	private:
 		size_t _size = 0;
-		std::vector<ListOp> _pending_ops;
+		std::vector<imtk::list_op> _pending_ops;
 
 	public:
 		imp::modifiable<size_t> active_index = 0;
-		ListPolicy policy = ListPolicy::None;
+		imtk::list_policy policy = imtk::list_policy::none;
 
 		void Init(IListAdapter& adapter);
 		void Update(IListAdapter& adapter);
@@ -106,11 +45,11 @@ namespace oly::editor::gui
 		bool ConsumeOps(IListAdapter& adapter);
 
 	private:
-		void Apply(const ListOp& op, IListAdapter& adapter);
+		void Apply(const imtk::list_op& op, IListAdapter& adapter);
 		void EnforcePolicy(IListAdapter& adapter);
 
 	public:
-		void Invoke(const ListOp& op, IListAdapter& adapter);
+		void Invoke(const imtk::list_op& op, IListAdapter& adapter);
 
 		struct ComboHeader
 		{
@@ -138,7 +77,7 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			imtk::desc::execute_vector_insert_action<T, Printer>(v.link.compute_path(), v.size());
+			imtk::desc::execute_vector_insert_action<T, Printer>(v.link.compute_path(), Size());
 		}
 
 		void Erase(size_t i) override
@@ -150,12 +89,6 @@ namespace oly::editor::gui
 		{
 			if (old_size != new_size)
 				imtk::desc::execute_vector_resize_action<T>(v.link.compute_path(), old_size, new_size);
-		}
-
-		void Clear() override
-		{
-			if (!v.empty())
-				imtk::desc::execute_vector_resize_action<T>(v.link.compute_path(), v.size(), 0);
 		}
 
 		void Move(size_t src, size_t dst) override
@@ -180,9 +113,9 @@ namespace oly::editor::gui
 	struct ListCallbackAdapter : public IListAdapter
 	{
 		std::unique_ptr<IListAdapter> primary;
-		std::function<void(ListOp)> callback;
+		std::function<void(imtk::list_op)> callback;
 
-		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(ListOp)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
+		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(imtk::list_op)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
 
 		size_t Size() const override
 		{
@@ -191,59 +124,54 @@ namespace oly::editor::gui
 
 		void PushBack() override
 		{
-			callback(ListOp::MakeCreateOp());
+			callback(imtk::list_op::make_append_op());
 			primary->PushBack();
 		}
 
 		void Erase(size_t i) override
 		{
-			callback(ListOp::MakeDeleteOp(i));
+			callback(imtk::list_op::make_delete_op(i));
 			primary->Erase(i);
 		}
 
 		void Resize(size_t old_size, size_t new_size) override
 		{
-			callback(ListOp::MakeResizeOp(old_size, new_size));
+			callback(imtk::list_op::make_resize_op(old_size, new_size));
 			primary->Resize(old_size, new_size);
-		}
-
-		void Clear() override
-		{
-			callback(ListOp::MakeClearOp());
-			primary->Clear();
 		}
 
 		void Move(size_t src, size_t dst) override
 		{
-			callback(ListOp::MakeMoveOp(src, dst));
+			callback(imtk::list_op::make_move_op(src, dst));
 			primary->Move(src, dst);
 		}
 	};
 
 	template<typename T, typename Getter, typename Hash = std::hash<T>, typename Equals = std::equal_to<T>>
-	std::function<void(ListOp)> MakeCounterCallback(imp::counter<T, Hash, Equals>& counter, Getter getter)
+	std::function<void(imtk::list_op)> MakeCounterCallback(imp::counter<T, Hash, Equals>& counter, Getter getter)
 	{
-		return [&counter, getter = std::move(getter)](ListOp op) {
-			switch (op.type)
+		return [&counter, getter = std::move(getter)](imtk::list_op op) {
+			switch (op.type())
 			{
-			case ListOpType::Create:
+			case imtk::list_op_type::append_:
 				counter.increment(T{});
 				break;
 
-			case ListOpType::Delete:
-				counter.decrement(getter(op.GetIndex()));
+			case imtk::list_op_type::delete_:
+				counter.decrement(getter(op.get_index()));
 				break;
 
-			case ListOpType::Resize:
-				for (size_t i = op.GetNewSize(); i < op.GetOldSize(); ++i)
-					counter.decrement(getter(i));
+			case imtk::list_op_type::resize_:
+				if (op.get_new_size() == 0)
+					counter.clear();
+				else
+				{
+					for (size_t i = op.get_new_size(); i < op.get_old_size(); ++i)
+						counter.decrement(getter(i));
 
-				if (op.GetOldSize() < op.GetNewSize())
-					counter.increment(T{}, op.GetNewSize() - op.GetOldSize());
-				break;
-
-			case ListOpType::Clear:
-				counter.clear();
+					if (op.get_old_size() < op.get_new_size())
+						counter.increment(T{}, op.get_new_size() - op.get_old_size());
+				}
 				break;
 			}
 		};

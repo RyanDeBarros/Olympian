@@ -6,46 +6,18 @@
 #include <optional>
 #include <unordered_set>
 
+// TODO v9.3 merge common 'operation' logic with ListModel
+
 namespace oly::editor::gui
 {
-	struct RowOperation
-	{
-		enum class Type
-		{
-			Delete,
-			Move,
-			Resize,
-			PushBack
-		};
-
-		Type type;
-		bool valid = true;
-		size_t index1 = 0;
-		size_t index2 = 0;
-
-		bool UpdateIndex(size_t& idx) const;
-		void UpdateRowOp(RowOperation& op) const;
-
-		static RowOperation MakeDelete(size_t index);
-		static RowOperation MakeMove(size_t src, size_t dst);
-		static RowOperation MakeResize(size_t size);
-		static RowOperation MakePushBack();
-
-		size_t GetIndex() const;
-		size_t GetSrcIndex() const;
-		size_t GetDstIndex() const;
-		size_t GetSize() const;
-
-		void SetValid(bool valid);
-	};
-
 	class DynamicRow;
 
 	struct DynamicListState
 	{
+		imtk::list_policy policy = imtk::list_policy::none;
 		size_t list_size = 0;
 		size_t index = 0;
-		std::vector<RowOperation> row_ops;
+		std::vector<imtk::list_op> row_ops;
 		std::unordered_set<size_t> simul_selected;
 		std::vector<size_t> simul_selected_ordered;
 
@@ -56,7 +28,7 @@ namespace oly::editor::gui
 		void DeferDelete();
 		void DeferResize(size_t count);
 
-		bool VisitRowOps(std::function<void(const RowOperation& op)> fn);
+		bool VisitRowOps(std::function<void(const imtk::list_op& op)> fn);
 
 		void DrawListHeader(size_t list_size);
 		void DrawBody(std::function<void(DynamicRow& row)> row_draw);

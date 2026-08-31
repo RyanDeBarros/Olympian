@@ -35,7 +35,7 @@ namespace oly::editor
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
-		_slots.policy = gui::ListPolicy::MinimumOne;
+		_slots.policy = imtk::list_policy::minimum_one;
 
 		LoadAsset();
 	}

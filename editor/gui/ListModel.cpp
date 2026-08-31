@@ -6,124 +6,6 @@
 
 namespace oly::editor::gui
 {
-	ListOp ListOp::MakeCreateOp()
-	{
-		return ListOp{ .type = ListOpType::Create };
-	}
-	
-	ListOp ListOp::MakeDeleteOp(size_t index)
-	{
-		return ListOp{ .type = ListOpType::Delete, .index1 = index };
-	}
-	
-	ListOp ListOp::MakeClearOp()
-	{
-		return ListOp{ .type = ListOpType::Clear };
-	}
-	
-	ListOp ListOp::MakeResizeOp(size_t old_size, size_t new_size)
-	{
-		return ListOp{ .type = ListOpType::Resize, .index1 = old_size, .index2 = new_size };
-	}
-	
-	ListOp ListOp::MakeMoveOp(size_t src, size_t dst)
-	{
-		return ListOp{ .type = ListOpType::Move, .index1 = src, .index2 = dst };
-	}
-
-	size_t ListOp::GetIndex() const
-	{
-		return index1;
-	}
-
-	size_t ListOp::GetSrcIndex() const
-	{
-		return index1;
-	}
-	
-	size_t ListOp::GetDstIndex() const
-	{
-		return index2;
-	}
-
-	size_t ListOp::GetOldSize() const
-	{
-		return index1;
-	}
-
-	size_t ListOp::GetNewSize() const
-	{
-		return index2;
-	}
-
-	void ListOp::Validate(bool valid)
-	{
-		if (type != ListOpType::Create && type != ListOpType::Clear && type != ListOpType::Resize)
-			this->valid = valid;
-	}
-
-	bool ListOp::UpdateIndex(ListPolicy policy, size_t& idx) const
-	{
-		imp::modifiable<size_t> m(idx);
-		bool v = UpdateIndex(policy, m);
-		idx = m;
-		return v;
-	}
-
-	bool ListOp::UpdateIndex(ListPolicy policy, imp::modifiable<size_t>& idx) const
-	{
-		switch (type)
-		{
-		case ListOpType::Create:
-			break;
-
-		case ListOpType::Delete:
-			if (idx == GetIndex())
-				return false;
-
-			if (idx > GetIndex())
-				idx = idx - 1;
-
-			break;
-
-		case ListOpType::Resize:
-			if (idx >= GetNewSize())
-				return false;
-
-			break;
-
-		case ListOpType::Clear:
-			return false;
-
-			break;
-
-		case ListOpType::Move:
-		{
-			size_t min = std::min(GetSrcIndex(), GetDstIndex());
-			size_t max = std::max(GetSrcIndex(), GetDstIndex());
-
-			if (idx >= min && idx <= max)
-			{
-				if (idx == GetSrcIndex())
-					idx = GetDstIndex();
-				else if (GetSrcIndex() < GetDstIndex())
-					idx = idx - 1;
-				else
-					idx = idx + 1;
-			}
-
-			break;
-		}
-		}
-
-		return true;
-	}
-
-	bool ListOp::UpdateIndex(ListPolicy policy, ListOp& op) const
-	{
-		return UpdateIndex(policy, op.index1) && UpdateIndex(policy, op.index2);
-	}
-
 	void ListModel::Init(IListAdapter& adapter)
 	{
 		_size = adapter.Size();
@@ -156,22 +38,22 @@ namespace oly::editor::gui
 
 	void ListModel::DeferCreate()
 	{
-		_pending_ops.push_back(ListOp::MakeCreateOp());
+		_pending_ops.push_back(imtk::list_op::make_append_op());
 	}
 	
 	void ListModel::DeferDelete()
 	{
-		_pending_ops.push_back(ListOp::MakeDeleteOp(active_index));
+		_pending_ops.push_back(imtk::list_op::make_delete_op(active_index));
 	}
 	
 	void ListModel::DeferResize(size_t new_size)
 	{
-		_pending_ops.push_back(ListOp::MakeResizeOp(_size, new_size));
+		_pending_ops.push_back(imtk::list_op::make_resize_op(_size, new_size));
 	}
 
 	void ListModel::DeferClear()
 	{
-		_pending_ops.push_back(ListOp::MakeClearOp());
+		_pending_ops.push_back(imtk::list_op::make_resize_op(_size, 0));
 	}
 
 	bool ListModel::ConsumeOps(IListAdapter& adapter)
@@ -180,7 +62,7 @@ namespace oly::editor::gui
 
 		for (auto it = _pending_ops.begin(); it != _pending_ops.end(); ++it)
 		{
-			if (!it->valid)
+			if (!it->valid())
 				continue;
 
 			any = true;
@@ -188,8 +70,8 @@ namespace oly::editor::gui
 
 			for (auto ut = std::next(it); ut != _pending_ops.end(); )
 			{
-				ut->Validate(ut->valid && it->UpdateIndex(policy, *ut));
-				if (ut->valid)
+				it->update_op(policy, *ut);
+				if (ut->valid())
 					++ut;
 				else
 					ut = _pending_ops.erase(ut);
@@ -200,40 +82,35 @@ namespace oly::editor::gui
 		return any;
 	}
 
-	void ListModel::Apply(const ListOp& op, IListAdapter& adapter)
+	void ListModel::Apply(const imtk::list_op& op, IListAdapter& adapter)
 	{
-		switch (op.type)
+		switch (op.type())
 		{
-		case ListOpType::Create:
+		case imtk::list_op_type::append_:
 			++_size;
 			SetLast();
 			adapter.PushBack();
 			break;
 
-		case ListOpType::Delete:
+		case imtk::list_op_type::delete_:
 			if (_size > 0)
 			{
 				--_size;
-				adapter.Erase(op.GetIndex());
+				adapter.Erase(op.get_index());
 			}
 			break;
 
-		case ListOpType::Resize:
-			_size = op.GetNewSize();
-			adapter.Resize(op.GetOldSize(), _size);
+		case imtk::list_op_type::resize_:
+			_size = op.get_new_size();
+			adapter.Resize(op.get_old_size(), _size);
 			break;
 
-		case ListOpType::Clear:
-			_size = 0;
-			adapter.Clear();
-			break;
-
-		case ListOpType::Move:
-			adapter.Move(op.GetSrcIndex(), op.GetDstIndex());
+		case imtk::list_op_type::move_:
+			adapter.Move(op.get_src_index(), op.get_dst_index());
 			break;
 		}
 
-		if (!op.UpdateIndex(policy, active_index))
+		if (!op.update_index(policy, active_index))
 			Clamp();
 
 		EnforcePolicy(adapter);
@@ -241,11 +118,11 @@ namespace oly::editor::gui
 
 	void ListModel::EnforcePolicy(IListAdapter& adapter)
 	{
-		if (_size == 0 && policy == ListPolicy::MinimumOne)
-			Apply(ListOp::MakeCreateOp(), adapter);
+		if (_size == 0 && imp::has_flag(policy, imtk::list_policy::minimum_one))
+			Apply(imtk::list_op::make_append_op(), adapter);
 	}
 
-	void ListModel::Invoke(const ListOp& op, IListAdapter& adapter)
+	void ListModel::Invoke(const imtk::list_op& op, IListAdapter& adapter)
 	{
 		if (!_pending_ops.empty())
 			ConsumeOps(adapter);

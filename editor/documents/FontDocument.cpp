@@ -24,7 +24,7 @@ namespace oly::editor
 		if (!GetSourcePath().is_resource())
 			imtk::notify_warning("Asset is not located in resource folder");
 
-		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
+		_atlas_slots.policy = imtk::list_policy::minimum_one;
 		_display_text.value = "Abc 123";
 		_display_text.config().label = "Display text";
 		LoadAsset();

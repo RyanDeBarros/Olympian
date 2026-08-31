@@ -57,24 +57,24 @@ namespace oly::editor
 					row.OnSelect();
 			});
 
-			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
-				switch (op.type)
+			result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
+				switch (op.type())
 				{
-				case gui::RowOperation::Type::Delete:
-					imtk::desc::execute_vector_delete_action<T, Printer>(link.compute_path(), op.GetIndex());
+				case imtk::list_op_type::delete_:
+					imtk::desc::execute_vector_delete_action<T, Printer>(link.compute_path(), op.get_index());
 					break;
 
-				case gui::RowOperation::Type::Move:
-					if (op.GetSrcIndex() != op.GetDstIndex())
-						imtk::desc::execute_vector_move_action<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
+				case imtk::list_op_type::move_:
+					if (op.get_src_index() != op.get_dst_index())
+						imtk::desc::execute_vector_move_action<T>(link.compute_path(), op.get_src_index(), op.get_dst_index());
 					break;
 
-				case gui::RowOperation::Type::Resize:
-					if (data.size() != op.GetSize())
-						imtk::desc::execute_vector_resize_action<T>(link.compute_path(), data.size(), op.GetSize());
+				case imtk::list_op_type::resize_:
+					if (op.get_old_size() != op.get_new_size())
+						imtk::desc::execute_vector_resize_action<T>(link.compute_path(), op.get_old_size(), op.get_new_size());
 					break;
 
-				case gui::RowOperation::Type::PushBack:
+				case imtk::list_op_type::append_:
 					imtk::desc::execute_vector_insert_action<T, Printer>(link.compute_path(), data.size());
 					break;
 				}
@@ -99,27 +99,27 @@ namespace oly::editor
 					row.OnSelect();
 			});
 
-			result.modified |= ui_state.VisitRowOps([&link, &data](const gui::RowOperation& op) {
-				switch (op.type)
+			result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
+				switch (op.type())
 				{
-				case gui::RowOperation::Type::Delete:
+				case imtk::list_op_type::delete_:
 					data.cancel_editing();
-					imtk::field::execute_list_delete_action<T, Printer>(link.compute_path(), op.GetIndex());
+					imtk::field::execute_list_delete_action<T, Printer>(link.compute_path(), op.get_index());
 					break;
 
-				case gui::RowOperation::Type::Move:
+				case imtk::list_op_type::move_:
 					data.cancel_editing();
-					if (op.GetSrcIndex() != op.GetDstIndex())
-						imtk::field::execute_list_move_action<T>(link.compute_path(), op.GetSrcIndex(), op.GetDstIndex());
+					if (op.get_src_index() != op.get_dst_index())
+						imtk::field::execute_list_move_action<T>(link.compute_path(), op.get_src_index(), op.get_dst_index());
 					break;
 
-				case gui::RowOperation::Type::Resize:
+				case imtk::list_op_type::resize_:
 					data.cancel_editing();
-					if (data.truth().size() != op.GetSize())
-						imtk::field::execute_list_resize_action<T>(link.compute_path(), data.truth().size(), op.GetSize());
+					if (op.get_old_size() != op.get_new_size())
+						imtk::field::execute_list_resize_action<T>(link.compute_path(), op.get_old_size(), op.get_new_size());
 					break;
 
-				case gui::RowOperation::Type::PushBack:
+				case imtk::list_op_type::append_:
 					data.cancel_editing();
 					imtk::field::execute_list_insert_action<T, Printer>(link.compute_path(), data.truth().size());
 					break;
