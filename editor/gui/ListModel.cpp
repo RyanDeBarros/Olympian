@@ -38,7 +38,7 @@ namespace oly::editor::gui
 
 	void ListModel::DeferCreate()
 	{
-		_pending_ops.push_back(imtk::list_op::make_append_op());
+		_pending_ops.push_back(imtk::list_op::make_append_op(_size));
 	}
 	
 	void ListModel::DeferDelete()
@@ -89,26 +89,19 @@ namespace oly::editor::gui
 		case imtk::list_op_type::append_:
 			++_size;
 			SetLast();
-			adapter.PushBack();
 			break;
 
 		case imtk::list_op_type::delete_:
 			if (_size > 0)
-			{
 				--_size;
-				adapter.Erase(op.get_index());
-			}
 			break;
 
 		case imtk::list_op_type::resize_:
 			_size = op.get_new_size();
-			adapter.Resize(op.get_old_size(), _size);
-			break;
-
-		case imtk::list_op_type::move_:
-			adapter.Move(op.get_src_index(), op.get_dst_index());
 			break;
 		}
+
+		adapter.Apply(op);
 
 		if (!op.update_index(policy, active_index))
 			Clamp();
@@ -119,7 +112,7 @@ namespace oly::editor::gui
 	void ListModel::EnforcePolicy(IListAdapter& adapter)
 	{
 		if (_size == 0 && imp::has_flag(policy, imtk::list_policy::minimum_one))
-			Apply(imtk::list_op::make_append_op(), adapter);
+			Apply(imtk::list_op::make_append_op(_size), adapter);
 	}
 
 	void ListModel::Invoke(const imtk::list_op& op, IListAdapter& adapter)

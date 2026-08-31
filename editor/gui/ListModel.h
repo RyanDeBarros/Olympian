@@ -11,10 +11,7 @@ namespace oly::editor::gui
 		virtual ~IListAdapter() = default;
 
 		virtual size_t Size() const = 0;
-		virtual void PushBack() = 0;
-		virtual void Erase(size_t index) = 0;
-		virtual void Resize(size_t old_size, size_t new_size) = 0;
-		virtual void Move(size_t src, size_t dst) = 0;
+		virtual void Apply(const imtk::list_op& op) = 0;
 	};
 
 	class ListModel
@@ -75,26 +72,9 @@ namespace oly::editor::gui
 			return v.size();
 		}
 
-		void PushBack() override
+		void Apply(const imtk::list_op& op) override
 		{
-			imtk::desc::execute_vector_insert_action<T, Printer>(v.link.compute_path(), Size());
-		}
-
-		void Erase(size_t i) override
-		{
-			imtk::desc::execute_vector_delete_action<T, Printer>(v.link.compute_path(), i);
-		}
-
-		void Resize(size_t old_size, size_t new_size) override
-		{
-			if (old_size != new_size)
-				imtk::desc::execute_vector_resize_action<T>(v.link.compute_path(), old_size, new_size);
-		}
-
-		void Move(size_t src, size_t dst) override
-		{
-			if (src != dst)
-				imtk::desc::execute_vector_move_action<T>(v.link.compute_path(), src, dst);
+			op.execute_desc_action<T, Printer>(v.link.compute_path());
 		}
 	};
 
@@ -113,37 +93,19 @@ namespace oly::editor::gui
 	struct ListCallbackAdapter : public IListAdapter
 	{
 		std::unique_ptr<IListAdapter> primary;
-		std::function<void(imtk::list_op)> callback;
+		std::function<void(const imtk::list_op&)> callback;
 
-		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(imtk::list_op)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
+		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(const imtk::list_op&)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
 
 		size_t Size() const override
 		{
 			return primary->Size();
 		}
 
-		void PushBack() override
+		void Apply(const imtk::list_op& op) override
 		{
-			callback(imtk::list_op::make_append_op());
-			primary->PushBack();
-		}
-
-		void Erase(size_t i) override
-		{
-			callback(imtk::list_op::make_delete_op(i));
-			primary->Erase(i);
-		}
-
-		void Resize(size_t old_size, size_t new_size) override
-		{
-			callback(imtk::list_op::make_resize_op(old_size, new_size));
-			primary->Resize(old_size, new_size);
-		}
-
-		void Move(size_t src, size_t dst) override
-		{
-			callback(imtk::list_op::make_move_op(src, dst));
-			primary->Move(src, dst);
+			callback(op);
+			primary->Apply(op);
 		}
 	};
 

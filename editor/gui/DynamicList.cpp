@@ -30,7 +30,7 @@ namespace oly::editor::gui
 
 	void DynamicListState::DeferPushBack()
 	{
-		row_ops.push_back(imtk::list_op::make_append_op());
+		row_ops.push_back(imtk::list_op::make_append_op(list_size));
 	}
 
 	void DynamicListState::DeferDelete()
@@ -128,15 +128,12 @@ namespace oly::editor::gui
 
 	void DynamicListState::DrawBody(std::function<void(DynamicRow&)> row_draw)
 	{
-		if (auto _ = imtk::child("List"))
+		for (size_t i = 0; i < list_size; ++i)
 		{
-			for (size_t i = 0; i < list_size; ++i)
-			{
-				imtk::id_scope scope(i);
+			imtk::id_scope scope(i);
 
-				if (auto row = gui::DynamicRow(i, "Row", *this))
-					row_draw(row);
-			}
+			if (auto row = gui::DynamicRow(i, "Row", *this))
+				row_draw(row);
 		}
 
 		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows) && !ImGui::GetIO().WantTextInput && ImGui::Shortcut(ImGuiKey_Delete))

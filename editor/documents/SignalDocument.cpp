@@ -197,6 +197,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(SignalDesc& desc)
 	{
+		// TODO v9.3 here and in other usages of imtk::outline, the outline should start in value draw (in widget itself).
 		imtk::outline dup_outline;
 		
 		desc.id.draw();
@@ -257,32 +258,28 @@ namespace oly::editor
 		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
 		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> imtk::item_result {
-			imtk::w::widget_row components;
-			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&]() -> imtk::item_result {
-				std::string& element = desc.signals.edit.buffer()[row.Index()];
+			std::string& element = desc.signals.edit.buffer()[row.Index()];
 
-				imtk::outline outline;
-				auto result = imtk::w::bound_widget<std::string>(element).draw();
+			imtk::outline outline;
+			auto result = imtk::w::bound_widget<std::string>(element).draw();
 
-				if (!signal_id_counter.contains(element))
-				{
-					outline.draw(imtk::col::warning);
-					if (result.state.hovered())
-						ImGui::SetTooltip("Signal id is not present in asset");
-				}
-				else if (local_id_counter.count(element) > 1)
-				{
-					outline.draw(imtk::col::warning);
-					if (result.state.hovered())
-						ImGui::SetTooltip("Duplicate signal id listing in route");
-				}
+			if (!signal_id_counter.contains(element))
+			{
+				outline.draw(imtk::col::warning);
+				if (result.state.hovered())
+					ImGui::SetTooltip("Signal id is not present in asset");
+			}
+			else if (local_id_counter.count(element) > 1)
+			{
+				outline.draw(imtk::col::warning);
+				if (result.state.hovered())
+					ImGui::SetTooltip("Duplicate signal id listing in route");
+			}
 
-				if (result.state.activated())
-					row.OnSelect();
+			if (result.state.activated())
+				row.OnSelect();
 
-				return result;
-			}));
-			return components.draw();
+			return result;
 		}, desc.signals.ui_state);
 
 		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);

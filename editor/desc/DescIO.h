@@ -42,94 +42,6 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = imtk::standard_printer<T>>
-		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, const imtk::desc::vector<T>& data,
-			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
-		{
-			imtk::item_result result;
-
-			ui_state.DrawListHeader(data.size());
-
-			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
-				ImGui::SameLine();
-				auto row_result = draw_fn(row);
-				result |= row_result;
-				if (row_result.state.left_clicked() || row_result.state.focused())
-					row.OnSelect();
-			});
-
-			result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
-				switch (op.type())
-				{
-				case imtk::list_op_type::delete_:
-					imtk::desc::execute_vector_delete_action<T, Printer>(link.compute_path(), op.get_index());
-					break;
-
-				case imtk::list_op_type::move_:
-					if (op.get_src_index() != op.get_dst_index())
-						imtk::desc::execute_vector_move_action<T>(link.compute_path(), op.get_src_index(), op.get_dst_index());
-					break;
-
-				case imtk::list_op_type::resize_:
-					if (op.get_old_size() != op.get_new_size())
-						imtk::desc::execute_vector_resize_action<T>(link.compute_path(), op.get_old_size(), op.get_new_size());
-					break;
-
-				case imtk::list_op_type::append_:
-					imtk::desc::execute_vector_insert_action<T, Printer>(link.compute_path(), data.size());
-					break;
-				}
-			});
-
-			return result;
-		}
-
-		template<typename T, typename Printer = imtk::standard_printer<T>>
-		static imtk::item_result ValueDrawDynamicList(const imtk::datapath_link& link, imtk::edit_session<std::vector<T>>& data,
-			const std::function<imtk::item_result(gui::DynamicRow&)>& draw_fn, gui::DynamicListState& ui_state)
-		{
-			imtk::item_result result;
-
-			ui_state.DrawListHeader(data.buffer().size());
-
-			ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
-				ImGui::SameLine();
-				auto row_result = draw_fn(row);
-				result |= row_result;
-				if (row_result.state.left_clicked() || row_result.state.focused())
-					row.OnSelect();
-			});
-
-			result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
-				switch (op.type())
-				{
-				case imtk::list_op_type::delete_:
-					data.cancel_editing();
-					imtk::field::execute_list_delete_action<T, Printer>(link.compute_path(), op.get_index());
-					break;
-
-				case imtk::list_op_type::move_:
-					data.cancel_editing();
-					if (op.get_src_index() != op.get_dst_index())
-						imtk::field::execute_list_move_action<T>(link.compute_path(), op.get_src_index(), op.get_dst_index());
-					break;
-
-				case imtk::list_op_type::resize_:
-					data.cancel_editing();
-					if (op.get_old_size() != op.get_new_size())
-						imtk::field::execute_list_resize_action<T>(link.compute_path(), op.get_old_size(), op.get_new_size());
-					break;
-
-				case imtk::list_op_type::append_:
-					data.cancel_editing();
-					imtk::field::execute_list_insert_action<T, Printer>(link.compute_path(), data.truth().size());
-					break;
-				}
-			});
-
-			return result;
-		}
-
-		template<typename T, typename Printer = imtk::standard_printer<T>>
 		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
 			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
 		{
@@ -138,8 +50,25 @@ namespace oly::editor
 			if (data.size() != def.size())
 				imtk::prop::reset::button(0);
 
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
-				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() {
+				imtk::item_result result;
+
+				ui_state.DrawListHeader(data.size());
+
+				ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+					ImGui::SameLine();
+					auto row_result = draw_fn(row);
+					result |= row_result;
+					if (row_result.state.left_clicked() || row_result.state.focused())
+						row.OnSelect();
+					});
+
+				result.modified |= ui_state.VisitRowOps([&link](const imtk::list_op& op) {
+					op.execute_desc_action<T, Printer>(link.compute_path());
+				});
+
+				return result;
+			}));
 
 			imtk::prop::row::submit();
 			if (imtk::prop::reset::activated(0))
@@ -155,8 +84,26 @@ namespace oly::editor
 			if (data.buffer().size() != def.size())
 				imtk::prop::reset::button(0);
 
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() -> imtk::item_result
-				{ return ValueDrawDynamicList<T, Printer>(link, data, draw_fn, ui_state); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() {
+				imtk::item_result result;
+
+				ui_state.DrawListHeader(data.buffer().size());
+
+				ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
+					ImGui::SameLine();
+					auto row_result = draw_fn(row);
+					result |= row_result;
+					if (row_result.state.left_clicked() || row_result.state.focused())
+						row.OnSelect();
+					});
+
+				result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
+					data.cancel_editing();
+					op.execute_field_action<T, Printer>(link.compute_path());
+				});
+
+				return result;
+			}));
 
 			imtk::prop::row::submit();
 			data.post_edit(imtk::prop::value::get_draw_result().state);
