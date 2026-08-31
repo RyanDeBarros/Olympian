@@ -24,7 +24,7 @@ namespace oly::editor
 		if (!GetSourcePath().is_resource())
 			imtk::notify_warning("Asset is not located in resource folder");
 
-		_atlas_slots.policy = imtk::list_policy::minimum_one;
+		_atlas_slots.model.policy = imtk::list_policy::minimum_one;
 		_display_text.value = "Abc 123";
 		_display_text.config().label = "Display text";
 		LoadAsset();
@@ -75,7 +75,7 @@ namespace oly::editor
 
 		_desc.LoadFromDisk();
 
-		_atlas_slots.Init(*FontAtlasListAdapter());
+		_atlas_slots.model.init(*FontAtlasListAdapter());
 	}
 
 	void FontDocument::DumpImpl()
@@ -110,7 +110,7 @@ namespace oly::editor
 	void FontDocument::ReloadFont()
 	{
 		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.value);
+		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.model.index()].font_size.value);
 	}
 
 	void FontDocument::DestroyFont()
@@ -134,19 +134,19 @@ namespace oly::editor
 		{
 			ImGui::TableNextColumn();
 				
-			_atlas_slots.Update(*FontAtlasListAdapter());
+			_atlas_slots.model.sync(*FontAtlasListAdapter());
 			if (auto scope = imtk::id_scope("##Atlas"))
 				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
 				
 			if (auto form = imtk::prop::form())
 			{
 				if (!_desc.scratch.font_atlases.empty())
-					Draw(_desc.scratch.font_atlases[_atlas_slots.active_index]);
+					Draw(_desc.scratch.font_atlases[_atlas_slots.model.index()]);
 
-				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
+				if (_atlas_slots.model.consume_ops(*FontAtlasListAdapter()))
 					MarkDirty();
 
-				if (_atlas_slots.active_index.consume_modified())
+				if (_atlas_slots.model.consume_index_modified())
 					DestroyFont();
 			}
 
@@ -406,7 +406,7 @@ namespace oly::editor
 		}
 	};
 
-	std::unique_ptr<gui::IListAdapter> FontDocument::FontAtlasListAdapter()
+	std::unique_ptr<imtk::list_adapter> FontDocument::FontAtlasListAdapter()
 	{
 		return gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.font_atlases);
 	}

@@ -93,7 +93,7 @@ namespace oly::editor
 
 		void OnActiveSlotChanged();
 
-		std::unique_ptr<gui::IListAdapter> ListAdapter();
+		std::unique_ptr<imtk::list_adapter> ListAdapter();
 
 	public:
 		enum class TextureSettingsLoadResult

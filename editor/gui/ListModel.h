@@ -6,47 +6,11 @@
 
 namespace oly::editor::gui
 {
-	struct IListAdapter
-	{
-		virtual ~IListAdapter() = default;
-
-		virtual size_t Size() const = 0;
-		virtual void Apply(const imtk::list_op& op) = 0;
-	};
-
 	class ListModel
 	{
-	private:
-		size_t _size = 0;
-		std::vector<imtk::list_op> _pending_ops;
-
 	public:
-		imp::modifiable<size_t> active_index = 0;
-		imtk::list_policy policy = imtk::list_policy::none;
-
-		void Init(IListAdapter& adapter);
-		void Update(IListAdapter& adapter);
-
-		size_t Size() const;
-
-	private:
-		void Clamp();
-		void SetLast();
-
-	public:
-		void DeferCreate();
-		void DeferDelete();
-		void DeferResize(size_t new_size);
-		void DeferClear();
-
-		bool ConsumeOps(IListAdapter& adapter);
-
-	private:
-		void Apply(const imtk::list_op& op, IListAdapter& adapter);
-		void EnforcePolicy(IListAdapter& adapter);
-
-	public:
-		void Invoke(const imtk::list_op& op, IListAdapter& adapter);
+		// TODO v9.3 obviously collapse this to just imtk::list_model
+		imtk::list_model model;
 
 		struct ComboHeader
 		{
@@ -61,51 +25,51 @@ namespace oly::editor::gui
 	};
 
 	template<typename T, typename Printer = imtk::standard_printer<T>>
-	struct VectorAdapter : public IListAdapter
+	struct VectorAdapter : public imtk::list_adapter
 	{
 		const imtk::desc::vector<T>& v;
 
 		VectorAdapter(const imtk::desc::vector<T>& vec) : v(vec) {}
 
-		size_t Size() const override
+		size_t size() const override
 		{
 			return v.size();
 		}
 
-		void Apply(const imtk::list_op& op) override
+		void apply(const imtk::list_op& op) override
 		{
 			op.execute_desc_action<T, Printer>(v.link.compute_path());
 		}
 	};
 
 	template<typename T>
-	std::unique_ptr<IListAdapter> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
+	std::unique_ptr<VectorAdapter<T, imtk::standard_printer<T>>> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
 	{
 		return std::make_unique<VectorAdapter<T, imtk::standard_printer<T>>>(vector);
 	}
 
 	template<typename Printer, typename T>
-	std::unique_ptr<IListAdapter> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
+	std::unique_ptr<VectorAdapter<T, Printer>> MakeVectorAdapter(const imtk::desc::vector<T>& vector)
 	{
 		return std::make_unique<VectorAdapter<T, Printer>>(vector);
 	}
 
-	struct ListCallbackAdapter : public IListAdapter
+	struct ListCallbackAdapter : public imtk::list_adapter
 	{
-		std::unique_ptr<IListAdapter> primary;
+		std::unique_ptr<imtk::list_adapter> primary;
 		std::function<void(const imtk::list_op&)> callback;
 
-		ListCallbackAdapter(std::unique_ptr<IListAdapter>&& primary, std::function<void(const imtk::list_op&)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
+		ListCallbackAdapter(std::unique_ptr<imtk::list_adapter>&& primary, std::function<void(const imtk::list_op&)> callback) : primary(std::move(primary)), callback(std::move(callback)) {}
 
-		size_t Size() const override
+		size_t size() const override
 		{
-			return primary->Size();
+			return primary->size();
 		}
 
-		void Apply(const imtk::list_op& op) override
+		void apply(const imtk::list_op& op) override
 		{
 			callback(op);
-			primary->Apply(op);
+			primary->apply(op);
 		}
 	};
 

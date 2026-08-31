@@ -63,7 +63,7 @@ namespace oly::editor
 						row.OnSelect();
 					});
 
-				result.modified |= ui_state.VisitRowOps([&link](const imtk::list_op& op) {
+				result.modified |= ui_state.model.visit_deferred_ops([&link](const imtk::list_op& op) {
 					op.execute_desc_action<T, Printer>(link.compute_path());
 				});
 
@@ -72,7 +72,7 @@ namespace oly::editor
 
 			imtk::prop::row::submit();
 			if (imtk::prop::reset::activated(0))
-				ui_state.DeferResize(def.size());
+				ui_state.model.defer_resize(def.size());
 		}
 
 		template<typename T, typename Printer = imtk::standard_printer<T>>
@@ -97,7 +97,7 @@ namespace oly::editor
 						row.OnSelect();
 					});
 
-				result.modified |= ui_state.VisitRowOps([&link, &data](const imtk::list_op& op) {
+				result.modified |= ui_state.model.visit_deferred_ops([&link, &data](const imtk::list_op& op) {
 					data.cancel_editing();
 					op.execute_field_action<T, Printer>(link.compute_path());
 				});
@@ -108,7 +108,7 @@ namespace oly::editor
 			imtk::prop::row::submit();
 			data.post_edit(imtk::prop::value::get_draw_result().state);
 			if (imtk::prop::reset::activated(0))
-				ui_state.DeferResize(def.size());
+				ui_state.model.defer_resize(def.size());
 		}
 
 		// TODO v9.3 replace with imtk::prop::multi_row_scope

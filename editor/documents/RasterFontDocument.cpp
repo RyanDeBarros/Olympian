@@ -59,7 +59,7 @@ namespace oly::editor
 		for (auto& desc : _desc.scratch.glyphs)
 			_codepoint_counter.increment(desc.codepoint.value);
 
-		_glyph_model.Init(*ListAdapter());
+		_glyph_model.model.init(*ListAdapter());
 	}
 
 	void RasterFontDocument::DumpImpl()
@@ -96,7 +96,7 @@ namespace oly::editor
 			{
 				if (auto pause = imtk::prop::form::pause())
 				{
-					_glyph_model.Update(*ListAdapter());
+					_glyph_model.model.sync(*ListAdapter());
 
 					if (auto scope = imtk::id_scope("##Glyph"))
 					{
@@ -113,15 +113,15 @@ namespace oly::editor
 				if (imtk::prop::in_form())
 				{
 					if (!desc.glyphs.empty())
-						Draw(desc.glyphs[_glyph_model.active_index]);
+						Draw(desc.glyphs[_glyph_model.model.index()]);
 
 					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 				}
 
-				if (_glyph_model.ConsumeOps(*ListAdapter()))
+				if (_glyph_model.model.consume_ops(*ListAdapter()))
 					MarkDirty();
 
-				_glyph_model.active_index.consume_modified();
+				_glyph_model.model.consume_index_modified();
 			}
 		}
 	}

@@ -80,8 +80,8 @@ namespace oly::editor
 		}
 
 		_desc.LoadFromDisk();
-		_signal_slots.Init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.signals));
-		_route_slots.Init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.routes));
+		_signal_slots.model.init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.signals));
+		_route_slots.model.init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -110,7 +110,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
 	{
-		_signal_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
+		_signal_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Signal"))
 		{
@@ -129,18 +129,18 @@ namespace oly::editor
 		if (auto form = imtk::prop::form())
 		{
 			if (!desc.empty())
-				Draw(desc[_signal_slots.active_index]);
+				Draw(desc[_signal_slots.model.index()]);
 
-			if (_signal_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
+			if (_signal_slots.model.consume_ops(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
-			_signal_slots.active_index.consume_modified();
+			_signal_slots.model.consume_index_modified();
 		}
 	}
 
 	void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
 	{
-		_route_slots.Update(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
+		_route_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Route"))
 		{
@@ -159,12 +159,12 @@ namespace oly::editor
 		if (auto form = imtk::prop::form())
 		{
 			if (!desc.empty())
-				Draw(desc[_route_slots.active_index]);
+				Draw(desc[_route_slots.model.index()]);
 
-			if (_route_slots.ConsumeOps(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
+			if (_route_slots.model.consume_ops(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
-			_route_slots.active_index.consume_modified();
+			_route_slots.model.consume_index_modified();
 		}
 	}
 

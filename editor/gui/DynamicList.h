@@ -6,29 +6,14 @@
 #include <optional>
 #include <unordered_set>
 
-// TODO v9.3 merge common 'operation' logic with ListModel
-
 namespace oly::editor::gui
 {
 	class DynamicRow;
 
+	// TODO v9.3 remove DynamicListState - just put DrawListHeader/DrawBody into widget draw logic
 	struct DynamicListState
 	{
-		imtk::list_policy policy = imtk::list_policy::none;
-		size_t list_size = 0;
-		size_t index = 0;
-		std::vector<imtk::list_op> row_ops;
-		std::unordered_set<size_t> simul_selected;
-		std::vector<size_t> simul_selected_ordered;
-
-		void Clamp();
-		void SetLast();
-
-		void DeferPushBack();
-		void DeferDelete();
-		void DeferResize(size_t count);
-
-		bool VisitRowOps(std::function<void(const imtk::list_op& op)> fn);
+		imtk::list_model model;
 
 		void DrawListHeader(size_t list_size);
 		void DrawBody(std::function<void(DynamicRow& row)> row_draw);

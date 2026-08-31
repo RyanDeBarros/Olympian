@@ -35,7 +35,7 @@ namespace oly::editor
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
-		_slots.policy = imtk::list_policy::minimum_one;
+		_slots.model.policy = imtk::list_policy::minimum_one;
 
 		LoadAsset();
 	}
@@ -86,11 +86,11 @@ namespace oly::editor
 
 		_desc.LoadFromDisk();
 
-		_slots.Init(*ListAdapter());
+		_slots.model.init(*ListAdapter());
 
 		_preview_nav = {};
 		if (auto svg_desc = _desc.scratch.variant.try_get<imtk::desc::vector<VectorTextureDesc>>())
-			_preview_nav.svg_scale = (*svg_desc)[_slots.active_index].scale.value;
+			_preview_nav.svg_scale = (*svg_desc)[_slots.model.index()].scale.value;
 
 		_stale_preview_texture = true;
 	}
@@ -131,9 +131,9 @@ namespace oly::editor
 
 		_stale_preview_texture = false;
 
-		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Value(); });
-		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Value(); });
-		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
+		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.min_filter.Value(); });
+		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.Value(); });
+		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> bool {
 			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.value), bool>)
 				return desc.generate_mipmaps.value;
 			else
@@ -245,7 +245,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _desc.scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.value ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _desc.scratch.Visit(_slots.model.index(), [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.value ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -426,19 +426,19 @@ namespace oly::editor
 
 	void TextureDocument::Draw(TextureVariantDesc& desc)
 	{
-		_slots.Update(*ListAdapter());
+		_slots.model.sync(*ListAdapter());
 		
 		if (auto scope = imtk::id_scope("##Slot"))
 			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
 
 		if (auto form = imtk::prop::form())
 		{
-			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.active_index]); });
+			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.model.index()]); });
 
-			if (_slots.ConsumeOps(*ListAdapter()))
+			if (_slots.model.consume_ops(*ListAdapter()))
 				MarkDirty();
 
-			if (_slots.active_index.consume_modified())
+			if (_slots.model.consume_index_modified())
 				_stale_preview_texture = true;
 		}
 	}
@@ -623,9 +623,9 @@ namespace oly::editor
 		}
 	};
 
-	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
+	std::unique_ptr<imtk::list_adapter> TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.visit([this](auto& desc) { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
+		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::list_adapter> { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)
