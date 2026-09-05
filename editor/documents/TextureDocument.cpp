@@ -23,6 +23,11 @@ namespace oly::editor
 		playing.config.tooltip = "Play/pause animation";
 	}
 
+	TextureDocument::TextureDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path)), _slots({.prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots"}, "Slot")
+	{
+	}
+
 	const char* TextureDocument::GetVersion()
 	{
 		return "1.0";
@@ -429,7 +434,7 @@ namespace oly::editor
 		_slots.model.sync(*ListAdapter());
 		
 		if (auto scope = imtk::id_scope("##Slot"))
-			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
+			_slots.draw();
 
 		if (auto form = imtk::prop::form())
 		{

@@ -9,14 +9,20 @@
 
 namespace oly::editor
 {
-	const char* FontDocument::GetVersion()
+	FontDocument::FontDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path))
+		, _atlas_slots({ .prompt = "Select atlas", .create_tooltip = "Create atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas")
 	{
-		return "1.0";
 	}
 
 	FontDocument::~FontDocument()
 	{
 		DestroyFont();
+	}
+
+	const char* FontDocument::GetVersion()
+	{
+		return "1.0";
 	}
 
 	void FontDocument::InitImpl()
@@ -117,6 +123,7 @@ namespace oly::editor
 	{
 		if (_preview_font)
 		{
+			// TODO v9.3 imtk RAII for auto font removal
 			ImGui::GetIO().Fonts->RemoveFont(_preview_font);
 			_preview_font = nullptr;
 		}
@@ -136,7 +143,7 @@ namespace oly::editor
 				
 			_atlas_slots.model.sync(*FontAtlasListAdapter());
 			if (auto scope = imtk::id_scope("##Atlas"))
-				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
+				_atlas_slots.draw();
 				
 			if (auto form = imtk::prop::form())
 			{

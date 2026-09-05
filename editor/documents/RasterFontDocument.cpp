@@ -5,6 +5,23 @@
 
 namespace oly::editor
 {
+	static auto MakeGlyphComboName(auto& double_desc)
+	{
+		return [&double_desc](size_t i) -> std::string {
+			auto& desc = double_desc.scratch;
+			if (i < desc.glyphs.size() && !desc.glyphs[i].codepoint.value.empty())
+				return desc.glyphs[i].codepoint.value;
+			else
+				return "Glyph #" + std::to_string(i);
+		};
+	}
+
+	RasterFontDocument::RasterFontDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path))
+		, _glyphs({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" }, MakeGlyphComboName(_desc))
+	{
+	}
+
 	const char* RasterFontDocument::GetVersion()
 	{
 		return "1.0";
@@ -59,7 +76,7 @@ namespace oly::editor
 		for (auto& desc : _desc.scratch.glyphs)
 			_codepoint_counter.increment(desc.codepoint.value);
 
-		_glyph_model.model.init(*ListAdapter());
+		_glyphs.model.init(*ListAdapter());
 	}
 
 	void RasterFontDocument::DumpImpl()
@@ -96,32 +113,24 @@ namespace oly::editor
 			{
 				if (auto pause = imtk::prop::form::pause())
 				{
-					_glyph_model.model.sync(*ListAdapter());
+					_glyphs.model.sync(*ListAdapter());
 
 					if (auto scope = imtk::id_scope("##Glyph"))
-					{
-						_glyph_model.DrawComboHeader({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" },
-							[&desc](size_t i) -> std::string {
-								if (i < desc.glyphs.size() && !desc.glyphs[i].codepoint.value.empty())
-									return desc.glyphs[i].codepoint.value;
-								else
-									return "Glyph #" + std::to_string(i);
-							});
-					}
+						_glyphs.draw();
 				}
 
 				if (imtk::prop::in_form())
 				{
 					if (!desc.glyphs.empty())
-						Draw(desc.glyphs[_glyph_model.model.index()]);
+						Draw(desc.glyphs[_glyphs.model.index()]);
 
 					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 				}
 
-				if (_glyph_model.model.consume_ops(*ListAdapter()))
+				if (_glyphs.model.consume_ops(*ListAdapter()))
 					MarkDirty();
 
-				_glyph_model.model.consume_index_modified();
+				_glyphs.model.consume_index_modified();
 			}
 		}
 	}

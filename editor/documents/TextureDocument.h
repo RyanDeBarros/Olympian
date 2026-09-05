@@ -43,7 +43,7 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		gui::ListModel _slots;
+		gui::ListIndexer _slots;
 		imtk::texture _texture;
 		PreviewNav _preview_nav;
 		
@@ -51,7 +51,7 @@ namespace oly::editor
 		SpritesheetPreviewData _spritesheet_preview_data;
 
 	public:
-		using IDocument::IDocument;
+		TextureDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 

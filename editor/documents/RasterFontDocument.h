@@ -15,11 +15,11 @@ namespace oly::editor
 	{
 		DoubleDescriptor<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListModel _glyph_model;
+		gui::ListIndexer _glyphs;
 		imp::counter<std::string> _codepoint_counter;
 
 	public:
-		using IDocument::IDocument;
+		RasterFontDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 

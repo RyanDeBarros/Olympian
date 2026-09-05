@@ -9,7 +9,7 @@
 
 namespace oly::editor
 {
-	IDocument::IDocument(detail::ResourcePath&& oly_path)
+	IDocument::IDocument(detail::ResourcePath oly_path)
 		: imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path)),
 		_undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
 	{

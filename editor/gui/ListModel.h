@@ -6,22 +6,18 @@
 
 namespace oly::editor::gui
 {
-	class ListModel
+	struct ListIndexer : public imtk::w::owned_list_indexer
 	{
-	public:
-		// TODO v9.3 obviously collapse this to just imtk::list_model
-		imtk::list_model model;
-
-		struct ComboHeader
+		struct Ctor
 		{
-			const char* prompt;
-			const char* create_tooltip;
-			const char* delete_tooltip;
-			const char* clear_tooltip;
+			std::string prompt;
+			std::string create_tooltip;
+			std::string delete_tooltip;
+			std::string clear_tooltip;
 		};
 
-		imtk::item_result DrawComboHeader(const ComboHeader& header, const char* slot_prefix);
-		imtk::item_result DrawComboHeader(const ComboHeader& header, std::function<std::string(size_t)> combo_getter);
+		ListIndexer(Ctor config, std::function<std::string(size_t)> combo_name);
+		ListIndexer(Ctor config, std::string combo_slot_prefix);
 	};
 
 	template<typename T, typename Printer = imtk::standard_printer<T>>

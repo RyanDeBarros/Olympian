@@ -19,14 +19,14 @@ namespace oly::editor
 	{
 		DoubleDescriptor<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListModel _signal_slots;
-		gui::ListModel _route_slots;
+		gui::ListIndexer _signal_slots;
+		gui::ListIndexer _route_slots;
 
 		ListenMode _listen_mode = ListenMode::None;
 		bool _stop_listening = true;
 
 	public:
-		using IDocument::IDocument;
+		SignalDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 

@@ -24,7 +24,7 @@ namespace oly::editor
 		bool _initialized = false;
 
 	public:
-		IDocument(detail::ResourcePath&& oly_path);
+		IDocument(detail::ResourcePath oly_path);
 		virtual ~IDocument() = default;
 
 		void Init();

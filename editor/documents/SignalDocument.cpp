@@ -18,6 +18,41 @@ namespace oly::editor
 		}
 	};
 
+	static auto MakeSignalComboName(auto& double_desc)
+	{
+		return [&double_desc](size_t i) {
+			auto& desc = double_desc.scratch.signals;
+			if (i < desc.size())
+			{
+				std::string id = desc[i].id.value;
+				if (!id.empty())
+					return id;
+			}
+			return "<Signal #" + std::to_string(i) + ">";
+		};
+	}
+
+	static auto MakeRouteComboName(auto& double_desc)
+	{
+		return [&double_desc](size_t i) {
+			auto& desc = double_desc.scratch.routes;
+			if (i < desc.size())
+			{
+				std::string id = desc[i].id.value;
+				if (!id.empty())
+					return id;
+			}
+			return "<Route #" + std::to_string(i) + ">";
+		};
+	}
+
+	SignalDocument::SignalDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path))
+		, _signal_slots({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" }, MakeSignalComboName(_desc))
+		, _route_slots({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" }, MakeRouteComboName(_desc))
+	{
+	}
+
 	const char* SignalDocument::GetVersion()
 	{
 		return "1.0";
@@ -113,18 +148,7 @@ namespace oly::editor
 		_signal_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Signal"))
-		{
-			_signal_slots.DrawComboHeader({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" },
-				[&desc](size_t i) {
-					if (i < desc.size())
-					{
-						std::string id = desc[i].id.value;
-						if (!id.empty())
-							return id;
-					}
-					return "<Signal #" + std::to_string(i) + ">";
-				});
-		}
+			_signal_slots.draw();
 
 		if (auto form = imtk::prop::form())
 		{
@@ -143,18 +167,7 @@ namespace oly::editor
 		_route_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Route"))
-		{
-			_route_slots.DrawComboHeader({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" },
-				[&desc](size_t i) {
-					if (i < desc.size())
-					{
-						std::string id = desc[i].id.value;
-						if (!id.empty())
-							return id;
-					}
-					return "<Signal #" + std::to_string(i) + ">";
-				});
-		}
+			_route_slots.draw();
 
 		if (auto form = imtk::prop::form())
 		{

@@ -350,7 +350,7 @@ namespace oly::editor
 				if (inline_checkboxes)
 					imtk::prop::value::add_component(std::make_unique<imtk::w::widget_row>(std::move(widgets)));
 				else
-					imtk::prop::value::add_component(std::make_unique<imtk::w::vertical_list>(std::move(widgets)));
+					imtk::prop::value::add_component(std::make_unique<imtk::w::sequence>(std::move(widgets)));
 			}
 
 			if (og != value)
@@ -723,7 +723,7 @@ namespace oly::editor
 				if (inline_checkboxes)
 					imtk::prop::value::add_component(std::make_unique<imtk::w::widget_row>(std::move(widgets)));
 				else
-					imtk::prop::value::add_component(std::make_unique<imtk::w::vertical_list>(std::move(widgets)));
+					imtk::prop::value::add_component(std::make_unique<imtk::w::sequence>(std::move(widgets)));
 			}
 
 			SetEnum();
