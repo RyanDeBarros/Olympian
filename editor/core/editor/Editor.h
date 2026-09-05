@@ -7,9 +7,7 @@
 
 #include <imp/event.hpp>
 
-// TODO v9.3 remove once fio stuff is added to imtk
 #include <filesystem>
-#include <memory>
 
 namespace oly::editor
 {

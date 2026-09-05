@@ -5,7 +5,7 @@
 #include "desc/impl/RasterFontDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListModel.h"
+#include "gui/ListIndexer.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -15,7 +15,7 @@ namespace oly::editor
 	{
 		DoubleDescriptor<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListIndexer _glyphs;
+		ListIndexer _glyphs;
 		imp::counter<std::string> _codepoint_counter;
 
 	public:
@@ -41,6 +41,6 @@ namespace oly::editor
 		void Dump(toml::table& table, RasterFontDesc& desc);
 		void Dump(toml::table& table, GlyphDesc& desc);
 
-		std::unique_ptr<gui::ListCallbackAdapter> ListAdapter();
+		std::unique_ptr<imtk::list_callback_adapter> ListAdapter();
 	};
 }

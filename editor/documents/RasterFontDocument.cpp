@@ -215,9 +215,9 @@ namespace oly::editor
 		}
 	};
 
-	std::unique_ptr<gui::ListCallbackAdapter> RasterFontDocument::ListAdapter()
+	std::unique_ptr<imtk::list_callback_adapter> RasterFontDocument::ListAdapter()
 	{
-		return std::make_unique<gui::ListCallbackAdapter>(gui::MakeVectorAdapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),
-			gui::MakeCounterCallback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
+		return std::make_unique<imtk::list_callback_adapter>(imtk::make_vector_adapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),
+			imtk::make_counter_callback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
 	}
 }

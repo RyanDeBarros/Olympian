@@ -1,6 +1,6 @@
 target_sources(OlympianEditor PRIVATE
 	DynamicList.cpp
-	ListModel.cpp
+	ListIndexer.cpp
 	UnsavedChangesModal.cpp
 	Widgets.cpp
 )

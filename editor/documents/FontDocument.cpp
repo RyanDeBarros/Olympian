@@ -413,8 +413,8 @@ namespace oly::editor
 		}
 	};
 
-	std::unique_ptr<imtk::list_adapter> FontDocument::FontAtlasListAdapter()
+	std::unique_ptr<imtk::list_adapter> FontDocument::FontAtlasListAdapter() const
 	{
-		return gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.font_atlases);
+		return imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.font_atlases);
 	}
 }

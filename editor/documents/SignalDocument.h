@@ -5,7 +5,7 @@
 #include "desc/impl/SignalDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListModel.h"
+#include "gui/ListIndexer.h"
 
 #include "core/InputListener.h"
 
@@ -19,8 +19,8 @@ namespace oly::editor
 	{
 		DoubleDescriptor<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListIndexer _signal_slots;
-		gui::ListIndexer _route_slots;
+		ListIndexer _signal_slots;
+		ListIndexer _route_slots;
 
 		ListenMode _listen_mode = ListenMode::None;
 		bool _stop_listening = true;

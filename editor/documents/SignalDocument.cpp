@@ -115,8 +115,8 @@ namespace oly::editor
 		}
 
 		_desc.LoadFromDisk();
-		_signal_slots.model.init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.signals));
-		_route_slots.model.init(*gui::MakeVectorAdapter<BriefDescPrinter>(_desc.scratch.routes));
+		_signal_slots.model.init(*imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.signals));
+		_route_slots.model.init(*imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.routes));
 	}
 
 	void SignalDocument::DumpImpl()
@@ -145,7 +145,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
 	{
-		_signal_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
+		_signal_slots.model.sync(*imtk::make_vector_adapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Signal"))
 			_signal_slots.draw();
@@ -155,7 +155,7 @@ namespace oly::editor
 			if (!desc.empty())
 				Draw(desc[_signal_slots.model.index()]);
 
-			if (_signal_slots.model.consume_ops(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
+			if (_signal_slots.model.consume_ops(*imtk::make_vector_adapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
 			_signal_slots.model.consume_index_modified();
@@ -164,7 +164,7 @@ namespace oly::editor
 
 	void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
 	{
-		_route_slots.model.sync(*gui::MakeVectorAdapter<BriefDescPrinter>(desc));
+		_route_slots.model.sync(*imtk::make_vector_adapter<BriefDescPrinter>(desc));
 
 		if (auto scope = imtk::id_scope("##Route"))
 			_route_slots.draw();
@@ -174,7 +174,7 @@ namespace oly::editor
 			if (!desc.empty())
 				Draw(desc[_route_slots.model.index()]);
 
-			if (_route_slots.model.consume_ops(*gui::MakeVectorAdapter<BriefDescPrinter>(desc)))
+			if (_route_slots.model.consume_ops(*imtk::make_vector_adapter<BriefDescPrinter>(desc)))
 				MarkDirty();
 
 			_route_slots.model.consume_index_modified();

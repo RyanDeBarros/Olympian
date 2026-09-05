@@ -630,7 +630,7 @@ namespace oly::editor
 
 	std::unique_ptr<imtk::list_adapter> TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::list_adapter> { return gui::MakeVectorAdapter<BriefDescPrinter>(desc); });
+		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::list_adapter> { return imtk::make_vector_adapter<BriefDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)

@@ -1,10 +1,10 @@
-#include "ListModel.h"
+#include "ListIndexer.h"
 
 #include "core/editor/ResourceLoader.h"
 
 #include <string>
 
-namespace oly::editor::gui
+namespace oly::editor
 {
 	static void ConfigureListIndexer(imtk::w::list_indexer& widget, std::string create_tooltip, std::string delete_tooltip, std::string clear_tooltip)
 	{

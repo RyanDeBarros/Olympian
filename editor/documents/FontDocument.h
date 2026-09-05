@@ -5,7 +5,7 @@
 #include "desc/impl/FontDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListModel.h"
+#include "gui/ListIndexer.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -15,7 +15,7 @@ namespace oly::editor
 	{
 		DoubleDescriptor<FullFontDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListIndexer _atlas_slots;
+		ListIndexer _atlas_slots;
 		imtk::w::simple_widget<std::string> _display_text;
 		ImFont* _preview_font = nullptr;
 		
@@ -56,6 +56,6 @@ namespace oly::editor
 		void Dump(toml::table& table, KerningDesc& desc);
 		void Dump(toml::table& table, FontAtlasDesc& desc);
 
-		std::unique_ptr<imtk::list_adapter> FontAtlasListAdapter();
+		std::unique_ptr<imtk::list_adapter> FontAtlasListAdapter() const;
 	};
 }
