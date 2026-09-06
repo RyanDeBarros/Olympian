@@ -42,28 +42,17 @@ namespace oly::editor
 		}
 
 		template<typename T, typename Printer = imtk::standard_printer<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, const imtk::desc::vector<T>& data, const std::vector<T>& def,
-			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, const imtk::desc::vector<T>& data, const std::vector<T>& def, gui::DynamicList& list)
 		{
 			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
 			if (data.size() != def.size())
 				imtk::prop::reset::button(0);
 
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() {
-				imtk::item_result result;
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &list]() {
+				imtk::item_result result = list.Draw(data.size());
 
-				ui_state.DrawListHeader(data.size());
-
-				ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
-					ImGui::SameLine();
-					auto row_result = draw_fn(row);
-					result |= row_result;
-					if (row_result.state.left_clicked() || row_result.state.focused())
-						row.OnSelect();
-					});
-
-				result.modified |= ui_state.model.visit_deferred_ops([&link](const imtk::list_op& op) {
+				result.modified |= list.model.visit_deferred_ops([&link](const imtk::list_op& op) {
 					op.execute_desc_action<T, Printer>(link.compute_path());
 				});
 
@@ -72,32 +61,21 @@ namespace oly::editor
 
 			imtk::prop::row::submit();
 			if (imtk::prop::reset::activated(0))
-				ui_state.model.defer_resize(def.size());
+				list.model.defer_resize(def.size());
 		}
 
 		template<typename T, typename Printer = imtk::standard_printer<T>>
-		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def,
-			std::function<imtk::item_result(gui::DynamicRow&)> draw_fn, gui::DynamicListState& ui_state)
+		static void DrawDynamicList(const imtk::datapath_link& link, std::string_view label, imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def, gui::DynamicList& list)
 		{
 			imtk::id_scope scope(&data);
 			imtk::prop::key::set_label(label);
 			if (data.buffer().size() != def.size())
 				imtk::prop::reset::button(0);
 
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &ui_state, draw_fn = std::move(draw_fn)]() {
-				imtk::item_result result;
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&link, &data, &list]() {
+				imtk::item_result result = list.Draw(data.buffer().size());
 
-				ui_state.DrawListHeader(data.buffer().size());
-
-				ui_state.DrawBody([&result, &draw_fn](gui::DynamicRow& row) {
-					ImGui::SameLine();
-					auto row_result = draw_fn(row);
-					result |= row_result;
-					if (row_result.state.left_clicked() || row_result.state.focused())
-						row.OnSelect();
-					});
-
-				result.modified |= ui_state.model.visit_deferred_ops([&link, &data](const imtk::list_op& op) {
+				result.modified |= list.model.visit_deferred_ops([&link, &data](const imtk::list_op& op) {
 					data.cancel_editing();
 					op.execute_field_action<T, Printer>(link.compute_path());
 				});
@@ -108,118 +86,7 @@ namespace oly::editor
 			imtk::prop::row::submit();
 			data.post_edit(imtk::prop::value::get_draw_result().state);
 			if (imtk::prop::reset::activated(0))
-				ui_state.model.defer_resize(def.size());
-		}
-
-		// TODO v9.3 replace with imtk::prop::multi_row_scope
-		template<typename T>
-		static void DrawDynamicListRevertButtons(const std::vector<T>& data, const std::vector<T>& def)
-		{
-			for (size_t i = 0; i < data.size(); ++i)
-			{
-				if (i < def.size())
-				{
-					if (data[i] != def[i])
-						imtk::prop::reset::button(1 + i);
-				}
-				else
-				{
-					if (data[i] != T{})
-						imtk::prop::reset::button(1 + i);
-				}
-			}
-		}
-
-		template<typename T>
-		static void DrawDynamicListRevertButtons(const imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def)
-		{
-			for (size_t i = 0; i < data.buffer().size(); ++i)
-			{
-				if (i < def.size())
-				{
-					if (data.buffer()[i] != def[i])
-						imtk::prop::reset::button(1 + i);
-				}
-				else
-				{
-					if (data.buffer()[i] != T{})
-						imtk::prop::reset::button(1 + i);
-				}
-			}
-		}
-
-		template<typename T>
-		static void CheckDynamicListRevertButtons(std::vector<T>& data, const std::vector<T>& def)
-		{
-			for (size_t i = 0; i < data.size(); ++i)
-			{
-				if (imtk::prop::reset::activated(1 + i))
-				{
-					if (i < def.size())
-						data[i] = def[i];
-					else
-						data[i] = T{};
-				}
-			}
-		}
-
-		template<typename T>
-		static void CheckDynamicListRevertButtons(imtk::edit_session<std::vector<T>>& data, const std::vector<T>& def)
-		{
-			std::vector<T> reset = data.buffer();
-			bool publish = false;
-
-			for (size_t i = 0; i < data.buffer().size(); ++i)
-			{
-				if (imtk::prop::reset::activated(1 + i))
-				{
-					reset[i] = i < def.size() ? def[i] : T{};
-					publish = true;
-				}
-			}
-
-			if (publish)
-				data.publish_reset(std::move(reset));
-		}
-
-		template<typename T> requires (!std::is_enum_v<T>)
-		static void Draw(const imtk::datapath_link& link, std::string_view label, std::vector<T>& data, const std::vector<T>& def, gui::DynamicListState& ui_state)
-		{
-			DrawDynamicListRevertButtons(data, def);
-
-			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
-				imtk::item_result result;
-
-				ImGui::SameLine();
-				result |= imtk::w::widget<T>(data[row.Index()]).draw();
-
-				if (ImGui::IsItemActivated())
-					row.OnSelect();
-
-				return result;
-				}, ui_state);
-
-			CheckDynamicListRevertButtons(data, def);
-		}
-
-		template<typename E> requires (std::is_enum_v<E>)
-		static void Draw(const imtk::datapath_link& link, std::string_view label, std::vector<E>& data, const std::vector<E>& def, gui::DynamicListState& ui_state)
-		{
-			DrawDynamicListRevertButtons(data, def);
-
-			DrawDynamicList(std::move(link), label, data, def, [&data, &def](gui::DynamicRow& row) {
-				imtk::item_result result;
-
-				ImGui::SameLine();
-				result |= DrawCombo(data[row.Index()]);
-
-				if (ImGui::IsItemActivated())
-					row.OnSelect();
-
-				return result;
-				}, ui_state);
-
-			CheckDynamicListRevertButtons(data, def);
+				list.model.defer_resize(def.size());
 		}
 	};
 }

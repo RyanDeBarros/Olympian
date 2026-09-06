@@ -8,35 +8,27 @@
 
 namespace oly::editor::gui
 {
-	class DynamicRow;
-
-	// TODO v9.3 remove DynamicListState - just put DrawListHeader/DrawBody into widget draw logic
-	struct DynamicListState
+	struct DynamicListHeader : public imtk::w::dynamic_list_header
 	{
-		imtk::list_model model;
+		using imtk::w::dynamic_list_header::dynamic_list_header;
 
-		void DrawListHeader(size_t list_size);
-		void DrawBody(std::function<void(DynamicRow& row)> row_draw);
+		DynamicListHeader(imtk::list_model& model);
 	};
 
-	class DynamicRow
+	// TODO v9.3 remove DynamicList - just put DrawListHeader/DrawBody into widget draw logic
+	struct DynamicList
 	{
-		bool _visible = false;
-		DynamicListState& _state;
-		ImVec2 _cursor, _size;
-		size_t _index;
-		std::unique_ptr<imtk::child> _child;
+		imtk::list_model model;
+		DynamicListHeader header;
+		imtk::w::dynamic_list_body body;
 
-	public:
-		DynamicRow(size_t index, const char* str_id, DynamicListState& state);
-		DynamicRow(const DynamicRow&) = delete;
-		DynamicRow(DynamicRow&&) = delete;
-		~DynamicRow();
+		DynamicList();
+		DynamicList(const DynamicList& o);
+		DynamicList(DynamicList&& o) noexcept;
 
-		operator bool() const;
+		DynamicList& operator=(const DynamicList&) = default;
+		DynamicList& operator=(DynamicList&&) noexcept = default;
 
-		void OnSelect();
-		size_t Index() const;
-		ImVec2 Size() const;
+		imtk::item_result Draw(size_t list_size);
 	};
 }

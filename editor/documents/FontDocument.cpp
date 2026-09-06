@@ -183,6 +183,16 @@ namespace oly::editor
 	{
 		desc.storage.draw();
 
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
+		{
+			auto& k = desc.kerning[i];
+			k.distance.edit.pre_edit();
+			k.pair.edit.pre_edit();
+			if (k.distance.edit.buffer() != k.distance.def || k.pair.edit.buffer()[0] != k.pair.def[0] || k.pair.edit.buffer()[1] != k.pair.def[1])
+				imtk::prop::reset::button(1 + i);
+		}
+
+		// TODO v9.3 imp::codepoint_hash
 		struct CodepointHash
 		{
 			size_t operator()(const std::string& str) const
@@ -194,6 +204,7 @@ namespace oly::editor
 			}
 		};
 
+		// TODO v9.3 imp::codepoint_equal + imp::array_equal
 		struct CodepointPairEquality
 		{
 			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
@@ -204,22 +215,12 @@ namespace oly::editor
 
 		imp::counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
 		for (auto& k : desc.kerning)
-		{
-			k.distance.edit.pre_edit();
-			k.pair.edit.pre_edit();
 			counter.increment({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] });
-		}
 
-		for (size_t i = 0; i < desc.kerning.size(); ++i)
-		{
-			auto& k = desc.kerning[i];
-			if (k.distance.edit.buffer() != k.distance.def || k.pair.edit.buffer()[0] != k.pair.def[0] || k.pair.edit.buffer()[1] != k.pair.def[1])
-				imtk::prop::reset::button(1 + i);
-		}
-
-		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, [&desc, &counter](gui::DynamicRow& row) -> imtk::item_result {
+		// TODO v9.3 put in init
+		desc.kerning_widget.body.row_draw = [&desc, &counter](imtk::w::dynamic_row& row) -> imtk::item_result {
 			imtk::w::widget_row components;
-			auto& k = desc.kerning[row.Index()];
+			auto& k = desc.kerning[row.index()];
 
 			bool dup_warning = counter.count({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] }) > 1;
 			imtk::outline dup_outline;
@@ -260,7 +261,7 @@ namespace oly::editor
 					}
 
 					return result;
-				}));
+					}));
 			}
 
 			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
@@ -276,7 +277,9 @@ namespace oly::editor
 			k.pair.edit.post_edit(result.state);
 			k.distance.edit.post_edit(result.state);
 			return result;
-		}, desc.kerning_ui_state);
+		};
+
+		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, desc.kerning_widget);
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{

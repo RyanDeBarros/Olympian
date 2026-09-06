@@ -364,7 +364,7 @@ namespace oly::editor
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
-		gui::DynamicListState ui_state;
+		gui::DynamicList widget;
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 	};

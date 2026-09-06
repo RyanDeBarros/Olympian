@@ -267,11 +267,26 @@ namespace oly::editor
 			dup_outline.draw(imtk::col::error);
 		}
 
+		// TODO v9.3 replace with imtk::prop::multi_row_scope
 		desc.signals.edit.pre_edit();
-		DescIO::DrawDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
 
-		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, [&](gui::DynamicRow& row) -> imtk::item_result {
-			std::string& element = desc.signals.edit.buffer()[row.Index()];
+		for (size_t i = 0; i < desc.signals.edit.buffer().size(); ++i)
+		{
+			if (i < desc.signals.def.size())
+			{
+				if (desc.signals.edit.buffer()[i] != desc.signals.def[i])
+					imtk::prop::reset::button(1 + i);
+			}
+			else
+			{
+				if (desc.signals.edit.buffer()[i] != std::string{})
+					imtk::prop::reset::button(1 + i);
+			}
+		}
+
+		// TODO v9.3 put in init whenever RouteDesc is created
+		desc.signals.widget.body.row_draw = [&signal_id_counter, &local_id_counter, &desc](imtk::w::dynamic_row& row) -> imtk::item_result {
+			std::string& element = desc.signals.edit.buffer()[row.index()];
 
 			imtk::outline outline;
 			auto result = imtk::w::bound_widget<std::string>(element).draw();
@@ -290,12 +305,28 @@ namespace oly::editor
 			}
 
 			if (result.state.activated())
-				row.OnSelect();
+				row.on_select();
 
 			return result;
-		}, desc.signals.ui_state);
+		};
 
-		DescIO::CheckDynamicListRevertButtons(desc.signals.edit, desc.signals.def);
+		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget);
+
+		// TODO v9.3 replace with imtk::prop::multi_row_scope
+		std::vector<std::string> reset = desc.signals.edit.buffer();
+		bool publish = false;
+
+		for (size_t i = 0; i < desc.signals.edit.buffer().size(); ++i)
+		{
+			if (imtk::prop::reset::activated(1 + i))
+			{
+				reset[i] = i < desc.signals.def.size() ? desc.signals.def[i] : std::string{};
+				publish = true;
+			}
+		}
+
+		if (publish)
+			desc.signals.edit.publish_reset(std::move(reset));
 
 		desc.signals.CheckUndoAction();
 	}

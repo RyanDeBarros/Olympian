@@ -16,6 +16,8 @@ namespace oly::editor
 			std::string clear_tooltip;
 		};
 
+		using imtk::w::owned_list_indexer::owned_list_indexer;
+
 		ListIndexer(Ctor config, std::function<std::string(size_t)> combo_name);
 		ListIndexer(Ctor config, std::string combo_slot_prefix);
 	};

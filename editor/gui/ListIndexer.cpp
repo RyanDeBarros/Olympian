@@ -8,8 +8,12 @@ namespace oly::editor
 {
 	static void ConfigureListIndexer(imtk::w::list_indexer& widget, std::string create_tooltip, std::string delete_tooltip, std::string clear_tooltip)
 	{
-		widget.configure_buttons(Icon(IconResource::Plus), std::move(create_tooltip),
-			Icon(IconResource::Minus), std::move(delete_tooltip), Icon(IconResource::Close), std::move(clear_tooltip));
+		widget.create_button.config.icon = Icon(IconResource::Plus);
+		widget.create_button.config.tooltip = std::move(create_tooltip);
+		widget.delete_button.config.icon = Icon(IconResource::Minus);
+		widget.delete_button.config.tooltip = std::move(delete_tooltip);
+		widget.clear_button.config.icon = Icon(IconResource::Close);
+		widget.clear_button.config.tooltip = std::move(clear_tooltip);
 	}
 
 	ListIndexer::ListIndexer(Ctor config, std::function<std::string(size_t)> combo_name)
