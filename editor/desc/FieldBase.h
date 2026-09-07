@@ -18,7 +18,7 @@ namespace oly::editor
 		T value;
 		imtk::edit_session<T> edit;
 		imtk::key key;
-		const char* label;
+		const char* label; // TODO v9.3 use label_registry for all const char* labels -> use in widgets as well over std::string?
 
 		PrimitiveField(imtk::datapath_link link, T def, imtk::key key, const char* label)
 			: imtk::tick_processor(imtk::tick_process_phase::check_undo), link(std::move(link)), def(def), value(def), edit(value), key(key), label(label)
@@ -31,7 +31,8 @@ namespace oly::editor
 		}
 
 		PrimitiveField& operator=(const PrimitiveField&) = delete;
-		PrimitiveField& operator=(PrimitiveField&&) noexcept = default;
+
+		PrimitiveField& operator=(PrimitiveField&& o) noexcept = default;
 
 		void copy_data(const PrimitiveField& o)
 		{

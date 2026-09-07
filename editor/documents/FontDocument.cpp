@@ -183,15 +183,6 @@ namespace oly::editor
 	{
 		desc.storage.draw();
 
-		for (size_t i = 0; i < desc.kerning.size(); ++i)
-		{
-			auto& k = desc.kerning[i];
-			k.distance.edit.pre_edit();
-			k.pair.edit.pre_edit();
-			if (k.distance.edit.buffer() != k.distance.def || k.pair.edit.buffer()[0] != k.pair.def[0] || k.pair.edit.buffer()[1] != k.pair.def[1])
-				imtk::prop::reset::button(1 + i);
-		}
-
 		// TODO v9.3 imp::codepoint_hash
 		struct CodepointHash
 		{
@@ -279,28 +270,39 @@ namespace oly::editor
 			return result;
 		};
 
-		DescIO::DrawDynamicList(desc.kerning.link, "Kerning", desc.kerning, {}, desc.kerning_widget);
+		std::vector<std::unique_ptr<imtk::prop::iresettable>> resetters;
+		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, std::vector<KerningDesc>{}));
+
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
+		{
+			std::vector<std::unique_ptr<imtk::prop::iresettable>> row;
+
+			auto& k = desc.kerning[i];
+			row.push_back(std::make_unique<imtk::prop::resettable_value<imtk::edit_session<int>, int>>(k.distance.edit, k.distance.def));
+			row.push_back(std::make_unique<imtk::prop::resettable_value<imtk::edit_session<std::array<std::string, 2>>, std::array<std::string, 2>>>(k.pair.edit, k.pair.def));
+
+			resetters.push_back(std::make_unique<imtk::prop::resettable_row>(std::move(row)));
+		}
+
+		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.kerning_widget.Draw(desc.kerning.size()); }));
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{
 			KerningDesc& k = desc.kerning[i];
-			if (imtk::prop::reset::activated(1 + i))
-			{
-				k.distance.edit.publish_reset(k.distance.def);
-				k.pair.edit.publish_reset(k.pair.def);
-				MarkDirty();
-			}
-
 			auto og_distance = k.distance.edit.consume_published_from();
 			auto og_pair = k.pair.edit.consume_published_from();
 			if (og_distance || og_pair)
 			{
 				KerningDesc original;
-				original.distance.value = og_distance ? *og_distance : k.distance.value;
-				original.pair.value = og_pair ? *og_pair : k.pair.value;
+				original.distance.value = og_distance.value_or(k.distance.value);
+				original.pair.value = og_pair.value_or(k.pair.value);
 				imtk::desc::push_set_action(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}
+
+		if (desc.kerning_widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { op.execute_desc_action<KerningDesc>(desc.kerning.link.compute_path()); }))
+			imtk::prop::grid::mark_dirty();
 	}
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)

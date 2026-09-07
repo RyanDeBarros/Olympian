@@ -267,23 +267,6 @@ namespace oly::editor
 			dup_outline.draw(imtk::col::error);
 		}
 
-		// TODO v9.3 replace with imtk::prop::multi_row_scope
-		desc.signals.edit.pre_edit();
-
-		for (size_t i = 0; i < desc.signals.edit.buffer().size(); ++i)
-		{
-			if (i < desc.signals.def.size())
-			{
-				if (desc.signals.edit.buffer()[i] != desc.signals.def[i])
-					imtk::prop::reset::button(1 + i);
-			}
-			else
-			{
-				if (desc.signals.edit.buffer()[i] != std::string{})
-					imtk::prop::reset::button(1 + i);
-			}
-		}
-
 		// TODO v9.3 put in init whenever RouteDesc is created
 		desc.signals.widget.body.row_draw = [&signal_id_counter, &local_id_counter, &desc](imtk::w::dynamic_row& row) -> imtk::item_result {
 			std::string& element = desc.signals.edit.buffer()[row.index()];
@@ -310,23 +293,11 @@ namespace oly::editor
 			return result;
 		};
 
-		DescIO::DrawDynamicList(desc.signals.link, desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget);
+		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget.model))
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.signals.widget.Draw(desc.signals.edit.buffer().size()); }));
 
-		// TODO v9.3 replace with imtk::prop::multi_row_scope
-		std::vector<std::string> reset = desc.signals.edit.buffer();
-		bool publish = false;
-
-		for (size_t i = 0; i < desc.signals.edit.buffer().size(); ++i)
-		{
-			if (imtk::prop::reset::activated(1 + i))
-			{
-				reset[i] = i < desc.signals.def.size() ? desc.signals.def[i] : std::string{};
-				publish = true;
-			}
-		}
-
-		if (publish)
-			desc.signals.edit.publish_reset(std::move(reset));
+		if (desc.signals.widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { desc.signals.edit.cancel_editing(); op.execute_field_action<std::string>(desc.signals.link.compute_path()); }))
+			imtk::prop::grid::mark_dirty();
 
 		desc.signals.CheckUndoAction();
 	}

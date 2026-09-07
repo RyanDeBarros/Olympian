@@ -377,44 +377,38 @@ namespace oly::editor
 
 			if (auto scope = imtk::id_scope(&desc.texture))
 			{
-				imtk::prop::key::set_label(desc.texture.label);
-				desc.texture.edit.pre_edit();
-				if (desc.texture.edit.buffer() != desc.texture.def)
-					imtk::prop::reset::button();
+				if (auto _ = imtk::prop::make_row_scope(desc.texture.label, desc.texture.edit, desc.texture.def))
+				{
+					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
+						imtk::id_scope scope(&desc.texture.value);
 
-				imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
-					imtk::id_scope scope(&desc.texture.value);
+						imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
 
-					imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
-
-					// TODO v9.4 support dropping files directly on grid cells
-					if (auto target = imtk::drag_drop_target())
-					{
-						std::optional<detail::ResourcePath> path;
-						if (auto p = target.accept<TreeViewPathDDP>())
-							path = *p;
-						else if (auto p = target.accept<ContentBrowserPathDDP>())
-							path = *p;
-
-						if (path)
+						// TODO v9.4 support dropping files directly on grid cells
+						if (auto target = imtk::drag_drop_target())
 						{
-							if (path->is_resource())
+							std::optional<detail::ResourcePath> path;
+							if (auto p = target.accept<TreeViewPathDDP>())
+								path = *p;
+							else if (auto p = target.accept<ContentBrowserPathDDP>())
+								path = *p;
+
+							if (path)
 							{
-								desc.texture.edit.publish_reset(path->get_resource_shorthand());
-								result.modified = true;
+								if (path->is_resource())
+								{
+									desc.texture.edit.publish_reset(path->get_resource_shorthand());
+									result.modified = true;
+								}
+								else
+									imtk::notify_error("Path is not located in resource folder");
 							}
-							else
-								imtk::notify_error("Path is not located in resource folder");
 						}
-					}
 
-					desc.texture.edit.post_edit(result.state);
-					return result;
-				}));
-
-				imtk::prop::row::submit();
-				if (imtk::prop::reset::any_activated())
-					desc.texture.edit.publish_reset(desc.texture.def);
+						desc.texture.edit.post_edit(result.state);
+						return result;
+					}));
+				}
 
 				desc.texture.CheckUndoAction();
 			}
