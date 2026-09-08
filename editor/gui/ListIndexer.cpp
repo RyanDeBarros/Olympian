@@ -6,6 +6,7 @@
 
 namespace oly::editor
 {
+	// TODO v9.3 put icons in default list_indexer, so need for this special ListIndexer
 	static void ConfigureListIndexer(imtk::w::list_indexer& widget, std::string create_tooltip, std::string delete_tooltip, std::string clear_tooltip)
 	{
 		widget.create_button.config.icon = Icon(IconResource::Plus);

@@ -286,7 +286,7 @@ namespace oly::editor
 		}
 
 		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.kerning_widget.Draw(desc.kerning.size()); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.kerning_widget.draw(desc.kerning.size()); }));
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{

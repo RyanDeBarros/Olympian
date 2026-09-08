@@ -1,8 +1,8 @@
 #pragma once
 
-#include "gui/DynamicList.h"
-
 #include <imp/group.hpp>
+
+// TODO v9.3 move to imtk
 
 namespace oly::editor
 {
@@ -462,7 +462,7 @@ namespace oly::editor
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
-		gui::DynamicList widget;
+		imtk::w::dynamic_list widget;
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 	};

@@ -36,9 +36,14 @@ namespace oly::editor
 
 		imtk::post_window_init({
 			.reset_icon = Icon(IconResource::Revert),
-			.drag_icon = Icon(IconResource::Handle),
 			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
-			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); }
+			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); },
+			.dynamic_lists = {
+				.drag_icon = Icon(IconResource::Handle),
+				.create_icon = Icon(IconResource::Plus),
+				.delete_icon = Icon(IconResource::Minus),
+				.clear_icon = Icon(IconResource::Close),
+			},
 		});
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {

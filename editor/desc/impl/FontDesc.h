@@ -28,7 +28,7 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(FontFaceDesc, FONT_FACE_GENERATOR);
 
-		gui::DynamicList kerning_widget;
+		imtk::w::dynamic_list kerning_widget;
 
 		FontFaceDesc(imtk::datapath_link link = {});
 	};
