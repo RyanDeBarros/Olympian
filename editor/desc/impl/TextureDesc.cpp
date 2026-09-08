@@ -1,7 +1,5 @@
 #include "TextureDesc.h"
 
-#include "desc/DescIO.h"
-
 #include "definitions/Keys.h"
 #include "definitions/enums/Filters.h"
 

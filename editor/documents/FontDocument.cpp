@@ -206,19 +206,19 @@ namespace oly::editor
 
 		imp::counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
 		for (auto& k : desc.kerning)
-			counter.increment({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] });
+			counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
 
 		// TODO v9.3 put in init
 		desc.kerning_widget.body.row_draw = [&desc, &counter](imtk::w::dynamic_row& row) -> imtk::item_result {
 			imtk::w::widget_row components;
 			auto& k = desc.kerning[row.index()];
 
-			bool dup_warning = counter.count({ k.pair.edit.buffer()[0], k.pair.edit.buffer()[1] }) > 1;
+			bool dup_warning = counter.count({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
 			imtk::outline dup_outline;
 			for (size_t i = 0; i < 2; ++i)
 			{
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
-					bool bad_codepoint = !imp::stocdpt(k.pair.edit.buffer()[i]).has_value();
+					bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
 					imtk::outline bad_outline;
 					if (bad_codepoint)
 						dup_warning = false;
@@ -232,7 +232,7 @@ namespace oly::editor
 						ImGui::SameLine();
 					}
 
-					result |= imtk::w::bound_widget<std::string>(k.pair.edit.buffer()[i], { .label = k.pair.sublabels ? imtk::label_span_registry::string(k.pair.sublabels, i) : "" }).draw();
+					result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer(), { .label = "" }).draw();
 
 					if (dup_warning && result.state.hovered())
 						ImGui::SetTooltip("Duplicate codepoint pair");
@@ -265,23 +265,24 @@ namespace oly::editor
 			}));
 
 			auto result = components.draw();
-			k.pair.edit.post_edit(result.state);
+			k.pair.fields[0].edit.post_edit(result.state);
+			k.pair.fields[1].edit.post_edit(result.state);
 			k.distance.edit.post_edit(result.state);
 			return result;
 		};
 
 		std::vector<std::unique_ptr<imtk::prop::iresettable>> resetters;
-		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, std::vector<KerningDesc>{}));
+		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, 0));
 
-		for (size_t i = 0; i < desc.kerning.size(); ++i)
+		for (auto& k : desc.kerning)
 		{
-			std::vector<std::unique_ptr<imtk::prop::iresettable>> row;
+			// TODO v9.3 inline complex field support - instead of PrimitiveField, InlineComplexField?
 
-			auto& k = desc.kerning[i];
-			row.push_back(std::make_unique<imtk::prop::resettable_value<imtk::edit_session<int>, int>>(k.distance.edit, k.distance.def));
-			row.push_back(std::make_unique<imtk::prop::resettable_value<imtk::edit_session<std::array<std::string, 2>>, std::array<std::string, 2>>>(k.pair.edit, k.pair.def));
-
-			resetters.push_back(std::make_unique<imtk::prop::resettable_row>(std::move(row)));
+			resetters.push_back(imtk::prop::make_resettable_value_row(
+				imtk::prop::make_resettable_value(k.distance.edit, k.distance.def),
+				imtk::prop::make_resettable_value(k.pair.fields[0].edit, k.pair.fields[0].def),
+				imtk::prop::make_resettable_value(k.pair.fields[1].edit, k.pair.fields[1].def)
+			));
 		}
 
 		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
@@ -291,12 +292,14 @@ namespace oly::editor
 		{
 			KerningDesc& k = desc.kerning[i];
 			auto og_distance = k.distance.edit.consume_published_from();
-			auto og_pair = k.pair.edit.consume_published_from();
-			if (og_distance || og_pair)
+			auto og_pair_0 = k.pair.fields[0].edit.consume_published_from();
+			auto og_pair_1 = k.pair.fields[1].edit.consume_published_from();
+			if (og_distance || og_pair_0 || og_pair_1)
 			{
 				KerningDesc original;
 				original.distance.value = og_distance.value_or(k.distance.value);
-				original.pair.value = og_pair.value_or(k.pair.value);
+				original.pair.fields[0].value = og_pair_0.value_or(k.pair.fields[0].value);
+				original.pair.fields[1].value = og_pair_1.value_or(k.pair.fields[1].value);
 				imtk::desc::push_set_action(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
 			}
 		}

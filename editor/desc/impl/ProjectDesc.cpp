@@ -59,8 +59,8 @@ namespace oly::editor
 
 	CollisionDesc::CollisionDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		masks(IMTK_DATAPATH_SUBLINK(subpaths.masks), {}, detail::Key::Masks, "Masks"),
-		layers(IMTK_DATAPATH_SUBLINK(subpaths.layers), {}, detail::Key::Layers, "Layers")
+		masks(IMTK_DATAPATH_SUBLINK(subpaths.masks), std::array<std::string, 32>{}, detail::Key::Masks, "Masks"),
+		layers(IMTK_DATAPATH_SUBLINK(subpaths.layers), std::array<std::string, 32>{}, detail::Key::Layers, "Layers")
 	{
 	}
 

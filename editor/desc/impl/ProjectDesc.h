@@ -78,8 +78,8 @@ namespace oly::editor
 	};
 
 #define COLLISION_GENERATOR(M) \
-	M((StringArrayField<32>), masks) \
-	M((StringArrayField<32>), layers)
+	M((FieldArray<StringField, 32>), masks) \
+	M((FieldArray<StringField, 32>), layers)
 
 	struct CollisionDesc
 	{

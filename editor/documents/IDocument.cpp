@@ -76,6 +76,8 @@ namespace oly::editor
 		}
 	}
 
+	// TODO v9.3 saving doesn't work properly with actively edited sessions. Send some kind of signal on ctrl+s to all live edit_sessions to finish editing + deactivate item
+
 	void IDocument::DumpAsset()
 	{
 		DumpImpl();

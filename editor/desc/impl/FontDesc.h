@@ -8,7 +8,7 @@
 namespace oly::editor
 {
 #define KERNING_GENERATOR(M) \
-		M((StringArrayField<2>), pair) \
+		M((FieldArray<StringField, 2>), pair) \
 		M((IntField<imp::nullpotential, imp::nullpotential>), distance)
 
 	struct KerningDesc

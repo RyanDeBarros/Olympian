@@ -1,7 +1,5 @@
 #pragma once
 
-#include "desc/DescIO.h"
-
 #include "gui/DynamicList.h"
 
 #include <imp/group.hpp>
@@ -58,6 +56,11 @@ namespace oly::editor
 		{
 			if (key != imtk::key::null())
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(edit.truth()));
+		}
+
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<T>{}.dump(edit.truth()));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
@@ -125,6 +128,11 @@ namespace oly::editor
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<bool>{}.dump(value));
 		}
 
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<bool>{}.dump(value));
+		}
+
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			return path.empty() ? imp::matches_type(type, &value) : nullptr;
@@ -176,7 +184,7 @@ namespace oly::editor
 	using DoubleField = RangeField<double, double, Min, Max>;
 
 	template<typename E> requires (std::is_enum_v<E>)
-		struct EnumField
+	struct EnumField
 	{
 		imtk::datapath_link link;
 		E def;
@@ -214,6 +222,11 @@ namespace oly::editor
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<E>{}.dump(value));
 		}
 
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<E>{}.dump(value));
+		}
+
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			return path.empty() ? imp::matches_type(type, &value) : nullptr;
@@ -239,42 +252,124 @@ namespace oly::editor
 	using StringField = PrimitiveField<std::string>;
 	using Color4Field = PrimitiveField<imtk::color4>;
 
-	template<typename T, size_t N>
-	struct ArrayField : public PrimitiveField<std::array<T, N>>
+	template<typename Field, size_t N>
+	struct FieldArray
 	{
-		using Super = PrimitiveField<std::array<T, N>>;
+		imtk::datapath_link link;
+		std::array<Field, N> fields;
+		imtk::key key;
+		const char* label;
 
-		imtk::label_span_registry::handle sublabels = {};
-
-		ArrayField(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label)
-			: Super(std::move(link), def, key, label)
+		template<typename T>
+		FieldArray(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label)
+			: link(std::move(link))
+			, fields(init_fields(std::make_index_sequence<N>{}, this->link, std::move(def), nullptr))
+			, key(key)
+			, label(label)
 		{
 		}
 
-		ArrayField(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label, const char* (&sublabels)[N])
-			: Super(std::move(link), def, key, label), sublabels(imtk::label_span_registry::intern(std::span<const char* const>(sublabels, N)))
+		template<typename T>
+		FieldArray(imtk::datapath_link link, std::array<T, N> def, imtk::key key, const char* label, const char* (&sublabels)[N])
+			: link(std::move(link))
+			, fields(init_fields(std::make_index_sequence<N>{}, this->link, std::move(def), sublabels))
+			, key(key)
+			, label(label)
 		{
+		}
+
+	private:
+		template<typename T, size_t... i>
+		static auto init_fields(std::index_sequence<i...>, imtk::datapath_link& link, std::array<T, N> def, const char** sublabels)
+		{
+			return std::array<Field, N>{ Field(imtk::datapath_link(link, imtk::datapath::step(i)), std::move(def[i]), imtk::key::null(), sublabels ? sublabels[i] : "")... };
+		}
+
+	public:
+		void copy_data(const FieldArray& o)
+		{
+			for (size_t i = 0; i < N; ++i)
+				fields[i].copy_data(o.fields[i]);
+		}
+
+		bool query_dirty(const FieldArray& disk) const
+		{
+			for (size_t i = 0; i < N; ++i)
+			{
+				if (fields[i].query_dirty(disk.fields[i]))
+					return true;
+			}
+
+			return false;
+		}
+
+		void load(imtk::toml_node node)
+		{
+			if (auto arr = imtk::toml_get(node, key).as_array())
+			{
+				for (size_t i = 0; i < N; ++i)
+				{
+					if (i < arr->size())
+						fields[i].load(imtk::toml_node(arr->get(i)));
+					else
+						fields[i].load({});
+				}
+			}
+		}
+
+		void dump(toml::table& table) const
+		{
+			if (key != imtk::key::null())
+			{
+				toml::array arr;
+				arr.reserve(N);
+				for (size_t i = 0; i < N; ++i)
+					fields[i].dump(arr);
+				table.insert_or_assign(imtk::encode_key(key), std::move(arr));
+			}
+		}
+
+		void dump(toml::array& array) const
+		{
+			if (key != imtk::key::null())
+			{
+				toml::array arr;
+				arr.reserve(N);
+				for (size_t i = 0; i < N; ++i)
+					fields[i].dump(arr);
+				array.push_back(std::move(arr));
+			}
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
-				return imp::matches_type(type, &this->value);
+				return imp::matches_type(type, this); // TODO v9.3 rename in imp to resolve_type()
 
 			int index = path.step();
 			if (index >= 0 && index < N)
-			{
-				path = path.next();
-				return path.empty() ? imp::matches_type(type, &this->value[index]) : nullptr;
-			}
+				return fields[index].resolve(path.next(), type);
 			else
 				return nullptr;
 		}
 
 		void draw()
 		{
-			DescIO::Draw(this->label, this->edit, this->def, sublabels);
-			this->CheckUndoAction();
+			// TODO v9.3 subviews of each field
+			//imtk::prop::view_generator generator = [this]() {
+			//	auto view = std::make_unique<imtk::prop::view_list>();
+			//	view->subviews.reserve(N);
+			//	for (size_t i = 0; i < N; ++i)
+			//		view->subviews.push_back(std::make_unique<imtk::prop::simple_view<std::string>>(data.buffer()[i]));
+			//	return view;
+			//};
+			//if (auto subform = imtk::prop::subform(label, generator))
+
+			if (auto subform = imtk::prop::subform(label))
+			{
+				for (auto& field : fields)
+					field.draw();
+			}
 		}
 	};
 
@@ -319,6 +414,11 @@ namespace oly::editor
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<std::array<bool, N>>{}.dump(value));
 		}
 
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<std::array<bool, N>>{}.dump(value));
+		}
+
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
@@ -358,9 +458,6 @@ namespace oly::editor
 				imtk::field::push_set_action(link.compute_path(), og, value);
 		}
 	};
-
-	template<size_t N>
-	using StringArrayField = ArrayField<std::string, N>;
 
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
@@ -422,6 +519,11 @@ namespace oly::editor
 		void dump(toml::table& table) const
 		{
 			table.insert_or_assign(imtk::encode_key(key), Value());
+		}
+
+		void dump(toml::array& array) const
+		{
+			array.push_back(Value());
 		}
 
 		E Value() const
@@ -633,6 +735,11 @@ namespace oly::editor
 				table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
 		}
 
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<T>{}.dump(edit.truth().has_value ? edit.truth().value : nullopt));
+		}
+
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			return path.empty() ? imp::matches_type(type, &value) : nullptr;
@@ -762,6 +869,11 @@ namespace oly::editor
 		void dump(toml::table& table) const
 		{
 			table.insert_or_assign(imtk::encode_key(key), imtk::serializer<E>{}.dump(value));
+		}
+
+		void dump(toml::array& array) const
+		{
+			array.push_back(imtk::serializer<E>{}.dump(value));
 		}
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)

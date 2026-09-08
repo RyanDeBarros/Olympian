@@ -7,14 +7,14 @@ namespace oly::editor
 {
 	KerningDesc::KerningDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		pair(IMTK_DATAPATH_SUBLINK(subpaths.pair), { "", "" }, detail::Key::CodepointPair, "Codepoints"),
+		pair(IMTK_DATAPATH_SUBLINK(subpaths.pair), std::array<std::string, 2>{}, detail::Key::CodepointPair, "Codepoints"),
 		distance(IMTK_DATAPATH_SUBLINK(subpaths.distance), 0, detail::Key::CodepointDistance, "Distance")
 	{
 	}
 
 	std::ostream& operator<<(std::ostream& os, const KerningDesc& desc)
 	{
-		return os << "KerningDesc[pair=(\"" << desc.pair.value[0] << "\",\"" << desc.pair.value[1] << "\"), distance=" << desc.distance.value << "]";
+		return os << "KerningDesc[pair=(\"" << desc.pair.fields[0].value << "\",\"" << desc.pair.fields[1].value << "\"), distance=" << desc.distance.value << "]";
 	}
 
 	FontFaceDesc::FontFaceDesc(imtk::datapath_link link) :

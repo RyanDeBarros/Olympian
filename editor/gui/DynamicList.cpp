@@ -6,6 +6,7 @@
 
 namespace oly::editor::gui
 {
+	// TODO v9.3 imtk::assign_dynamic_list_icons() in imtk::init() so that there's no need for special DynamicListHeader -> move entirely into imtk
 	DynamicListHeader::DynamicListHeader(imtk::list_model& model)
 		: imtk::w::dynamic_list_header(model)
 	{
