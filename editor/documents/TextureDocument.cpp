@@ -24,7 +24,7 @@ namespace oly::editor
 	}
 
 	TextureDocument::TextureDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path)), _slots({.prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots"}, "Slot")
+		: IDocument(std::move(oly_path)), _slots({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot")
 	{
 	}
 

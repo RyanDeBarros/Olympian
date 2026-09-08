@@ -5,8 +5,6 @@
 #include "desc/impl/RasterFontDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListIndexer.h"
-
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
@@ -15,7 +13,7 @@ namespace oly::editor
 	{
 		DoubleDescriptor<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
-		ListIndexer _glyphs;
+		imtk::w::owned_list_indexer _glyphs;
 		imp::counter<std::string> _codepoint_counter;
 
 	public:

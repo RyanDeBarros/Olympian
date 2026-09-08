@@ -5,8 +5,6 @@
 #include "desc/impl/FontDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListIndexer.h"
-
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
@@ -15,7 +13,7 @@ namespace oly::editor
 	{
 		DoubleDescriptor<FullFontDesc> _desc;
 		detail::MetaMap _meta;
-		ListIndexer _atlas_slots;
+		imtk::w::owned_list_indexer _atlas_slots;
 		imtk::w::simple_widget<std::string> _display_text;
 		ImFont* _preview_font = nullptr;
 		

@@ -5,8 +5,6 @@
 #include "desc/impl/TextureDesc.h"
 #include "desc/DoubleDescriptor.h"
 
-#include "gui/ListIndexer.h"
-
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
@@ -43,7 +41,7 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		ListIndexer _slots;
+		imtk::w::owned_list_indexer _slots;
 		imtk::texture _texture;
 		PreviewNav _preview_nav;
 		
