@@ -4,6 +4,7 @@
 #include "definitions/Keys.h"
 
 #include <imp/counter.hpp>
+#include <imp/equal.hpp>
 #include <imp/hash.hpp>
 #include <imp/parser.hpp>
 
@@ -162,28 +163,7 @@ namespace oly::editor
 	{
 		desc.storage.draw();
 
-		// TODO v9.3 imp::codepoint_hash
-		struct CodepointHash
-		{
-			size_t operator()(const std::string& str) const
-			{
-				if (auto v = imp::stocdpt(str))
-					return std::hash<int>{}(*v);
-				else
-					return 0;
-			}
-		};
-
-		// TODO v9.3 imp::codepoint_equal + imp::array_equal
-		struct CodepointPairEquality
-		{
-			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
-			{
-				return imp::stocdpt(lhs[0]) == imp::stocdpt(rhs[0]) && imp::stocdpt(lhs[1]) == imp::stocdpt(rhs[1]);
-			}
-		};
-
-		imp::counter<std::array<std::string, 2>, imp::stl_hash<CodepointHash>, CodepointPairEquality> counter;
+		imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> counter;
 		for (auto& k : desc.kerning)
 			counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
 
