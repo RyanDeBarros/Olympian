@@ -1,6 +1,15 @@
-#meta version=1.0 type=signal
+#meta version="1.0" type="signal" 
+RouteArr = []
 
 [[SigArr]]
-ID = "click"
+BanMods = 0
 Binding = 1
 Button = 0
+ID = 'click'
+ReqMods = 0
+
+    [SigArr.Modifier]
+    Conv = 0
+    Invert = [ false, false, false ]
+    Mult = [ 1.0, 1.0, 1.0 ]
+    Swizzle = 0

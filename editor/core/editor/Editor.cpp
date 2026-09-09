@@ -44,6 +44,11 @@ namespace oly::editor
 				.delete_icon = Icon(IconResource::Minus),
 				.clear_icon = Icon(IconResource::Close),
 			},
+			.list_indexers = {
+				.create_icon = Icon(IconResource::Plus),
+				.delete_icon = Icon(IconResource::Minus),
+				.clear_icon = Icon(IconResource::Close),
+			},
 		});
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {

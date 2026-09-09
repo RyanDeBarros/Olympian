@@ -6,6 +6,7 @@
 
 namespace oly
 {
+	// TODO v9.3 use imp::intance_tracker
 	template<typename T>
 	class AutoRegistrable;
 
