@@ -8,19 +8,20 @@ namespace oly::editor
 	class PreferencesPanel : public IPanel
 	{
 		PreferencesDocument _doc;
-		bool _window_unsaved_changes_modal = false;
-		bool _shutdown_unsaved_changes_modal = false;
-		bool _open_shutdown_modal = false;
+		imtk::unsaved_changes_modal _window_unsaved_changes_modal;
+		imtk::unsaved_changes_modal _shutdown_unsaved_changes_modal;
 		
 	public:
 		static PreferencesPanel& Instance();
+
+		PreferencesPanel();
 
 		void InitImpl() override;
 		const char* GetTitle() const override;
 		void Draw() override;
 
 	private:
-		bool DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup);
+		bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal);
 
 	public:
 		bool RequestShutdown();

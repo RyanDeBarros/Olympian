@@ -76,8 +76,6 @@ namespace oly::editor
 		}
 	}
 
-	// TODO v9.3 saving doesn't work properly with actively edited sessions
-
 	void IDocument::DumpAsset()
 	{
 		imtk::signal_publish_editing_sessions();

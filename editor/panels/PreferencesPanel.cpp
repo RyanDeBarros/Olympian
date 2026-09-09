@@ -3,7 +3,6 @@
 #include "core/editor/Editor.h"
 #include "core/windows/MainWindow.h"
 #include "panels/PanelManager.h"
-#include "gui/UnsavedChangesModal.h"
 
 #include "definitions/Keys.h"
 
@@ -11,16 +10,18 @@
 
 namespace oly::editor
 {
-	// TODO DEBT use kPascalCase notation for constants instead of all caps
-	static constexpr const char* kWindowUnsavedChangesPopup = "Unsaved Changes##Window";
-	static constexpr const char* kShutdownUnsavedChangesPopup = "Unsaved Changes##App";
-
 	PreferencesPanel& PreferencesPanel::Instance()
 	{
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<PreferencesPanel>())
 			return *panel;
 		else
 			imtk::breakout_error::throw_("No instance of PreferencesPanel");
+	}
+
+	PreferencesPanel::PreferencesPanel()
+		: _window_unsaved_changes_modal("Window", { "Editor preferences" })
+		, _shutdown_unsaved_changes_modal("Shutdown", { "Editor preferences" })
+	{
 	}
 
 	void PreferencesPanel::InitImpl()
@@ -45,8 +46,7 @@ namespace oly::editor
 			Open();
 			ImGui::SetWindowFocus();
 
-			_window_unsaved_changes_modal = true;
-			ImGui::OpenPopup(kWindowUnsavedChangesPopup);
+			_window_unsaved_changes_modal.pop.open();
 		}
 
 		if (window.IsVisible())
@@ -64,42 +64,27 @@ namespace oly::editor
 			_doc.Draw();
 		}
 
-		if (_window_unsaved_changes_modal)
-		{
-			if (DrawUnsavedChangesModal(_window_unsaved_changes_modal, kWindowUnsavedChangesPopup))
-				Close();
-		}
+		if (DrawUnsavedChangesModal(_window_unsaved_changes_modal))
+			Close();
 
-		if (_shutdown_unsaved_changes_modal)
+		if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal))
 		{
-			if (_open_shutdown_modal)
-			{
-				_open_shutdown_modal = false;
-				ImGui::OpenPopup(kShutdownUnsavedChangesPopup);
-			}
-
-			if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal, kShutdownUnsavedChangesPopup))
-			{
-				Close();
-				Editor::RequestShutdown();
-			}
+			Close();
+			Editor::RequestShutdown();
 		}
 	}
 
-	bool PreferencesPanel::DrawUnsavedChangesModal(bool& unsaved_changes_modal, const char* popup)
+	bool PreferencesPanel::DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal)
 	{
-		std::vector<std::string> description;
-		description.push_back("Editor preferences");
-		auto result = gui::DrawUnsavedChangesModal(popup, description);
+		auto result = modal.draw();
 
-		if (result == gui::UnsavedChangesModalResult::SaveChanges)
+		if (result == imtk::unsaved_changes_modal::result::save_changes)
 			_doc.DumpAsset();
 
-		if (result == gui::UnsavedChangesModalResult::DiscardChanges)
+		if (result == imtk::unsaved_changes_modal::result::discard_changes)
 			_doc.LoadAsset();
 
-		unsaved_changes_modal = result == gui::UnsavedChangesModalResult::None;
-		return result == gui::UnsavedChangesModalResult::SaveChanges || result == gui::UnsavedChangesModalResult::DiscardChanges;
+		return modal.closing(result);
 	}
 
 	bool PreferencesPanel::RequestShutdown()
@@ -108,8 +93,7 @@ namespace oly::editor
 		{
 			Open();
 			GainFocus();
-			_shutdown_unsaved_changes_modal = true;
-			_open_shutdown_modal = true;
+			_shutdown_unsaved_changes_modal.pop.open();
 			return false;
 		}
 		else

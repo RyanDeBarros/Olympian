@@ -1,2 +1,19 @@
+[CntBrwsr]
+FolHLm = 30
+
+    [CntBrwsr.UndoH]
+    UndoCL = 500
+    UndoSL = 32
+    UndoSLu = 4
+
+[Edit.UndoH]
+UndoCL = 500
+UndoSL = 32
+UndoSLu = 4
+
+[FileSys]
+TrashLm = 5
+TrashLmU = 6
+
 [TreeView.Advanced]
 AnlsIntv = 10.0
