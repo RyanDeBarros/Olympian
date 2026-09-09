@@ -294,7 +294,7 @@ namespace oly::editor
 		};
 
 		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget.model))
-			// TODO v9.3 dedicate widget for dynamic_list - use in FontDocument as well
+			// TODO v9.3 dedicated widget for dynamic_list - use in FontDocument as well
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.signals.widget.draw(desc.signals.edit.buffer().size()); }));
 
 		if (desc.signals.widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { desc.signals.edit.cancel_editing(); op.execute_field_action<std::string>(desc.signals.link.compute_path()); }))

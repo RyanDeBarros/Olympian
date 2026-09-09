@@ -15,11 +15,10 @@ namespace oly::editor
 		detail::MetaMap _meta;
 		imtk::w::owned_list_indexer _atlas_slots;
 		imtk::w::simple_widget<std::string> _display_text;
-		ImFont* _preview_font = nullptr;
+		imtk::font_instance _preview_font;
 		
 	public:
 		FontDocument(detail::ResourcePath oly_path);
-		~FontDocument();
 
 		static const char* GetVersion();
 
@@ -34,9 +33,6 @@ namespace oly::editor
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
-		void ReloadFont();
-		void DestroyFont();
-
 		void DrawFontFace();
 		void DrawFontAtlases();
 		void DrawAtlasPreview();

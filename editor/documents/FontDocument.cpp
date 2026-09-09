@@ -15,11 +15,6 @@ namespace oly::editor
 	{
 	}
 
-	FontDocument::~FontDocument()
-	{
-		DestroyFont();
-	}
-
 	const char* FontDocument::GetVersion()
 	{
 		return "1.0";
@@ -113,22 +108,6 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	void FontDocument::ReloadFont()
-	{
-		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.model.index()].font_size.value);
-	}
-
-	void FontDocument::DestroyFont()
-	{
-		if (_preview_font)
-		{
-			// TODO v9.3 imtk RAII for auto font removal
-			ImGui::GetIO().Fonts->RemoveFont(_preview_font);
-			_preview_font = nullptr;
-		}
-	}
-
 	void FontDocument::DrawFontFace()
 	{
 		if (auto form = imtk::prop::form())
@@ -154,7 +133,7 @@ namespace oly::editor
 					MarkDirty();
 
 				if (_atlas_slots.model.consume_index_modified())
-					DestroyFont();
+					_preview_font.reset();
 			}
 
 			ImGui::TableNextColumn();
@@ -172,7 +151,7 @@ namespace oly::editor
 			_display_text.draw();
 
 			if (!_preview_font)
-				ReloadFont();
+				_preview_font = imtk::font_instance(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.model.index()].font_size.value);
 
 			if (auto _ = imtk::font_scope(_preview_font))
 				ImGui::TextUnformatted(_display_text.value.c_str());
@@ -312,7 +291,7 @@ namespace oly::editor
 	{
 		desc.font_size.draw();
 		if (imtk::prop::row::dirty())
-			DestroyFont();
+			_preview_font.reset();
 
 		IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
