@@ -4,7 +4,6 @@
 
 #include <imtk.hpp>
 
-// TODO v9.3 rename gui/ folder to something like bindings/
 namespace imtk::w
 {
 	template<>

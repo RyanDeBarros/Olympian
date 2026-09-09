@@ -21,6 +21,7 @@
 #include "desc/impl/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
+#include "assets/TranslateKey.h"
 
 namespace oly::editor
 {	

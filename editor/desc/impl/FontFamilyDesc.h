@@ -1,6 +1,6 @@
 #pragma once
 
-#include "desc/Fields.h"
+#include "bindings/Fields.h"
 
 #include "definitions/enums/FontStyle.h"
 

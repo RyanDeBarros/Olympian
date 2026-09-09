@@ -1,9 +1,8 @@
 #pragma once
 
-#include "desc/Serializer.h"
+#include <imtk.hpp>
 
-#include "assets/TranslateKey.h"
-
+// TODO v9.3 move to imtk
 namespace oly::editor
 {
 #define LOAD_SIMPLE_FIELD(F) F.Load(node);
@@ -20,21 +19,21 @@ namespace oly::editor
 	struct SimpleField
 	{
 		T value;
-		detail::Key key;
+		imtk::key key;
 
-		SimpleField(T value, detail::Key key)
+		SimpleField(T value, imtk::key key)
 			: value(std::move(value)), key(key)
 		{
 		}
 
 		void Load(imtk::toml_node node)
 		{
-			imtk::serializer<T>{}.load(value, node[detail::encode_key(key)]);
+			imtk::serializer<T>{}.load(value, node[imtk::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table)
 		{
-			table.insert_or_assign(detail::encode_key(key), imtk::serializer<T>{}.dump(value));
+			table.insert_or_assign(imtk::encode_key(key), imtk::serializer<T>{}.dump(value));
 		}
 
 		const T& operator*() const
@@ -72,23 +71,23 @@ namespace oly::editor
 	struct SimpleDesc
 	{
 		Desc desc;
-		detail::Key key;
+		imtk::key key;
 
-		SimpleDesc(detail::Key key)
+		SimpleDesc(imtk::key key)
 			: key(key)
 		{
 		}
 
 		void Load(imtk::toml_node node)
 		{
-			desc.Load(node[detail::encode_key(key)]);
+			desc.Load(node[imtk::encode_key(key)]);
 		}
 
 		void Dump(toml::table& table)
 		{
 			toml::table subtable;
 			desc.Dump(subtable);
-			table.insert_or_assign(detail::encode_key(key), std::move(subtable));
+			table.insert_or_assign(imtk::encode_key(key), std::move(subtable));
 		}
 
 		const Desc& operator*() const
@@ -126,9 +125,9 @@ namespace oly::editor
 	struct SimpleArrayDesc
 	{
 		std::vector<Desc> descs;
-		detail::Key key;
+		imtk::key key;
 
-		SimpleArrayDesc(detail::Key key)
+		SimpleArrayDesc(imtk::key key)
 			: key(key)
 		{
 		}
@@ -136,7 +135,7 @@ namespace oly::editor
 		void Load(imtk::toml_node node)
 		{
 			descs.clear();
-			if (auto array = node[detail::encode_key(key)].as_array())
+			if (auto array = node[imtk::encode_key(key)].as_array())
 			{
 				descs.resize(array->size());
 				for (size_t i = 0; i < descs.size(); ++i)
@@ -153,7 +152,7 @@ namespace oly::editor
 				descs[i].Dump(subtable);
 				array.push_back(std::move(subtable));
 			}
-			table.insert_or_assign(detail::encode_key(key), std::move(array));
+			table.insert_or_assign(imtk::encode_key(key), std::move(array));
 		}
 
 		const Desc& operator[](size_t i) const

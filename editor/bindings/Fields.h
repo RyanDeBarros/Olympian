@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/Types.h"
-#include "gui/Widgets.h"
-#include "desc/Serializer.h"
+#include "bindings/Widgets.h"
+#include "bindings/Serializer.h"
 
 #include "desc/FieldBase.h"
 

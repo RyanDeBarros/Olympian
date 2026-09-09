@@ -193,11 +193,11 @@ target_sources(OlympianEditor PRIVATE
 )
 
 # Add subdirectories
+add_subdirectory(bindings)
 add_subdirectory(core)
 add_subdirectory(desc)
 add_subdirectory(documents)
 add_subdirectory(fio)
-add_subdirectory(gui)
 add_subdirectory(panels)
 
 add_custom_command(TARGET OlympianEditor POST_BUILD

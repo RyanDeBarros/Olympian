@@ -1,6 +1,7 @@
 #pragma once
 
 #include "desc/SimpleField.h"
+#include "bindings/Serializer.h"
 
 #include "assets/ResourcePath.h"
 
