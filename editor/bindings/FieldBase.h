@@ -65,7 +65,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 	protected:
@@ -135,7 +135,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 		void draw()
@@ -229,7 +229,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 		void draw()
@@ -344,7 +344,7 @@ namespace oly::editor
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
-				return imp::matches_type(type, this); // TODO v9.3 rename in imp to resolve_type()
+				return imp::resolve_type(type, this); // TODO v9.3 rename in imp to resolve_type()
 
 			int index = path.step();
 			if (index >= 0 && index < N)
@@ -422,13 +422,13 @@ namespace oly::editor
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
 			if (path.empty())
-				return imp::matches_type(type, &this->value);
+				return imp::resolve_type(type, &this->value);
 
 			int index = path.step();
 			if (index >= 0 && index < N)
 			{
 				path = path.next();
-				return path.empty() ? imp::matches_type(type, &this->value[index]) : nullptr;
+				return path.empty() ? imp::resolve_type(type, &this->value[index]) : nullptr;
 			}
 			else
 				return nullptr;
@@ -549,7 +549,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &index) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &index) : nullptr;
 		}
 	};
 
@@ -634,7 +634,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 	protected:
@@ -742,7 +742,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 		void on_last_process_frame() override
@@ -878,7 +878,7 @@ namespace oly::editor
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type)
 		{
-			return path.empty() ? imp::matches_type(type, &value) : nullptr;
+			return path.empty() ? imp::resolve_type(type, &value) : nullptr;
 		}
 
 		bool query_dirty(const BitsetField<E, Count>& disk) const
