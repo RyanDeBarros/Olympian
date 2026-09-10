@@ -168,7 +168,7 @@ namespace oly::editor
 			counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
 
 		// TODO v9.3 put in init
-		desc.kerning_widget.body.row_draw = [&desc, &counter](imtk::w::dynamic_row& row) -> imtk::item_result {
+		desc.kerning_widget.body.row_draw = [&desc, &counter](imtk::dynamic_row& row) -> imtk::item_result {
 			imtk::w::widget_row components;
 			auto& k = desc.kerning[row.index()];
 
@@ -245,7 +245,7 @@ namespace oly::editor
 		}
 
 		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.kerning_widget.draw(desc.kerning.size()); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.kerning_widget, desc.kerning.size()));
 
 		for (size_t i = 0; i < desc.kerning.size(); ++i)
 		{

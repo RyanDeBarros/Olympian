@@ -462,7 +462,7 @@ namespace oly::editor
 	template<typename T>
 	struct VectorField : public PrimitiveField<std::vector<T>>
 	{
-		imtk::w::dynamic_list widget;
+		imtk::dynamic_list widget;
 
 		using PrimitiveField<std::vector<T>>::PrimitiveField;
 	};

@@ -268,7 +268,7 @@ namespace oly::editor
 		}
 
 		// TODO v9.3 put in init whenever RouteDesc is created
-		desc.signals.widget.body.row_draw = [&signal_id_counter, &local_id_counter, &desc](imtk::w::dynamic_row& row) -> imtk::item_result {
+		desc.signals.widget.body.row_draw = [&signal_id_counter, &local_id_counter, &desc](imtk::dynamic_row& row) -> imtk::item_result {
 			std::string& element = desc.signals.edit.buffer()[row.index()];
 
 			imtk::outline outline;
@@ -294,8 +294,7 @@ namespace oly::editor
 		};
 
 		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget.model))
-			// TODO v9.3 dedicated widget for dynamic_list - use in FontDocument as well
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([&desc]() { return desc.signals.widget.draw(desc.signals.edit.buffer().size()); }));
+			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
 
 		if (desc.signals.widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { desc.signals.edit.cancel_editing(); op.execute_field_action<std::string>(desc.signals.link.compute_path()); }))
 			imtk::prop::grid::mark_dirty();
