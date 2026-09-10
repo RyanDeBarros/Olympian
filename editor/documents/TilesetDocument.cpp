@@ -190,7 +190,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 	}
 
 	void TilesetDocument::DumpImpl()
@@ -198,7 +198,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
@@ -207,12 +207,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

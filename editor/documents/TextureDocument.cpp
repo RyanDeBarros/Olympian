@@ -89,7 +89,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 
 		_slots.model.init(*ListAdapter());
 
@@ -105,7 +105,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
@@ -114,12 +114,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch, _svg, _gif);
 	}
 
-	const IDoubleDescriptor& TextureDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& TextureDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& TextureDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& TextureDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

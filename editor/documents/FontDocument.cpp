@@ -75,7 +75,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 
 		_atlas_slots.model.init(*FontAtlasListAdapter());
 	}
@@ -85,7 +85,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
@@ -94,12 +94,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& FontDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& FontDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& FontDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& FontDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

@@ -3,13 +3,12 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/PreferencesDesc.h"
-#include "desc/DoubleDescriptor.h"
 
 namespace oly::editor
 {
 	class PreferencesDocument : public IDocument
 	{
-		DoubleDescriptor<PreferencesDesc> _desc;
+		imtk::desc::doubler<PreferencesDesc> _desc;
 
 	public:
 		static const char* GetVersion();
@@ -22,8 +21,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		void ApplyEditorPreferences();
 		void RevertEditorPreferences();

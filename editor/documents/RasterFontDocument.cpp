@@ -70,7 +70,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 		
 		_codepoint_counter.clear();
 		for (auto& desc : _desc.scratch.glyphs)
@@ -84,7 +84,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
@@ -93,12 +93,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& RasterFontDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

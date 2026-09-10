@@ -2,7 +2,6 @@
 
 #include "core/editor/Editor.h"
 
-#include "desc/DoubleDescriptor.h"
 #include "desc/impl/PreferencesDesc.h"
 
 #include <imgui.h>
@@ -46,13 +45,13 @@ namespace oly::editor
 
 	void IDocument::ResetAsset()
 	{
-		auto original = GetDoubleDescriptor().CopyScratch();
+		auto original = GetDoubleDescriptor().copy_scratch();
 
 		ResetAssetImpl();
 		query_dirty();
 
 		std::unique_ptr<imp::undo_action> action;
-		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
+		if (GetDoubleDescriptor().scratch_undo_action_query(std::move(original), action))
 		{
 			if (action)
 				_undo_history.push(std::move(action));
@@ -63,13 +62,13 @@ namespace oly::editor
 
 	void IDocument::LoadAsset()
 	{
-		auto original = GetDoubleDescriptor().CopyScratch();
+		auto original = GetDoubleDescriptor().copy_scratch();
 
 		LoadImpl();
 
 		if (_initialized)
 		{
-			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
+			if (auto action = GetDoubleDescriptor().scratch_undo_action(std::move(original)))
 				_undo_history.push(std::move(action));
 			else
 				_undo_history.clear();

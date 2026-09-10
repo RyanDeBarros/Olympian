@@ -3,7 +3,6 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/FontDesc.h"
-#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -11,7 +10,7 @@ namespace oly::editor
 {
 	class FontDocument : public IDocument
 	{
-		DoubleDescriptor<FullFontDesc> _desc;
+		imtk::desc::doubler<FullFontDesc> _desc;
 		detail::MetaMap _meta;
 		imtk::w::owned_list_indexer _atlas_slots;
 		imtk::w::simple_widget<std::string> _display_text;
@@ -27,8 +26,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 

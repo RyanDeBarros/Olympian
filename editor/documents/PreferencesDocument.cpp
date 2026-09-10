@@ -75,7 +75,7 @@ namespace oly::editor
 
 		Load(imtk::toml_node(table), _desc.disk);
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
@@ -88,7 +88,7 @@ namespace oly::editor
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << table;
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
@@ -98,12 +98,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

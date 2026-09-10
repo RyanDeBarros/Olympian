@@ -3,7 +3,6 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/TextureDesc.h"
-#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -37,7 +36,7 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		DoubleDescriptor<TextureVariantDesc> _desc;
+		imtk::desc::doubler<TextureVariantDesc> _desc;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
@@ -58,8 +57,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 

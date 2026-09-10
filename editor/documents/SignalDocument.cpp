@@ -114,7 +114,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 		_signal_slots.model.init(*imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.signals));
 		_route_slots.model.init(*imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.routes));
 	}
@@ -124,7 +124,7 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
@@ -133,12 +133,12 @@ namespace oly::editor
 		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& SignalDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& SignalDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}

@@ -8,7 +8,7 @@
 
 namespace oly::editor
 {
-	struct IDoubleDescriptor;
+	struct imtk::desc::idoubler;
 
 	class IDocument : public imtk::tick_processor, public imtk::data_accessor
 	{
@@ -40,8 +40,8 @@ namespace oly::editor
 		virtual void ResetAssetImpl() = 0;
 		bool Exists();
 
-		virtual const IDoubleDescriptor& GetDoubleDescriptor() const = 0;
-		virtual IDoubleDescriptor& GetDoubleDescriptor() = 0;
+		virtual const imtk::desc::idoubler& GetDoubleDescriptor() const = 0;
+		virtual imtk::desc::idoubler& GetDoubleDescriptor() = 0;
 
 		void* resolve(imtk::datapath_view path, imp::type_erasure type) override;
 		void describe(std::ostream& os, imtk::datapath_view path) const override;

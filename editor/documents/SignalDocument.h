@@ -3,7 +3,6 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/SignalDesc.h"
-#include "desc/DoubleDescriptor.h"
 
 #include "core/InputListener.h"
 
@@ -15,7 +14,7 @@ namespace oly::editor
 {
 	class SignalDocument : public IDocument
 	{
-		DoubleDescriptor<SignalFullDesc> _desc;
+		imtk::desc::doubler<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
 		imtk::w::owned_list_indexer _signal_slots;
 		imtk::w::owned_list_indexer _route_slots;
@@ -33,8 +32,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 	private:
 		void Draw(imtk::desc::vector<SignalDesc>& desc);

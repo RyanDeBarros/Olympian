@@ -3,7 +3,6 @@
 #include "documents/IDocument.h"
 
 #include "desc/impl/RasterFontDesc.h"
-#include "desc/DoubleDescriptor.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -11,7 +10,7 @@ namespace oly::editor
 {
 	class RasterFontDocument : public IDocument
 	{
-		DoubleDescriptor<RasterFontDesc> _desc;
+		imtk::desc::doubler<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
 		imtk::w::owned_list_indexer _glyphs;
 		imp::counter<std::string> _codepoint_counter;
@@ -26,8 +25,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 	private:
 		void Draw(RasterFontDesc& desc);
