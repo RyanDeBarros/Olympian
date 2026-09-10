@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/TextureDesc.h"
+#include "desc/TextureDesc.h"
 
 #include "assets/MetaSplitter.h"
 

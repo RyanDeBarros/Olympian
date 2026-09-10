@@ -18,7 +18,7 @@
 #include "panels/AssetEditorPanel.h"
 #include "panels/PreferencesPanel.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
 #include "assets/TranslateKey.h"

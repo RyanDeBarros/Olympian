@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 namespace oly::editor
 {

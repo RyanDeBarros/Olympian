@@ -4,7 +4,7 @@
 #include "bindings/Widgets.h"
 #include "bindings/Serializer.h"
 
-#include "desc/FieldBase.h"
+#include "bindings/FieldBase.h"
 
 namespace oly::editor
 {

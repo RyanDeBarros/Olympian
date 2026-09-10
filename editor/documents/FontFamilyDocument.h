@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/FontFamilyDesc.h"
+#include "desc/FontFamilyDesc.h"
 
 #include "assets/MetaSplitter.h"
 

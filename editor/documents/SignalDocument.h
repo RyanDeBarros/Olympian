@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/SignalDesc.h"
+#include "desc/SignalDesc.h"
 
 #include "core/InputListener.h"
 

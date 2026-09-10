@@ -14,7 +14,7 @@
 
 #include "fio/FIOOperation.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
 

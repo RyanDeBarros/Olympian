@@ -11,7 +11,7 @@
 #include "panels/PanelManager.h"
 #include "panels/ContentBrowserPanel.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include <algorithm>
 #include <stack>

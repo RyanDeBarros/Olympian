@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/RasterFontDesc.h"
+#include "desc/RasterFontDesc.h"
 
 #include "assets/MetaSplitter.h"
 

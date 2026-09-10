@@ -2,7 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/TilesetDesc.h"
+#include "desc/TilesetDesc.h"
 
 #include "assets/MetaSplitter.h"
 

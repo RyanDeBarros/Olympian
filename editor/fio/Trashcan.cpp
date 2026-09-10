@@ -4,7 +4,7 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
 

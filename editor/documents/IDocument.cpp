@@ -2,7 +2,7 @@
 
 #include "core/editor/Editor.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include <imgui.h>
 
