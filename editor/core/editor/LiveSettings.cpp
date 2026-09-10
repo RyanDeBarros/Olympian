@@ -34,13 +34,13 @@ namespace oly::editor
 			}
 		}
 
-		desc.Load(imtk::toml_node(table));
+		desc.load(imtk::toml_node(table));
 	}
 
 	void LiveSettings::Dump()
 	{
 		toml::table table;
-		desc.Dump(table);
+		desc.dump(table);
 		std::filesystem::path path = GetPath().get_absolute();
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);

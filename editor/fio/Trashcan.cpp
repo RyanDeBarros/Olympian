@@ -4,7 +4,6 @@
 #include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"
 
-#include "desc/SimpleField.h"
 #include "desc/impl/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
@@ -95,9 +94,9 @@ namespace oly::editor::fio
 		M(last_write_time) \
 		M(size)
 
-			SimpleField<std::string> trash_path;
-			SimpleField<int64_t> last_write_time;
-			SimpleField<int64_t> size;
+			imtk::field::simple<std::string> trash_path;
+			imtk::field::simple<int64_t> last_write_time;
+			imtk::field::simple<int64_t> size;
 
 			Entry() :
 				trash_path("", detail::Key::Path),
@@ -106,12 +105,12 @@ namespace oly::editor::fio
 			{
 			}
 			
-			LOAD_DUMP_SIMPLE_FIELDS_IMPL(ENTRY_GENERATOR);
+			IMTK_LOAD_DUMP_SIMPLE_FIELDS_IMPL(ENTRY_GENERATOR);
 
 #undef ENTRY_GENERATOR
 		};
 
-		SimpleArrayDesc<Entry> entries;
+		imtk::desc::simple_array<Entry> entries;
 		size_t total_size = 0;
 
 		Manifest()
@@ -121,7 +120,7 @@ namespace oly::editor::fio
 
 		void Load(const imtk::toml_node node)
 		{
-			entries.Load(node);
+			entries.load(node);
 			total_size = 0;
 			for (const Entry& entry : entries)
 				total_size += *entry.size;
@@ -129,7 +128,7 @@ namespace oly::editor::fio
 
 		void Dump(toml::table& table)
 		{
-			entries.Dump(table);
+			entries.dump(table);
 		}
 
 		void Add(const std::filesystem::path& local_trash_path)

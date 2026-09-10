@@ -1,6 +1,5 @@
 #pragma once
 
-#include "desc/SimpleField.h"
 #include "bindings/Serializer.h"
 
 #include "assets/ResourcePath.h"
@@ -14,11 +13,11 @@ namespace oly::editor
 		M(favorites) \
 		M(font_scale)
 
-		SimpleField<unsigned int> columns;
-		SimpleField<std::set<detail::ResourcePath>> favorites;
-		SimpleField<float> font_scale;
+		imtk::field::simple<unsigned int> columns;
+		imtk::field::simple<std::set<detail::ResourcePath>> favorites;
+		imtk::field::simple<float> font_scale;
 
-		LOAD_DUMP_SIMPLE_FIELDS_IMPL(CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR);
+		IMTK_LOAD_DUMP_SIMPLE_FIELDS_IMPL(CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR);
 
 #undef CONTENT_BROWSER_LIVE_SETTINGS_GENERATOR
 
@@ -30,9 +29,9 @@ namespace oly::editor
 #define LIVE_SETTINGS_GENERATOR(M) \
 		M(content_browser)
 
-		SimpleDesc<ContentBrowserLiveSettingsDesc> content_browser;
+		imtk::desc::simple<ContentBrowserLiveSettingsDesc> content_browser;
 
-		LOAD_DUMP_SIMPLE_FIELDS_IMPL(LIVE_SETTINGS_GENERATOR);
+		IMTK_LOAD_DUMP_SIMPLE_FIELDS_IMPL(LIVE_SETTINGS_GENERATOR);
 
 #undef LIVE_SETTINGS_GENERATOR
 
