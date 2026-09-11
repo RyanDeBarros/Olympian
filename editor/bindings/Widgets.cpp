@@ -22,8 +22,6 @@ namespace imtk::w
 		id_scope scope(&data);
 		item_result result;
 	
-		// TODO v9.3 do this for glm::vec2/3/4 for individual properties for each float box ?
-
 		if (auto s = prop::grid::subproperty_scope())
 		{
 			widget* subwidgets[] = { &x1, &x2, &y1, &y2 };

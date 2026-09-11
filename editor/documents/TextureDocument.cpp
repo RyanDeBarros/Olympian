@@ -136,8 +136,8 @@ namespace oly::editor
 
 		_stale_preview_texture = false;
 
-		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.min_filter.Value(); });
-		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.Value(); });
+		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.min_filter.value(); });
+		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.value(); });
 		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> bool {
 			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.value), bool>)
 				return desc.generate_mipmaps.value;
@@ -665,8 +665,8 @@ namespace oly::editor
 			Load(node, desc, svg, gif);
 			
 			desc.Visit(slot, [&](const auto& d) {
-				min_filter = d.base.min_filter.Value();
-				mag_filter = d.base.mag_filter.Value();
+				min_filter = d.base.min_filter.value();
+				mag_filter = d.base.mag_filter.value();
 
 				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
 				{

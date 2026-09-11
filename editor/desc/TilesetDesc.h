@@ -8,11 +8,11 @@
 namespace oly::editor
 {
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
-		M((StringField), texture) \
-		M((IntField<imp::potential<int>(0), imp::nullpotential>), texture_index) \
-		M((UVRectField), uvs) \
-		M((BitsetField<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT>), reflection) \
-		M((EnumField<detail::TileRotation>), rotation)
+		M((imtk::field::string_fld), texture) \
+		M((imtk::field::int_fld<imp::potential<int>(0), imp::nullpotential>), texture_index) \
+		M((imtk::field::uv_rect_fld), uvs) \
+		M((imtk::field::bitset_fld<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT>), reflection) \
+		M((imtk::field::enum_fld<detail::TileRotation>), rotation)
 
 	struct TilesetAssignmentDesc
 	{
@@ -32,7 +32,7 @@ namespace oly::editor
 	};
 
 #define TILESET_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::StorageMode>), storage)
+		M((imtk::field::enum_fld<detail::StorageMode>), storage)
 
 #define TILESET_GENERATOR(M) \
 		TILESET_PARTIAL_GENERATOR(M) \

@@ -12,19 +12,19 @@
 namespace oly::editor
 {
 #define SPRITESHEET_PARTIAL_GENERATOR(M) \
-		M((IntField<0, imp::nullpotential>), col_offset_index) \
-		M((IntField<0, imp::nullpotential>), col_offset_pixel) \
-		M((IntField<0, imp::nullpotential>), row_offset_index) \
-		M((IntField<0, imp::nullpotential>), row_offset_pixel) \
-		M((FloatField<0.f, imp::nullpotential>), delay) \
-		M((BoolField), row_major) \
-		M((BoolField), row_up)
+		M((imtk::field::int_fld<0, imp::nullpotential>), col_offset_index) \
+		M((imtk::field::int_fld<0, imp::nullpotential>), col_offset_pixel) \
+		M((imtk::field::int_fld<0, imp::nullpotential>), row_offset_index) \
+		M((imtk::field::int_fld<0, imp::nullpotential>), row_offset_pixel) \
+		M((imtk::field::float_fld<0.f, imp::nullpotential>), delay) \
+		M((imtk::field::bool_fld), row_major) \
+		M((imtk::field::bool_fld), row_up)
 
 #define SPRITESHEET_GENERATOR(M) \
-		M((EnumField<detail::SpritesheetParamType>), col_type) \
-		M((IntField<1, imp::nullpotential>), col_value) \
-		M((EnumField<detail::SpritesheetParamType>), row_type) \
-		M((IntField<1, imp::nullpotential>), row_value) \
+		M((imtk::field::enum_fld<detail::SpritesheetParamType>), col_type) \
+		M((imtk::field::int_fld<1, imp::nullpotential>), col_value) \
+		M((imtk::field::enum_fld<detail::SpritesheetParamType>), row_type) \
+		M((imtk::field::int_fld<1, imp::nullpotential>), row_value) \
 		SPRITESHEET_PARTIAL_GENERATOR(M)
 
 	struct SpritesheetDesc
@@ -35,14 +35,14 @@ namespace oly::editor
 	};
 
 #define TEXTURE_PARAMS_GENERATOR(M) \
-		M((DisjointEnumField<GLenum>), min_filter) \
-		M((DisjointEnumField<GLenum>), mag_filter) \
-		M((DisjointEnumField<GLenum>), wrap_s) \
-		M((DisjointEnumField<GLenum>), wrap_t)
+		M((imtk::field::disjoint_enum_fld<GLenum>), min_filter) \
+		M((imtk::field::disjoint_enum_fld<GLenum>), mag_filter) \
+		M((imtk::field::disjoint_enum_fld<GLenum>), wrap_s) \
+		M((imtk::field::disjoint_enum_fld<GLenum>), wrap_t)
 
 #define BASE_TEXTURE_GENERATOR(M) \
 		TEXTURE_PARAMS_GENERATOR(M) \
-		M((BoolField), anim) \
+		M((imtk::field::bool_fld), anim) \
 		M((SpritesheetDesc), spritesheet)
 
 	struct BaseTextureDesc
@@ -53,8 +53,8 @@ namespace oly::editor
 	};
 
 #define RASTER_TEXTURE_PARTIAL_GENERATOR(M) \
-		M((BoolField), generate_mipmaps) \
-		M((EnumField<detail::StorageMode>), storage)
+		M((imtk::field::bool_fld), generate_mipmaps) \
+		M((imtk::field::enum_fld<detail::StorageMode>), storage)
 
 #define RASTER_TEXTURE_GENERATOR(M) \
 		M((BaseTextureDesc), base) \
@@ -68,10 +68,10 @@ namespace oly::editor
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::SVGMipmapGenerationMode>), generate_mipmaps) \
-		M((EnumField<detail::StorageMode>), image_storage) \
-		M((EnumField<detail::StorageMode>), abstract_storage) \
-		M((FloatField<0.f, imp::nullpotential>), scale)
+		M((imtk::field::enum_fld<detail::SVGMipmapGenerationMode>), generate_mipmaps) \
+		M((imtk::field::enum_fld<detail::StorageMode>), image_storage) \
+		M((imtk::field::enum_fld<detail::StorageMode>), abstract_storage) \
+		M((imtk::field::float_fld<0.f, imp::nullpotential>), scale)
 
 #define VECTOR_TEXTURE_GENERATOR(M) \
 		M((BaseTextureDesc), base) \

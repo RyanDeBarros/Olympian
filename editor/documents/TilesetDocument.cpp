@@ -410,7 +410,7 @@ namespace oly::editor
 					}));
 				}
 
-				desc.texture.CheckUndoAction();
+				desc.texture.check_undo_action();
 			}
 
 			desc.texture_index.draw();

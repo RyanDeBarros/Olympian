@@ -8,15 +8,15 @@
 namespace oly::editor
 {
 #define GLYPH_BODY_GENERATOR(M) \
-		M((StringField), texture_file) \
-		M((IntField<0, imp::nullpotential>), texture_slot) \
-		M((RectField), location) \
-		M((TopSidePaddingField), padding) \
-		M((EnumField<detail::PositioningMode>), origin_offset_mode) \
-		M((Vec2Field<imp::nullpotential, imp::nullpotential>), origin_offset)
+		M((imtk::field::string_fld), texture_file) \
+		M((imtk::field::int_fld<0, imp::nullpotential>), texture_slot) \
+		M((imtk::field::rect_fld), location) \
+		M((imtk::field::top_side_padding_fld), padding) \
+		M((imtk::field::enum_fld<detail::PositioningMode>), origin_offset_mode) \
+		M((imtk::field::vec2_fld<imp::nullpotential, imp::nullpotential>), origin_offset)
 
 #define GLYPH_GENERATOR(M) \
-		M((StringField), codepoint) \
+		M((imtk::field::string_fld), codepoint) \
 		GLYPH_BODY_GENERATOR(M)
 
 	struct GlyphDesc
@@ -27,10 +27,10 @@ namespace oly::editor
 	};
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \
-		M((FloatField<imp::nullpotential, imp::nullpotential>), space_advance_width) \
-		M((FloatField<imp::nullpotential, imp::nullpotential>), line_height) \
-		M((Vec2Field<0.f, imp::nullpotential>), font_scale) \
-		M((EnumField<detail::StorageMode>), storage)
+		M((imtk::field::float_fld<imp::nullpotential, imp::nullpotential>), space_advance_width) \
+		M((imtk::field::float_fld<imp::nullpotential, imp::nullpotential>), line_height) \
+		M((imtk::field::vec2_fld<0.f, imp::nullpotential>), font_scale) \
+		M((imtk::field::enum_fld<detail::StorageMode>), storage)
 
 #define RASTER_FONT_GENERATOR(M) \
 		RASTER_FONT_PARTIAL_GENERATOR(M) \

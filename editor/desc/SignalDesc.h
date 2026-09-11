@@ -12,9 +12,9 @@
 namespace oly::editor
 {
 #define MODIFIER_BASE_GENERATOR(M) \
-		M((EnumField<detail::Swizzle>), swizzle) \
-		M((Vec3Field<imp::nullpotential, imp::nullpotential>), multiplier) \
-		M((BoolArrayField<3>), invert)
+		M((imtk::field::enum_fld<detail::Swizzle>), swizzle) \
+		M((imtk::field::vec3_fld<imp::nullpotential, imp::nullpotential>), multiplier) \
+		M((imtk::field::bool_array_fld<3>), invert)
 
 	struct ModifierBaseDesc
 	{
@@ -24,7 +24,7 @@ namespace oly::editor
 	};
 
 #define MODIFIER_0D_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::Axis0dConversion>), conversion)
+		M((imtk::field::enum_fld<detail::Axis0dConversion>), conversion)
 
 #define MODIFIER_0D_GENERATOR(M) \
 		M((ModifierBaseDesc), base) \
@@ -38,7 +38,7 @@ namespace oly::editor
 	};
 
 #define MODIFIER_1D_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::Axis1dConversion>), conversion)
+		M((imtk::field::enum_fld<detail::Axis1dConversion>), conversion)
 
 #define MODIFIER_1D_GENERATOR(M) \
 		M((ModifierBaseDesc), base) \
@@ -52,7 +52,7 @@ namespace oly::editor
 	};
 
 #define MODIFIER_2D_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::Axis2dConversion>), conversion)
+		M((imtk::field::enum_fld<detail::Axis2dConversion>), conversion)
 
 #define MODIFIER_2D_GENERATOR(M) \
 		M((ModifierBaseDesc), base) \
@@ -66,9 +66,9 @@ namespace oly::editor
 	};
 
 #define KEY_PARTIAL_GENERATOR(M) \
-		M((DisjointEnumField<detail::KeyInput>), key) \
-		M((BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
-		M((BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
+		M((imtk::field::disjoint_enum_fld<detail::KeyInput>), key) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
@@ -82,9 +82,9 @@ namespace oly::editor
 	};
 
 #define MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
-		M((DisjointEnumField<detail::MouseButton>), button) \
-		M((BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
-		M((BitsetField<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
+		M((imtk::field::disjoint_enum_fld<detail::MouseButton>), button) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
@@ -98,7 +98,7 @@ namespace oly::editor
 	};
 
 #define GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
-		M((DisjointEnumField<GLenum>), button)
+		M((imtk::field::disjoint_enum_fld<GLenum>), button)
 
 #define GAMEPAD_BUTTON_GENERATOR(M) \
 		GAMEPAD_BUTTON_PARTIAL_GENERATOR(M) \
@@ -112,8 +112,8 @@ namespace oly::editor
 	};
 
 #define GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
-		M((DisjointEnumField<GLenum>), axis) \
-		M((FloatField<0.f, 1.f>), deadzone)
+		M((imtk::field::disjoint_enum_fld<GLenum>), axis) \
+		M((imtk::field::float_fld<0.f, 1.f>), deadzone)
 
 #define GAMEPAD_AXIS_1D_GENERATOR(M) \
 		GAMEPAD_AXIS_1D_PARTIAL_GENERATOR(M) \
@@ -127,8 +127,8 @@ namespace oly::editor
 	};
 
 #define GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
-		M((EnumField<detail::GamepadAxis2D>), axis) \
-		M((FloatField<0.f, 1.f>), deadzone)
+		M((imtk::field::enum_fld<detail::GamepadAxis2D>), axis) \
+		M((imtk::field::float_fld<0.f, 1.f>), deadzone)
 
 #define GAMEPAD_AXIS_2D_GENERATOR(M) \
 		GAMEPAD_AXIS_2D_PARTIAL_GENERATOR(M) \
@@ -177,8 +177,8 @@ namespace oly::editor
 		M(Scroll)
 
 #define SIGNAL_PARTIAL_GENERATOR(M) \
-		M((StringField), id) \
-		M((EnumField<detail::SignalBindingType>), binding)
+		M((imtk::field::string_fld), id) \
+		M((imtk::field::enum_fld<detail::SignalBindingType>), binding)
 
 #define SIGNAL_GENERATOR(M) \
 		SIGNAL_PARTIAL_GENERATOR(M) \
@@ -192,8 +192,8 @@ namespace oly::editor
 	};
 
 #define ROUTE_GENERATOR(M) \
-	M((StringField), id) \
-	M((StringVectorField), signals)
+	M((imtk::field::string_fld), id) \
+	M((imtk::field::string_vector_fld), signals)
 
 	struct RouteDesc
 	{

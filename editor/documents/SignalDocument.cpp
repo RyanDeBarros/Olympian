@@ -299,13 +299,13 @@ namespace oly::editor
 		if (desc.signals.widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { desc.signals.edit.cancel_editing(); op.execute_field_action<std::string>(desc.signals.link.compute_path()); }))
 			imtk::prop::grid::mark_dirty();
 
-		desc.signals.CheckUndoAction();
+		desc.signals.check_undo_action();
 	}
 
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
-		const auto initial = desc.key.index;
-		if (auto row = imtk::prop::make_row_scope(desc.key.label, desc.key.index, desc.key.def_index))
+		const auto initial = desc.key.index_;
+		if (auto row = imtk::prop::make_row_scope(desc.key.label, desc.key.index_, desc.key.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -314,30 +314,30 @@ namespace oly::editor
 				ImGui::SameLine();
 				if (key)
 				{
-					if (*key != desc.key.Value())
+					if (*key != desc.key.value())
 					{
-						desc.key.SetValue(*key);
+						desc.key.set_value(*key);
 						result.modified = true;
 					}
 					else
 						result.modified = false;
 				}
-				return result | imtk::w::combo_widget(desc.key.index, desc.key.names).draw();
+				return result | imtk::w::combo_widget(desc.key.index_, desc.key.names).draw();
 			}));
 		}
 		
-		if (initial != desc.key.index)
-			imtk::field::push_set_action(desc.key.link.compute_path(), initial, desc.key.index);
+		if (initial != desc.key.index_)
+			imtk::field::push_set_action(desc.key.link.compute_path(), initial, desc.key.index_);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
-			bool disabled_required_mods[desc.required_mods.Count]{};
-			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+			bool disabled_required_mods[desc.required_mods.count]{};
+			for (size_t i = 0; i < desc.required_mods.count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
 			desc.required_mods.draw(disabled_required_mods);
 
-			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+			bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
 			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
@@ -348,8 +348,8 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
-		const auto initial = desc.button.index;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index, desc.button.def_index))
+		const auto initial = desc.button.index_;
+		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index_, desc.button.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -358,30 +358,30 @@ namespace oly::editor
 				ImGui::SameLine();
 				if (mb)
 				{
-					if (*mb != desc.button.Value())
+					if (*mb != desc.button.value())
 					{
-						desc.button.SetValue(*mb);
+						desc.button.set_value(*mb);
 						result.modified = true;
 					}
 					else
 						result.modified = false;
 				}
-				return result | imtk::w::combo_widget(desc.button.index, desc.button.names).draw();
+				return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
 			}));
 		}
 
-		if (initial != desc.button.index)
-			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index);
+		if (initial != desc.button.index_)
+			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
 
 		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
 		{
-			bool disabled_required_mods[desc.required_mods.Count]{};
-			for (size_t i = 0; i < desc.required_mods.Count; ++i)
+			bool disabled_required_mods[desc.required_mods.count]{};
+			for (size_t i = 0; i < desc.required_mods.count; ++i)
 				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
 			desc.required_mods.draw(disabled_required_mods);
 
-			bool disabled_forbidden_mods[desc.forbidden_mods.Count]{};
-			for (size_t i = 0; i < desc.forbidden_mods.Count; ++i)
+			bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
+			for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
 				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
 			desc.forbidden_mods.draw(disabled_forbidden_mods);
 		}
@@ -392,8 +392,8 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
-		const auto initial = desc.button.index;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index, desc.button.def_index))
+		const auto initial = desc.button.index_;
+		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index_, desc.button.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -402,20 +402,20 @@ namespace oly::editor
 				ImGui::SameLine();
 				if (button)
 				{
-					if (*button != desc.button.Value())
+					if (*button != desc.button.value())
 					{
-						desc.button.SetValue(*button);
+						desc.button.set_value(*button);
 						result.modified = true;
 					}
 					else
 						result.modified = false;
 				}
-				return result | imtk::w::combo_widget(desc.button.index, desc.button.names).draw();
+				return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
 			}));
 		}
 
-		if (initial != desc.button.index)
-			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index);
+		if (initial != desc.button.index_)
+			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
 
 		if (auto subform = imtk::prop::subform("Modifiers"))
 			Draw(*desc.modifier);
@@ -423,8 +423,8 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
-		const auto initial = desc.axis.index;
-		if (auto row = imtk::prop::make_row_scope(desc.axis.label, desc.axis.index, desc.axis.def_index))
+		const auto initial = desc.axis.index_;
+		if (auto row = imtk::prop::make_row_scope(desc.axis.label, desc.axis.index_, desc.axis.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -433,20 +433,20 @@ namespace oly::editor
 				ImGui::SameLine();
 				if (axis)
 				{
-					if (*axis != desc.axis.Value())
+					if (*axis != desc.axis.value())
 					{
-						desc.axis.SetValue(*axis);
+						desc.axis.set_value(*axis);
 						result.modified = true;
 					}
 					else
 						result.modified = false;
 				}
-				return result | imtk::w::combo_widget(desc.axis.index, desc.axis.names).draw();
+				return result | imtk::w::combo_widget(desc.axis.index_, desc.axis.names).draw();
 			}));
 		}
 
-		if (initial != desc.axis.index)
-			imtk::field::push_set_action(desc.axis.link.compute_path(), initial, desc.axis.index);
+		if (initial != desc.axis.index_)
+			imtk::field::push_set_action(desc.axis.link.compute_path(), initial, desc.axis.index_);
 
 		desc.deadzone.draw();
 		if (auto subform = imtk::prop::subform("Modifiers"))
@@ -476,7 +476,7 @@ namespace oly::editor
 					else
 						result.modified = false;
 				}
-				return result | imtk::w::combo_widget(int_value, desc.axis.ComboNames()).draw();
+				return result | imtk::w::combo_widget(int_value, desc.axis.combo_names()).draw();
 			}));
 		}
 

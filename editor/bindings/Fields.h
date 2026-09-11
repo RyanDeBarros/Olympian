@@ -4,11 +4,9 @@
 #include "bindings/Widgets.h"
 #include "bindings/Serializer.h"
 
-#include "bindings/FieldBase.h"
-
-namespace oly::editor
+namespace imtk::field
 {
-	using RectField = PrimitiveField<Rect>;
-	using UVRectField = PrimitiveField<UVRect>;
-	using TopSidePaddingField = PrimitiveField<TopSidePadding>;
+	using rect_fld = primitive_fld<oly::editor::Rect>;
+	using uv_rect_fld = primitive_fld<oly::editor::UVRect>;
+	using top_side_padding_fld = primitive_fld<oly::editor::TopSidePadding>;
 }
