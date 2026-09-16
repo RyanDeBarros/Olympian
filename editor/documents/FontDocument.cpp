@@ -77,7 +77,7 @@ namespace oly::editor
 
 		_desc.load_from_disk();
 
-		_atlas_slots.model.init(*FontAtlasListAdapter());
+		_atlas_slots.model.init(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
 	}
 
 	void FontDocument::DumpImpl()
@@ -121,7 +121,7 @@ namespace oly::editor
 		{
 			ImGui::TableNextColumn();
 				
-			_atlas_slots.model.sync(*FontAtlasListAdapter());
+			_atlas_slots.model.sync(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
 			if (auto scope = imtk::id_scope("##Atlas"))
 				_atlas_slots.draw();
 				
@@ -130,7 +130,7 @@ namespace oly::editor
 				if (!_desc.scratch.font_atlases.empty())
 					Draw(_desc.scratch.font_atlases[_atlas_slots.model.index()]);
 
-				if (_atlas_slots.model.consume_ops(*FontAtlasListAdapter()))
+				if (_atlas_slots.model.consume_ops(imtk::make_vector_op_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases)))
 					MarkDirty();
 
 				if (_atlas_slots.model.consume_index_modified())
@@ -263,8 +263,7 @@ namespace oly::editor
 			}
 		}
 
-		if (desc.kerning_widget.model.visit_deferred_ops([&desc](const imtk::list_op& op) { op.execute_desc_action<KerningDesc>(desc.kerning.link.compute_path()); }))
-			imtk::prop::grid::mark_dirty();
+		desc.kerning.consume_ops(desc.kerning_widget.model);
 	}
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)
@@ -370,18 +369,5 @@ namespace oly::editor
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
 	{
 		IMTK_DUMP_FIELDS(FONT_ATLAS_GENERATOR);
-	}
-
-	struct BriefDescPrinter
-	{
-		void operator()(std::ostream& os, const FontAtlasDesc& desc) const
-		{
-			os << "FontAtlasDesc[font_size=" << desc.font_size.value << ", ...]";
-		}
-	};
-
-	std::unique_ptr<imtk::list_adapter> FontDocument::FontAtlasListAdapter() const
-	{
-		return imtk::make_vector_adapter<BriefDescPrinter>(_desc.scratch.font_atlases);
 	}
 }

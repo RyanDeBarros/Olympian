@@ -37,6 +37,11 @@ namespace oly::editor
 	{
 	}
 
+	void FontAtlasDesc::Printer::operator()(std::ostream& os, const FontAtlasDesc& desc) const
+	{
+		os << "FontAtlasDesc[font_size=" << desc.font_size.value << ", ...]";
+	}
+
 	FullFontDesc::FullFontDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		font_face(detail::Key::FontFace, IMTK_DATAPATH_SUBLINK(subpaths.font_face)),

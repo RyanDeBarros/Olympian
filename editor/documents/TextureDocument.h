@@ -36,7 +36,7 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		imtk::desc::doubler<TextureVariantDesc> _desc;
+		imtk::desc::doubler<TextureFullDesc> _desc;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
@@ -70,19 +70,19 @@ namespace oly::editor
 		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
-		void Draw(TextureVariantDesc& desc);
+		void Draw(TextureFullDesc& desc);
 		void Draw(RasterTextureDesc& desc);
 		void Draw(VectorTextureDesc& desc);
 		void Draw(BaseTextureDesc& desc);
 		void Draw(SpritesheetDesc& desc);
 
-		static void Load(imtk::toml_node node, TextureVariantDesc& desc, bool svg, bool gif);
+		static void Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif);
 		static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
 		static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
 		static void Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif);
 		static void Load(imtk::toml_node node, SpritesheetDesc& desc);
 
-		void Dump(toml::table& table, TextureVariantDesc& desc);
+		void Dump(toml::table& table, TextureFullDesc& desc);
 		void Dump(toml::table& table, RasterTextureDesc& desc);
 		void Dump(toml::table& table, VectorTextureDesc& desc);
 		void Dump(toml::table& table, BaseTextureDesc& desc);
@@ -90,7 +90,8 @@ namespace oly::editor
 
 		void OnActiveSlotChanged();
 
-		std::unique_ptr<imtk::list_adapter> ListAdapter();
+		imtk::list_adapter ListAdapter();
+		std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
 
 	public:
 		enum class TextureSettingsLoadResult

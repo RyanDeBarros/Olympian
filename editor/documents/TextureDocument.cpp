@@ -91,7 +91,7 @@ namespace oly::editor
 
 		_desc.load_from_disk();
 
-		_slots.model.init(*ListAdapter());
+		_slots.model.init(ListAdapter());
 
 		_preview_nav = {};
 		if (auto svg_desc = _desc.scratch.variant.try_get<imtk::desc::vector<VectorTextureDesc>>())
@@ -429,9 +429,9 @@ namespace oly::editor
 		ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size, uv_min, uv_max);
 	}
 
-	void TextureDocument::Draw(TextureVariantDesc& desc)
+	void TextureDocument::Draw(TextureFullDesc& desc)
 	{
-		_slots.model.sync(*ListAdapter());
+		_slots.model.sync(ListAdapter());
 		
 		if (auto scope = imtk::id_scope("##Slot"))
 			_slots.draw();
@@ -440,7 +440,7 @@ namespace oly::editor
 		{
 			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.model.index()]); });
 
-			if (_slots.model.consume_ops(*ListAdapter()))
+			if (_slots.model.consume_ops(*ListOpAdapter()))
 				MarkDirty();
 
 			if (_slots.model.consume_index_modified())
@@ -519,7 +519,7 @@ namespace oly::editor
 		IMTK_DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
-	void TextureDocument::Load(imtk::toml_node node, TextureVariantDesc& desc, bool svg, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif)
 	{
 		if (svg)
 			desc.variant.set<imtk::desc::vector<VectorTextureDesc>>();
@@ -575,7 +575,7 @@ namespace oly::editor
 		IMTK_LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
+	void TextureDocument::Dump(toml::table& table, TextureFullDesc& desc)
 	{
 		toml::array array;
 		desc.variant.visit([this, &array](auto& d) {
@@ -615,22 +615,27 @@ namespace oly::editor
 		_stale_preview_texture = true;
 	}
 
-	struct BriefDescPrinter
+	struct TextureDescPrinter
 	{
 		void operator()(std::ostream& os, const RasterTextureDesc& desc) const
 		{
-			os << "RasterTextureDesc[...]";
+			RasterTextureDesc::Printer{}(os, desc);
 		}
 
 		void operator()(std::ostream& os, const VectorTextureDesc& desc) const
 		{
-			os << "VectorTextureDesc[...]";
+			VectorTextureDesc::Printer{}(os, desc);
 		}
 	};
 
-	std::unique_ptr<imtk::list_adapter> TextureDocument::ListAdapter()
+	imtk::list_adapter TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::list_adapter> { return imtk::make_vector_adapter<BriefDescPrinter>(desc); });
+		return _desc.scratch.variant.visit([this](auto& desc) -> imtk::list_adapter { return imtk::make_vector_adapter<TextureDescPrinter>(desc); });
+	}
+
+	std::unique_ptr<imtk::ilist_op_adapter> TextureDocument::ListOpAdapter()
+	{
+		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::ilist_op_adapter> { return imtk::make_unique_vector_op_adapter<TextureDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)
@@ -654,7 +659,7 @@ namespace oly::editor
 		{
 			imtk::toml_node node = imtk::toml_node(table);
 
-			TextureVariantDesc desc;
+			TextureFullDesc desc;
 
 			const toml::array* array = desc.variant.subnode(node).as_array();
 			if (!array || slot >= array->size() || !array->get(slot))

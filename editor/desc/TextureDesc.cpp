@@ -40,6 +40,11 @@ namespace oly::editor
 	{
 	}
 
+	void RasterTextureDesc::Printer::operator()(std::ostream& os, const RasterTextureDesc& desc) const
+	{
+		os << "RasterTextureDesc[...]";
+	}
+
 	VectorTextureDesc::VectorTextureDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		base(GL_LINEAR, IMTK_DATAPATH_SUBLINK(subpaths.base)),
@@ -50,33 +55,38 @@ namespace oly::editor
 	{
 	}
 
-	TextureVariantDesc::TextureVariantDesc(imtk::datapath_link link) :
+	void VectorTextureDesc::Printer::operator()(std::ostream& os, const VectorTextureDesc& desc) const
+	{
+		os << "VectorTextureDesc[...]";
+	}
+
+	TextureFullDesc::TextureFullDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		variant(detail::Key::TextureArray, IMTK_DATAPATH_SUBLINK(subpaths.variant))
 	{
 	}
 
-	size_t TextureVariantDesc::Size() const
+	size_t TextureFullDesc::Size() const
 	{
 		return variant.visit([](const auto& desc) { return desc.size(); });
 	}
 
-	bool TextureVariantDesc::Empty() const
+	bool TextureFullDesc::Empty() const
 	{
 		return Size() == 0;
 	}
 
-	void TextureVariantDesc::PushBack()
+	void TextureFullDesc::PushBack()
 	{
 		variant.visit([](auto& desc) { desc.push_back(); });
 	}
 	
-	void TextureVariantDesc::Remove(size_t i)
+	void TextureFullDesc::Remove(size_t i)
 	{
 		variant.visit([i](auto& desc) { desc.remove(i); });
 	}
 
-	void TextureVariantDesc::Clear()
+	void TextureFullDesc::Clear()
 	{
 		variant.visit([](auto& desc) { desc.clear(); });
 	}

@@ -77,7 +77,7 @@ namespace oly::editor
 		return _os_window->should_close();
 	}
 
-	// TODO v9.3 using imtk::handle_error throughout project - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
+	// TODO v9.4 using imtk::handle_error throughout project - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();

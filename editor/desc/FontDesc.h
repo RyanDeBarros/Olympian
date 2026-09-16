@@ -51,6 +51,11 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(FontAtlasDesc, FONT_ATLAS_GENERATOR);
 
 		FontAtlasDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const FontAtlasDesc& desc) const;
+		};
 	};
 
 #define FULL_FONT_GENERATOR(M) \

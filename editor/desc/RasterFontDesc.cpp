@@ -16,6 +16,11 @@ namespace oly::editor
 	{
 	}
 
+	void GlyphDesc::Printer::operator()(std::ostream& os, const GlyphDesc& desc) const
+	{
+		os << "GlyphDesc[codepoint=" << desc.codepoint.value << ", ...]";
+	}
+
 	RasterFontDesc::RasterFontDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		space_advance_width(IMTK_DATAPATH_SUBLINK(subpaths.space_advance_width), 5.f, detail::Key::SpaceAdvanceWidth, "Space advance width"),

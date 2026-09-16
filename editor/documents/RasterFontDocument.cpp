@@ -76,7 +76,7 @@ namespace oly::editor
 		for (auto& desc : _desc.scratch.glyphs)
 			_codepoint_counter.increment(desc.codepoint.value);
 
-		_glyphs.model.init(*ListAdapter());
+		_glyphs.model.init(ListAdapter());
 	}
 
 	void RasterFontDocument::DumpImpl()
@@ -113,7 +113,7 @@ namespace oly::editor
 			{
 				if (auto pause = imtk::prop::form::pause())
 				{
-					_glyphs.model.sync(*ListAdapter());
+					_glyphs.model.sync(ListAdapter());
 
 					if (auto scope = imtk::id_scope("##Glyph"))
 						_glyphs.draw();
@@ -127,7 +127,7 @@ namespace oly::editor
 					// TODO v11 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 				}
 
-				if (_glyphs.model.consume_ops(*ListAdapter()))
+				if (_glyphs.model.consume_ops(*ListOpAdapter()))
 					MarkDirty();
 
 				_glyphs.model.consume_index_modified();
@@ -207,17 +207,21 @@ namespace oly::editor
 		IMTK_DUMP_FIELDS(GLYPH_GENERATOR);
 	}
 
-	struct BriefGlyphDescPrinter
+	imtk::list_adapter RasterFontDocument::ListAdapter()
 	{
-		void operator()(std::ostream& os, const GlyphDesc& desc)
-		{
-			os << "GlyphDesc[codepoint=" << desc.codepoint.value << ", ...]";
-		}
-	};
+		return {
+			.sized = std::make_unique<imtk::vector_sized<GlyphDesc>>(_desc.scratch.glyphs),
+			.ops = ListOpAdapter()
+		};
+	}
 
-	std::unique_ptr<imtk::list_callback_adapter> RasterFontDocument::ListAdapter()
+	std::unique_ptr<imtk::ilist_op_adapter> RasterFontDocument::ListOpAdapter()
 	{
-		return std::make_unique<imtk::list_callback_adapter>(imtk::make_vector_adapter<BriefGlyphDescPrinter>(_desc.scratch.glyphs),
-			imtk::make_counter_callback(_codepoint_counter, [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; }));
+		auto callback = imtk::make_counter_callback(_codepoint_counter,
+													[this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; });
+		return std::make_unique<imtk::list_callback_adapter>(
+			std::make_unique<imtk::vector_op_adapter<GlyphDesc, GlyphDesc::Printer>>(_desc.scratch.glyphs),
+			std::move(callback)
+		);
 	}
 }

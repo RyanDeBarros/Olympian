@@ -65,6 +65,11 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(RasterTextureDesc, RASTER_TEXTURE_GENERATOR);
 
 		RasterTextureDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const RasterTextureDesc& desc) const;
+		};
 	};
 
 #define VECTOR_TEXTURE_PARTIAL_GENERATOR(M) \
@@ -82,16 +87,21 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(VectorTextureDesc, VECTOR_TEXTURE_GENERATOR);
 
 		VectorTextureDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const VectorTextureDesc& desc) const;
+		};
 	};
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
 		M((imtk::desc::subvariant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>>), variant)
 
-	struct TextureVariantDesc
+	struct TextureFullDesc
 	{
-		IMTK_DESCRIPTOR_BODY(TextureVariantDesc, TEXTURE_VARIANT_GENERATOR);
+		IMTK_DESCRIPTOR_BODY(TextureFullDesc, TEXTURE_VARIANT_GENERATOR);
 
-		TextureVariantDesc(imtk::datapath_link link = {});
+		TextureFullDesc(imtk::datapath_link link = {});
 
 		size_t Size() const;
 		bool Empty() const;

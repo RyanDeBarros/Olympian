@@ -189,6 +189,11 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(SignalDesc, SIGNAL_GENERATOR);
 
 		SignalDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const SignalDesc& desc) const;
+		};
 	};
 
 #define ROUTE_GENERATOR(M) \
@@ -200,6 +205,11 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(RouteDesc, ROUTE_GENERATOR);
 
 		RouteDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const RouteDesc& desc) const;
+		};
 	};
 
 #define SIGNAL_FULL_GENERATOR(M) \

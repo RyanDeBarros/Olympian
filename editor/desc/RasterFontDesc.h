@@ -24,6 +24,11 @@ namespace oly::editor
 		IMTK_DESCRIPTOR_BODY(GlyphDesc, GLYPH_GENERATOR);
 
 		GlyphDesc(imtk::datapath_link link = {});
+
+		struct Printer
+		{
+			void operator()(std::ostream& os, const GlyphDesc& desc) const;
+		};
 	};
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \

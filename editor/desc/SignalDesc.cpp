@@ -154,11 +154,21 @@ namespace oly::editor
 	{
 	}
 
+	void SignalDesc::Printer::operator()(std::ostream& os, const SignalDesc& desc) const
+	{
+		os << "SignalDesc[id=" << desc.id.value << ", binding=" << desc.binding.value << ", ...]";
+	}
+
 	RouteDesc::RouteDesc(imtk::datapath_link link) :
 		link(std::move(link)),
 		id(IMTK_DATAPATH_SUBLINK(subpaths.id), "", detail::Key::ID, "ID"),
 		signals(IMTK_DATAPATH_SUBLINK(subpaths.signals), {}, detail::Key::Signals, "Signals")
 	{
+	}
+
+	void RouteDesc::Printer::operator()(std::ostream& os, const RouteDesc& desc) const
+	{
+		os << "SignalDesc[id=" << desc.id.value << ", ...]";
 	}
 
 	SignalFullDesc::SignalFullDesc(imtk::datapath_link link) :

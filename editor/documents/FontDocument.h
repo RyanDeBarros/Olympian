@@ -48,7 +48,5 @@ namespace oly::editor
 		void Dump(toml::table& table, FontFaceDesc& desc);
 		void Dump(toml::table& table, KerningDesc& desc);
 		void Dump(toml::table& table, FontAtlasDesc& desc);
-
-		std::unique_ptr<imtk::list_adapter> FontAtlasListAdapter() const;
 	};
 }

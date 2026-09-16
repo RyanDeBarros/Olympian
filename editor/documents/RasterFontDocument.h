@@ -38,6 +38,7 @@ namespace oly::editor
 		void Dump(toml::table& table, RasterFontDesc& desc);
 		void Dump(toml::table& table, GlyphDesc& desc);
 
-		std::unique_ptr<imtk::list_callback_adapter> ListAdapter();
+		imtk::list_adapter ListAdapter();
+		std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
 	};
 }
