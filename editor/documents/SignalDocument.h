@@ -22,6 +22,11 @@ namespace oly::editor
 		ListenMode _listen_mode = ListenMode::None;
 		bool _stop_listening = true;
 
+		imp::counter<std::string> _signal_id_counter;
+		imp::counter<std::string> _route_id_counter;
+		imp::counter<std::string> _id_counter;
+		imp::counter<std::string> _route_local_signal_id_counter;
+
 	public:
 		SignalDocument(detail::ResourcePath oly_path);
 
@@ -38,9 +43,6 @@ namespace oly::editor
 	private:
 		void Draw(imtk::desc::vector<SignalDesc>& desc);
 		void Draw(imtk::desc::vector<RouteDesc>& desc);
-		imp::counter<std::string> GetSignalIDCounter() const;
-		imp::counter<std::string> GetRouteIDCounter() const;
-		imp::counter<std::string> GetIDCounter() const;
 
 		void Draw(SignalDesc& desc);
 		void Draw(RouteDesc& desc);

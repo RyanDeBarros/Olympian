@@ -3,10 +3,7 @@
 #include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
-#include <imp/counter.hpp>
-#include <imp/equal.hpp>
 #include <imp/hash.hpp>
-#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -163,72 +160,74 @@ namespace oly::editor
 	{
 		desc.storage.draw();
 
-		imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> counter;
+		_glyph_counter.clear();
 		for (auto& k : desc.kerning)
-			counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
+			_glyph_counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
 
-		// TODO v9.3 put in init
-		desc.kerning_widget.body.row_draw = [&desc, &counter](imtk::dynamic_row& row) -> imtk::item_result {
-			imtk::w::widget_row components;
-			auto& k = desc.kerning[row.index()];
+		if (!desc.kerning_widget.body.row_draw)
+		{
+			desc.kerning_widget.body.row_draw = [this, &desc](imtk::dynamic_row& row) -> imtk::item_result {
+				imtk::w::widget_row components;
+				auto& k = desc.kerning[row.index()];
 
-			bool dup_warning = counter.count({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
-			imtk::outline dup_outline;
-			for (size_t i = 0; i < 2; ++i)
-			{
-				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
-					bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
-					imtk::outline bad_outline;
-					if (bad_codepoint)
-						dup_warning = false;
+				bool dup_warning = _glyph_counter.count({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
+				imtk::outline dup_outline;
+				for (size_t i = 0; i < 2; ++i)
+				{
+					components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
+						bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
+						if (bad_codepoint)
+							dup_warning = false;
 
-					imtk::item_result result;
+						imtk::item_result result;
 
-					if (i == 0)
-					{
-						ImGui::TextUnformatted(k.pair.label);
-						result |= imtk::item_result::query(false);
-						ImGui::SameLine();
-					}
+						if (i == 0)
+						{
+							ImGui::TextUnformatted(k.pair.label);
+							result |= imtk::item_result::query(false);
+							ImGui::SameLine();
+						}
 
-					result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer(), { .label = "" }).draw();
+						imtk::outline bad_outline;
+						result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer(), { .label = "" }).draw();
 
-					if (dup_warning && result.state.hovered())
-						ImGui::SetTooltip("Duplicate codepoint pair");
+						if (dup_warning && result.state.hovered())
+							ImGui::SetTooltip("Duplicate codepoint pair");
 
-					if (bad_codepoint)
-					{
-						if (result.state.hovered())
-							ImGui::SetTooltip("Bad codepoint format");
+						if (bad_codepoint)
+						{
+							if (result.state.hovered())
+								ImGui::SetTooltip("Bad codepoint format");
 
-						bad_outline.draw(imtk::col::error);
-					}
+							bad_outline.draw(imtk::col::error);
+						}
 
-					if (i == 1)
-					{
-						if (dup_warning)
-							dup_outline.draw(imtk::col::error);
-					}
+						if (i == 1)
+						{
+							if (dup_warning)
+								dup_outline.draw(imtk::col::error);
+						}
 
-					return result;
+						return result;
 					}));
-			}
+				}
 
-			components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
-				imtk::controls::vertical_separator();
-				ImGui::TextUnformatted(k.distance.label);
-				auto result = imtk::item_result::query(false);
-				ImGui::SameLine();
-				result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();
+				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
+					imtk::controls::vertical_separator();
+					ImGui::TextUnformatted(k.distance.label);
+					auto result = imtk::item_result::query(false);
+					ImGui::SameLine();
+					result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();
+					return result;
+				}));
+
+				auto result = components.draw();
+				k.pair.fields[0].edit.post_edit(result.state);
+				k.pair.fields[1].edit.post_edit(result.state);
+				k.distance.edit.post_edit(result.state);
 				return result;
-			}));
-
-			auto result = components.draw();
-			k.pair.fields[0].edit.post_edit(result.state);
-			k.pair.fields[1].edit.post_edit(result.state);
-			k.distance.edit.post_edit(result.state);
-			return result;
-		};
+			};
+		}
 
 		std::vector<std::unique_ptr<imtk::prop::iresettable>> resetters;
 		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, 0));

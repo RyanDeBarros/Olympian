@@ -57,6 +57,18 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
+		_signal_id_counter.clear();
+		for (const auto& subdesc : _desc.scratch.signals)
+			_signal_id_counter.increment(subdesc.id.value);
+
+		_route_id_counter.clear();
+		for (const auto& subdesc : _desc.scratch.routes)
+			_route_id_counter.increment(subdesc.id.value);
+
+		_id_counter.clear();
+		_id_counter.accumulate(_signal_id_counter);
+		_id_counter.accumulate(_route_id_counter);
+
 		_stop_listening = true;
 		imtk::id_scope scope(this);
 
@@ -168,39 +180,12 @@ namespace oly::editor
 		}
 	}
 
-	imp::counter<std::string> SignalDocument::GetSignalIDCounter() const
-	{
-		imp::counter<std::string> id_counter;
-
-		for (const auto& subdesc : _desc.scratch.signals)
-			id_counter.increment(subdesc.id.value);
-
-		return id_counter;
-	}
-	
-	imp::counter<std::string> SignalDocument::GetRouteIDCounter() const
-	{
-		imp::counter<std::string> id_counter;
-
-		for (const auto& subdesc : _desc.scratch.routes)
-			id_counter.increment(subdesc.id.value);
-
-		return id_counter;
-	}
-
-	imp::counter<std::string> SignalDocument::GetIDCounter() const
-	{
-		imp::counter<std::string> id_counter = GetSignalIDCounter();
-		id_counter.accumulate(GetRouteIDCounter());
-		return id_counter;
-	}
-
 	void SignalDocument::Draw(SignalDesc& desc)
 	{
 		if (auto dup_outline = imtk::prop::value_outline())
 		{
 			desc.id.draw();
-			if (GetIDCounter().count(desc.id.value) > 1)
+			if (_id_counter.count(desc.id.value) > 1)
 			{
 				if (imtk::prop::value::get_draw_result().state.hovered())
 					ImGui::SetTooltip("Duplicate signal/route id");
@@ -237,16 +222,13 @@ namespace oly::editor
 	
 	void SignalDocument::Draw(RouteDesc& desc)
 	{
-		auto signal_id_counter = GetSignalIDCounter();
-		auto id_counter = GetIDCounter();
-
-		imp::counter<std::string> local_id_counter;
-		local_id_counter.accumulate(desc.signals.value);
+		_route_local_signal_id_counter.clear();
+		_route_local_signal_id_counter.accumulate(desc.signals.value);
 
 		if (auto dup_outline = imtk::prop::value_outline())
 		{
 			desc.id.draw();
-			if (id_counter.count(desc.id.value) > 1)
+			if (_id_counter.count(desc.id.value) > 1)
 			{
 				if (imtk::prop::row::get_draw_result().state.hovered())
 					ImGui::SetTooltip("Duplicate signal/route id");
@@ -255,31 +237,33 @@ namespace oly::editor
 			}
 		}
 
-		// TODO v9.3 put in init whenever RouteDesc is created
-		desc.signals.widget.body.row_draw = [&signal_id_counter, &local_id_counter, &desc](imtk::dynamic_row& row) -> imtk::item_result {
-			std::string& element = desc.signals.edit.buffer()[row.index()];
+		if (!desc.signals.widget.body.row_draw)
+		{
+			desc.signals.widget.body.row_draw = [this, &desc](imtk::dynamic_row& row) -> imtk::item_result {
+				std::string& element = desc.signals.edit.buffer()[row.index()];
 
-			imtk::outline outline;
-			auto result = imtk::w::bound_widget<std::string>(element).draw();
+				imtk::outline outline;
+				auto result = imtk::w::bound_widget<std::string>(element).draw();
 
-			if (!signal_id_counter.contains(element))
-			{
-				outline.draw(imtk::col::warning);
-				if (result.state.hovered())
-					ImGui::SetTooltip("Signal id is not present in asset");
-			}
-			else if (local_id_counter.count(element) > 1)
-			{
-				outline.draw(imtk::col::warning);
-				if (result.state.hovered())
-					ImGui::SetTooltip("Duplicate signal id listing in route");
-			}
+				if (!_signal_id_counter.contains(element))
+				{
+					outline.draw(imtk::col::warning);
+					if (result.state.hovered())
+						ImGui::SetTooltip("Signal id is not present in asset");
+				}
+				else if (_route_local_signal_id_counter.count(element) > 1)
+				{
+					outline.draw(imtk::col::warning);
+					if (result.state.hovered())
+						ImGui::SetTooltip("Duplicate signal id listing in route");
+				}
 
-			if (result.state.activated())
-				row.on_select();
+				if (result.state.activated())
+					row.on_select();
 
-			return result;
-		};
+				return result;
+			};
+		}
 
 		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget.model))
 			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
