@@ -210,16 +210,16 @@ namespace oly::editor
 
 	void SignalDocument::Draw(SignalDesc& desc)
 	{
-		// TODO v9.3 here and in other usages of imtk::outline, the outline should start in value draw (in widget itself).
-		imtk::outline dup_outline;
-		
-		desc.id.draw();
-		if (GetIDCounter().count(desc.id.value) > 1)
+		if (auto dup_outline = imtk::prop::value_outline())
 		{
-			if (imtk::prop::row::get_draw_result().state.hovered())
-				ImGui::SetTooltip("Duplicate signal/route id");
+			desc.id.draw();
+			if (GetIDCounter().count(desc.id.value) > 1)
+			{
+				if (imtk::prop::value::get_draw_result().state.hovered())
+					ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.draw(imtk::col::error);
+				dup_outline.draw(imtk::col::error);
+			}
 		}
 
 		auto initial_binding = desc.binding.value;
@@ -256,15 +256,16 @@ namespace oly::editor
 		imp::counter<std::string> local_id_counter;
 		local_id_counter.accumulate(desc.signals.value);
 
-		imtk::outline dup_outline;
-
-		desc.id.draw();
-		if (id_counter.count(desc.id.value) > 1)
+		if (auto dup_outline = imtk::prop::value_outline())
 		{
-			if (imtk::prop::row::get_draw_result().state.hovered())
-				ImGui::SetTooltip("Duplicate signal/route id");
+			desc.id.draw();
+			if (id_counter.count(desc.id.value) > 1)
+			{
+				if (imtk::prop::row::get_draw_result().state.hovered())
+					ImGui::SetTooltip("Duplicate signal/route id");
 
-			dup_outline.draw(imtk::col::error);
+				dup_outline.draw(imtk::col::error);
+			}
 		}
 
 		// TODO v9.3 put in init whenever RouteDesc is created
