@@ -176,7 +176,7 @@ namespace oly::editor
 		ignore_imports.config.icon = Icon(IconResource::FilterOff);
 		ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
 		ignore_imports.config.str_id = "##IgnoreImports";
-		ignore_imports.config.tooltip = imtk::label("Ignore import files");
+		ignore_imports.config.tooltip = "Ignore import files";
 
 		// TODO v9.4 option to "Sync with open asset" (open in tree view and have it selected - selection outline around single-clicked item)
 	}
@@ -310,7 +310,7 @@ namespace oly::editor
 		_config.ignore_imports.draw();
 		
 		ImGui::SameLine();
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = imtk::label("Collapse all") }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
 			_root->CollapseAll();
 		
 		ImGui::Separator();

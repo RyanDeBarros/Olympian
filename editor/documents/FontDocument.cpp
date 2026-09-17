@@ -10,10 +10,10 @@ namespace oly::editor
     static imtk::w::list_indexer::config AtlasListConfig()
     {
         return {
-            .prompt         = imtk::label("Select atlas"),
-            .create_tooltip = imtk::label("Create atlas"),
-            .delete_tooltip = imtk::label("Delete atlas"),
-            .clear_tooltip  = imtk::label("Clear atlases")
+            .prompt         = "Select atlas",
+            .create_tooltip = "Create atlas",
+            .delete_tooltip = "Delete atlas",
+            .clear_tooltip  = "Clear atlases"
         };
     }
     
@@ -34,7 +34,7 @@ namespace oly::editor
 
 		_atlas_slots.model.policy = imtk::list_policy::minimum_one;
 		_display_text.value = "Abc 123";
-		_display_text.config().label = imtk::label("Display text");
+		_display_text.config().label = "Display text";
 		LoadAsset();
 	}
 
@@ -192,7 +192,7 @@ namespace oly::editor
 
 						if (i == 0)
 						{
-							ImGui::TextUnformatted(imtk::label_registry::string(k.pair.label)); // TODO v9.3 with label_handle, just have c_str() method
+							ImGui::TextUnformatted(k.pair.label.c_str());
 							result |= imtk::item_result::query(false);
 							ImGui::SameLine();
 						}
@@ -223,7 +223,7 @@ namespace oly::editor
 
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
 					imtk::controls::vertical_separator();
-					ImGui::TextUnformatted(imtk::label_registry::string(k.distance.label));
+					ImGui::TextUnformatted(k.distance.label.c_str());
 					auto result = imtk::item_result::query(false);
 					ImGui::SameLine();
 					result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();

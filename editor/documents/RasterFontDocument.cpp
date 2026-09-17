@@ -19,10 +19,10 @@ namespace oly::editor
 	static imtk::w::list_indexer::config GlyphListConfig()
 	{
 		return {
-		    .prompt	        = imtk::label("Select glyph"),
-			.create_tooltip = imtk::label("New glyph"),
-			.delete_tooltip = imtk::label("Delete glyph"),
-			.clear_tooltip  = imtk::label("Clear glyphs")
+		    .prompt	        = "Select glyph",
+			.create_tooltip = "New glyph",
+			.delete_tooltip = "Delete glyph",
+			.clear_tooltip  = "Clear glyphs"
 		};
 	}
 
