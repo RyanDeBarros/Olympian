@@ -174,7 +174,7 @@ namespace oly::editor
 	{
 		if (auto d = imtk::disabled(_on_res_root))
 		{
-			_favorited.config.tooltip = d.is_disabled() ? "Favorite (disabled for root folder)" : "Favorite";
+			_favorited.config.tooltip = imtk::label(d.is_disabled() ? "Favorite (disabled for root folder)" : "Favorite");
 			if (_favorited.draw())
 			{
 				if (!d.is_disabled())
@@ -183,16 +183,16 @@ namespace oly::editor
 		}
 
 		ImGui::SameLine();
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::OpenInTreeView), .str_id = "##OpenInTreeView", .tooltip = "Open in tree view" }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::OpenInTreeView), .str_id = "##OpenInTreeView", .tooltip = imtk::label("Open in tree view") }).draw())
 			TreeViewPanel::ShowResourceFolderInTreeView(_folder);
 
 		ImGui::SameLine();
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::FolderOpen), .str_id = "##RevealInExplorer", .tooltip = "Reveal in explorer" }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::FolderOpen), .str_id = "##RevealInExplorer", .tooltip = imtk::label("Reveal in explorer") }).draw())
 			PathInfo::RevealInExplorer(_folder, true);
 
 		ImGui::SameLine();
 		imtk::popup new_asset_popup("New");
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::CirclePlus), .str_id = "##New", .tooltip = "New" }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::CirclePlus), .str_id = "##New", .tooltip = imtk::label("New") }).draw())
 			new_asset_popup.open();
 
 		if (auto d = new_asset_popup.draw())
@@ -206,14 +206,14 @@ namespace oly::editor
 
 		imtk::controls::vertical_separator();
 
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::Import), .str_id = "##Import", .tooltip = "Import" }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::Import), .str_id = "##Import", .tooltip = imtk::label("Import") }).draw())
 		{
 			ImportFromPath(_folder, fio_queue);
 			ImGui::CloseCurrentPopup();
 		}
 
 		ImGui::SameLine();
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::Prune), .str_id = "##Prune", .tooltip = "Prune" }).draw())
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::Prune), .str_id = "##Prune", .tooltip = imtk::label("Prune") }).draw())
 		{
 			PruneFromPath(_folder, fio_queue);
 			ImGui::CloseCurrentPopup();
@@ -223,7 +223,7 @@ namespace oly::editor
 
 		if (auto d = imtk::disabled(_folder_history.empty_backwards()))
 		{
-			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleLeft), .str_id = "##FolderHistoryBack", .tooltip = "Back" }).draw())
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleLeft), .str_id = "##FolderHistoryBack", .tooltip = imtk::label("Back") }).draw())
 			{
 				_folder_history.move_backward();
 				if (auto f = _folder_history.get_present())
@@ -235,7 +235,7 @@ namespace oly::editor
 
 		if (auto d = imtk::disabled(_folder_history.empty_forwards()))
 		{
-			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleRight), .str_id = "##FolderHistoryForward", .tooltip = "forward" }).draw())
+			if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleRight), .str_id = "##FolderHistoryForward", .tooltip = imtk::label("forward") }).draw())
 			{
 				_folder_history.move_forward();
 				if (auto f = _folder_history.get_present())
@@ -333,13 +333,13 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = "Import"}).draw())
+					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = imtk::label("Import")}).draw())
 					{
 						ImportFromPath(_folder, fio_queue);
 						ImGui::CloseCurrentPopup();
 					}
 
-					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = "Prune" }).draw())
+					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = imtk::label("Prune") }).draw())
 					{
 						PruneFromPath(_folder, fio_queue);
 						ImGui::CloseCurrentPopup();
@@ -347,13 +347,13 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::OpenInTreeView), .label = "Open in tree view" }).draw())
+					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::OpenInTreeView), .label = imtk::label("Open in tree view") }).draw())
 					{
 						TreeViewPanel::ShowResourceFolderInTreeView(_folder);
 						ImGui::CloseCurrentPopup();
 					}
 
-					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = "Reveal in explorer" }).draw())
+					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = imtk::label("Reveal in explorer") }).draw())
 					{
 						PathInfo::RevealInExplorer(_folder, true);
 						ImGui::CloseCurrentPopup();
@@ -450,13 +450,13 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (!detail::ResourcePath(path).get_import_path().exists() && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = "Import" }).draw())
+					if (!detail::ResourcePath(path).get_import_path().exists() && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = imtk::label("Import") }).draw())
 					{
 						ImportFromPath(path, fio_queue);
 						ImGui::CloseCurrentPopup();
 					}
 
-					if (std::filesystem::is_directory(path) && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = "Prune" }).draw())
+					if (std::filesystem::is_directory(path) && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = imtk::label("Prune") }).draw())
 					{
 						PruneFromPath(path, fio_queue);
 						ImGui::CloseCurrentPopup();
@@ -464,7 +464,7 @@ namespace oly::editor
 
 					ImGui::Separator();
 
-					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = "Reveal in explorer" }).draw())
+					if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = imtk::label("Reveal in explorer") }).draw())
 					{
 						PathInfo::RevealInExplorer(path, false);
 						ImGui::CloseCurrentPopup();
@@ -606,13 +606,13 @@ namespace oly::editor
 
 	void ContentBrowserPanel::NewAssetMenu()
 	{
-		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Tileset)), .label = "Tileset" }).draw())
+		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Tileset)), .label = imtk::label("Tileset") }).draw())
 		{
 			_new_asset = NewAssetInfo(detail::Key::Meta_Tileset, "New Tileset", "New tileset");
 			ImGui::CloseCurrentPopup();
 		}
 
-		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Signal)), .label = "Signal" }).draw())
+		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Signal)), .label = imtk::label("Signal") }).draw())
 		{
 			_new_asset = NewAssetInfo(detail::Key::Meta_Signal, "New Signal", "New signal");
 			ImGui::CloseCurrentPopup();
@@ -620,13 +620,13 @@ namespace oly::editor
 
 		if (auto _ = imtk::menu("Fonts"))
 		{
-			if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)), .label = "Font family" }).draw())
+			if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)), .label = imtk::label("Font family") }).draw())
 			{
 				_new_asset = NewAssetInfo(detail::Key::Meta_FontFamily, "New Font Family", "New font family");
 				ImGui::CloseCurrentPopup();
 			}
 
-			if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_RasterFont)), .label = "Raster font" }).draw())
+			if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_RasterFont)), .label = imtk::label("Raster font") }).draw())
 			{
 				_new_asset = NewAssetInfo(detail::Key::Meta_RasterFont, "New Raster Font", "New raster font");
 				ImGui::CloseCurrentPopup();
@@ -636,7 +636,7 @@ namespace oly::editor
 
 	void ContentBrowserPanel::NewFolderMenu()
 	{
-		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Folder)), .label = "New folder" }).draw())
+		if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Folder)), .label = imtk::label("New folder") }).draw())
 		{
 			_new_asset = NewAssetInfo(detail::Key::Meta_Folder, "New Folder", "New folder");
 			ImGui::CloseCurrentPopup();

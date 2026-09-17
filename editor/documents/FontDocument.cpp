@@ -7,9 +7,18 @@
 
 namespace oly::editor
 {
+    static imtk::w::list_indexer::config AtlasListConfig()
+    {
+        return {
+            .prompt         = imtk::label("Select atlas"),
+            .create_tooltip = imtk::label("Create atlas"),
+            .delete_tooltip = imtk::label("Delete atlas"),
+            .clear_tooltip  = imtk::label("Clear atlases")
+        };
+    }
+    
 	FontDocument::FontDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path))
-		, _atlas_slots({ .prompt = "Select atlas", .create_tooltip = "Create atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas")
+		: IDocument(std::move(oly_path)), _atlas_slots(AtlasListConfig(), "Atlas")
 	{
 	}
 
@@ -25,7 +34,7 @@ namespace oly::editor
 
 		_atlas_slots.model.policy = imtk::list_policy::minimum_one;
 		_display_text.value = "Abc 123";
-		_display_text.config().label = "Display text";
+		_display_text.config().label = imtk::label("Display text");
 		LoadAsset();
 	}
 
@@ -183,13 +192,13 @@ namespace oly::editor
 
 						if (i == 0)
 						{
-							ImGui::TextUnformatted(k.pair.label);
+							ImGui::TextUnformatted(imtk::label_registry::string(k.pair.label)); // TODO v9.3 with label_handle, just have c_str() method
 							result |= imtk::item_result::query(false);
 							ImGui::SameLine();
 						}
 
 						imtk::outline bad_outline;
-						result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer(), { .label = "" }).draw();
+						result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer()).draw();
 
 						if (dup_warning && result.state.hovered())
 							ImGui::SetTooltip("Duplicate codepoint pair");
@@ -214,7 +223,7 @@ namespace oly::editor
 
 				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
 					imtk::controls::vertical_separator();
-					ImGui::TextUnformatted(k.distance.label);
+					ImGui::TextUnformatted(imtk::label_registry::string(k.distance.label));
 					auto result = imtk::item_result::query(false);
 					ImGui::SameLine();
 					result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();

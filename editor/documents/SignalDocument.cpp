@@ -33,10 +33,30 @@ namespace oly::editor
 		};
 	}
 
+    static imtk::w::list_indexer::config SignalListConfig()
+    {
+        return {
+            .prompt         = imtk::label("Select signal"),
+            .create_tooltip = imtk::label("New signal"),
+            .delete_tooltip = imtk::label("Delete signal"),
+            .clear_tooltip  = imtk::label("Clear signals")
+        };
+    }
+
+    static imtk::w::list_indexer::config RouteListConfig()
+    {
+        return {
+            .prompt = imtk::label("Select route"),
+            .create_tooltip = imtk::label("New route"),
+            .delete_tooltip = imtk::label("Delete route"),
+            .clear_tooltip = imtk::label("Clear routes")
+        };
+    }
+
 	SignalDocument::SignalDocument(detail::ResourcePath oly_path)
 		: IDocument(std::move(oly_path))
-		, _signal_slots({ .prompt = "Select signal", .create_tooltip = "New signal", .delete_tooltip = "Delete signal", .clear_tooltip = "Clear signals" }, MakeSignalComboName(_desc))
-		, _route_slots({ .prompt = "Select route", .create_tooltip = "New route", .delete_tooltip = "Delete route", .clear_tooltip = "Clear routes" }, MakeRouteComboName(_desc))
+		, _signal_slots(SignalListConfig(), MakeSignalComboName(_desc))
+		, _route_slots(RouteListConfig(), MakeRouteComboName(_desc))
 	{
 	}
 
@@ -265,7 +285,7 @@ namespace oly::editor
 			};
 		}
 
-		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label, desc.signals.edit, desc.signals.def, desc.signals.widget.model))
+		if (auto _ = imtk::prop::vector_row_scope<std::string>(imtk::label_registry::string(desc.signals.label), desc.signals.edit, desc.signals.def, desc.signals.widget.model))
 			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
 
 		desc.signals.consume_ops();
@@ -275,7 +295,7 @@ namespace oly::editor
 	void SignalDocument::Draw(KeyDesc& desc)
 	{
 		const auto initial = desc.key.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.key.label, desc.key.index_, desc.key.def_index))
+		if (auto row = imtk::prop::make_row_scope(imtk::label_registry::string(desc.key.label), desc.key.index_, desc.key.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -319,7 +339,7 @@ namespace oly::editor
 	void SignalDocument::Draw(MouseButtonDesc& desc)
 	{
 		const auto initial = desc.button.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index_, desc.button.def_index))
+		if (auto row = imtk::prop::make_row_scope(imtk::label_registry::string(desc.button.label), desc.button.index_, desc.button.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -363,7 +383,7 @@ namespace oly::editor
 	void SignalDocument::Draw(GamepadButtonDesc& desc)
 	{
 		const auto initial = desc.button.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label, desc.button.index_, desc.button.def_index))
+		if (auto row = imtk::prop::make_row_scope(imtk::label_registry::string(desc.button.label), desc.button.index_, desc.button.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -394,7 +414,7 @@ namespace oly::editor
 	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
 	{
 		const auto initial = desc.axis.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.axis.label, desc.axis.index_, desc.axis.def_index))
+		if (auto row = imtk::prop::make_row_scope(imtk::label_registry::string(desc.axis.label), desc.axis.index_, desc.axis.def_index))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
 				_stop_listening = false;
@@ -429,7 +449,7 @@ namespace oly::editor
 		int int_value = static_cast<int>(desc.axis.value);
 		const int int_default = static_cast<int>(desc.axis.def);
 
-		if (auto row = imtk::prop::make_row_scope(desc.axis.label, int_value, int_default))
+		if (auto row = imtk::prop::make_row_scope(imtk::label_registry::string(desc.axis.label), int_value, int_default))
 		{
 			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
 				_stop_listening = false;

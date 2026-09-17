@@ -13,12 +13,21 @@ namespace oly::editor
 				return desc.glyphs[i].codepoint.value;
 			else
 				return "Glyph #" + std::to_string(i);
+        };
+	}
+
+	static imtk::w::list_indexer::config GlyphListConfig()
+	{
+		return {
+		    .prompt	        = imtk::label("Select glyph"),
+			.create_tooltip = imtk::label("New glyph"),
+			.delete_tooltip = imtk::label("Delete glyph"),
+			.clear_tooltip  = imtk::label("Clear glyphs")
 		};
 	}
 
 	RasterFontDocument::RasterFontDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path))
-		, _glyphs({ .prompt = "Select glyph", .create_tooltip = "New glyph", .delete_tooltip = "Delete glyph", .clear_tooltip = "Clear glyphs" }, MakeGlyphComboName(_desc))
+		: IDocument(std::move(oly_path)), _glyphs(GlyphListConfig(), MakeGlyphComboName(_desc))
 	{
 	}
 

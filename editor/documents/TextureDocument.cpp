@@ -14,17 +14,27 @@ namespace oly::editor
 		preview.config.icon = Icon(IconResource::Preview);
 		preview.config.str_id = "##Preview";
 		preview.config.selected = true;
-		preview.config.tooltip = "Preview spritesheet";
+		preview.config.tooltip = imtk::label("Preview spritesheet");
 
 		playing.config.icon = Icon(IconResource::Pause);
 		playing.config.str_id = "##Playing";
 		playing.config.selected_icon = Icon(IconResource::Play);
 		playing.config.selected = false;
-		playing.config.tooltip = "Play/pause animation";
+		playing.config.tooltip = imtk::label("Play/pause animation");
 	}
 
+    static imtk::w::list_indexer::config SlotListConfig()
+    {
+        return {
+            .prompt         = imtk::label("Select slot"),
+            .create_tooltip = imtk::label("New texture slot"),
+            .delete_tooltip = imtk::label("Delete texture slot"),
+            .clear_tooltip  = imtk::label("Clear texture slots")
+        };
+    }
+
 	TextureDocument::TextureDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path)), _slots({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot")
+		: IDocument(std::move(oly_path)), _slots(SlotListConfig(), "Slot")
 	{
 	}
 
@@ -160,7 +170,12 @@ namespace oly::editor
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
-			if (imtk::w::icon_button({ .icon = Icon(IconResource::Recenter), .str_id = "##Recenter", .tooltip = "Reset panning/zoom" }).draw())
+            static imtk::w::icon_button_config icon_config = {
+                .icon    = Icon(IconResource::Recenter),
+                .str_id  = "##Recenter",
+                .tooltip = imtk::label("Reset panning/zoom")
+            };
+			if (imtk::w::icon_button(icon_config).draw())
 			{
 				_preview_nav = {};
 				if (imtk::svg_texture* svg = _texture.get_svg())
@@ -183,7 +198,7 @@ namespace oly::editor
 				ImGui::InputFloat("Scale", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
 				imtk::controls::vertical_separator();
-				if (imtk::w::icon_button({ .icon = Icon(IconResource::Refresh), .str_id = "##RefreshSVGScale", .tooltip = "Refresh SVG scale"}).draw())
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Refresh), .str_id = "##RefreshSVGScale", .tooltip = imtk::label("Refresh SVG scale") }).draw())
 				{
 					_preview_nav.svg_scale = scale;
 					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
@@ -199,7 +214,7 @@ namespace oly::editor
 				ImGui::SameLine();
 				_spritesheet_preview_data.playing.draw();
 				ImGui::SameLine();
-				if (imtk::w::icon_button({ .icon = Icon(IconResource::Stop), .str_id = "##StopAnimation", .tooltip = "Stop animation"}).draw())
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Stop), .str_id = "##StopAnimation", .tooltip = imtk::label("Stop animation") }).draw())
 					_spritesheet_preview_data = {};
 			}
 			else
@@ -509,11 +524,11 @@ namespace oly::editor
 	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
 		desc.col_type.draw();
-		desc.col_value.label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
+		desc.col_value.label = imtk::label(desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width");
 		desc.col_value.draw();
 
 		desc.row_type.draw();
-		desc.row_value.label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
+		desc.row_value.label = imtk::label(desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height");
 		desc.row_value.draw();
 
 		IMTK_DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);

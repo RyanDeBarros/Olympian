@@ -377,7 +377,7 @@ namespace oly::editor
 
 			if (auto scope = imtk::id_scope(&desc.texture))
 			{
-				if (auto _ = imtk::prop::make_row_scope(desc.texture.label, desc.texture.edit, desc.texture.def))
+				if (auto _ = imtk::prop::make_row_scope(imtk::label_registry::string(desc.texture.label), desc.texture.edit, desc.texture.def))
 				{
 					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
 						imtk::id_scope scope(&desc.texture.value);
