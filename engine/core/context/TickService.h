@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/types/AutoRegistry.h"
+#include <imp/soft_singleton.hpp>
 
 #include <unordered_set>
 #include <array>

@@ -11,6 +11,8 @@
 #include "core/base/Constants.h"
 #include "core/types/Issuer.h"
 
+#include <imp/auto_tracker.hpp>
+
 namespace oly::rendering
 {
 	namespace internal
@@ -19,7 +21,7 @@ namespace oly::rendering
 
 		class SpriteReference;
 
-		class SpriteBatch : public AutoRegistrable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
+		class SpriteBatch : public imp::auto_trackable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
 		{
 			friend class SpriteReference;
 

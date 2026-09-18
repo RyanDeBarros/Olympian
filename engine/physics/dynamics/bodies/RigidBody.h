@@ -3,7 +3,8 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/components/DynamicsComponent.h"
-#include "core/types/AutoRegistry.h"
+
+#include <imp/auto_tracker.hpp>
 
 namespace oly::physics
 {
@@ -12,7 +13,7 @@ namespace oly::physics
 		struct RigidBodyOnTick;
 	}
 
-	class RigidBody : public col2d::CollisionController, public AutoRegistrable<RigidBody>
+	class RigidBody : public col2d::CollisionController, public imp::auto_trackable<RigidBody>
 	{
 	protected:
 		std::vector<col2d::Collider> colliders;

@@ -5,6 +5,8 @@
 #include "core/algorithms/STLUtils.h"
 #include "core/context/TickService.h"
 
+#include <imp/auto_tracker.hpp>
+
 #include <stack>
 #include <unordered_set>
 #include <memory>
@@ -34,7 +36,7 @@ namespace oly
 
 	namespace internal
 	{
-		struct IPool : public AutoRegistrable<IPool>
+		struct IPool : public imp::auto_trackable<IPool>
 		{
 			virtual void clean() = 0;
 			virtual void clear() = 0;
@@ -54,16 +56,14 @@ namespace oly
 
 			void on_terminate() override
 			{
-				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
-				for (IPool* pool : pools.tracked())
+				for (IPool* pool : IPool::tracked())
 					pool->clear();
-				pools.clear();
+                IPool::tracker().clear();
 			}
 
 			void clean()
 			{
-				auto& pools = oly::internal::AutoRegistry<IPool>::instance();
-				for (IPool* pool : pools.tracked())
+				for (IPool* pool : IPool::tracked())
 					pool->clean();
 			}
 		};
