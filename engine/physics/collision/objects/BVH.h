@@ -10,9 +10,12 @@
 #include "core/base/Transforms.h"
 #include "core/base/TransformerExposure.h"
 #include "core/base/Assert.h"
-#include "core/types/DeferredFalse.h"
-#include "core/math/Solvers.h"
+
 #include "core/containers/DoubleBuffer.h"
+
+#include "core/math/Solvers.h"
+
+#include <imp/dependent_false.hpp>
 
 #include <algorithm>
 
@@ -23,7 +26,10 @@ namespace oly::col2d
 		template<typename Shape>
 		struct Wrap
 		{
-			Shape operator()(const Element* elements, size_t count) const { static_assert(deferred_false<Shape>, "oly::col2d::internal::wrap() not defined for the provided Shape"); }
+			Shape operator()(const Element* elements, size_t count) const
+            {
+                static_assert(imp::dependent_false_v<Shape>, "oly::col2d::internal::Wrap::operator()() not defined for the provided Shape");
+            }
 		};
 
 		template<>

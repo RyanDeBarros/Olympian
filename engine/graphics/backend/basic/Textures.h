@@ -1,21 +1,24 @@
 #pragma once
 
-#include <vector>
-#include <array>
-#include <string>
-#include <memory>
-
-#include "external/GLM.h"
-#include "external/NSVG.h"
+#include "core/math/Shapes.h"
 
 #include "core/types/SmartReference.h"
-#include "core/types/DeferredFalse.h"
-#include "core/math/Shapes.h"
 
 #include "graphics/backend/basic/Sampler.h"
 
 #include "assets/ResourcePath.h"
+
 #include "definitions/enums/SpritesheetParamType.h"
+
+#include "external/GLM.h"
+#include "external/NSVG.h"
+
+#include <imp/dependent_false.hpp>
+
+#include <vector>
+#include <array>
+#include <string>
+#include <memory>
 
 namespace oly::graphics
 {
@@ -108,7 +111,7 @@ namespace oly::graphics
 			else if constexpr (std::is_same_v<Pixel, float>)
 				data_type = GL_FLOAT;
 			else
-				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_2d().");
+				static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_2d().");
 			ScopedPixelAlignment pixel_align(cpp);
 			glTextureSubImage2D(texture, level, subarea.x, subarea.y, subarea.w, subarea.h, format(cpp), data_type, pixels);
 		}
@@ -133,7 +136,7 @@ namespace oly::graphics
 			else if constexpr (std::is_same_v<Pixel, float>)
 				data_type = GL_FLOAT;
 			else
-				static_assert(deferred_false<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_3d().");
+				static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_3d().");
 			ScopedPixelAlignment pixel_align(cpp);
 			glTextureSubImage3D(texture, level, subarea.x, subarea.y, subarea.z, subarea.w, subarea.h, subarea.d, format(cpp), data_type, pixels);
 		}

@@ -1,7 +1,5 @@
 #pragma once
 
-#include "core/types/DeferredFalse.h"
-
 #include "physics/collision/methods/CollisionInfo.h"
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/Circle.h"
@@ -10,6 +8,8 @@
 #include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
 
+#include <imp/dependent_false.hpp>
+
 namespace oly::col2d::sat
 {
 	namespace internal
@@ -17,7 +17,7 @@ namespace oly::col2d::sat
 		template<typename Shape1, typename Shape2>
 		struct OverlapTest
 		{
-			static_assert(deferred_false<Shape1>, "OverlapTest not supported for the provided shape combo.");
+			static_assert(imp::dependent_false_v<Shape1>, "OverlapTest not supported for the provided shape combo.");
 		};
 
 		template<typename Shape1, typename Shape2>
@@ -32,7 +32,7 @@ namespace oly::col2d::sat
 		template<typename Shape1, typename Shape2>
 		struct CollisionTest
 		{
-			static_assert(deferred_false<Shape1>, "CollisionTest not supported for the provided shape combo.");
+			static_assert(imp::dependent_false_v<Shape1>, "CollisionTest not supported for the provided shape combo.");
 		};
 
 		template<typename Shape1, typename Shape2>

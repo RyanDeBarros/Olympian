@@ -1,12 +1,17 @@
 #pragma once
 
-#include "external/TOML.h"
-#include "external/GLM.h"
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
+
 #include "core/containers/IDGenerator.h"
+
 #include "core/types/Polymorphic.h"
 #include "core/types/Singleton.h"
+
+#include "external/TOML.h"
+#include "external/GLM.h"
+
+#include <imp/dependent_false.hpp>
 
 namespace oly
 {
@@ -252,7 +257,7 @@ namespace oly
 	template<size_t N>
 	struct CompoundTransformModifier2D
 	{
-		static_assert(deferred_false<N>);
+		static_assert(imp::dependent_false_v<N>);
 	};
 
 	template<>

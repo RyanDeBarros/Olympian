@@ -1,15 +1,17 @@
 #pragma once
 
-#include "core/types/DeferredFalse.h"
 #include "core/base/Errors.h"
+
 #include "core/util/Macros.h"
+
+#include <imp/dependent_false.hpp>
 
 namespace oly
 {
 	template<typename... Types>
 	class Variant
 	{
-		static_assert(deferred_false<Variant<Types...>>);
+		static_assert(imp::dependent_false_v<Variant<Types...>>);
 	};
 
 #define _OLY_ENUM_DEF(N) _##N
@@ -224,7 +226,7 @@ namespace oly
 	static constexpr Type type_of()\
 	{\
 		_OLY_REPEAT(_OLY_TYPE_OF_CASE, N);\
-		static_assert(deferred_false<T>);\
+		static_assert(imp::dependent_false_v<T>);\
 	}
 
 #define _OLY_TYPENAME_T(N) typename T##N

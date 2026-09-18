@@ -2,6 +2,7 @@
 
 #include "physics/collision/scene/dispatch/CollisionController.h"
 #include "physics/collision/scene/dispatch/CollisionTree.h"
+
 #include "core/containers/SymmetricRefMap.h"
 
 namespace oly::col2d
@@ -134,7 +135,7 @@ namespace oly::col2d
 			template<typename T>
 			std::optional<T> get(const Collider& c1, const Collider& c2) const
 			{
-				static_assert(deferred_false<T>, "CollisionCache::get<T>() does not support the invoked type.");
+				static_assert(imp::dependent_false_v<T>, "CollisionCache::get<T>() does not support the invoked type.");
 			}
 
 			template<>

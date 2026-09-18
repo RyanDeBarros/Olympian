@@ -1,7 +1,10 @@
 #pragma once
 
-#include "external/GL.h"
 #include "core/types/Variant.h"
+
+#include "external/GL.h"
+
+#include <imp/dependent_false.hpp>
 
 namespace oly::graphics
 {
@@ -15,7 +18,7 @@ namespace oly::graphics
 	template<VertexAttributeType T>
 	struct VertexAttribute
 	{
-		static_assert(deferred_false<T>);
+		static_assert(imp::dependent_false_v<T>);
 	};
 
 	template<>
