@@ -94,7 +94,7 @@ namespace oly
 			bind(id, handler);
 		else
 		{
-			auto it = _signal_routing_table.find(signal);
+			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
 				// TODO v13 handle infinite recursion
@@ -114,7 +114,7 @@ namespace oly
 			bind(id, handler);
 		else
 		{
-			auto it = _signal_routing_table.find(signal);
+			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
 				// TODO v13 handle infinite recursion
@@ -134,7 +134,7 @@ namespace oly
 			unbind(id);
 		else
 		{
-			auto it = _signal_routing_table.find(signal);
+			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
 				// TODO v13 handle infinite recursion

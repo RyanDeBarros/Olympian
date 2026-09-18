@@ -5,6 +5,8 @@
 #include "core/types/DeferredFalse.h"
 #include "core/util/StringParam.h"
 
+#include <imp/hetero.hpp>
+
 namespace oly::input
 {
 	typedef unsigned int SignalID;
@@ -12,7 +14,7 @@ namespace oly::input
 	class SignalTable
 	{
 		SignalID next = 1;
-		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
+        imp::hetero::string_umap<SignalID> table;
 
 	public:
 		SignalID insert(const StringParam& name)
@@ -24,7 +26,7 @@ namespace oly::input
 
 		SignalID get(const StringParam& name) const
 		{
-			auto it = table.find(name);
+			auto it = table.find(name.view());
 			if (it != table.end())
 				return it->second;
 			else
@@ -32,7 +34,7 @@ namespace oly::input
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalRoutingTable;
+	typedef imp::hetero::string_umap<std::vector<std::string>> SignalRoutingTable;
 
 	enum class Phase
 	{

@@ -140,22 +140,6 @@ namespace oly
 		unsigned int to_uint(const int base = 10) const;
 		float to_float() const;
 	};
-
-	// TODO v9.3 use imp::hetero
-
-	struct StringParamHeteroHash
-	{
-		using is_transparent = void;
-		size_t operator()(const StringParam& s) const { return s.hash(); }
-	};
-
-	struct StringParamHeteroEqual
-	{
-		using is_transparent = void;
-		bool operator()(const StringParam& s1, const StringParam& s2) const { return s1 == s2; }
-	};
-
-	inline const StringParam a = StringParam("a");
 }
 
 template<>
