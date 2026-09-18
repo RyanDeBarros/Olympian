@@ -65,7 +65,7 @@ namespace oly::rendering
 
 			struct PeekData
 			{
-				utf::Codepoint first_codepoint = utf::Codepoint(0);
+				imp::utf::codepoint first_codepoint = imp::utf::codepoint(0);
 			};
 
 			PeekData peek() const;
@@ -81,8 +81,8 @@ namespace oly::rendering
 
 		private:
 			void build_adj_offset(TypesetData& typeset, PeekData next_peek) const;
-			void build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			void build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void build_space(TypesetData& typeset, imp::utf::codepoint next_codepoint) const;
+			void build_tab(TypesetData& typeset, imp::utf::codepoint next_codepoint) const;
 			void build_newline(TypesetData& typeset) const;
 			void build_glyph(TypesetData& typeset, float dx) const;
 
@@ -92,14 +92,14 @@ namespace oly::rendering
 			};
 
 			bool write_adj_offset(TypesetData& typeset, PeekData next_peek, LineAlignment& line) const;
-			void write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const;
-			void write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const;
+			void write_space(TypesetData& typeset, imp::utf::codepoint next_codepoint) const;
+			void write_tab(TypesetData& typeset, imp::utf::codepoint next_codepoint) const;
 			bool write_newline(TypesetData& typeset, LineAlignment& line) const;
-			void write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const;
+			void write_glyph(TypesetData& typeset, imp::utf::codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const;
 			glm::vec2 get_glyph_position(size_t i) const;
 
-			float space_width(utf::Codepoint next_codepoint) const;
-			float tab_width(utf::Codepoint next_codepoint) const;
+			float space_width(imp::utf::codepoint next_codepoint) const;
+			float tab_width(imp::utf::codepoint next_codepoint) const;
 
 			void recolor() const;
 			void realign_lines() const;
@@ -124,7 +124,7 @@ namespace oly::rendering
 	public:
 		void set_font(const FontAtlasRef& font);
 		void set_font(const RasterFontRef& font);
-		void set_text(utf::String&& text);
+		void set_text(imp::utf::string&& text);
 		void set_text_color(glm::vec4 color);
 		void set_adj_offset(float adj_offset);
 		void set_scale(glm::vec2 scale);

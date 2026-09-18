@@ -3,12 +3,12 @@
 #include "core/base/Errors.h"
 #include "core/base/Color.h"
 #include "core/util/Logger.h"
-#include "core/util/UTF.h"
 #include "core/cmath/ColoredGeometry.h"
 
 #include "definitions/Keys.h"
 
 #include <imp/parser.hpp>
+#include <imp/utf.hpp>
 
 namespace oly::assets
 {
@@ -272,7 +272,7 @@ namespace oly::assets::internal
 	}
 
 	template<>
-	bool try_parse(TOMLNode node, utf::Codepoint& v)
+	bool try_parse(TOMLNode node, imp::utf::codepoint& v)
 	{
 		std::string str;
 		if (!try_parse(node, str))
@@ -280,7 +280,7 @@ namespace oly::assets::internal
 
 		if (auto val = imp::stocdpt(str))
 		{
-			v = utf::Codepoint(*val);
+			v = imp::utf::codepoint(*val);
 			return true;
 		}
 		else

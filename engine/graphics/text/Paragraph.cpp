@@ -146,7 +146,7 @@ namespace oly::rendering
 	internal::GlyphGroup::PeekData internal::GlyphGroup::peek() const
 	{
 		auto iter = element.text.begin();
-		return { .first_codepoint = iter ? iter.codepoint() : utf::Codepoint(0) };
+		return { .first_codepoint = iter ? *iter : imp::utf::codepoint(0) };
 	}
 
 	void internal::GlyphGroup::build_page_section(TypesetData& typeset, PeekData next_peek) const
@@ -160,16 +160,16 @@ namespace oly::rendering
 
 		while (iter)
 		{
-			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+			imp::utf::codepoint codepoint = iter.advance();
+			imp::utf::codepoint next_codepoint = iter ? *iter : next_peek.first_codepoint;
 
 			if (codepoint == ' ')
 				build_space(typeset, next_codepoint);
 			else if (codepoint == '\t')
 				build_tab(typeset, next_codepoint);
-			else if (utf::is_n_or_r(codepoint))
+			else if (imp::utf::is_n_or_r(codepoint))
 			{
-				if (iter && utf::is_rn(codepoint, next_codepoint))
+				if (iter && imp::utf::is_rn(codepoint, next_codepoint))
 					++iter;
 				build_newline(typeset);
 				if (iter || next_peek.first_codepoint) // next codepoint in group
@@ -205,16 +205,16 @@ namespace oly::rendering
 
 		while (iter)
 		{
-			utf::Codepoint codepoint = iter.advance();
-			utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+			imp::utf::codepoint codepoint = iter.advance();
+			imp::utf::codepoint next_codepoint = iter ? *iter : next_peek.first_codepoint;
 
 			if (codepoint == ' ')
 				write_space(typeset, next_codepoint);
 			else if (codepoint == '\t')
 				write_tab(typeset, next_codepoint);
-			else if (utf::is_n_or_r(codepoint))
+			else if (imp::utf::is_n_or_r(codepoint))
 			{
-				if (iter && utf::is_rn(codepoint, next_codepoint))
+				if (iter && imp::utf::is_rn(codepoint, next_codepoint))
 					++iter;
 				if (!write_newline(typeset, line))
 					return WriteResult::Break;
@@ -251,11 +251,11 @@ namespace oly::rendering
 			return;
 
 		auto iter = element.text.begin();
-		const utf::Codepoint codepoint = iter.advance();
-		if (utf::is_n_or_r(codepoint))
+		const imp::utf::codepoint codepoint = iter.advance();
+		if (imp::utf::is_n_or_r(codepoint))
 			return;
 
-		const utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+		const imp::utf::codepoint next_codepoint = iter ? *iter : next_peek.first_codepoint;
 		float dx = 0.0f;
 		if (codepoint == ' ')
 			dx = space_width(next_codepoint);
@@ -282,7 +282,7 @@ namespace oly::rendering
 		}
 	}
 
-	void internal::GlyphGroup::build_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::build_space(TypesetData& typeset, imp::utf::codepoint next_codepoint) const
 	{
 		const float dx = space_width(next_codepoint);
 		typeset.x += dx;
@@ -290,7 +290,7 @@ namespace oly::rendering
 		++paragraph->page_data.current_line().characters;
 	}
 
-	void internal::GlyphGroup::build_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::build_tab(TypesetData& typeset, imp::utf::codepoint next_codepoint) const
 	{
 		const float dx = tab_width(next_codepoint);
 		typeset.x += dx;
@@ -323,11 +323,11 @@ namespace oly::rendering
 			return true;
 
 		auto iter = element.text.begin();
-		const utf::Codepoint codepoint = iter.advance();
-		if (utf::is_n_or_r(codepoint))
+		const imp::utf::codepoint codepoint = iter.advance();
+		if (imp::utf::is_n_or_r(codepoint))
 			return true;
 
-		const utf::Codepoint next_codepoint = iter ? iter.codepoint() : next_peek.first_codepoint;
+		const imp::utf::codepoint next_codepoint = iter ? *iter : next_peek.first_codepoint;
 		float dx = 0.0f;
 		if (codepoint == ' ')
 			dx = space_width(next_codepoint);
@@ -350,13 +350,13 @@ namespace oly::rendering
 			return write_newline(typeset, line);
 	}
 
-	void internal::GlyphGroup::write_space(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::write_space(TypesetData& typeset, imp::utf::codepoint next_codepoint) const
 	{
 		typeset.x += space_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
 	}
 
-	void internal::GlyphGroup::write_tab(TypesetData& typeset, utf::Codepoint next_codepoint) const
+	void internal::GlyphGroup::write_tab(TypesetData& typeset, imp::utf::codepoint next_codepoint) const
 	{
 		typeset.x += tab_width(next_codepoint) * paragraph->alignment_cache.lines[typeset.line].space_width_mult;
 		++typeset.character;
@@ -379,7 +379,7 @@ namespace oly::rendering
 		return true;
 	}
 
-	void internal::GlyphGroup::write_glyph(TypesetData& typeset, utf::Codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const
+	void internal::GlyphGroup::write_glyph(TypesetData& typeset, imp::utf::codepoint c, float dx, LineAlignment line, bool is_camera_invariant) const
 	{
 		cached_info.push_back(CachedGlyphInfo{ .typeset = typeset, .line_y_offset = line.y_offset });
 		TextGlyph glyph;
@@ -397,14 +397,14 @@ namespace oly::rendering
 		return paragraph->alignment_cache.position(cache.typeset) + glm::vec2{ 0.0f, cache.line_y_offset } + element.jitter_offset;
 	}
 
-	float internal::GlyphGroup::space_width(utf::Codepoint next_codepoint) const
+	float internal::GlyphGroup::space_width(imp::utf::codepoint next_codepoint) const
 	{
-		return element.advance_width(utf::Codepoint(' '), next_codepoint);
+		return element.advance_width(imp::utf::codepoint(' '), next_codepoint);
 	}
 
-	float internal::GlyphGroup::tab_width(utf::Codepoint next_codepoint) const
+	float internal::GlyphGroup::tab_width(imp::utf::codepoint next_codepoint) const
 	{
-		return space_width(utf::Codepoint(' ')) * (paragraph->format.tab_spaces - 1.0f) + space_width(next_codepoint);
+		return space_width(imp::utf::codepoint(' ')) * (paragraph->format.tab_spaces - 1.0f) + space_width(next_codepoint);
 	}
 
 	void internal::GlyphGroup::recolor() const
@@ -480,7 +480,7 @@ namespace oly::rendering
 		}
 	}
 	
-	void TextElementExposure::set_text(utf::String&& text)
+	void TextElementExposure::set_text(imp::utf::string&& text)
 	{
 		if (glyph_group.element.text != text)
 		{

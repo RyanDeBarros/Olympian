@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/util/UTF.h"
+#include <imp/utf.hpp>
 
 #include <vector>
 #include <stack>
@@ -11,12 +11,12 @@ namespace oly::algo
 	{
 		struct Group
 		{
-			utf::String str;
-			std::stack<utf::String> tags;
+			imp::utf::string str;
+			std::stack<imp::utf::string> tags;
 		};
 
 		std::vector<Group> groups;
 
-		UTFTaggedTextParser(const utf::String& input);
+		UTFTaggedTextParser(const imp::utf::string& input);
 	};
 }

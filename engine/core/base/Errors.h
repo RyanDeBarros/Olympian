@@ -10,7 +10,6 @@ namespace oly
 		OlympianInit,
 		FileIO,
 		IndexOutOfRange,
-		Utf,
 		GlfwInit,
 		GlewInit,
 		ContextInit,

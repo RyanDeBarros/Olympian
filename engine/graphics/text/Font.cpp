@@ -29,7 +29,7 @@ namespace oly
 			stbtt_GetGlyphHMetrics(&info, glyph_index, &advance_width, &left_bearing);
 		}
 
-		void FontFace::get_codepoint_horizontal_metrics(utf::Codepoint codepoint, int& advance_width, int& left_bearing) const
+		void FontFace::get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const
 		{
 			stbtt_GetCodepointHMetrics(&info, codepoint, &advance_width, &left_bearing);
 		}
@@ -39,7 +39,7 @@ namespace oly
 			stbtt_GetFontVMetrics(&info, &ascent, &descent, &linegap);
 		}
 
-		int FontFace::find_glyph_index(utf::Codepoint codepoint) const
+		int FontFace::find_glyph_index(imp::utf::codepoint codepoint) const
 		{
 			return stbtt_FindGlyphIndex(&info, codepoint);
 		}
@@ -55,7 +55,7 @@ namespace oly
 			flip_pixel_buffer(buf, w, h, 1);
 		}
 
-		int FontFace::get_kerning(utf::Codepoint c1, utf::Codepoint c2) const
+		int FontFace::get_kerning(imp::utf::codepoint c1, imp::utf::codepoint c2) const
 		{
 			auto k = kerning.map.find({ c1, c2 });
 			if (k != kerning.map.end()) [[unlikely]]
@@ -99,7 +99,7 @@ namespace oly
 			font.font->make_bitmap(buffer, _box.width(), _box.height(), font.scale, index);
 		}
 
-		FontAtlas::FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer)
+		FontAtlas::FontAtlas(const FontFaceRef& font, FontOptions options, const imp::utf::string& common_buffer)
 			: font(font), options(options)
 		{
 			common_dim.cpp = 1;
@@ -109,11 +109,11 @@ namespace oly
 			font->get_vertical_metrics(ascent, descent, linegap);
 			_line_height = ascent - descent + linegap;
 
-			std::vector<utf::Codepoint> codepoints;
+			std::vector<imp::utf::codepoint> codepoints;
 			auto iter = common_buffer.begin();
 			while (iter)
 			{
-				utf::Codepoint codepoint = iter.advance();
+				imp::utf::codepoint codepoint = iter.advance();
 				if (codepoint == ' ')
 					continue;
 				if (glyphs.find(codepoint) != glyphs.end())
@@ -132,7 +132,7 @@ namespace oly
 			if (common_dim.w > 0)
 			{
 				unsigned char* common_buf = common_dim.pxnew();
-				for (utf::Codepoint codepoint : codepoints)
+				for (imp::utf::codepoint codepoint : codepoints)
 				{
 					auto it = glyphs.find(codepoint);
 					it->second.render_on_bitmap_shared(*this, common_buf + it->second.buffer_pos, common_dim.w, common_dim.h, 1, 1, 1, 1);
@@ -146,11 +146,11 @@ namespace oly
 					glyph._texture = common_texture;
 			}
 			int _space_advance_width, _space_left_bearing;
-			font->get_codepoint_horizontal_metrics(utf::Codepoint(' '), _space_advance_width, _space_left_bearing);
+			font->get_codepoint_horizontal_metrics(imp::utf::codepoint(' '), _space_advance_width, _space_left_bearing);
 			space_advance_width = _space_advance_width * scale;
 		}
 
-		bool FontAtlas::cache(utf::Codepoint codepoint) const
+		bool FontAtlas::cache(imp::utf::codepoint codepoint) const
 		{
 			if (glyphs.find(codepoint) != glyphs.end())
 				return true;
@@ -178,7 +178,7 @@ namespace oly
 				cache(codepoint);
 		}
 
-		const FontGlyph& FontAtlas::get_glyph(utf::Codepoint codepoint) const
+		const FontGlyph& FontAtlas::get_glyph(imp::utf::codepoint codepoint) const
 		{
 			auto it = glyphs.find(codepoint);
 			if (it != glyphs.end())
@@ -187,7 +187,7 @@ namespace oly
 				throw Error(ErrorCode::UncachedGlyph);
 		}
 
-		int FontAtlas::get_glyph_index(utf::Codepoint codepoint) const
+		int FontAtlas::get_glyph_index(imp::utf::codepoint codepoint) const
 		{
 			auto it = glyphs.find(codepoint);
 			if (it != glyphs.end())
@@ -196,14 +196,14 @@ namespace oly
 				return font->find_glyph_index(codepoint);
 		}
 
-		bool FontAtlas::supports(utf::Codepoint codepoint) const
+		bool FontAtlas::supports(imp::utf::codepoint codepoint) const
 		{
 			if (glyphs.find(codepoint) != glyphs.end())
 				return true;
 			return font->find_glyph_index(codepoint) != 0;
 		}
 
-		float FontAtlas::kerning_of(utf::Codepoint c1, utf::Codepoint c2) const
+		float FontAtlas::kerning_of(imp::utf::codepoint c1, imp::utf::codepoint c2) const
 		{
 			return font->get_kerning(c1, c2) * scale;
 		}

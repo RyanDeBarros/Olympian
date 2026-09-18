@@ -101,7 +101,7 @@ namespace oly::rendering
 			});
 	}
 
-	bool Font::support(utf::Codepoint c) const
+	bool Font::support(imp::utf::codepoint c) const
 	{
 		return visit_font(f, [c](const auto& f) {
 			if constexpr (visiting_class_is<decltype(f), FontAtlasRef>)
@@ -111,15 +111,15 @@ namespace oly::rendering
 			});
 	}
 
-	void Font::set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos, glm::vec2 scale) const
+	void Font::set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos, glm::vec2 scale) const
 	{
 		visit_font(f, [&glyph, c, pos, scale](const auto& f) { glyph.set_glyph(*f, f->get_glyph(c), pos, scale); });
 	}
 
-	float Font::advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const
+	float Font::advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const
 	{
 		float adv = 0.0f;
-		if (c != utf::Codepoint(' '))
+		if (c != imp::utf::codepoint(' '))
 			adv = visit_font(f, [c](const auto& font) {
 				if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
 					return font->get_glyph(c).advance_width() * font->get_scale();
@@ -312,9 +312,9 @@ namespace oly::rendering
 			std::vector<std::string> style_tags;
 			while (!group.tags.empty())
 			{
-				utf::String tag = group.tags.top();
+				imp::utf::string tag = group.tags.top();
 				group.tags.pop();
-				apply_tag(tag.string(), e, overrides, style_tags);
+				apply_tag(tag.str(), e, overrides, style_tags);
 				if (overrides.all())
 					break;
 			}

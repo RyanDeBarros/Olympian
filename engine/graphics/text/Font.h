@@ -2,12 +2,14 @@
 
 #include "external/STB.h"
 
-#include "core/types/SmartReference.h"
 #include "core/math/Shapes.h"
-#include "core/util/UTF.h"
+
+#include "core/types/SmartReference.h"
 
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/text/Kerning.h"
+
+#include <imp/utf.hpp>
 
 namespace oly::rendering
 {
@@ -22,12 +24,12 @@ namespace oly::rendering
 
 		float scale_for_pixel_height(float font_size) const;
 		void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
-		void get_codepoint_horizontal_metrics(utf::Codepoint codepoint, int& advance_width, int& left_bearing) const;
+		void get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const;
 		void get_vertical_metrics(int& ascent, int& descent, int& linegap) const;
-		int find_glyph_index(utf::Codepoint codepoint) const;
+		int find_glyph_index(imp::utf::codepoint codepoint) const;
 		void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
 		void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
-		int get_kerning(utf::Codepoint c1, utf::Codepoint c2) const;
+		int get_kerning(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
 	};
 
 	typedef SmartReference<FontFace> FontFaceRef;
@@ -68,7 +70,7 @@ namespace oly::rendering
 	{
 		FontFaceRef font;
 		friend struct FontGlyph;
-		mutable std::unordered_map<utf::Codepoint, FontGlyph> glyphs;
+		mutable std::unordered_map<imp::utf::codepoint, FontGlyph> glyphs;
 		FontOptions options;
 		float scale = 1.0f;
 		float _line_height = 0.0f;
@@ -78,16 +80,16 @@ namespace oly::rendering
 		graphics::BindlessTextureRef common_texture;
 
 	public:
-		FontAtlas(const FontFaceRef& font, FontOptions options, const utf::String& common_buffer);
+		FontAtlas(const FontFaceRef& font, FontOptions options, const imp::utf::string& common_buffer);
 
 		const FontFaceRef& font_face() const { return font; }
 
-		bool cache(utf::Codepoint codepoint) const;
+		bool cache(imp::utf::codepoint codepoint) const;
 		void cache_all(const FontAtlas& other) const;
-		const FontGlyph& get_glyph(utf::Codepoint codepoint) const;
-		int get_glyph_index(utf::Codepoint codepoint) const;
-		bool supports(utf::Codepoint codepoint) const;
-		float kerning_of(utf::Codepoint c1, utf::Codepoint c2) const;
+		const FontGlyph& get_glyph(imp::utf::codepoint codepoint) const;
+		int get_glyph_index(imp::utf::codepoint codepoint) const;
+		bool supports(imp::utf::codepoint codepoint) const;
+		float kerning_of(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
 		float line_height() const;
 		float get_ascent() const;
 		math::UVRect uvs(const FontGlyph& glyph) const;

@@ -47,17 +47,17 @@ namespace oly::rendering
 	class RasterFont
 	{
 		Kerning kerning;
-		std::unordered_map<utf::Codepoint, RasterFontGlyph> glyphs;
+		std::unordered_map<imp::utf::codepoint, RasterFontGlyph> glyphs;
 		glm::vec2 font_scale = glm::vec2(1.0f);
 		float _line_height = 0.0f, _space_advance_width = 0.0f;
 
 	public:
-		RasterFont(std::unordered_map<utf::Codepoint, RasterFontGlyph>&& glyphs, float space_advance_width, float line_height, glm::vec2 font_scale = glm::vec2(1.0f), Kerning&& kerning = {})
+		RasterFont(std::unordered_map<imp::utf::codepoint, RasterFontGlyph>&& glyphs, float space_advance_width, float line_height, glm::vec2 font_scale = glm::vec2(1.0f), Kerning&& kerning = {})
 			: glyphs(std::move(glyphs)), font_scale(font_scale), kerning(std::move(kerning)), _line_height(line_height), _space_advance_width(space_advance_width)
 		{
 		}
 
-		const RasterFontGlyph& get_glyph(utf::Codepoint codepoint) const
+		const RasterFontGlyph& get_glyph(imp::utf::codepoint codepoint) const
 		{
 			auto it = glyphs.find(codepoint);
 			if (it != glyphs.end())
@@ -66,12 +66,12 @@ namespace oly::rendering
 				throw Error(ErrorCode::UncachedGlyph);
 		}
 		
-		bool supports(utf::Codepoint codepoint) const
+		bool supports(imp::utf::codepoint codepoint) const
 		{
 			return glyphs.count(codepoint);
 		}
 		
-		float kerning_of(utf::Codepoint c1, utf::Codepoint c2) const
+		float kerning_of(imp::utf::codepoint c1, imp::utf::codepoint c2) const
 		{
 			auto it = kerning.map.find({ c1, c2 });
 			return it != kerning.map.end() ? it->second * font_scale.x : 0.0f;

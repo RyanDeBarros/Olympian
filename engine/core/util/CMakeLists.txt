@@ -8,5 +8,4 @@ target_sources(OlympianEngine PRIVATE
 	StringParam.cpp
 	Time.cpp
 	Timers.cpp
-	UTF.cpp
 )

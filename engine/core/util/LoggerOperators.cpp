@@ -1,11 +1,10 @@
 #include "LoggerOperators.h"
 
-#include "core/util/UTF.h"
 #include "assets/ResourcePath.h"
 
 namespace oly
 {
-	Logger::Impl operator<<(Logger::Impl impl, const utf::String& str)
+	Logger::Impl operator<<(Logger::Impl impl, const imp::utf::string& str)
 	{
 		return impl << std::string(str.encoding().begin(), str.encoding().end());
 	}
