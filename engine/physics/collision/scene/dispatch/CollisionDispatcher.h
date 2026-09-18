@@ -210,9 +210,9 @@ namespace oly::col2d
 
 	}
 
-	class CollisionDispatcher final : public Singleton<CollisionDispatcher>, public ITickService
+	class CollisionDispatcher final : public imp::soft_singleton<CollisionDispatcher>, public ITickService
 	{
-		friend class Singleton<CollisionDispatcher>;
+		friend class imp::soft_singleton<CollisionDispatcher>;
 
 #define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
 		{\

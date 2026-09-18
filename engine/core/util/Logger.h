@@ -8,9 +8,10 @@
 #include "external/GL.h"
 #include "external/GLM.h"
 #include "core/types/Meta.h"
-#include "core/types/Singleton.h"
 #include "core/util/StringParam.h"
 #include "core/util/LogLevel.h"
+
+#include <imp/soft_singleton.hpp>
 
 namespace oly
 {
@@ -31,9 +32,9 @@ namespace oly
 		std::optional<size_t> max_prior_log_bytes = std::nullopt;
 	};
 
-	class Logger final : public Singleton<Logger>
+	class Logger final : public imp::soft_singleton<Logger>
 	{
-		friend class Singleton<Logger>;
+		friend class imp::soft_singleton<Logger>;
 
 		std::stringstream stream;
 		std::ofstream file;

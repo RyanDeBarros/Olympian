@@ -1,21 +1,22 @@
 #pragma once
 
-#include "core/types/Singleton.h"
+#include <imp/soft_singleton.hpp>
 
 #include <unordered_set>
 
+// TODO v9.3 move to imp
+
 namespace oly
 {
-	// TODO v9.3 use imp::intance_tracker
 	template<typename T>
 	class AutoRegistrable;
 
 	namespace internal
 	{
 		template<typename T>
-		class AutoRegistry final : public Singleton<AutoRegistry<T>>
+		class AutoRegistry final : public imp::soft_singleton<AutoRegistry<T>>
 		{
-			friend class Singleton<AutoRegistry<T>>;
+			friend class imp::soft_singleton<AutoRegistry<T>>;
 
 			friend class AutoRegistrable<T>;
 			std::unordered_set<T*> _tracked;

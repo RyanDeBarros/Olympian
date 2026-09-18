@@ -40,9 +40,9 @@ namespace oly
 			virtual void clear() = 0;
 		};
 
-		class PoolBatch final : public Singleton<PoolBatch>, public ITickService
+		class PoolBatch final : public imp::soft_singleton<PoolBatch>, public ITickService
 		{
-			friend class Singleton<PoolBatch>;
+			friend class imp::soft_singleton<PoolBatch>;
 
 			PoolBatch() : ITickService(TickPhase::PreFrame, TerminatePhase::ReferencePool) {}
 
@@ -76,9 +76,9 @@ namespace oly
 
 		// TODO v13 multi-threading and thread safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
-		class SmartReferencePool final : public Singleton<SmartReferencePool<Object>>, public IPool
+		class SmartReferencePool final : public imp::soft_singleton<SmartReferencePool<Object>>, public IPool
 		{
-			friend class Singleton<SmartReferencePool<Object>>;
+			friend class imp::soft_singleton<SmartReferencePool<Object>>;
 
 			std::vector<std::unique_ptr<Object>> objects;
 			std::stack<size_t> unoccupied;

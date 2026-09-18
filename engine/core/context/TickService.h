@@ -35,9 +35,9 @@ namespace oly
 
 	namespace context::internal
 	{
-		class TickServiceRegistry final : public Singleton<TickServiceRegistry>
+		class TickServiceRegistry final : public imp::soft_singleton<TickServiceRegistry>
 		{
-			friend class Singleton<TickServiceRegistry>;
+			friend class imp::soft_singleton<TickServiceRegistry>;
 
 			friend struct ITickService;
 			std::array<std::unordered_set<ITickService*>, (size_t)TickPhase::None> tick_services;
@@ -91,9 +91,9 @@ namespace oly
 	};
 
 	template<TickPhase OnTickPhase, typename OnTick, TerminatePhase OnTerminatePhase, typename OnTerminate>
-	class SingletonTickService final : public Singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>, public ITickService
+	class SingletonTickService final : public imp::soft_singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>, public ITickService
 	{
-		friend class Singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>;
+		friend class imp::soft_singleton<SingletonTickService<OnTickPhase, OnTick, OnTerminatePhase, OnTerminate>>;
 
 		SingletonTickService() : ITickService(OnTickPhase, OnTerminatePhase) {}
 

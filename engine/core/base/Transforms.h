@@ -6,12 +6,12 @@
 #include "core/containers/IDGenerator.h"
 
 #include "core/types/Polymorphic.h"
-#include "core/types/Singleton.h"
 
 #include "external/TOML.h"
 #include "external/GLM.h"
 
 #include <imp/dependent_false.hpp>
+#include <imp/soft_singleton.hpp>
 
 namespace oly
 {
@@ -95,14 +95,14 @@ namespace oly
 
 	namespace internal
 	{
-		class Transformer2DRegistry final : public Singleton<Transformer2DRegistry>
+		class Transformer2DRegistry final : public imp::soft_singleton<Transformer2DRegistry>
 		{
 			typedef glm::uint Index;
 
 			oly::SoftIDGenerator<Index> id_generator;
 			static const Index NULL_INDEX = Index(-1);
 
-			friend class Singleton<Transformer2DRegistry>;
+			friend class imp::soft_singleton<Transformer2DRegistry>;
 			Transformer2DRegistry()
 				: id_generator(0, nmax<Index>() - 1)
 			{
