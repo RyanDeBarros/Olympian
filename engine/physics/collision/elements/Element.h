@@ -24,6 +24,7 @@ namespace oly::col2d
 
 	namespace internal
 	{
+        // TODO v9.3 use imp::type_erasure
 		enum class ElementID
 		{
 			NONE,

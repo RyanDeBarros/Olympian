@@ -5,6 +5,8 @@
 #include "core/base/Errors.h"
 #include "core/types/Issuer.h"
 
+// TODO v9.3 move to imp
+
 namespace oly
 {
 	template<std::unsigned_integral T>
@@ -28,6 +30,7 @@ namespace oly
 					throw Error(ErrorCode::IndexOutOfRange);
 				return next++;
 			}
+
 			T id = yielded.top();
 			yielded.pop();
 			return id;

@@ -8,6 +8,7 @@
 
 namespace oly::col2d::internal
 {
+    // TODO v9.3 use imp::type_erasure
 	enum class CObjID : unsigned int
 	{
 		TPRIMITIVE,
