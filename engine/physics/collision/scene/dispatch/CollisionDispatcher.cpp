@@ -35,7 +35,7 @@ namespace oly::col2d
 
 	Phase internal::CollisionPhaseTracker::prior_phase(const Collider& c1, const Collider& c2)
 	{
-		return map.get_or(c1, c2, Phase::Expired);
+		return map.get_or(&c1, &c2, Phase::Expired);
 	}
 	
 	void internal::CollisionPhaseTracker::lazy_update_phase(const Collider& c1, const Collider& c2, Phase phase)
@@ -59,34 +59,34 @@ namespace oly::col2d
 	void internal::CollisionPhaseTracker::copy_all(const Collider& from, const Collider& to)
 	{
 		flush();
-		map.copy_all(from, to);
+		map.copy_all(&from, &to);
 	}
 
 	void internal::CollisionPhaseTracker::replace_all(const Collider& at, const Collider& with)
 	{
 		flush();
-		map.replace_all(at, with);
+		map.replace_all(&at, &with);
 	}
 
 	void internal::CollisionPhaseTracker::erase_all(const Collider& c)
 	{
 		flush();
-		map.erase_all(c);
+		map.erase_all(&c);
 	}
 
 	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const OverlapEventData& data)
 	{
-		overlaps.set(c1, c2, data);
+		overlaps.set(&c1, &c2, data);
 	}
 
 	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const CollisionEventData& data)
 	{
-		collisions.set(c1, c2, data);
+		collisions.set(&c1, &c2, data);
 	}
 	
 	void internal::CollisionCache::update(const Collider& c1, const Collider& c2, const ContactEventData& data)\
 	{
-		contacts.set(c1, c2, data);
+		contacts.set(&c1, &c2, data);
 	}
 
 	void internal::CollisionCache::clear()
@@ -98,23 +98,23 @@ namespace oly::col2d
 
 	void internal::CollisionCache::copy_all(const Collider& from, const Collider& to)
 	{
-		overlaps.copy_all(from, to);
-		collisions.copy_all(from, to);
-		contacts.copy_all(from, to);
+		overlaps.copy_all(&from, &to);
+		collisions.copy_all(&from, &to);
+		contacts.copy_all(&from, &to);
 	}
 
 	void internal::CollisionCache::replace_all(const Collider& at, const Collider& with)
 	{
-		overlaps.replace_all(at, with);
-		collisions.replace_all(at, with);
-		contacts.replace_all(at, with);
+		overlaps.replace_all(&at, &with);
+		collisions.replace_all(&at, &with);
+		contacts.replace_all(&at, &with);
 	}
 
 	void internal::CollisionCache::erase_all(const Collider& c)
 	{
-		overlaps.erase_all(c);
-		collisions.erase_all(c);
-		contacts.erase_all(c);
+		overlaps.erase_all(&c);
+		collisions.erase_all(&c);
+		contacts.erase_all(&c);
 	}
 
 	template<typename Result, typename EventData, typename HandlerRef>
