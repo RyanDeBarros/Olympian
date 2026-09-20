@@ -9,7 +9,6 @@
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
-#include "core/types/Issuer.h"
 
 #include <imp/auto_tracker.hpp>
 
@@ -21,7 +20,7 @@ namespace oly::rendering
 
 		class SpriteReference;
 
-		class SpriteBatch : public imp::auto_trackable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
+		class SpriteBatch : public imp::auto_trackable<SpriteBatch>, public imp::issuer<SpriteBatch>
 		{
 			friend class SpriteReference;
 
@@ -174,13 +173,13 @@ namespace oly::rendering
 		};
 	}
 
-	using SpriteBatch = PublicIssuer<internal::SpriteBatch>;
+	using SpriteBatch = imp::issuer_instance<internal::SpriteBatch>;
 
 	namespace internal
 	{
-		class SpriteReference : public PublicIssuerHandle<SpriteBatch>
+		class SpriteReference : public imp::ticket<SpriteBatch>
 		{
-			using Super = PublicIssuerHandle<SpriteBatch>;
+			using Super = imp::ticket<SpriteBatch>;
 			GLuint id = SpriteBatch::NULL_ID;
 
 		public:

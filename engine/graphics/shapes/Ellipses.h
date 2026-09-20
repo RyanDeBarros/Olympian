@@ -2,7 +2,6 @@
 
 #include "core/base/Constants.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/Issuer.h"
 #include "core/util/DebugTrace.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
@@ -43,7 +42,7 @@ namespace oly::rendering
 	{
 		class EllipseReference;
 
-		class EllipseBatch : public oly::internal::Issuer<EllipseBatch>
+		class EllipseBatch : public imp::issuer<EllipseBatch>
 		{
 			friend class EllipseReference;
 
@@ -81,13 +80,13 @@ namespace oly::rendering
 		};
 	}
 
-	using EllipseBatch = PublicIssuer<internal::EllipseBatch>;
+	using EllipseBatch = imp::issuer_instance<internal::EllipseBatch>;
 
 	namespace internal
 	{
-		class EllipseReference : public PublicIssuerHandle<EllipseBatch>
+		class EllipseReference : public imp::ticket<EllipseBatch>
 		{
-			using Super = PublicIssuerHandle<EllipseBatch>;
+			using Super = imp::ticket<EllipseBatch>;
 			GLuint id = EllipseBatch::NULL_ID;
 
 		public:

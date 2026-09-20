@@ -1,9 +1,10 @@
 #pragma once
 
-#include <stack>
-
 #include "core/base/Errors.h"
-#include "core/types/Issuer.h"
+
+#include <imp/issuer.hpp>
+
+#include <stack>
 
 // TODO v9.3 move to imp
 
@@ -44,9 +45,9 @@ namespace oly
 	namespace internal
 	{
 		template<std::unsigned_integral T>
-		class StrictIDGenerator : public Issuer<StrictIDGenerator<T>>
+		class StrictIDGenerator : public imp::issuer<StrictIDGenerator<T>>
 		{
-			using Super = Issuer<StrictIDGenerator<T>>;
+			using Super = imp::issuer<StrictIDGenerator<T>>;
 			friend class ID;
 			T next;
 			T max;
@@ -64,9 +65,10 @@ namespace oly
 
 			StrictIDGenerator<T>& operator=(StrictIDGenerator<T>&& other) noexcept = default;
 
-			class ID : public Issuer<StrictIDGenerator<T>>::Handle
+            // TODO v9.3 move out of StrictIDGenerator? Just rename to StrictID
+			class ID : public imp::ticket<StrictIDGenerator<T>>
 			{
-				using Super = Issuer<StrictIDGenerator<T>>::Handle;
+				using Super = imp::ticket<StrictIDGenerator<T>>;
 				friend class StrictIDGenerator<T>;
 				T id = T(-1);
 
@@ -165,5 +167,5 @@ namespace oly
 	}
 
 	template<std::unsigned_integral T>
-	using StrictIDGenerator = PublicIssuer<internal::StrictIDGenerator<T>>;
+	using StrictIDGenerator = imp::issuer_instance<internal::StrictIDGenerator<T>>;
 }

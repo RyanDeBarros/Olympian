@@ -4,7 +4,6 @@
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
 #include "core/containers/IDGenerator.h"
-#include "core/types/Issuer.h"
 #include "core/util/DebugTrace.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
@@ -18,7 +17,7 @@ namespace oly::rendering
 	{
 		class PolygonReference;
 
-		class PolygonBatch : public oly::internal::Issuer<PolygonBatch>
+		class PolygonBatch : public imp::issuer<PolygonBatch>
 		{
 			friend class internal::PolygonReference;
 
@@ -77,13 +76,13 @@ namespace oly::rendering
 		};
 	}
 
-	using PolygonBatch = PublicIssuer<internal::PolygonBatch>;
+	using PolygonBatch = imp::issuer_instance<internal::PolygonBatch>;
 
 	namespace internal
 	{
-		class PolygonReference : public PublicIssuerHandle<PolygonBatch>
+		class PolygonReference : public imp::ticket<PolygonBatch>
 		{
-			using Super = PublicIssuerHandle<PolygonBatch>;
+			using Super = imp::ticket<PolygonBatch>;
 			// ID refers to the index of a polygon in transform SSBO. It also indexes the set of ranges in the VBO block.
 			mutable GLuint id = PolygonBatch::NULL_ID;
 			
