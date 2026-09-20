@@ -1,13 +1,14 @@
 #pragma once
 
 #include "core/base/Constants.h"
-#include "core/containers/IDGenerator.h"
 #include "core/util/DebugTrace.h"
 
 #include "graphics/backend/basic/VertexArrays.h"
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/Tags.h"
 #include "graphics/Camera.h"
+
+#include <imp/id_generator.hpp>
 
 namespace oly::rendering
 {
@@ -72,7 +73,7 @@ namespace oly::rendering
 			void render() const;
 
 		private:
-			SoftIDGenerator<GLuint> id_generator;
+			imp::soft_id_generator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);
 			static void assert_valid_id(GLuint id);
 			GLuint generate_id();

@@ -3,14 +3,13 @@
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 
-#include "core/containers/IDGenerator.h"
-
 #include "core/types/Polymorphic.h"
 
 #include "external/TOML.h"
 #include "external/GLM.h"
 
 #include <imp/dependent_false.hpp>
+#include <imp/id_generator.hpp>
 #include <imp/soft_singleton.hpp>
 
 namespace oly
@@ -99,10 +98,11 @@ namespace oly
 		{
 			typedef glm::uint Index;
 
-			oly::SoftIDGenerator<Index> id_generator;
+			imp::soft_id_generator<Index> id_generator;
 			static const Index NULL_INDEX = Index(-1);
 
 			friend class imp::soft_singleton<Transformer2DRegistry>;
+
 			Transformer2DRegistry()
 				: id_generator(0, nmax<Index>() - 1)
 			{

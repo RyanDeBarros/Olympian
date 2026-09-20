@@ -11,6 +11,7 @@
 #include "core/base/Constants.h"
 
 #include <imp/auto_tracker.hpp>
+#include <imp/id_generator.hpp>
 
 namespace oly::rendering
 {
@@ -119,7 +120,7 @@ namespace oly::rendering
 			void render() const;
 
 		private:
-			SoftIDGenerator<GLuint> id_generator;
+			imp::soft_id_generator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);
 			static void assert_valid_id(GLuint id);
 			GLuint gen_sprite_id();

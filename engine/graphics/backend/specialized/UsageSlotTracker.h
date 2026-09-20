@@ -1,11 +1,12 @@
 #pragma once
 
-#include <unordered_map>
-
 #include "core/base/Assert.h"
-#include "core/containers/IDGenerator.h"
 
 #include "graphics/backend/specialized/LightweightBuffers.h"
+
+#include <imp/id_generator.hpp>
+
+#include <unordered_map>
 
 namespace oly::graphics
 {
@@ -20,7 +21,7 @@ namespace oly::graphics
 
 		std::unordered_map<SlotType, UsageHolder> usages;
 		std::unordered_map<StoredObjectType, SlotType, StoredObjectTypeHash> slot_lookup;
-		SoftIDGenerator<SlotType> pos_generator;
+		imp::soft_id_generator<SlotType> pos_generator;
 
 		std::optional<StoredObjectType> _decrement_usage(SlotType i)
 		{

@@ -3,13 +3,14 @@
 #include "core/base/Constants.h"
 #include "core/cmath/ColoredGeometry.h"
 #include "core/containers/FreeSpaceTracker.h"
-#include "core/containers/IDGenerator.h"
 #include "core/util/DebugTrace.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
 #include "graphics/Tags.h"
 #include "graphics/Camera.h"
+
+#include <imp/id_generator.hpp>
 
 namespace oly::rendering
 {
@@ -70,7 +71,7 @@ namespace oly::rendering
 
 			StrictFreeSpaceTracker<GLuint> vertex_free_space;
 			std::unordered_map<GLuint, Range<GLuint>> polygon_indexer;
-			SoftIDGenerator<GLuint> id_generator;
+			imp::soft_id_generator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);
 			void assert_valid_id(GLuint id) const;
 		};
