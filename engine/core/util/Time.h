@@ -1,7 +1,8 @@
 #pragma once
 
 #include "external/GL.h"
-#include "core/types/Meta.h"
+
+#include <imp/traits.hpp>
 
 #include <chrono>
 
@@ -68,13 +69,16 @@ namespace oly
 			double frame_length_clip = 0.2;
 			double time_scale = 1.0;
 
-			template<numeric T = float>
+			template<imp::numeric T = float>
 			T now() const { return (T)_processed_now; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T inverse_now() const { return (T)_inv_processed_now; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T delta() const { return (T)_processed_delta; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T inverse_delta() const { return (T)_inv_processed_delta; }
 
 		private:
@@ -98,13 +102,16 @@ namespace oly
 			double _inv_delta = 0.0;
 
 		public:
-			template<numeric T = float>
+			template<imp::numeric T = float>
 			T now() const { return (T)_now; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T inverse_now() const { return (T)_inv_now; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T delta() const { return (T)_delta; }
-			template<numeric T = float>
+			
+            template<imp::numeric T = float>
 			T inverse_delta() const { return (T)_inv_delta; }
 
 		private:

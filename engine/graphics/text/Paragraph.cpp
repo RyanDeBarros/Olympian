@@ -576,7 +576,7 @@ namespace oly::rendering
 	Paragraph& Paragraph::operator=(const Paragraph& other)
 	{
 		if (this != &other)
-			*this = dupl(other);
+			*this = imp::dupl(other);
 		return *this;
 	}
 

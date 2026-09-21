@@ -1,12 +1,11 @@
 #pragma once
 
+#include "core/base/Errors.h"
+
 #include <stack>
 #include <set>
 #include <vector>
 #include <string_view>
-
-#include "core/base/Errors.h"
-#include "core/types/Meta.h"
 
 namespace oly::algo
 {

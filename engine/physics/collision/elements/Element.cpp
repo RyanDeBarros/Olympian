@@ -4,6 +4,8 @@
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
 
+#include <imp/util.hpp>
+
 namespace oly::col2d
 {
 #define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class)\
@@ -161,10 +163,10 @@ namespace oly::col2d
 			{
 				// AABB
 				return AABB{
-					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
-					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
-					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
-					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+					.x1 = imp::min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = imp::max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = imp::min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = imp::max(points[1].y, points[1].y, points[2].y, points[3].y)
 				};
 			}
 			else
@@ -176,10 +178,10 @@ namespace oly::col2d
 					points[i] = inverse_rotation * points[i];
 
 				AABB aabb{
-					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
-					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
-					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
-					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+					.x1 = imp::min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = imp::max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = imp::min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = imp::max(points[1].y, points[1].y, points[2].y, points[3].y)
 				};
 
 				return OBB{ .center = rot.rotation_matrix() * aabb.center(), .width = aabb.width(), .height = aabb.height(), .rotation = rot.rotation() };

@@ -1,7 +1,5 @@
 #include "Textures.h"
 
-#include "core/types/Meta.h"
-
 #include "core/base/Assert.h"
 
 namespace oly::graphics::textures

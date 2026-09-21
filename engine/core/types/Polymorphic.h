@@ -1,11 +1,15 @@
 #pragma once
 
 #include "core/base/Errors.h"
-#include "core/types/Meta.h"
 #include "core/util/Macros.h"
 
 namespace oly
 {
+    // TODO v9.3 move polymorphic to imp: it should just wrap a std::unique_ptr but allow copying through a virtual clone() method.
+
+    template<typename From, typename To>
+    concept PolymorphicBaseOf = std::is_polymorphic_v<To> && std::is_base_of_v<To, From> && !std::is_same_v<From, To>;
+
 	template<typename T>
 	class Polymorphic
 	{

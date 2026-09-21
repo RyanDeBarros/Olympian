@@ -30,7 +30,7 @@ namespace oly::col2d
 		return oly::below_zero(a, LINEAR_TOLERANCE);
 	}
 
-	template<numeric T>
+	template<imp::numeric T>
 	inline bool near_multiple(const T& a, const T& b)
 	{
 		return oly::near_multiple(a, b, LINEAR_TOLERANCE);

@@ -1,7 +1,5 @@
 #include "Ellipses.h"
 
-#include <algorithm>
-
 #include "core/context/rendering/Rendering.h"
 #include "graphics/resources/Shaders.h"
 #include "core/util/Parser.h"
@@ -9,6 +7,10 @@
 #include "physics/collision/elements/OBB.h"
 
 #include "definitions/Keys.h"
+
+#include <imp/util.hpp>
+
+#include <algorithm>
 
 namespace oly::rendering
 {
@@ -338,10 +340,10 @@ namespace oly::rendering
 		math::Rect2D b{ .x1 = nmax<float>(), .x2 = -nmax<float>(), .y1 = nmax<float>(), .y2 = -nmax<float>() };
 		for (size_t i = 0; i < 4; ++i)
 		{
-			b.x1 = min(b.x1, pts[i].x);
-			b.x2 = max(b.x2, pts[i].x);
-			b.y1 = min(b.y1, pts[i].y);
-			b.y2 = max(b.y2, pts[i].y);
+			b.x1 = imp::min(b.x1, pts[i].x);
+			b.x2 = imp::max(b.x2, pts[i].x);
+			b.y1 = imp::min(b.y1, pts[i].y);
+			b.y2 = imp::max(b.y2, pts[i].y);
 		}
 		return b;
 	}

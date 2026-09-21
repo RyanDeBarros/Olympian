@@ -1,7 +1,6 @@
 #include "Textures.h"
 
 #include "core/context/rendering/Sprites.h"
-#include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"

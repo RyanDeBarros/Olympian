@@ -7,11 +7,13 @@
 
 #include "external/GL.h"
 #include "external/GLM.h"
-#include "core/types/Meta.h"
 #include "core/util/StringParam.h"
 #include "core/util/LogLevel.h"
 
 #include <imp/soft_singleton.hpp>
+#include <imp/traits.hpp>
+
+#include <optional>
 
 namespace oly
 {
@@ -181,7 +183,7 @@ namespace oly
 	extern Logger::Impl operator<<(Logger::Impl, const StringParam&);
 	extern Logger::Impl operator<<(Logger::Impl, bool);
 	
-	template<numeric T>
+	template<imp::numeric T>
 	inline Logger::Impl operator<<(Logger::Impl impl, T v) { return impl << std::to_string(v); }
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec2);
 	extern Logger::Impl operator<<(Logger::Impl, glm::vec3);

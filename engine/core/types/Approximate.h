@@ -1,7 +1,8 @@
 #pragma once
 
 #include "external/GLM.h"
-#include "core/types/Meta.h"
+
+#include <imp/traits.hpp>
 
 namespace oly
 {
@@ -11,7 +12,7 @@ namespace oly
 		static_assert(requires { false; }, "Distance not implemented for this type");
 	};
 
-	template<numeric T>
+	template<imp::numeric T>
 	struct Distance<T>
 	{
 		double operator()(const T& a, const T& b) const { return static_cast<double>(std::abs(a - b)); }
@@ -32,7 +33,7 @@ namespace oly
 	template<typename T>
 	constexpr double Tolerance = Tolerance_V<T>::TOL;
 
-	template<numeric T>
+	template<imp::numeric T>
 	struct Tolerance_V<T>
 	{
 		static constexpr double TOL = 1e-7;
@@ -80,7 +81,7 @@ namespace oly
 		return static_cast<double>(a) < tolerance;
 	}
 
-	template<numeric T>
+	template<imp::numeric T>
 	inline bool near_multiple(const T& a, const T& b, double tolerance = Tolerance<T>)
 	{
 		if (near_zero(b))

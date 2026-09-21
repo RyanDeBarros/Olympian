@@ -82,16 +82,16 @@ namespace oly::rendering
 	bool Font::adj_compat(const Font& other) const
 	{
 		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) {
-			if constexpr (visiting_class_is<decltype(f1), FontAtlasRef>)
+			if constexpr (imp::decays_one_of<decltype(f1), FontAtlasRef>)
 			{
-				if constexpr (visiting_class_is<decltype(f2), FontAtlasRef>)
+				if constexpr (imp::decays_one_of<decltype(f2), FontAtlasRef>)
 					return f1->font_face() == f2->font_face();
 				else
 					return false;
 			}
-			else if constexpr (visiting_class_is<decltype(f1), RasterFontRef>)
+			else if constexpr (imp::decays_one_of<decltype(f1), RasterFontRef>)
 			{
-				if constexpr (visiting_class_is<decltype(f2), RasterFontRef>)
+				if constexpr (imp::decays_one_of<decltype(f2), RasterFontRef>)
 					return f1 == f2;
 				else
 					return false;
@@ -104,7 +104,7 @@ namespace oly::rendering
 	bool Font::support(imp::utf::codepoint c) const
 	{
 		return visit_font(f, [c](const auto& f) {
-			if constexpr (visiting_class_is<decltype(f), FontAtlasRef>)
+			if constexpr (imp::decays_one_of<decltype(f), FontAtlasRef>)
 				return f->cache(c);
 			else
 				return f->supports(c);
@@ -121,7 +121,7 @@ namespace oly::rendering
 		float adv = 0.0f;
 		if (c != imp::utf::codepoint(' '))
 			adv = visit_font(f, [c](const auto& font) {
-				if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
+				if constexpr (imp::decays_one_of<decltype(font), FontAtlasRef>)
 					return font->get_glyph(c).advance_width() * font->get_scale();
 				else
 					return font->get_glyph(c).advance_width() * font->get_scale().x;

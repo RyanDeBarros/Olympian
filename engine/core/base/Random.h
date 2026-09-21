@@ -1,12 +1,12 @@
 #pragma once
 
-#include <random>
+#include <imp/traits.hpp>
 
-#include "core/types/Meta.h"
+#include <random>
 
 namespace oly
 {
-	template<numeric T>
+	template<imp::numeric T>
 	struct Random
 	{
 	private:
@@ -28,6 +28,6 @@ namespace oly
 		}
 	};
 
-	template<numeric T>
+	template<imp::numeric T>
 	typename Random<T>::RNGEngineType Random<T>::engine{ std::random_device{}() };
 }
