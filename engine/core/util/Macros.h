@@ -1,10 +1,5 @@
 #pragma once
 
-#define OLY_REMOVE_PARENS_IMPL(...) __VA_ARGS__
-#define OLY_REMOVE_PARENS(X) OLY_REMOVE_PARENS_IMPL X
-#define OLY_CONCAT(...) __VA_ARGS__
-#define OLY_FLATTEN(...) OLY_REMOVE_PARENS((OLY_CONCAT(__VA_ARGS__)))
-
 #define _OLY_REPEAT_1(M) M(1)
 #define _OLY_REPEAT_2(M) _OLY_REPEAT_1(M) M(2)
 #define _OLY_REPEAT_3(M) _OLY_REPEAT_2(M) M(3)
@@ -45,16 +40,3 @@
     auto& _polyklass_obj = obj; \
     do\
 	{
-
-#define _OLY_POLYKLASS_IF_CASE(name)\
-		if (klass == #name)\
-		{\
-			if (!_polyklass_obj.castable<name>())\
-				_polyklass_obj = make_polymorphic<name>();\
-		}
-
-#define _OLY_POLYKLASS_ELSE_IF_CASE(name)\
-		else _OLY_POLYKLASS_IF_CASE(name)
-
-#define _OLY_POLYKLASS_CASES_END \
-    } while(false);

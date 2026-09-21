@@ -80,7 +80,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 	{
 		bkg.bkg_rect->set_batch(polygon_batch);
 
-		flag_tesselation_parent.set_modifier() = oly::Polymorphic<oly::PivotTransformModifier2D>();
+		flag_tesselation_parent.set_modifier() = imp::make_poly<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
@@ -95,7 +95,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 			flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 		}
 
-		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
+		oly::default_camera().transformer.set_modifier() = imp::make_poly<oly::ShearTransformModifier2D>();
 
 		{
 			particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;

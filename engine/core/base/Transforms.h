@@ -3,13 +3,12 @@
 #include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 
-#include "core/types/Polymorphic.h"
-
 #include "external/TOML.h"
 #include "external/GLM.h"
 
 #include <imp/dependent_false.hpp>
 #include <imp/id_generator.hpp>
+#include <imp/polymorphic.hpp>
 #include <imp/soft_singleton.hpp>
 
 namespace oly
@@ -73,18 +72,19 @@ namespace oly
 		}
 	};
 
-	struct TransformModifier2D
+	struct TransformModifier2D : public imp::polymorphic
 	{
+        IMP_POLYMORPHIC_IMPL((TransformModifier2D));
+
 		virtual ~TransformModifier2D() = default;
 		virtual void operator()(glm::mat3& global) const {}
-		OLY_POLYMORPHIC_CLONE_DEFINITION(TransformModifier2D);
 
 		virtual void overload(TOMLNode node) {}
-		static void overload(Polymorphic<TransformModifier2D>& modifier, TOMLNode node);
+		static void overload(imp::poly<TransformModifier2D>& modifier, TOMLNode node);
 	
-		static Polymorphic<TransformModifier2D> load(TOMLNode node)
+		static imp::poly<TransformModifier2D> load(TOMLNode node)
 		{
-			Polymorphic<TransformModifier2D> modifier = nullptr;
+			imp::poly<TransformModifier2D> modifier = nullptr;
 			overload(modifier, node);
 			return modifier;
 		}
@@ -166,10 +166,11 @@ namespace oly
 		mutable glm::mat3 _global = glm::mat3(1.0f);
 		mutable bool _dirty_internal = true;
 		mutable bool _dirty_external = true;
-		Polymorphic<TransformModifier2D> modifier;
+		imp::poly<TransformModifier2D> modifier;
 
 	public:
-		Transformer2D(Transform2D local = {}, Polymorphic<TransformModifier2D>&& modifier = {});
+		Transformer2D(Transform2D local = {});
+		Transformer2D(Transform2D local, imp::poly<TransformModifier2D> modifier);
 		Transformer2D(const Transformer2D&);
 		Transformer2D(Transformer2D&&) noexcept;
 		~Transformer2D();
@@ -195,10 +196,12 @@ namespace oly
 
 		UnitVector2D forward() const;
 
-		Polymorphic<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
-		template<PolymorphicBaseOf<TransformModifier2D> T>
+		imp::poly<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
+
+		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const { return dynamic_cast<const T&>(*modifier); }
-		template<PolymorphicBaseOf<TransformModifier2D> T>
+		
+        template<std::derived_from<TransformModifier2D> T>
 		T& ref_modifier() { post_set(); return dynamic_cast<T&>(*modifier); }
 
 		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
@@ -214,6 +217,8 @@ namespace oly
 
 	struct PivotTransformModifier2D : public TransformModifier2D
 	{
+        IMP_POLYMORPHIC_IMPL((PivotTransformModifier2D));
+
 		glm::vec2 pivot = { 0.5f, 0.5f };
 		glm::vec2 size = { 0.0f, 0.0f };
 
@@ -221,8 +226,6 @@ namespace oly
 
 		virtual void operator()(glm::mat3& global) const override;
 		virtual void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(PivotTransformModifier2D);
 	};
 
 	constexpr glm::mat3 shearing_matrix(glm::vec2 shearing)
@@ -232,26 +235,26 @@ namespace oly
 
 	struct ShearTransformModifier2D : public TransformModifier2D
 	{
+        IMP_POLYMORPHIC_IMPL((ShearTransformModifier2D));
+
 		glm::vec2 shearing = { 0.0f, 0.0f };
 
 		ShearTransformModifier2D(glm::vec2 shearing = glm::vec2(0.0f)) : shearing(shearing) {}
 
 		virtual void operator()(glm::mat3& global) const override;
 		virtual void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ShearTransformModifier2D);
 	};
 
 	struct OffsetTransformModifier2D : public TransformModifier2D
 	{
+        IMP_POLYMORPHIC_IMPL((OffsetTransformModifier2D));
+
 		glm::vec2 offset = { 0.0f, 0.0f };
 
 		OffsetTransformModifier2D(glm::vec2 offset = glm::vec2(0.0f)) : offset(offset) {}
 
 		virtual void operator()(glm::mat3& global) const override;
 		virtual void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(OffsetTransformModifier2D);
 	};
 
 	template<size_t N>
@@ -263,24 +266,26 @@ namespace oly
 	template<>
 	struct CompoundTransformModifier2D<2> : public TransformModifier2D
 	{
-		Polymorphic<TransformModifier2D> t1;
-		Polymorphic<TransformModifier2D> t2;
+        IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<2>));
+
+		imp::poly<TransformModifier2D> t1;
+		imp::poly<TransformModifier2D> t2;
 
 		virtual void operator()(glm::mat3& global) const override
 		{
 			(*t1)(global);
 			(*t2)(global);
 		}
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(CompoundTransformModifier2D<2>);
 	};
 
 	template<>
 	struct CompoundTransformModifier2D<3> : public TransformModifier2D
 	{
-		Polymorphic<TransformModifier2D> t1;
-		Polymorphic<TransformModifier2D> t2;
-		Polymorphic<TransformModifier2D> t3;
+        IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<3>));
+
+		imp::poly<TransformModifier2D> t1;
+		imp::poly<TransformModifier2D> t2;
+		imp::poly<TransformModifier2D> t3;
 
 		virtual void operator()(glm::mat3& global) const override
 		{
@@ -288,17 +293,17 @@ namespace oly
 			(*t2)(global);
 			(*t3)(global);
 		}
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(CompoundTransformModifier2D<3>);
 	};
 
 	template<>
 	struct CompoundTransformModifier2D<4> : public TransformModifier2D
 	{
-		Polymorphic<TransformModifier2D> t1;
-		Polymorphic<TransformModifier2D> t2;
-		Polymorphic<TransformModifier2D> t3;
-		Polymorphic<TransformModifier2D> t4;
+        IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<4>));
+
+		imp::poly<TransformModifier2D> t1;
+		imp::poly<TransformModifier2D> t2;
+		imp::poly<TransformModifier2D> t3;
+		imp::poly<TransformModifier2D> t4;
 
 		virtual void operator()(glm::mat3& global) const override
 		{
@@ -307,8 +312,6 @@ namespace oly
 			(*t3)(global);
 			(*t4)(global);
 		}
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(CompoundTransformModifier2D<4>);
 	};
 
 	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
