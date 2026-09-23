@@ -12,6 +12,9 @@
 #include "core/base/Parameters.h"
 #include "core/types/Variant.h"
 
+#include <imp/empty.hpp>
+#include <imp/type_delimiter.hpp>
+
 namespace oly::col2d
 {
 	using KDOP2 = KDOP<2>;
@@ -24,115 +27,43 @@ namespace oly::col2d
 
 	namespace internal
 	{
-        // TODO v9.3 use imp::type_erasure
-		enum class ElementID
-		{
-			NONE,
-			CIRCLE,
-			AABB,
-			OBB,
-			CONVEX_HULL,
-			KDOP2,
-			KDOP3,
-			KDOP4,
-			KDOP5,
-			KDOP6,
-			KDOP7,
-			KDOP8
-		};
+#define _OLY_ELEM_GENERATOR(M) \
+        M((imp::empty)) \
+        M((Circle)) \
+        M((AABB)) \
+        M((OBB)) \
+        M((ConvexHull)) \
+        M((KDOP2)) \
+        M((KDOP3)) \
+        M((KDOP4)) \
+        M((KDOP5)) \
+        M((KDOP6)) \
+        M((KDOP7)) \
+        M((KDOP8))
 
-		template<typename T>
-		struct ElementIDTrait;
-
-		template<typename T>
-		concept ElementShape = requires { { ElementIDTrait<std::decay_t<T>>::ID } -> std::convertible_to<ElementID>; };
-
-		template<>
-		struct ElementIDTrait<Circle>
-		{
-			static constexpr ElementID ID = ElementID::CIRCLE;
-		};
-
-		template<>
-		struct ElementIDTrait<AABB>
-		{
-			static constexpr ElementID ID = ElementID::AABB;
-		};
-
-		template<>
-		struct ElementIDTrait<OBB>
-		{
-			static constexpr ElementID ID = ElementID::OBB;
-		};
-
-		template<>
-		struct ElementIDTrait<ConvexHull>
-		{
-			static constexpr ElementID ID = ElementID::CONVEX_HULL;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP2>
-		{
-			static constexpr ElementID ID = ElementID::KDOP2;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP3>
-		{
-			static constexpr ElementID ID = ElementID::KDOP3;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP4>
-		{
-			static constexpr ElementID ID = ElementID::KDOP4;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP5>
-		{
-			static constexpr ElementID ID = ElementID::KDOP5;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP6>
-		{
-			static constexpr ElementID ID = ElementID::KDOP6;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP7>
-		{
-			static constexpr ElementID ID = ElementID::KDOP7;
-		};
-
-		template<>
-		struct ElementIDTrait<KDOP8>
-		{
-			static constexpr ElementID ID = ElementID::KDOP8;
-		};
+        IMP_TYPE_DELIMITER(_OLY_ELEM_GENERATOR, Elem);
 	}
 
 	class Element
 	{
-		internal::ElementID id = internal::ElementID::NONE;
-		BlackBox obj;
+        imp::type_erasure _type = imp::erase_type<imp::empty>();
+		BlackBox _obj;
 
 	public:
 		Element() = default;
-		template<internal::ElementShape Shape>
-		Element(Shape&& shape) : obj(std::forward<Shape>(shape)) { id = internal::ElementIDTrait<std::decay_t<Shape>>::ID; }
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
+		Element(Shape&& shape) : _obj(std::forward<Shape>(shape)) { _type = imp::erase_type<Shape>(); }
+
+		template<internal::Elem_check Shape>
 		Element& operator=(Shape&& shape)
 		{
-			if (internal::ElementIDTrait<std::decay_t<Shape>>::ID == id)
-				*obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
+			if (imp::erase_type<Shape>() == _type)
+				*_obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
 			else
 			{
-				obj = BlackBox(std::forward<Shape>(shape));
-				id = internal::ElementIDTrait<std::decay_t<Shape>>::ID;
+				_obj = BlackBox(std::forward<Shape>(shape));
+				_type = imp::erase_type<Shape>();
 			}
 			return *this;
 		}

@@ -33,9 +33,11 @@ namespace oly::physics
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		col2d::Collider& add_collider(col2d::Collider&& collider);
-		template<col2d::internal::ColliderObjectShape CObj>
+		
+        template<col2d::internal::CObj_check CObj>
 		col2d::Collider& add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
-		template<col2d::internal::ElementShape Shape>
+		
+        template<col2d::internal::Elem_check Shape>
 		col2d::Collider& add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
 
 		col2d::Collider& add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }

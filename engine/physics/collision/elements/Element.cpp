@@ -9,12 +9,12 @@
 namespace oly::col2d
 {
 #define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class)\
-	case internal::ElementIDTrait<Class>::ID:\
-		Macro(obj.cast<Class>())\
+	case imp::erase_type<Class>().uid():\
+		Macro(_obj.cast<Class>())\
 		break;
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
-	switch (id)\
+	switch (_type.uid())\
 	{\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB);\
@@ -225,8 +225,9 @@ namespace oly::col2d
 
 	AABB Element::aabb_wrap() const
 	{
-		if (id == internal::ElementID::AABB)
-			return *obj.cast<AABB>();
+        // TODO v9.3 ty* imp::box::cast_if<ty>(imp::type_erasure)
+		if (_type == imp::erase_type<AABB>())
+			return *_obj.cast<AABB>();
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
 		{\
@@ -261,12 +262,12 @@ namespace oly::col2d
 	}
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class)\
-	case internal::ElementIDTrait<Class>::ID:\
-		Macro(p, c.obj.cast<Class>())\
+	case imp::erase_type<Class>().uid():\
+		Macro(p, c._obj.cast<Class>())\
 		break;
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
-	switch (c.id)\
+	switch (c._type.uid())\
 	{\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB);\
