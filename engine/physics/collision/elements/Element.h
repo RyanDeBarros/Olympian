@@ -8,10 +8,10 @@
 #include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
 
-#include "core/containers/BlackBox.h"
 #include "core/base/Parameters.h"
 #include "core/types/Variant.h"
 
+#include <imp/box.hpp>
 #include <imp/empty.hpp>
 #include <imp/type_delimiter.hpp>
 
@@ -44,27 +44,22 @@ namespace oly::col2d
         IMP_TYPE_DELIMITER(_OLY_ELEM_GENERATOR, Elem);
 	}
 
+    // TODO v9.3 imp::box addition seems to mess up physics in Tester, perhaps because of imp::empty
+
 	class Element
 	{
-        imp::type_erasure _type = imp::erase_type<imp::empty>();
-		BlackBox _obj;
+		imp::box _obj;
 
 	public:
-		Element() = default;
+        Element() : _obj(imp::make_box<imp::empty>()) {}
 
 		template<internal::Elem_check Shape>
-		Element(Shape&& shape) : _obj(std::forward<Shape>(shape)) { _type = imp::erase_type<Shape>(); }
+		Element(Shape&& shape) : _obj(imp::forward_to_box(std::forward<Shape>(shape))) {}
 
 		template<internal::Elem_check Shape>
 		Element& operator=(Shape&& shape)
 		{
-			if (imp::erase_type<Shape>() == _type)
-				*_obj.cast<std::decay_t<Shape>>() = std::forward<Shape>(shape);
-			else
-			{
-				_obj = BlackBox(std::forward<Shape>(shape));
-				_type = imp::erase_type<Shape>();
-			}
+            imp::forward_into_box(_obj, std::forward<Shape>(shape));
 			return *this;
 		}
 

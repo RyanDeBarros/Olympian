@@ -8,14 +8,11 @@
 
 namespace oly::col2d
 {
-#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class)\
-	case imp::erase_type<Class>().uid():\
-		Macro(_obj.cast<Class>())\
-		break;
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) \
+    if (auto obj = _obj.as<Class>()) \
+        Macro(obj);
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
-	switch (_type.uid())\
-	{\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, OBB);\
@@ -27,9 +24,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP6);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8);\
-		default:\
-			throw Error(ErrorCode::UnsupportedSwitchCase);\
-	}
+		throw Error(ErrorCode::UnsupportedSwitchCase);\
 
 	float Element::projection_max(UnitVector2D axis) const
 	{
@@ -225,9 +220,8 @@ namespace oly::col2d
 
 	AABB Element::aabb_wrap() const
 	{
-        // TODO v9.3 ty* imp::box::cast_if<ty>(imp::type_erasure)
-		if (_type == imp::erase_type<AABB>())
-			return *_obj.cast<AABB>();
+        if (auto obj = _obj.as<AABB>())
+            return *obj;
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
 		{\
@@ -261,14 +255,11 @@ namespace oly::col2d
 #undef OLY_ELEMENT_RAYCAST
 	}
 
-#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class)\
-	case imp::erase_type<Class>().uid():\
-		Macro(p, c._obj.cast<Class>())\
-		break;
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) \
+    if (auto obj = c._obj.as<Class>()) \
+        Macro(p, obj);
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
-	switch (c._type.uid())\
-	{\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, OBB);\
@@ -280,9 +271,6 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP6);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8);\
-		default:\
-			throw Error(ErrorCode::UnsupportedSwitchCase);\
-	}
 
 	OverlapResult Element::overlaps(const Element& c) const
 	{

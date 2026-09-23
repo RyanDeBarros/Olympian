@@ -1,6 +1,8 @@
 #pragma once
 
-#include "core/containers/BlackBox.h"
+#include "core/base/Errors.h"
+
+#include <imp/box.hpp>
 
 namespace oly::context
 {
@@ -24,20 +26,23 @@ namespace oly::context
 			return VaultKey(next++);
 		}
 
-		extern void vault_set(VaultKey key, BlackBox&& value);
-		extern const BlackBox& vault_get(VaultKey key);
+		extern void vault_set(VaultKey key, imp::box&& value);
+		extern const imp::box& vault_get(VaultKey key);
 	}
 
-	template<typename Object> requires (std::is_copy_constructible_v<Object>)
-	inline void vault_set(internal::VaultKey key, Object object)
+	template<typename Object>
+	inline void vault_set(internal::VaultKey key, Object&& object)
 	{
-		internal::vault_set(key, BlackBox(std::move(object)));
+		internal::vault_set(key, imp::forward_to_box(std::forward<Object>(object)));
 	}
 
-	template<typename Object> requires (std::is_copy_constructible_v<Object>)
+	template<typename Object>
 	inline Object vault_get(internal::VaultKey key)
 	{
-		return Object(*internal::vault_get(key).cast<Object>());
+        if (auto obj = internal::vault_get(key).as<Object>())
+            return *obj;
+        else
+            throw Error(ErrorCode::InvalidType);
 	}
 
 	extern void vault_free(internal::VaultKey key);
@@ -47,14 +52,13 @@ namespace oly::context
 	inline auto vault_prototype(internal::VaultKey key, Func&& generate_first)
 	{
 		using Object = std::decay_t<decltype(std::invoke(std::forward<Func>(generate_first)))>;
-		static_assert(std::is_copy_constructible_v<Object>);
 
 		if (vault_key_exists(key))
 			return vault_get<Object>(key);
 		else
 		{
 			Object object = std::invoke(std::forward<Func>(generate_first));
-			vault_set<Object>(key, object);
+			vault_set(key, object);
 			return object;
 		}
 	}
