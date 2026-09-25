@@ -1,13 +1,13 @@
 #pragma once
 
-#include "core/containers/TreeNode.h"
+#include <imp/tree_node.hpp>
 
 namespace oly
 {
 	template<typename EventData>
-	struct EventHandler : public TreeNode<EventHandler<EventData>>
+	struct EventHandler : public imp::tree_node<EventHandler<EventData>>
 	{
-		using TreeNode<EventHandler<EventData>>::TreeNode;
+		using imp::tree_node<EventHandler<EventData>>::tree_node;
 
 		virtual bool block(const EventData& data) { return false; }
 		virtual bool consume(const EventData& data) { return false; }
