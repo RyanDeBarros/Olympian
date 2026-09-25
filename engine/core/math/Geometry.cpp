@@ -2,7 +2,7 @@
 
 #include "core/math/Coordinates.h"
 #include "core/base/SimpleMath.h"
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 
 namespace oly::math
 {

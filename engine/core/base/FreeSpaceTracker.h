@@ -1,7 +1,7 @@
 #pragma once
 
-#include "core/containers/Ranges.h"
 #include "core/base/Assert.h"
+#include "core/base/Ranges.h"
 
 namespace oly
 {

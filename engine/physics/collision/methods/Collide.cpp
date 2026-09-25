@@ -1,15 +1,18 @@
 #include "Collide.h"
 
+#include "core/base/Approximate.h"
+#include "core/base/SimpleMath.h"
+#include "core/base/Transforms.h"
+#include "core/base/Constants.h"
+
+#include "core/math/Solvers.h"
+
+#include "core/algorithms/GoldenSectionSearch.h"
+
 #include "physics/collision/methods/SAT.h"
 #include "physics/collision/methods/GJK.h"
 #include "physics/collision/methods/CircleMethods.h"
 #include "physics/collision/methods/KDOPCollide.h"
-#include "core/types/Approximate.h"
-#include "core/base/SimpleMath.h"
-#include "core/base/Transforms.h"
-#include "core/base/Constants.h"
-#include "core/math/Solvers.h"
-#include "core/algorithms/GoldenSectionSearch.h"
 
 namespace oly::col2d
 {

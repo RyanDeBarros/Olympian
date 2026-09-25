@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/types/SmartReference.h"
+#include "core/base/SmartReference.h"
 
 #include "assets/ResourcePath.h"
 

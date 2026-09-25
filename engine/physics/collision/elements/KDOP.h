@@ -1,15 +1,17 @@
 #pragma once
 
-#include "core/base/UnitVector.h"
+#include "core/base/Approximate.h"
 #include "core/base/Errors.h"
-#include "core/base/Transforms.h"
 #include "core/base/SimpleMath.h"
+#include "core/base/Transforms.h"
+#include "core/base/UnitVector.h"
+
 #include "core/math/Geometry.h"
 #include "core/math/Triangulation.h"
-#include "core/types/Approximate.h"
+
+#include "physics/collision/Tolerance.h"
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/Common.h"
-#include "physics/collision/Tolerance.h"
 #include "physics/collision/methods/CollisionInfo.h"
 
 #include <array>

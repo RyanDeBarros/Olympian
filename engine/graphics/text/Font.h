@@ -4,7 +4,7 @@
 
 #include "core/math/Shapes.h"
 
-#include "core/types/SmartReference.h"
+#include "core/base/SmartReference.h"
 
 #include "graphics/backend/basic/Textures.h"
 #include "graphics/text/Kerning.h"

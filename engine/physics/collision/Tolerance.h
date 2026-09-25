@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 
 namespace oly::col2d
 {

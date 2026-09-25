@@ -1,7 +1,8 @@
 #pragma once
 
+#include "core/base/SmartReference.h"
+
 #include "external/GL.h"
-#include "core/types/SmartReference.h"
 
 namespace oly::graphics
 {

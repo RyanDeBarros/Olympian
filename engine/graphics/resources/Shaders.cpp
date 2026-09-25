@@ -1,7 +1,8 @@
 #include "Shaders.h"
 
+#include "core/base/SmartReferenceLookup.h"
+
 #include "core/util/IO.h"
-#include "core/containers/SmartReferenceLookup.h"
 
 namespace oly::graphics::internal_shaders
 {

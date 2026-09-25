@@ -1,9 +1,11 @@
 #pragma once
 
-#include "core/types/SmartReference.h"
+#include "core/base/SmartReference.h"
+
 #include "core/math/Shapes.h"
 
 #include "assets/ResourcePath.h"
+
 #include "definitions/enums/TilesetConfiguration.h"
 
 #include <unordered_set>

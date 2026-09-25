@@ -1,17 +1,17 @@
 #pragma once
 
+#include "core/base/SmartReference.h"
+
 #include "core/math/Shapes.h"
 
-#include "core/types/SmartReference.h"
-
 #include "graphics/backend/basic/Sampler.h"
+
+#include "external/GLM.h"
+#include "external/NSVG.h"
 
 #include "assets/ResourcePath.h"
 
 #include "definitions/enums/SpritesheetParamType.h"
-
-#include "external/GLM.h"
-#include "external/NSVG.h"
 
 #include <imp/dependent_false.hpp>
 

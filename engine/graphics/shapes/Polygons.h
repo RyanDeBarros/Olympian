@@ -1,14 +1,17 @@
 #pragma once
 
 #include "core/base/Constants.h"
+#include "core/base/FreeSpaceTracker.h"
+
 #include "core/cmath/ColoredGeometry.h"
-#include "core/containers/FreeSpaceTracker.h"
+
 #include "core/util/DebugTrace.h"
+
+#include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
-#include "graphics/Tags.h"
-#include "graphics/Camera.h"
 
 #include <imp/id_generator.hpp>
 

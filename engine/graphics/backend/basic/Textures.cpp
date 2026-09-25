@@ -1,13 +1,14 @@
 #include "Textures.h"
 
-#include "external/STB.h"
+#include "core/base/Approximate.h"
+#include "core/base/Assert.h"
+#include "core/base/Errors.h"
 
 #include "core/context/rendering/Textures.h"
 
-#include "core/base/Errors.h"
-#include "core/base/Assert.h"
 #include "core/util/IO.h"
-#include "core/types/Approximate.h"
+
+#include "external/STB.h"
 
 #include "definitions/enums/SVGMipmapGenerationMode.h"
 

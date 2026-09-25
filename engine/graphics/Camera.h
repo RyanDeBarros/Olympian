@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/Transforms.h"
-#include "core/types/SmartReference.h"
+#include "core/base/SmartReference.h"
 #include "core/math/Shapes.h"
 
 #include "core/platform/WindowEvents.h"

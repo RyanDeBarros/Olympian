@@ -1,10 +1,11 @@
 #include "Solvers.h"
 
-#include <algorithm>
-
+#include "core/base/Approximate.h"
 #include "core/base/Errors.h"
-#include "core/types/Approximate.h"
+
 #include "external/Quartic.h"
+
+#include <algorithm>
 
 namespace oly::math::solver
 {

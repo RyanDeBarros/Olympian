@@ -92,7 +92,6 @@ namespace oly::editor
 		_stop_listening = true;
 		imtk::id_scope scope(this);
 
-		// TODO v9.3 imtk::w::tab_bar widget with a map<std::string, imtk::w::tab_item> where the tab items have callbacks?
 		if (auto _ = imtk::tab_bar(""))
 		{
 			if (auto _ = imtk::tab_item("Signals"))

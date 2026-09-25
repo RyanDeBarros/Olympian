@@ -1,10 +1,12 @@
 #pragma once
 
-#include "external/GL.h"
 #include "core/base/Errors.h"
-#include "core/containers/Ranges.h"
+#include "core/base/Ranges.h"
+
 #include "graphics/backend/basic/Buffers.h"
 #include "graphics/backend/basic/FenceSync.h"
+
+#include "external/GL.h"
 
 namespace oly::graphics
 {

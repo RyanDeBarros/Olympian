@@ -11,11 +11,10 @@
 #include "core/base/TransformerExposure.h"
 #include "core/base/Assert.h"
 
-#include "core/containers/DoubleBuffer.h"
-
 #include "core/math/Solvers.h"
 
 #include <imp/dependent_false.hpp>
+#include <imp/swapper.hpp>
 
 #include <algorithm>
 
@@ -313,7 +312,7 @@ namespace oly::col2d
 		std::vector<const Element*> build_layer(size_t at_depth) const
 		{
 			std::vector<const Element*> layer;
-			DoubleBuffer<const Node*> nodes;
+			imp::swapper<std::vector<const Node*>> nodes;
 			nodes.back.push_back(&root());
 
 			for (size_t i = 0; i < at_depth; ++i)
