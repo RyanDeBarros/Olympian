@@ -15,6 +15,14 @@ namespace oly::editor
 	{
 		IMTK_DESCRIPTOR_BODY(KerningDesc, KERNING_GENERATOR);
 
+#define KERNING_TUPLE_GENERATOR(M) \
+        M(distance) \
+        M(pair.fields[0]) \
+        M(pair.fields[1])
+
+        IMTK_DESC_TUPLE_METHODS(KerningDesc, KERNING_TUPLE_GENERATOR);
+#undef KERNING_TUPLE_GENERATOR
+
 		KerningDesc(imtk::datapath_link link = {});
 
 		friend std::ostream& operator<<(std::ostream& os, const KerningDesc& desc);

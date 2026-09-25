@@ -242,36 +242,15 @@ namespace oly::editor
 		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, 0));
 
 		for (auto& k : desc.kerning)
-		{
-			// TODO v9.3 inline complex field support - instead of PrimitiveField, InlineComplexField?
-
-			resetters.push_back(imtk::prop::make_resettable_value_row(
-				imtk::prop::make_resettable_value(k.distance.edit, k.distance.def),
-				imtk::prop::make_resettable_value(k.pair.fields[0].edit, k.pair.fields[0].def),
-				imtk::prop::make_resettable_value(k.pair.fields[1].edit, k.pair.fields[1].def)
-			));
-		}
+            resetters.push_back(k.make_resetter());
 
 		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
 			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.kerning_widget, desc.kerning.size()));
 
-		for (size_t i = 0; i < desc.kerning.size(); ++i)
-		{
-			KerningDesc& k = desc.kerning[i];
-			auto og_distance = k.distance.edit.consume_published_from();
-			auto og_pair_0 = k.pair.fields[0].edit.consume_published_from();
-			auto og_pair_1 = k.pair.fields[1].edit.consume_published_from();
-			if (og_distance || og_pair_0 || og_pair_1)
-			{
-				KerningDesc original;
-				original.distance.value = og_distance.value_or(k.distance.value);
-				original.pair.fields[0].value = og_pair_0.value_or(k.pair.fields[0].value);
-				original.pair.fields[1].value = og_pair_1.value_or(k.pair.fields[1].value);
-				imtk::desc::push_set_action(k.link.compute_path(), std::move(original), imtk::desc::clone_data(k));
-			}
-		}
-
 		desc.kerning.consume_ops(desc.kerning_widget.model);
+
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
+			desc.kerning[i].check_undo_action();
 	}
 	
 	void FontDocument::Draw(FontAtlasDesc& desc)
