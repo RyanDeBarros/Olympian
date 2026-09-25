@@ -2,10 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/RasterFontDesc.h"
-#include "desc/DoubleDescriptor.h"
-
-#include "gui/ListModel.h"
+#include "desc/RasterFontDesc.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -13,13 +10,13 @@ namespace oly::editor
 {
 	class RasterFontDocument : public IDocument
 	{
-		DoubleDescriptor<RasterFontDesc> _desc;
+		imtk::desc::doubler<RasterFontDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListModel _glyph_model;
-		Counter<std::string> _codepoint_counter;
+		imtk::w::owned_list_indexer _glyphs;
+		imp::counter<std::string> _codepoint_counter;
 
 	public:
-		using IDocument::IDocument;
+		RasterFontDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 
@@ -28,19 +25,20 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 	private:
-		void Draw(DataPath path, RasterFontDesc& desc);
-		void Draw(DataPath path, GlyphDesc& desc);
+		void Draw(RasterFontDesc& desc);
+		void Draw(GlyphDesc& desc);
 
-		void Load(TOMLNode node, RasterFontDesc& desc);
-		void Load(TOMLNode node, GlyphDesc& desc);
+		void Load(imtk::toml_node node, RasterFontDesc& desc);
+		void Load(imtk::toml_node node, GlyphDesc& desc);
 
 		void Dump(toml::table& table, RasterFontDesc& desc);
 		void Dump(toml::table& table, GlyphDesc& desc);
 
-		std::unique_ptr<gui::ListCallbackAdapter> ListAdapter();
+		imtk::list_adapter ListAdapter();
+		std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
 	};
 }

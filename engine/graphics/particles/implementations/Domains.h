@@ -9,6 +9,8 @@ namespace oly::particles
 {
 	struct ConstantDomain1D : public IDomain1D
 	{
+        IMP_POLYMORPHIC_IMPL((ConstantDomain1D));
+
 		Attribute<float> c;
 
 		ConstantDomain1D(float c = 0.0f) : c(c) {}
@@ -21,12 +23,12 @@ namespace oly::particles
 		}
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain1D);
 	};
 
 	struct LineDomain1D : public IDomain1D
 	{
+        IMP_POLYMORPHIC_IMPL((LineDomain1D));
+
 		Attribute<float> a;
 		Attribute<float> b;
 
@@ -41,12 +43,12 @@ namespace oly::particles
 		}
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(LineDomain1D);
 	};
 
 	struct BiLineDomain1D : public IDomain1D
 	{
+        IMP_POLYMORPHIC_IMPL((BiLineDomain1D));
+
 		Attribute<float> a;
 		Attribute<float> b;
 		Attribute<float> c;
@@ -63,12 +65,12 @@ namespace oly::particles
 		}
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(BiLineDomain1D);
 	};
 
 	struct ConstantDomain2D : public IDomain2D
 	{
+        IMP_POLYMORPHIC_IMPL((ConstantDomain2D));
+
 		Attribute<glm::vec2> c;
 
 		ConstantDomain2D(glm::vec2 c = {}) : c(c) {}
@@ -81,12 +83,12 @@ namespace oly::particles
 		}
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain2D);
 	};
 
 	struct ConstantDomain3D : public IDomain3D
 	{
+        IMP_POLYMORPHIC_IMPL((ConstantDomain3D));
+
 		Attribute<glm::vec3> c;
 
 		ConstantDomain3D(glm::vec3 c = {}) : c(c) {}
@@ -99,12 +101,12 @@ namespace oly::particles
 		}
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain3D);
 	};
 
 	struct ConstantDomain4D : public IDomain4D
 	{
+        IMP_POLYMORPHIC_IMPL((ConstantDomain4D));
+
 		Attribute<glm::vec4> c;
 
 		ConstantDomain4D(glm::vec4 c = {}) : c(c) {}
@@ -117,7 +119,5 @@ namespace oly::particles
 		};
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantDomain4D);
 	};
 }

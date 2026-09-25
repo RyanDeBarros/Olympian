@@ -37,10 +37,12 @@ namespace oly::physics
 
 	void KinematicBody::handle_contacts(const col2d::ContactEventData& data) const
 	{
-		if (data.phase & (col2d::Phase::Started | col2d::Phase::Ongoing))
-			if (const RigidBody* other = rigid_body(data.passive_collider))
-				if (other != this)
-					dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, dynamics_of(*other));
+        if (data.phase & (col2d::Phase::Started | col2d::Phase::Ongoing))
+        {
+            const RigidBody* other = rigid_body(data.passive_collider);
+			if (other && other != this)
+				dynamics.add_collision(data.active_contact.impulse, data.active_contact.position - dynamics.get_state().position, dynamics_of(*other));
+        }
 		delegator.emit(data);
 	}
 

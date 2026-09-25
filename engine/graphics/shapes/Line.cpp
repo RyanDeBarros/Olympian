@@ -1,6 +1,6 @@
 #include "Line.h"
 
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 
 namespace oly::rendering
 {

@@ -1,0 +1,86 @@
+#include "Fields.h"
+
+#include "core/MemoryUnit.h"
+
+#include "definitions/enums/Include.h"
+
+namespace imtk::field
+{
+	template<>
+	imtk::label_span_handle enum_fld<oly::editor::MemoryUnit>::combo_names()
+	{
+		return imtk::label_span_handle({ "B", "KB", "KiB", "MB", "MiB", "GB", "GiB" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::Axis0dConversion>::combo_names()
+	{
+		return imtk::label_span_handle({ "None", "To 1D", "To 2D", "To 3D" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::Axis1dConversion>::combo_names()
+	{
+		return imtk::label_span_handle({ "None", "To 0D", "To 2D", "To 3D" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::Axis2dConversion>::combo_names()
+	{
+		return imtk::label_span_handle({ "None", "To 0D (X)", "To 0D (Y)", "To 0D (XY)", "To 1D (X)", "To 1D (Y)", "To 1D (XY)", "To 3D (z=0)", "To 3D (z=1)" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::CommonBufferPreset>::combo_names()
+	{
+		return imtk::label_span_handle({ "Common", "Alphanumeric", "Numeric", "Alphabet", "Alphabet (lowercase)", "Alphabet (uppercase)" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::GamepadAxis2D>::combo_names()
+	{
+		return imtk::label_span_handle({ "Left XY", "Right XY" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::PositioningMode>::combo_names()
+	{
+		return imtk::label_span_handle({ "Relative", "Absolute" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::SignalBindingType>::combo_names()
+	{
+		return imtk::label_span_handle({ "Key", "Mouse Button", "Gamepad Button", "Gamepad Axis 1D", "Gamepad Axis 2D", "Cursor Position", "Scroll" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::SpritesheetParamType>::combo_names()
+	{
+		return imtk::label_span_handle({ "Index", "Pixel" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::StorageMode>::combo_names()
+	{
+		return imtk::label_span_handle({ "Discard", "Keep" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::Swizzle>::combo_names()
+	{
+		return imtk::label_span_handle({ "None", "YX", "XZY", "YXZ", "YZX", "ZXY", "ZYX" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::SVGMipmapGenerationMode>::combo_names()
+	{
+		return imtk::label_span_handle({ "Auto", "Off", "Manual" });
+	}
+
+	template<>
+	imtk::label_span_handle enum_fld<oly::detail::TileRotation>::combo_names()
+	{
+		return imtk::label_span_handle({ "None", "90 degrees", "180 degrees", "270 degrees" });
+	}
+}

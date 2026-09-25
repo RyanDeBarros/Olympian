@@ -16,7 +16,7 @@ namespace oly::particles
 		}
 	}
 
-	Polymorphic<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
+	imp::poly<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
 	{
 		if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(detail::Key::Operation)())
 		{
@@ -38,11 +38,11 @@ namespace oly::particles
 
 	namespace ops
 	{
-		Polymorphic<Sequence<0>> Sequence<0>::load(TOMLNode node)
+		imp::poly<Sequence<0>> Sequence<0>::load(TOMLNode node)
 		{
 			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
 
-			std::vector<Polymorphic<IAttributeOperation>> ops;
+			std::vector<imp::poly<IAttributeOperation>> ops;
 
 			for (size_t i = 0; i < arr->size(); ++i)
 			{
@@ -52,24 +52,24 @@ namespace oly::particles
 					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
 			}
 
-			return make_polymorphic<Sequence<0>>(std::move(ops));
+			return imp::make_poly<Sequence<0>>(std::move(ops));
 		}
 
 		template<size_t N>
-		static Polymorphic<IAttributeOperation> load_sequence(std::vector<Polymorphic<IAttributeOperation>>&& ops)
+		static imp::poly<IAttributeOperation> load_sequence(std::vector<imp::poly<IAttributeOperation>>&& ops)
 		{
-			std::array<Polymorphic<IAttributeOperation>, N> arr;
+            std::array<imp::poly<IAttributeOperation>, N> arr;
 			for (size_t i = 0; i < N; ++i)
 				arr[i] = std::move(ops[i]);
 
-			return make_polymorphic<Sequence<N>>(std::move(arr));
+			return imp::make_poly<Sequence<N>>(std::move(arr));
 		}
 
-		Polymorphic<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
+		imp::poly<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
 		{
 			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
 
-			std::vector<Polymorphic<IAttributeOperation>> ops;
+			std::vector<imp::poly<IAttributeOperation>> ops;
 
 			for (size_t i = 0; i < arr->size(); ++i)
 				if (auto subnode = arr->get(i))
@@ -92,15 +92,15 @@ namespace oly::particles
 			else if (ops.size() == 8)
 				return load_sequence<8>(std::move(ops));
 			else
-				return make_polymorphic<Sequence<0>>(std::move(ops));
+				return imp::make_poly<Sequence<0>>(std::move(ops));
 		}
 
-		Polymorphic<Selector> Selector::load(TOMLNode node)
+		imp::poly<Selector> Selector::load(TOMLNode node)
 		{
 			try
 			{
 				assets::Parser parser(node);
-				return make_polymorphic<Selector>(IAttributeOperation::load(parser.field(detail::Key::InnerOperation)),
+				return imp::make_poly<Selector>(IAttributeOperation::load(parser.field(detail::Key::InnerOperation)),
 					parser.defaulted<particles::SubSelector>(detail::Key::Selector)());
 			}
 			catch (const Error& e)

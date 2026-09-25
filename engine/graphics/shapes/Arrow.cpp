@@ -1,7 +1,8 @@
 #include "Arrow.h"
 
+#include "core/base/Approximate.h"
+
 #include "core/cmath/Triangulation.h"
-#include "core/types/Approximate.h"
 
 namespace oly::rendering
 {

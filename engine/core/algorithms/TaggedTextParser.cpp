@@ -6,18 +6,18 @@
 
 namespace oly::algo
 {
-	UTFTaggedTextParser::UTFTaggedTextParser(const utf::String& input)
+	UTFTaggedTextParser::UTFTaggedTextParser(const imp::utf::string& input)
 	{
-        std::stack<utf::String> tag_stack;
-        utf::String buffer;
+        std::stack<imp::utf::string> tag_stack;
+        imp::utf::string buffer;
         
         auto it = input.begin();
 
         while (it)
         {
-            utf::Codepoint c = it.advance();
+            imp::utf::codepoint c = it.advance();
 
-            if (c == '\\' && it && (it.codepoint() == '<' || it.codepoint() == '>'))
+            if (c == '\\' && it && (*it == '<' || *it == '>'))
             {
                 // Handle escaped '<' or '>'
                 buffer.push_back(it.advance());
@@ -33,14 +33,14 @@ namespace oly::algo
 
                 // Check if it's a closing tag
                 bool closing = false;
-                if (it && it.codepoint() == '/')
+                if (it && *it == '/')
                 {
                     closing = true;
                     it.advance();
                 }
 
-                utf::String tag;
-                while (it && it.codepoint() != '>')
+                imp::utf::string tag;
+                while (it && *it != '>')
                     tag.push_back(it.advance());
 
                 if (!tag.empty())
@@ -56,7 +56,7 @@ namespace oly::algo
                         tag_stack.push(tag);
                 }
                 
-                if (it && it.codepoint() == '>')
+                if (it && *it == '>')
                     it.advance();
             }
             else

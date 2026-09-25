@@ -6,6 +6,7 @@
 namespace oly::graphics
 {
 	class Framebuffer;
+
 	namespace internal
 	{
 		extern Framebuffer framebuffer_from_id(GLuint id);
@@ -17,6 +18,7 @@ namespace oly::graphics
 		bool depth_attached = false, stencil_attached = false, depth_stencil_attached = false;
 
 		friend Framebuffer internal::framebuffer_from_id(GLuint id);
+
 		Framebuffer(GLuint id) : id(id) {}
 
 	public:

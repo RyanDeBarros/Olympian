@@ -1,7 +1,8 @@
 #pragma once
 
+#include "core/base/Approximate.h"
+
 #include "external/GLM.h"
-#include "core/types/Approximate.h"
 
 namespace oly
 {
@@ -95,7 +96,7 @@ namespace oly
 	};
 
 	template<>
-	struct Tolerance_V<UnitVector2D>
+	struct ToleranceImpl<UnitVector2D>
 	{
 		static constexpr double TOL = 1e-7;
 	};

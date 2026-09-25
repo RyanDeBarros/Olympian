@@ -1,17 +1,14 @@
 #include "TilesetDocument.h"
 
-#include "core/editor/Notifier.h"
-#include "core/editor/UID.h"
-#include "core/Colors.h"
-#include "core/Errors.h"
-
-#include "gui/scopes/Subform.h"
-#include "gui/graphics/Overlays.h"
-
 #include "documents/TextureDocument.h"
 
+#include "panels/ContentBrowserPanel.h"
+#include "panels/TreeViewPanel.h"
+
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -138,7 +135,7 @@ namespace oly::editor
 	void TilesetDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		_individual_editor = {};
 		_group_editors = {};
@@ -153,26 +150,16 @@ namespace oly::editor
 		UpdateActiveTextures();
 		imtk::id_scope scope(this);
 
-		DataPathSource path;
+		if (auto subform = imtk::prop::subform("Advanced"))
+			_desc.scratch.storage.draw();
 
-		if (auto subform = Subform("Advanced"))
-			_desc.scratch.storage.Draw(path / _desc.scratch.subpaths.storage);
-
-		if (ImGui::BeginTabBar("##Editors"))
+		if (auto _ = imtk::tab_bar("##Editors"))
 		{
-			if (ImGui::BeginTabItem("Group"))
-			{
+			if (auto _ = imtk::tab_item("Group"))
 				DrawGroupEditor();
-				ImGui::EndTabItem();
-			}
 
-			if (ImGui::BeginTabItem("Individual"))
-			{
+			if (auto _ = imtk::tab_item("Individual"))
 				DrawIndividualEditor();
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
 		}
 	}
 
@@ -185,15 +172,15 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load tileset - corrupted asset: " + _oly_path.string());
+				imtk::notify_error("cannot load tileset - corrupted asset: " + _oly_path.string());
 
 			MarkClean();
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -203,7 +190,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 	}
 
 	void TilesetDocument::DumpImpl()
@@ -211,21 +198,21 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
 	void TilesetDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& TilesetDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}
@@ -233,7 +220,7 @@ namespace oly::editor
 	void TilesetDocument::DrawGroupEditor()
 	{
 		int type_index = static_cast<int>(_group_editors.current_type);
-		if (gui::Combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }))
+		if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }).modified)
 			_group_editors.current_type = static_cast<GroupEditorType>(type_index);
 
 		GridEditorStateBase* editor = nullptr;
@@ -251,11 +238,11 @@ namespace oly::editor
 		if (!editor)
 			return;
 
-		if (ImGui::BeginTable("##Table", 2))
+		if (auto _ = imtk::table("##Table", 2))
 		{
 			ImGui::TableNextColumn();
 			bool new_cell_selected = false;
-			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
 				const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
@@ -292,38 +279,35 @@ namespace oly::editor
 
 						if (ImGui::IsItemHovered())
 						{
-							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
+							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
 							TextureErrorTooltip(GetActiveTexture(*grid).error);
 						}
 
 						if (editor->selected_cell == cell)
-							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Green, 0.f, 0, 4.f);
+							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::green, 0.f, 0, 4.f);
 					}
 				}
 			}
-			ImGui::EndChild();
+
 			if (ImGui::IsItemClicked() && !new_cell_selected)
 				editor->selected_cell = std::nullopt;
 
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				if (auto cell = editor->selected_cell)
 					if (auto grid = editor->At(cell->first, cell->second))
 						Draw(*grid);
 			}
-			ImGui::EndChild();
-
-			ImGui::EndTable();
 		}
 	}
 
 	void TilesetDocument::DrawIndividualEditor()
 	{
-		if (ImGui::BeginTable("##Table", 2))
+		if (auto _ = imtk::table("##Table", 2))
 		{
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
 			{
 				const float avail = std::min(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
 				const float cell_width = 0.2f * avail;
@@ -353,28 +337,24 @@ namespace oly::editor
 					}
 				}
 			}
-			ImGui::EndChild();
 
 			ImGui::TableNextColumn();
-			if (ImGui::BeginChild("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
 				Draw(_individual_editor.grid);
-			ImGui::EndChild();
-
-			ImGui::EndTable();
 		}
 	}
 
 	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
 	{
 		if (available)
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? Color::Azure : Color::Grey(64));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? imtk::col::azure : imtk::col::grey(64));
 		else
 		{
 			on = false;
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(32));
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(32));
 		}
 
-		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, Color::Black, 0.f, 0, 2.f);
+		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::black, 0.f, 0, 2.f);
 
 		ImGui::SetCursorScreenPos(rect_start);
 		if (available)
@@ -383,7 +363,7 @@ namespace oly::editor
 				on = !on;
 
 			if (ImGui::IsItemHovered())
-				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(Color::White, 0.3f));
+				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
 		}
 		else
 			ImGui::Dummy(rect_end - rect_start);
@@ -391,113 +371,102 @@ namespace oly::editor
 
 	void TilesetDocument::Draw(const detail::TileConfigGrid grid)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
-			auto path = GetAssignmentPath(grid);
-
 			TilesetAssignmentDesc& desc = GetAssignment(grid);
 
 			if (auto scope = imtk::id_scope(&desc.texture))
 			{
-				gui::PropertyGrid::Key::SetLabel(desc.texture.label);
-				desc.texture.edit.PreEdit();
-				if (desc.texture.edit.buffer != desc.texture.def)
-					gui::PropertyGrid::Reset::Button();
+				if (auto _ = imtk::prop::make_row_scope(desc.texture.label.c_str(), desc.texture.edit, desc.texture.def))
+				{
+					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
+						imtk::id_scope scope(&desc.texture.value);
 
-				gui::PropertyGrid::Value::AddComponent(comp::Generic([this, &desc, grid, path]() -> DrawResult {
-					imtk::id_scope scope(&desc.texture.value);
+						imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
 
-					DrawResult result = gui::InputData<std::string>{}("", desc.texture.edit.buffer);
-
-					// TODO v9.4 support dropping files directly on grid cells
-					if (ImGui::BeginDragDropTarget())
-					{
-						const ImGuiPayload* payload = nullptr;
-
-						// TODO v9.3 imtk utilities for drag-drop, especially for receiving different payloads like this
-						if (auto test = ImGui::GetDragDropPayload())
+						// TODO v9.4 support dropping files directly on grid cells
+						if (auto target = imtk::drag_drop_target())
 						{
-							if (test->IsDataType(StringID(UID::PathDragFromTV)))
-								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromTV));
+							std::optional<detail::ResourcePath> path;
+							if (auto p = target.accept<TreeViewPathDDP>())
+								path = *p;
+							else if (auto p = target.accept<ContentBrowserPathDDP>())
+								path = *p;
 
-							if (test->IsDataType(StringID(UID::PathDragFromCB)))
-								payload = ImGui::AcceptDragDropPayload(StringID(UID::PathDragFromCB));
-						}
-
-						if (payload)
-						{
-							detail::ResourcePath path(std::string_view(reinterpret_cast<const char*>(payload->Data), payload->DataSize));
-							if (path.is_resource())
+							if (path)
 							{
-								desc.texture.edit.PublishReset(path.get_resource_shorthand());
-								result.SetDirty(true);
+								if (path->is_resource())
+								{
+									desc.texture.edit.publish_reset(path->get_resource_shorthand());
+									result.modified = true;
+								}
+								else
+									imtk::notify_error("Path is not located in resource folder");
 							}
-							else
-								Notifier::NotifyError("Path is not located in resource folder");
 						}
 
-						ImGui::EndDragDropTarget();
-					}
+						desc.texture.edit.post_edit(result.state);
+						return result;
+					}));
+				}
 
-					desc.texture.edit.PostEdit(result);
-					return result;
-				}));
-
-				gui::PropertyGrid::SubmitRow();
-				if (gui::PropertyGrid::Reset::AnyActivated())
-					desc.texture.edit.PublishReset(desc.texture.def);
-
-				desc.texture.CheckUndoAction(path / desc.subpaths.texture);
+				desc.texture.check_undo_action();
 			}
 
-			DRAW_FIELD(texture_index);
-			DRAW_FIELD(uvs);
-			DRAW_FIELD(reflection);
-			DRAW_FIELD(rotation);
+			desc.texture_index.draw();
+			desc.uvs.draw();
+			desc.reflection.draw();
+			desc.rotation.draw();
 		}
 	}
 
-	void TilesetDocument::Load(TOMLNode node, TilesetDesc& desc)
+	void TilesetDocument::Load(imtk::toml_node node, TilesetDesc& desc)
 	{
-		LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
 
-		desc.assignments.map.Clear();
-		if (auto table = node[detail::encode_key(desc.assignments_key)].as_table())
+		Load(node, desc.assignments);
+	}
+
+	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc)
+	{
+		desc.map.clear();
+		if (auto table = desc.map.subnode(node).as_table())
 		{
 			for (auto&& [key, node] : *table)
 			{
-				if (auto config = stoi(key.str()))
-				{
-					TilesetAssignmentDesc subdesc;
-					Load(TOMLNode(node), subdesc);
-					desc.assignments.map[*config] = std::move(subdesc);
-				}
+				if (auto config = imp::stoi(key.str()))
+					Load(imtk::toml_node(node), desc.map[*config]);
 			}
 		}
 	}
 
-	void TilesetDocument::Load(TOMLNode node, TilesetAssignmentDesc& desc)
+	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentDesc& desc)
 	{
-		LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+		IMTK_LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
 	}
 
 	void TilesetDocument::Dump(toml::table& table, TilesetDesc& desc)
 	{
-		DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
 
+		Dump(table, desc.assignments);
+	}
+
+	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentMapDesc& desc)
+	{
 		toml::table subtable;
-		for (auto& [config, subdesc] : desc.assignments.map)
+		for (auto& [config, subdesc] : desc.map)
 		{
 			toml::table dump;
 			Dump(dump, subdesc);
 			subtable.insert_or_assign(std::to_string(config), std::move(dump));
 		}
-		table.insert_or_assign(detail::encode_key(desc.assignments_key), std::move(subtable));
+		desc.map.dump_into(table, std::move(subtable));
 	}
 
 	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)
 	{
-		DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+		IMTK_DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
 	}
 
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
@@ -508,16 +477,6 @@ namespace oly::editor
 	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
 	{
 		return _desc.scratch.assignments.map[config];
-	}
-
-	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfigGrid grid)
-	{
-		return GetAssignmentPath(GetResolvedTileConfig(grid));
-	}
-
-	DataPathSource TilesetDocument::GetAssignmentPath(const detail::TileConfig config)
-	{
-		return DataPath() / _desc.scratch.subpaths.assignments / _desc.scratch.assignments.subpaths.map / _desc.scratch.assignments.map.Subpath(config);
 	}
 
 	void TilesetDocument::UpdateActiveTextures()
@@ -536,7 +495,7 @@ namespace oly::editor
 				active.texture = {};
 			else
 			{
-				BreakoutError::NotifyScope notify(true);
+				imtk::breakout_error::notify_scope ns(true);
 				try
 				{
 					std::string filepath = detail::ResourcePath(desc.texture.value).string();
@@ -545,7 +504,7 @@ namespace oly::editor
 					bool generate_mipmaps = false;
 					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
 					if (result == TextureDocument::TextureSettingsLoadResult::Success)
-						active.texture = Texture::LoadGeneric(filepath, min_filter, mag_filter, scale, generate_mipmaps);
+						active.texture = imtk::texture::load_generic(filepath, min_filter, mag_filter, scale, generate_mipmaps);
 					else
 					{
 						switch (result)
@@ -572,8 +531,9 @@ namespace oly::editor
 						}
 					}
 				}
-				catch (const BreakoutError& e)
+				catch (const imtk::breakout_error& e)
 				{
+					e.log();
 					active.error = TextureError::CannotLoad;
 				}
 			}
@@ -589,14 +549,14 @@ namespace oly::editor
 	{
 		auto& active = GetActiveTexture(grid);
 		if (active.error != TextureError::None && !TextureErrorIsWarning(active.error))
-			gui::Overlay::QuadError(rect_start, rect_end);
+			imtk::overlays::quad_error(rect_start, rect_end, imtk::col::magenta);
 		else if (active.error != TextureError::None && TextureErrorIsWarning(active.error))
 		{
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
-			gui::Overlay::QuadWarning(rect_start, rect_end);
+			imtk::overlays::quad_warning(rect_start, rect_end, imtk::col::magenta);
 		}
-		else if (active.texture.Empty())
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, Color::Grey(empty_gray_value));
+		else if (active.texture.empty())
+			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(empty_gray_value));
 		else
 			DrawActiveTextureDirect(grid, rect_start, rect_end);
 	}
@@ -635,7 +595,7 @@ namespace oly::editor
 		}
 
 		ImVec2 rect_delta = rect_end - rect_start;
-		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.ID(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
+		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.id(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
 			rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
 	}
 

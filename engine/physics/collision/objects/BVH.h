@@ -10,9 +10,11 @@
 #include "core/base/Transforms.h"
 #include "core/base/TransformerExposure.h"
 #include "core/base/Assert.h"
-#include "core/types/DeferredFalse.h"
+
 #include "core/math/Solvers.h"
-#include "core/containers/DoubleBuffer.h"
+
+#include <imp/dependent_false.hpp>
+#include <imp/swapper.hpp>
 
 #include <algorithm>
 
@@ -23,7 +25,10 @@ namespace oly::col2d
 		template<typename Shape>
 		struct Wrap
 		{
-			Shape operator()(const Element* elements, size_t count) const { static_assert(deferred_false<Shape>, "oly::col2d::internal::wrap() not defined for the provided Shape"); }
+			Shape operator()(const Element* elements, size_t count) const
+            {
+                static_assert(imp::dependent_false_v<Shape>, "oly::col2d::internal::Wrap::operator()() not defined for the provided Shape");
+            }
 		};
 
 		template<>
@@ -251,13 +256,13 @@ namespace oly::col2d
 		const std::vector<Element>& get_elements() const { return elements; }
 		std::vector<Element>& set_elements() { dirty = true; return elements; }
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		const Shape& element_as(size_t i) const
 		{
 			return *get_elements()[i].variant().get<const Shape*>();
 		}
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		Shape& element_as(size_t i)
 		{
 			return *set_elements()[i].variant().get<Shape*>();
@@ -307,7 +312,7 @@ namespace oly::col2d
 		std::vector<const Element*> build_layer(size_t at_depth) const
 		{
 			std::vector<const Element*> layer;
-			DoubleBuffer<const Node*> nodes;
+			imp::swapper<std::vector<const Node*>> nodes;
 			nodes.back.push_back(&root());
 
 			for (size_t i = 0; i < at_depth; ++i)
@@ -556,13 +561,13 @@ namespace oly::col2d
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
 		
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		const Shape& element_as(size_t i) const
 		{
 			return *get_elements()[i].variant().get<const Shape*>();
 		}
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		Shape& element_as(size_t i)
 		{
 			return *set_elements()[i].variant().get<Shape*>();

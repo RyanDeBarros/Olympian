@@ -17,7 +17,7 @@ namespace oly::context
 {
 	namespace internal
 	{
-		std::unordered_map<VaultKey, BlackBox> map;
+		std::unordered_map<VaultKey, imp::box> map;
 
 		struct VaultOnTerminate
 		{
@@ -32,12 +32,12 @@ namespace oly::context
 			SingletonTickService<TickPhase::None, void, TerminatePhase::Vault, VaultOnTerminate>::instance();
 		}
 
-		void vault_set(VaultKey key, BlackBox&& value)
+		void vault_set(VaultKey key, imp::box&& value)
 		{
 			map[key] = std::move(value);
 		}
 
-		const BlackBox& vault_get(VaultKey key)
+		const imp::box& vault_get(VaultKey key)
 		{
 			auto it = map.find(key);
 			if (it != map.end())

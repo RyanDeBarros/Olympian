@@ -2,6 +2,7 @@
 
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
+#include "core/util/Polyklass.h"
 
 #include "definitions/Keys.h"
 
@@ -19,7 +20,7 @@ namespace oly
 		parser.optional(detail::Key::Scale)(scale);
 	}
 
-	void TransformModifier2D::overload(Polymorphic<TransformModifier2D>& modifier, TOMLNode node)
+	void TransformModifier2D::overload(imp::poly<TransformModifier2D>& modifier, TOMLNode node)
 	{
 		if (auto parser = assets::Parser(node).optional(detail::Key::Modifier).subparser())
 		{
@@ -295,7 +296,12 @@ namespace oly
 		unparent();
 	}
 
-	Transformer2D::Transformer2D(Transform2D local, Polymorphic<TransformModifier2D>&& modifier)
+    Transformer2D::Transformer2D(Transform2D local)
+        : local(local), handle(this), modifier(imp::poly_default)
+    {
+    }
+
+	Transformer2D::Transformer2D(Transform2D local, imp::poly<TransformModifier2D> modifier)
 		: local(local), handle(this), modifier(std::move(modifier))
 	{
 	}

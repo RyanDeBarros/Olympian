@@ -80,7 +80,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 	{
 		bkg.bkg_rect->set_batch(polygon_batch);
 
-		flag_tesselation_parent.set_modifier() = oly::Polymorphic<oly::PivotTransformModifier2D>();
+		flag_tesselation_parent.set_modifier() = imp::make_poly<oly::PivotTransformModifier2D>();
 		flag_tesselation_parent.set_local().position.y = -100;
 		flag_tesselation_modifier = &flag_tesselation_parent.ref_modifier<oly::PivotTransformModifier2D>();
 		*flag_tesselation_modifier = { { 0.0f, 0.0f }, { 400, 320 } };
@@ -95,7 +95,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 			flag_tesselation[i].transformer.attach_parent(&flag_tesselation_parent);
 		}
 
-		oly::default_camera().transformer.set_modifier() = oly::Polymorphic<oly::ShearTransformModifier2D>();
+		oly::default_camera().transformer.set_modifier() = imp::make_poly<oly::ShearTransformModifier2D>();
 
 		{
 			particle_system.age_sort = oly::rendering::ParticleSystem::AgeSort::YoungOnOld;
@@ -169,6 +169,11 @@ int main()
 {
 	oly::ProjectContext context;
 
+    const auto player_layer = oly::context::get_collision_layer("player");
+    const auto player_mask = oly::context::get_collision_mask("player");
+    const auto obstacle_layer = oly::context::get_collision_layer("obstacle");
+    const auto obstacle_mask = oly::context::get_collision_mask("obstacle");
+
 	oly::col2d::CollisionDispatcher::instance().add_tree(oly::math::Rect2D{ .x1 = -10'000, .x2 = 10'000, .y1 = -10'000, .y2 = 10'000 });
 
 	TesterRenderPipeline pipeline;
@@ -215,8 +220,8 @@ int main()
 
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });
 	player->add_collider(player_collider);
-	player->collider().layer() |= oly::context::get_collision_layer("player");
-	player->collider().mask() |= oly::context::get_collision_mask("obstacle");
+	player->collider().layer() |= player_layer;
+	player->collider().mask() |= obstacle_mask;
 	player->set_local().scale.y = 1.2f;
 	player->set_local().rotation = glm::pi<float>() / 4;
 
@@ -229,8 +234,8 @@ int main()
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
 	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
 	obstacle0->add_collider(capsule);
-	obstacle0->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	obstacle0->collider().mask() |= oly::context::get_collision_mask("player") | oly::context::get_collision_mask("obstacle");
+	obstacle0->collider().layer() |= obstacle_layer;
+	obstacle0->collider().mask() |= player_mask | obstacle_mask;
 	obstacle0->collider().set_local().position = -capsule.center;
 	obstacle0->set_transformer().set_modifier() = new oly::OffsetTransformModifier2D(capsule.center);
 	obstacle0->set_local().position = glm::vec2{ 800.0f, 400.0f };
@@ -242,40 +247,40 @@ int main()
 	capsule.center.y += 200.0f;
 	oly::physics::LinearBodyRef obstacle1 = oly::REF_INIT;
 	obstacle1->add_collider(capsule);
-	obstacle1->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	obstacle1->collider().mask() |= oly::context::get_collision_mask("player");
+	obstacle1->collider().layer() |= obstacle_layer;
+	obstacle1->collider().mask() |= player_mask;
 	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle2 = oly::REF_INIT;
 	obstacle2->add_collider(capsule);
-	obstacle2->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	obstacle2->collider().mask() |= oly::context::get_collision_mask("player");
+	obstacle2->collider().layer() |= obstacle_layer;
+	obstacle2->collider().mask() |= player_mask;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle3 = oly::REF_INIT;
 	obstacle3->add_collider(capsule);
-	obstacle3->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	obstacle3->collider().mask() |= oly::context::get_collision_mask("player");
+	obstacle3->collider().layer() |= obstacle_layer;
+	obstacle3->collider().mask() |= player_mask;
 
 	capsule.center.y += 200.0f;
 	oly::physics::StaticBodyRef obstacle4 = oly::REF_INIT;
 	obstacle4->add_collider(capsule);
-	obstacle4->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	obstacle4->collider().mask() |= oly::context::get_collision_mask("player");
+	obstacle4->collider().layer() |= obstacle_layer;
+	obstacle4->collider().mask() |= player_mask;
 
 	oly::physics::StaticBodyRef ground = oly::REF_INIT;
 	ground->add_collider(oly::col2d::TCompound({
 		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
 		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
-		}));
-	ground->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	ground->collider().mask() |= oly::context::get_collision_mask("player");
+	}));
+	ground->collider().layer() |= obstacle_layer;
+	ground->collider().mask() |= player_mask;
 
 	oly::physics::StaticBodyRef semi_solid = oly::REF_INIT;
 	semi_solid->add_collider(oly::col2d::AABB{ .x1 = -100.0f, .x2 = 300.0f, .y1 = 300.0f, .y2 = 400.0f });
-	semi_solid->collider().layer() |= oly::context::get_collision_layer("obstacle");
-	semi_solid->collider().mask() |= oly::context::get_collision_mask("player");
+	semi_solid->collider().layer() |= obstacle_layer;
+	semi_solid->collider().mask() |= player_mask;
 	semi_solid->collider().one_way_blocking = oly::UnitVector2D::Up;
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
@@ -285,12 +290,17 @@ int main()
 	oly::debug::DebugOverlay ray_cv(
 		pipeline.ray_layer,
 		oly::debug::create_shape_group(ray, oly::colors::WHITE * oly::colors::alpha(0.8f)),
-		{ .bounds_use_rotation = true }
+		{
+            .bounds_use_rotation = true
+        }
 	);
 	oly::debug::DebugOverlay circle_cast_cv(
 		pipeline.ray_layer,
 		oly::debug::create_shape_group(circle_cast, oly::colors::WHITE * oly::colors::alpha(0.8f), oly::colors::GREEN * oly::colors::alpha(0.8f)),
-		{ .bounds_use_rotation = true, .quality = 0.5f }
+		{
+            .bounds_use_rotation = true,
+            .quality = 0.5f
+        }
 	);
 
 	auto cv_obstacle0 = obstacle0->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
@@ -310,9 +320,9 @@ int main()
 		else if (state == 1)
 			flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
 		oly::context::sync_texture_handle(flag_texture);
-		}, false);
+	}, false);
 
-	auto modtex = oly::graphics::textures::mod2x2(
+	const auto modtex = oly::graphics::textures::mod2x2(
 		glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f },
 		glm::vec4{ 0.0f, 1.0f, 0.0f, 1.0f },
 		glm::vec4{ 0.0f, 0.0f, 1.0f, 1.0f },
@@ -321,13 +331,13 @@ int main()
 	pipeline.jumble.nonant_panel->set_mod_texture(modtex, { 2, 2 });
 
 	oly::GenericTickService logic(oly::TickPhase::Logic, [&]() {
-			player->modify_debug_overlay(0, player_cv);
-			obstacle0->modify_debug_overlay(0, cv_obstacle0);
-			obstacle1->modify_debug_overlay(0, cv_obstacle1);
-			obstacle2->modify_debug_overlay(0, cv_obstacle2);
-			obstacle3->modify_debug_overlay(0, cv_obstacle3);
-			obstacle4->modify_debug_overlay(0, cv_obstacle4);
-		});
+		player->modify_debug_overlay(0, player_cv);
+		obstacle0->modify_debug_overlay(0, cv_obstacle0);
+		obstacle1->modify_debug_overlay(0, cv_obstacle1);
+		obstacle2->modify_debug_overlay(0, cv_obstacle2);
+		obstacle3->modify_debug_overlay(0, cv_obstacle3);
+		obstacle4->modify_debug_overlay(0, cv_obstacle4);
+	});
 
 	oly::run();
 	oly::LOG.flush();

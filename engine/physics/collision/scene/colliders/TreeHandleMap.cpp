@@ -33,7 +33,7 @@ namespace oly::col2d::internal
 		{
 			for (auto it = handles.begin(); it != handles.end(); )
 			{
-				if (other.handles.count(it->key))
+				if (other.handles.contains(it->key))
 					++it;
 				else
 					it = handles.erase(it);
@@ -41,11 +41,12 @@ namespace oly::col2d::internal
 
 			for (auto it = other.handles.begin(); it != other.handles.end(); ++it)
 			{
-				if (!handles.count(it->key))
+				if (!handles.contains(it->key))
 				{
 					if (it->value)
 						it->value->set_colliders().insert(&collider);
-					handles.insert(it->key, it->value);
+
+					handles.assign(it->key, it->value);
 				}
 			}
 		}
@@ -81,10 +82,10 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::attach(const CollisionTree& tree)
 	{
-		if (!handles.count(&tree))
+		if (!handles.contains(&tree))
 		{
 			tree.root->set_colliders().insert(&collider);
-			handles.insert(&tree, tree.root.get());
+			handles.assign(&tree, tree.root.get());
 		}
 	}
 

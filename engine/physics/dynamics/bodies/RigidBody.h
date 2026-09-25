@@ -3,7 +3,8 @@
 #include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
 #include "physics/dynamics/components/DynamicsComponent.h"
-#include "core/types/AutoRegistry.h"
+
+#include <imp/auto_tracker.hpp>
 
 namespace oly::physics
 {
@@ -12,7 +13,7 @@ namespace oly::physics
 		struct RigidBodyOnTick;
 	}
 
-	class RigidBody : public col2d::CollisionController, public AutoRegistrable<RigidBody>
+	class RigidBody : public col2d::CollisionController, public imp::auto_trackable<RigidBody>
 	{
 	protected:
 		std::vector<col2d::Collider> colliders;
@@ -32,9 +33,11 @@ namespace oly::physics
 		Transform2D& set_local() { return transformer.set_local(); }
 
 		col2d::Collider& add_collider(col2d::Collider&& collider);
-		template<col2d::internal::ColliderObjectShape CObj>
+		
+        template<col2d::internal::CObj_check CObj>
 		col2d::Collider& add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
-		template<col2d::internal::ElementShape Shape>
+		
+        template<col2d::internal::Elem_check Shape>
 		col2d::Collider& add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
 
 		col2d::Collider& add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }

@@ -1,21 +1,43 @@
 #include "TextureDocument.h"
 
-#include "core/editor/Notifier.h"
 #include "core/editor/ResourceLoader.h"
-#include "core/Colors.h"
 
-#include "gui/scopes/DisabledSection.h"
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-#include "gui/graphics/Toolbar.h"
-#include "gui/ImGuiWrapper.h"
-
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
 #include <imgui_internal.h>
 
 namespace oly::editor
 {
+	SpritesheetPreviewData::SpritesheetPreviewData()
+	{
+		preview.config.icon = Icon(IconResource::Preview);
+		preview.config.str_id = "##Preview";
+		preview.config.selected = true;
+		preview.config.tooltip = "Preview spritesheet";
+
+		playing.config.icon = Icon(IconResource::Pause);
+		playing.config.str_id = "##Playing";
+		playing.config.selected_icon = Icon(IconResource::Play);
+		playing.config.selected = false;
+		playing.config.tooltip = "Play/pause animation";
+	}
+
+    static imtk::w::list_indexer::config SlotListConfig()
+    {
+        return {
+            .prompt         = "Select slot",
+            .create_tooltip = "New texture slot",
+            .delete_tooltip = "Delete texture slot",
+            .clear_tooltip  = "Clear texture slots"
+        };
+    }
+
+	TextureDocument::TextureDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path)), _slots(SlotListConfig(), "Slot")
+	{
+	}
+
 	const char* TextureDocument::GetVersion()
 	{
 		return "1.0";
@@ -24,11 +46,11 @@ namespace oly::editor
 	void TextureDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		_gif = GetSourcePath().extension_matches(".gif");
 		_svg = GetSourcePath().extension_matches(".svg");
-		_slots.policy = gui::ListPolicy::MinimumOne;
+		_slots.model.policy = imtk::list_policy::minimum_one;
 
 		LoadAsset();
 	}
@@ -40,14 +62,13 @@ namespace oly::editor
 		UpdatePreviewTexture();
 
 		imtk::id_scope scope(this);
-		if (ImGui::BeginTable("", 2))
+		if (auto _ = imtk::table("", 2))
 		{
 			ImGui::TableNextColumn();
-			Draw(DataPath(), _desc.scratch);
+			Draw(_desc.scratch);
 
 			ImGui::TableNextColumn();
 			DrawPreview();
-			ImGui::EndTable();
 		}
 	}
 
@@ -60,15 +81,15 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk, _svg, _gif);
+				Load(imtk::toml_node(table), _desc.disk, _svg, _gif);
 			else
-				Notifier::NotifyError("cannot load texture - corrupted asset: " + GetSourcePath().string());
+				imtk::notify_error("cannot load texture - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk, _svg, _gif);
+			Load(imtk::toml_node(), _desc.disk, _svg, _gif);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -78,13 +99,13 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 
-		_slots.Init(*ListAdapter());
+		_slots.model.init(ListAdapter());
 
 		_preview_nav = {};
-		if (auto svg_desc = _desc.scratch.variant.TryGet<VectorDesc<VectorTextureDesc>>())
-			_preview_nav.svg_scale = svg_desc->vector[_slots.active_index].scale.value;
+		if (auto svg_desc = _desc.scratch.variant.try_get<imtk::desc::vector<VectorTextureDesc>>())
+			_preview_nav.svg_scale = (*svg_desc)[_slots.model.index()].scale.value;
 
 		_stale_preview_texture = true;
 	}
@@ -94,21 +115,21 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
 	void TextureDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch, _svg, _gif);
+		Load(imtk::toml_node(), _desc.scratch, _svg, _gif);
 	}
 
-	const IDoubleDescriptor& TextureDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& TextureDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& TextureDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& TextureDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}
@@ -125,9 +146,9 @@ namespace oly::editor
 
 		_stale_preview_texture = false;
 
-		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.min_filter.Value(); });
-		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> GLenum { return desc.base.mag_filter.Value(); });
-		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.active_index, [](const auto& desc) -> bool {
+		std::optional<GLenum> min_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.min_filter.value(); });
+		std::optional<GLenum> mag_filter = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> GLenum { return desc.base.mag_filter.value(); });
+		std::optional<bool> generate_mipmaps = _desc.scratch.Visit(_slots.model.index(), [](const auto& desc) -> bool {
 			if constexpr (std::is_same_v<decltype(desc.generate_mipmaps.value), bool>)
 				return desc.generate_mipmaps.value;
 			else
@@ -135,46 +156,52 @@ namespace oly::editor
 		});
 
 		if (_svg)
-			_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale, min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else if (_gif)
-			_texture = { GIFTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::gif_texture::load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 		else
-			_texture = { RasterTexture::Load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
+			_texture = { imtk::raster_texture::load(GetSourcePath().string().c_str(), min_filter, mag_filter, generate_mipmaps ? *generate_mipmaps : false) };
 	}
 
 	void TextureDocument::DrawPreview()
 	{
-		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
-			if (Toolbar::DrawIconButton(IconResource::Recenter, "Reset panning/zoom", "##Recenter"))
+
+            static imtk::w::icon_button_config icon_config = {
+                .icon    = Icon(IconResource::Recenter),
+                .str_id  = "##Recenter",
+                .tooltip = "Reset panning/zoom"
+            };
+			if (imtk::w::icon_button(icon_config).draw())
 			{
 				_preview_nav = {};
-				if (SVGTexture* svg = _texture.GetSVG())
-					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+				if (imtk::svg_texture* svg = _texture.get_svg())
+					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 			}
 			
-			if (GIFTexture* gif = _texture.GetGIF())
+			if (imtk::gif_texture* gif = _texture.get_gif())
 			{
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
 				ImGui::InputFloat("Speed", &gif->speed);
-				gif->Update(ImGui::GetIO().DeltaTime);
+				gif->update();
 			}
 
-			if (SVGTexture* svg = _texture.GetSVG())
+			if (imtk::svg_texture* svg = _texture.get_svg())
 			{
-				gui::VerticalSeparator();
+				imtk::controls::vertical_separator();
 				ImGui::SetNextItemWidth(100.0f);
 				float scale = svg->preview_scale * _preview_nav.svg_scale;
 				ImGui::InputFloat("Scale", &scale);
 				svg->preview_scale = scale / _preview_nav.svg_scale;
-				gui::VerticalSeparator();
-				if (Toolbar::DrawIconButton(IconResource::Refresh, "Refresh SVG scale", "##RefreshSVGScale"))
+				imtk::controls::vertical_separator();
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Refresh), .str_id = "##RefreshSVGScale", .tooltip = "Refresh SVG scale" }).draw())
 				{
 					_preview_nav.svg_scale = scale;
-					_texture = { SVGTexture::Load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
+					_texture = { imtk::svg_texture::load(GetSourcePath().string().c_str(), _preview_nav.svg_scale) };
 				}
 			}
 
@@ -182,12 +209,12 @@ namespace oly::editor
 
 			if (spritesheet_desc)
 			{
-				gui::VerticalSeparator();
-				Toolbar::DrawIconToggleButton(IconResource::Preview, _preview_spritesheet, "Preview spritesheet");
+				imtk::controls::vertical_separator();
+				_spritesheet_preview_data.preview.draw();
 				ImGui::SameLine();
-				Toolbar::DrawIconToggleButton(IconResource::Pause, IconResource::Play, _spritesheet_preview_data.playing, "Play/pause animation");
+				_spritesheet_preview_data.playing.draw();
 				ImGui::SameLine();
-				if (Toolbar::DrawIconButton(IconResource::Stop, "Stop animation", "StopAnimation"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::Stop), .str_id = "##StopAnimation", .tooltip = "Stop animation" }).draw())
 					_spritesheet_preview_data = {};
 			}
 			else
@@ -216,22 +243,21 @@ namespace oly::editor
 				_preview_nav.pos += ImGui::GetIO().MouseDelta;
 			ImGui::SetCursorScreenPos(pos);
 
-			if (_spritesheet_preview_data.playing && spritesheet_desc)
+			if (_spritesheet_preview_data.playing.selected() && spritesheet_desc)
 				PlaySpritesheetAnimation(*spritesheet_desc);
 			else
 			{
 				ImVec2 avail = ImGui::GetContentRegionAvail();
 				ImVec2 cursor = ImGui::GetCursorScreenPos();
-				ImVec2 size = _texture.Size() * std::pow(2.f, _preview_nav.zoom);
+				ImVec2 size = ImVec2(_texture.width(), _texture.height()) * std::pow(2.f, _preview_nav.zoom);
 
 				ImVec2 offset = 0.5f * (avail - size) + _preview_nav.pos;
 				ImVec2 pos = cursor + offset;
 
-				ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size);
-				if (_preview_spritesheet && spritesheet_desc)
+				ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size);
+				if (_spritesheet_preview_data.preview.selected() && spritesheet_desc)
 					DrawSpritesheetOverlay(*spritesheet_desc, pos, size);
 			}
-			ImGui::EndChild();
 		}
 	}
 
@@ -239,7 +265,7 @@ namespace oly::editor
 	{
 		if (_gif)
 			return nullptr;
-		else if (auto d = _desc.scratch.Visit(_slots.active_index, [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.value ? &desc.base.spritesheet : nullptr; }))
+		else if (auto d = _desc.scratch.Visit(_slots.model.index(), [](auto& desc) -> SpritesheetDesc* { return desc.base.anim.value ? &desc.base.spritesheet : nullptr; }))
 			return *d;
 		else
 			return nullptr;
@@ -247,8 +273,8 @@ namespace oly::editor
 
 	SpritesheetInfo TextureDocument::CalcSpritesheetInfo(const SpritesheetDesc& desc)
 	{
-		int xoff = _texture.Width() > 1 ? std::min(desc.col_offset_pixel.value, static_cast<int>(_texture.Width())) : 0;
-		int working_width = static_cast<int>(_texture.Width()) - xoff;
+		int xoff = _texture.width() > 1 ? std::min(desc.col_offset_pixel.value, static_cast<int>(_texture.width())) : 0;
+		int working_width = static_cast<int>(_texture.width()) - xoff;
 
 		int cols = desc.col_type.value == detail::SpritesheetParamType::Index ? desc.col_value.value : 1;
 		float cell_width = desc.col_type.value == detail::SpritesheetParamType::Pixel ? desc.col_value.value : 1;
@@ -263,8 +289,8 @@ namespace oly::editor
 
 		const float full_width = cols * cell_width;
 
-		int yoff = _texture.Height() > 1 ? std::min(desc.row_offset_pixel.value, static_cast<int>(_texture.Height())) : 0;
-		int working_height = static_cast<int>(_texture.Height()) - yoff;
+		int yoff = _texture.height() > 1 ? std::min(desc.row_offset_pixel.value, static_cast<int>(_texture.height())) : 0;
+		int working_height = static_cast<int>(_texture.height()) - yoff;
 
 		int rows = desc.row_type.value == detail::SpritesheetParamType::Index ? desc.row_value.value : 1;
 		float cell_height = desc.row_type.value == detail::SpritesheetParamType::Pixel ? desc.row_value.value : 1;
@@ -294,7 +320,7 @@ namespace oly::editor
 		auto info = CalcSpritesheetInfo(desc);
 		auto dl = ImGui::GetWindowDrawList();
 
-		ImVec2 scale = size / _texture.Size();
+		ImVec2 scale = ImVec2(size.x / _texture.width(), size.y / _texture.height());
 		rect_start += info.rect_offset * scale;
 
 		std::vector<int> xpos(info.cols + 1);
@@ -303,7 +329,7 @@ namespace oly::editor
 			xpos[i] = i * info.full_width / info.cols;
 
 		for (int x : xpos)
-			dl->AddLine(rect_start + ImVec2(x, 0) * scale, rect_start + ImVec2(x, info.full_height) * scale, Color::White);
+			dl->AddLine(rect_start + ImVec2(x, 0) * scale, rect_start + ImVec2(x, info.full_height) * scale, imtk::col::white);
 
 		std::vector<int> ypos(info.rows + 1);
 
@@ -311,7 +337,7 @@ namespace oly::editor
 			ypos[i] = i * info.full_height / info.rows;
 
 		for (int y : ypos)
-			dl->AddLine(rect_start + ImVec2(0, y) * scale, rect_start + ImVec2(info.full_width, y) * scale, Color::White);
+			dl->AddLine(rect_start + ImVec2(0, y) * scale, rect_start + ImVec2(info.full_width, y) * scale, imtk::col::white);
 
 		const auto DrawDigit = [dl, rect_start, &xpos, &ypos, scale](int x, int y, int digit) {
 			const std::string d = std::to_string(digit);
@@ -334,11 +360,11 @@ namespace oly::editor
 					for (int dy = -1; dy <= 1; ++dy)
 					{
 						if (dx != 0 || dy != 0)
-							dl->AddText(font, font_size, box_start + ImVec2(dx, dy) * 1.5f, Color::Black, d.c_str());
+							dl->AddText(font, font_size, box_start + ImVec2(dx, dy) * 1.5f, imtk::col::black, d.c_str());
 					}
 				}
 
-				dl->AddText(font, font_size, box_start, Color::White, d.c_str());
+				dl->AddText(font, font_size, box_start, imtk::col::white, d.c_str());
 			}
 		};
 
@@ -408,147 +434,144 @@ namespace oly::editor
 		const int col1 = desc.row_major.value ? active_index % info.cols : info.cols - (active_index % info.cols);
 		const int col2 = desc.row_major.value ? col1 + 1 : col1 - 1;
 
-		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.Width(), std::min(row1, row2) * info.cell_height / _texture.Height());
-		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.Width(), std::max(row1, row2) * info.cell_height / _texture.Height());
+		ImVec2 uv_min = ImVec2(std::min(col1, col2) * info.cell_width / _texture.width(), std::min(row1, row2) * info.cell_height / _texture.height());
+		ImVec2 uv_max = ImVec2(std::max(col1, col2) * info.cell_width / _texture.width(), std::max(row1, row2) * info.cell_height / _texture.height());
 
-		ImVec2 uv_offset = info.rect_offset / _texture.Size();
+		ImVec2 uv_offset = ImVec2(info.rect_offset.x / _texture.width(), info.rect_offset.y / _texture.height());
 		uv_min += uv_offset;
 		uv_max += uv_offset;
 
-		ImGui::GetWindowDrawList()->AddImage(_texture.ID(), pos, pos + size, uv_min, uv_max);
+		ImGui::GetWindowDrawList()->AddImage(_texture.id(), pos, pos + size, uv_min, uv_max);
 	}
 
-	void TextureDocument::Draw(DataPath path, TextureVariantDesc& desc)
+	void TextureDocument::Draw(TextureFullDesc& desc)
 	{
-		_slots.Update(*ListAdapter());
+		_slots.model.sync(ListAdapter());
 		
 		if (auto scope = imtk::id_scope("##Slot"))
-			_slots.DrawComboHeader({ .prompt = "Select slot", .create_tooltip = "New texture slot", .delete_tooltip = "Delete texture slot", .clear_tooltip = "Clear texture slots" }, "Slot");
+			_slots.draw();
 
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
-			desc.variant.Visit([this, path = path / desc.subpaths.variant](auto& desc_list) {
-				size_t index = _slots.active_index;
-				Draw(path / desc_list.Subpath(index), desc_list[index]);
-			});
+			desc.variant.visit([this](auto& desc_list) { Draw(desc_list[_slots.model.index()]); });
 
-			if (_slots.ConsumeOps(*ListAdapter()))
+			if (_slots.model.consume_ops(*ListOpAdapter()))
 				MarkDirty();
 
-			if (_slots.active_index.ConsumeModified())
+			if (_slots.model.consume_index_modified())
 				_stale_preview_texture = true;
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, RasterTextureDesc& desc)
+	void TextureDocument::Draw(RasterTextureDesc& desc)
 	{
-		Draw(path / desc.subpaths.base, desc.base);
-		if (auto subform = Subform("Storage", true))
+		Draw(desc.base);
+		if (auto subform = imtk::prop::subform("Storage", { .start_open = true }))
 		{
-			DRAW_FIELD(generate_mipmaps);
-			if (gui::PropertyGrid::DirtyRow())
+			desc.generate_mipmaps.draw();
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(storage);
+			desc.storage.draw();
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, VectorTextureDesc& desc)
+	void TextureDocument::Draw(VectorTextureDesc& desc)
 	{
-		Draw(path / desc.subpaths.base, desc.base);
-		if (auto subform = Subform("Storage", true))
+		Draw(desc.base);
+		if (auto subform = imtk::prop::subform("Storage", { .start_open = true }))
 		{
-			DRAW_FIELD(generate_mipmaps);
-			if (gui::PropertyGrid::DirtyRow())
+			desc.generate_mipmaps.draw();
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
-			DRAW_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR_NO_MIPMAPS);
+			desc.image_storage.draw();
+			desc.abstract_storage.draw();
+			desc.scale.draw();
 		}
 	}
 	
-	void TextureDocument::Draw(DataPath path, BaseTextureDesc& desc)
+	void TextureDocument::Draw(BaseTextureDesc& desc)
 	{
-		if (auto subform = Subform("Parameters", true))
+		if (auto subform = imtk::prop::subform("Parameters", { .start_open = true }))
 		{
-			DRAW_FIELD(min_filter);
-			if (gui::PropertyGrid::DirtyRow())
+			desc.min_filter.draw();
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(mag_filter);
-			if (gui::PropertyGrid::DirtyRow())
+			desc.mag_filter.draw();
+			if (imtk::prop::row::dirty())
 				_stale_preview_texture = true;
 
-			DRAW_FIELD(wrap_s);
-			DRAW_FIELD(wrap_t);
+			desc.wrap_s.draw();
+			desc.wrap_t.draw();
 		}
 
-		if (auto subform = Subform("Animation", true))
+		if (auto subform = imtk::prop::subform("Animation", { .start_open = true }))
 		{
-			if (auto disabled = DisabledSection(_gif))
+			if (auto d = imtk::disabled(_gif))
 			{
-				DRAW_FIELD(anim);
-				if (gui::PropertyGrid::GetFullDrawResult().IsHovered())
+				desc.anim.draw();
+				if (imtk::prop::row::get_draw_result().state.hovered())
 					ImGui::SetTooltip("Animation is always enabled for GIF textures");
 			}
 
 			if (desc.anim.value && !_gif)
-				Draw(path / desc.subpaths.spritesheet, desc.spritesheet);
+				Draw(desc.spritesheet);
 		}
 	}
 
-	void TextureDocument::Draw(DataPath path, SpritesheetDesc& desc)
+	void TextureDocument::Draw(SpritesheetDesc& desc)
 	{
-		DRAW_FIELD(col_type);
-		const char* col_label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
-		DescIO::Draw(col_label, desc.col_value.edit, desc.col_value.def, desc.col_value.Min, desc.col_value.Max);
-		desc.col_value.CheckUndoAction(path / desc.subpaths.col_value);
+		desc.col_type.draw();
+		desc.col_value.label = desc.col_type.value == detail::SpritesheetParamType::Index ? "# Columns" : "Cell Width";
+		desc.col_value.draw();
 
-		DRAW_FIELD(row_type);
-		const char* row_label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
-		DescIO::Draw(row_label, desc.row_value.edit, desc.row_value.def, desc.row_value.Min, desc.row_value.Max);
-		desc.row_value.CheckUndoAction(path / desc.subpaths.row_value);
+		desc.row_type.draw();
+		desc.row_value.label = desc.row_type.value == detail::SpritesheetParamType::Index ? "# Rows" : "Cell Height";
+		desc.row_value.draw();
 
-		DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
+		IMTK_DRAW_FIELDS(SPRITESHEET_PARTIAL_GENERATOR);
 	}
 
-	void TextureDocument::Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif)
 	{
 		if (svg)
-			desc.variant.variant = VectorDesc<VectorTextureDesc>();
+			desc.variant.set<imtk::desc::vector<VectorTextureDesc>>();
 		else
-			desc.variant.variant = VectorDesc<RasterTextureDesc>();
+			desc.variant.set<imtk::desc::vector<RasterTextureDesc>>();
 
-		TOMLArray array = node[detail::encode_key(desc.array_key)].as_array();
+		const toml::array* array = desc.variant.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 				desc.PushBack();
 
-			desc.VisitIndexed([&array, gif](size_t i, auto& d) { Load(TOMLNode(*array->get(i)), d, gif); });
+			desc.VisitIndexed([&array, gif](size_t i, auto& d) { Load(imtk::toml_node(*array->get(i)), d, gif); });
 		}
 		else
 		{
 			desc.PushBack();
 
-			desc.Visit(0, [gif](auto& d) { Load(TOMLNode(), d, gif); });
+			desc.Visit(0, [gif](auto& d) { Load(imtk::toml_node(), d, gif); });
 		}
 	}
 	
-	void TextureDocument::Load(TOMLNode node, RasterTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
-		LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, VectorTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif)
 	{
 		Load(node, desc.base, gif);
-		LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_LOAD_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 	
-	void TextureDocument::Load(TOMLNode node, BaseTextureDesc& desc, bool gif)
+	void TextureDocument::Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif)
 	{
-		LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		IMTK_LOAD_FIELDS(TEXTURE_PARAMS_GENERATOR);
 
 		if (gif)
 		{
@@ -557,53 +580,49 @@ namespace oly::editor
 		}
 		else
 		{
-			desc.anim.Load(node);
+			desc.anim.load(node);
 			Load(node, desc.spritesheet);
 		}
 	}
 
-	void TextureDocument::Load(TOMLNode node, SpritesheetDesc& desc)
+	void TextureDocument::Load(imtk::toml_node node, SpritesheetDesc& desc)
 	{
-		LOAD_FIELDS(SPRITESHEET_GENERATOR);
+		IMTK_LOAD_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
-	void TextureDocument::Dump(toml::table& table, TextureVariantDesc& desc)
+	void TextureDocument::Dump(toml::table& table, TextureFullDesc& desc)
 	{
 		toml::array array;
-		desc.variant.Visit([this, &array](auto& d) {
+		desc.variant.visit([this, &array](auto& d) {
 			for (auto& desc : d)
-			{
-				toml::table table;
-				Dump(table, desc);
-				array.push_back(std::move(table));
-			}
+				Dump(array.emplace_back<toml::table>(), desc);
 		});
-		table.insert_or_assign(detail::encode_key(desc.array_key), std::move(array));
+		desc.variant.dump_into(table, std::move(array));
 	}
 
 	void TextureDocument::Dump(toml::table& table, RasterTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		DUMP_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(RASTER_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, VectorTextureDesc& desc)
 	{
 		Dump(table, desc.base);
-		DUMP_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
+		IMTK_DUMP_FIELDS(VECTOR_TEXTURE_PARTIAL_GENERATOR);
 	}
 
 	void TextureDocument::Dump(toml::table& table, BaseTextureDesc& desc)
 	{
-		DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
-		desc.anim.Dump(table);
+		IMTK_DUMP_FIELDS(TEXTURE_PARAMS_GENERATOR);
+		desc.anim.dump(table);
 		if (desc.anim.value && !_gif)
 			Dump(table, desc.spritesheet);
 	}
 
 	void TextureDocument::Dump(toml::table& table, SpritesheetDesc& desc)
 	{
-		DUMP_FIELDS(SPRITESHEET_GENERATOR);
+		IMTK_DUMP_FIELDS(SPRITESHEET_GENERATOR);
 	}
 
 	void TextureDocument::OnActiveSlotChanged()
@@ -611,22 +630,27 @@ namespace oly::editor
 		_stale_preview_texture = true;
 	}
 
-	struct BriefDescPrinter
+	struct TextureDescPrinter
 	{
 		void operator()(std::ostream& os, const RasterTextureDesc& desc) const
 		{
-			os << "RasterTextureDesc[...]";
+			RasterTextureDesc::Printer{}(os, desc);
 		}
 
 		void operator()(std::ostream& os, const VectorTextureDesc& desc) const
 		{
-			os << "VectorTextureDesc[...]";
+			VectorTextureDesc::Printer{}(os, desc);
 		}
 	};
 
-	std::unique_ptr<gui::IListAdapter> TextureDocument::ListAdapter()
+	imtk::list_adapter TextureDocument::ListAdapter()
 	{
-		return _desc.scratch.variant.Visit([this](auto& desc) { return desc.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.variant); });
+		return _desc.scratch.variant.visit([this](auto& desc) -> imtk::list_adapter { return imtk::make_vector_adapter<TextureDescPrinter>(desc); });
+	}
+
+	std::unique_ptr<imtk::ilist_op_adapter> TextureDocument::ListOpAdapter()
+	{
+		return _desc.scratch.variant.visit([this](auto& desc) -> std::unique_ptr<imtk::ilist_op_adapter> { return imtk::make_unique_vector_op_adapter<TextureDescPrinter>(desc); });
 	}
 
 	TextureDocument::TextureSettingsLoadResult TextureDocument::LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps)
@@ -648,19 +672,21 @@ namespace oly::editor
 		std::string err = oly_path.load_toml(table);
 		if (err.empty())
 		{
-			TOMLNode node = TOMLNode(table);
-			TOMLArray array = node[detail::encode_key(TextureVariantDesc::array_key)].as_array();
+			imtk::toml_node node = imtk::toml_node(table);
+
+			TextureFullDesc desc;
+
+			const toml::array* array = desc.variant.subnode(node).as_array();
 			if (!array || slot >= array->size() || !array->get(slot))
 				return TextureSettingsLoadResult::BadSlot;
-			
-			TextureVariantDesc desc;
+
 			bool gif = path.extension_matches(".gif");
 			bool svg = path.extension_matches(".svg");
 			Load(node, desc, svg, gif);
 			
 			desc.Visit(slot, [&](const auto& d) {
-				min_filter = d.base.min_filter.Value();
-				mag_filter = d.base.mag_filter.Value();
+				min_filter = d.base.min_filter.value();
+				mag_filter = d.base.mag_filter.value();
 
 				if constexpr (std::is_same_v<std::decay_t<decltype(d)>, VectorTextureDesc>)
 				{
@@ -670,7 +696,7 @@ namespace oly::editor
 				else
 					generate_mipmaps = d.generate_mipmaps.value;
 			});
-
+			
 			if (!path.is_resource())
 				return TextureSettingsLoadResult::NotAResource;
 

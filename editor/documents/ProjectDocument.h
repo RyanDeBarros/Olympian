@@ -2,8 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/ProjectDesc.h"
-#include "desc/DoubleDescriptor.h"
+#include "desc/ProjectDesc.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -11,7 +10,7 @@ namespace oly::editor
 {
 	class ProjectDocument : public IDocument
 	{
-		DoubleDescriptor<ProjectDesc> _desc;
+		imtk::desc::doubler<ProjectDesc> _desc;
 		detail::MetaMap _meta;
 
 	public:
@@ -26,33 +25,33 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		std::string TabName() const override;
 
 	private:
-		void Draw(DataPath path, ProjectDesc& desc);
-		void Draw(DataPath path, ContextDesc& desc);
-		void Draw(DataPath path, PlatformDesc& desc);
-		void Draw(DataPath path, WindowDesc& desc);
-		void Draw(DataPath path, ViewportDesc& desc);
-		void Draw(DataPath path, WindowHintsDesc& desc);
-		void Draw(DataPath path, CollisionDesc& desc);
-		void Draw(DataPath path, LoggerDesc& desc);
-		void Draw(DataPath path, LoggerEnableDesc& desc);
-		void Draw(DataPath path, FrameRateDesc& desc);
+		void Draw(ProjectDesc& desc);
+		void Draw(ContextDesc& desc);
+		void Draw(PlatformDesc& desc);
+		void Draw(WindowDesc& desc);
+		void Draw(ViewportDesc& desc);
+		void Draw(WindowHintsDesc& desc);
+		void Draw(CollisionDesc& desc);
+		void Draw(LoggerDesc& desc);
+		void Draw(LoggerEnableDesc& desc);
+		void Draw(FrameRateDesc& desc);
 
-		void Load(TOMLNode node, ProjectDesc& desc);
-		void Load(TOMLNode node, ContextDesc& desc);
-		void Load(TOMLNode node, PlatformDesc& desc);
-		void Load(TOMLNode node, WindowDesc& desc);
-		void Load(TOMLNode node, ViewportDesc& desc);
-		void Load(TOMLNode node, WindowHintsDesc& desc);
-		void Load(TOMLNode node, CollisionDesc& desc);
-		void Load(TOMLNode node, LoggerDesc& desc);
-		void Load(TOMLNode node, LoggerEnableDesc& desc);
-		void Load(TOMLNode node, FrameRateDesc& desc);
+		void Load(imtk::toml_node node, ProjectDesc& desc);
+		void Load(imtk::toml_node node, ContextDesc& desc);
+		void Load(imtk::toml_node node, PlatformDesc& desc);
+		void Load(imtk::toml_node node, WindowDesc& desc);
+		void Load(imtk::toml_node node, ViewportDesc& desc);
+		void Load(imtk::toml_node node, WindowHintsDesc& desc);
+		void Load(imtk::toml_node node, CollisionDesc& desc);
+		void Load(imtk::toml_node node, LoggerDesc& desc);
+		void Load(imtk::toml_node node, LoggerEnableDesc& desc);
+		void Load(imtk::toml_node node, FrameRateDesc& desc);
 
 		void Dump(toml::table& table, ProjectDesc& desc);
 		void Dump(toml::table& table, ContextDesc& desc);

@@ -2,10 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/TextureDesc.h"
-#include "desc/DoubleDescriptor.h"
-
-#include "gui/graphics/Texture.h"
+#include "desc/TextureDesc.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -20,9 +17,13 @@ namespace oly::editor
 
 	struct SpritesheetPreviewData
 	{
+		imtk::w::icon_button preview;
+		imtk::w::icon_button playing;
+
 		int active_index = 0;
 		float timer = 0.f;
-		bool playing = false;
+
+		SpritesheetPreviewData();
 	};
 
 	struct SpritesheetInfo
@@ -35,19 +36,19 @@ namespace oly::editor
 
 	class TextureDocument : public IDocument
 	{
-		DoubleDescriptor<TextureVariantDesc> _desc;
+		imtk::desc::doubler<TextureFullDesc> _desc;
 		detail::MetaMap _meta;
 		bool _gif = false;
 		bool _svg = false;
-		gui::ListModel _slots;
-		Texture _texture;
+		imtk::w::owned_list_indexer _slots;
+		imtk::texture _texture;
 		PreviewNav _preview_nav;
-		bool _preview_spritesheet = true;
+		
 		bool _stale_preview_texture = true;
 		SpritesheetPreviewData _spritesheet_preview_data;
 
 	public:
-		using IDocument::IDocument;
+		TextureDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 
@@ -56,8 +57,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 
@@ -69,19 +70,19 @@ namespace oly::editor
 		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
 		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 		
-		void Draw(DataPath path, TextureVariantDesc& desc);
-		void Draw(DataPath path, RasterTextureDesc& desc);
-		void Draw(DataPath path, VectorTextureDesc& desc);
-		void Draw(DataPath path, BaseTextureDesc& desc);
-		void Draw(DataPath path, SpritesheetDesc& desc);
+		void Draw(TextureFullDesc& desc);
+		void Draw(RasterTextureDesc& desc);
+		void Draw(VectorTextureDesc& desc);
+		void Draw(BaseTextureDesc& desc);
+		void Draw(SpritesheetDesc& desc);
 
-		static void Load(TOMLNode node, TextureVariantDesc& desc, bool svg, bool gif);
-		static void Load(TOMLNode node, RasterTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, VectorTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, BaseTextureDesc& desc, bool gif);
-		static void Load(TOMLNode node, SpritesheetDesc& desc);
+		static void Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif);
+		static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif);
+		static void Load(imtk::toml_node node, SpritesheetDesc& desc);
 
-		void Dump(toml::table& table, TextureVariantDesc& desc);
+		void Dump(toml::table& table, TextureFullDesc& desc);
 		void Dump(toml::table& table, RasterTextureDesc& desc);
 		void Dump(toml::table& table, VectorTextureDesc& desc);
 		void Dump(toml::table& table, BaseTextureDesc& desc);
@@ -89,7 +90,8 @@ namespace oly::editor
 
 		void OnActiveSlotChanged();
 
-		std::unique_ptr<gui::IListAdapter> ListAdapter();
+		imtk::list_adapter ListAdapter();
+		std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
 
 	public:
 		enum class TextureSettingsLoadResult

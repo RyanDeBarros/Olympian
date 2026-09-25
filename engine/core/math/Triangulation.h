@@ -1,7 +1,8 @@
 #pragma once
 
+#include "core/base/Approximate.h"
+
 #include "core/math/Geometry.h"
-#include "core/types/Approximate.h"
 
 namespace oly::math
 {

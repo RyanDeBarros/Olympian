@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/base/Approximate.h"
 #include "core/base/SimpleMath.h"
-#include "core/types/Approximate.h"
 
 namespace oly
 {
@@ -29,7 +29,7 @@ namespace oly
 	};
 
 	template<typename T, T Min, T Max>
-	struct Tolerance_V<BoundedValue<T, Min, Max>>
+	struct ToleranceImpl<BoundedValue<T, Min, Max>>
 	{
 		static constexpr double TOL = 1e-7;
 	};
@@ -78,7 +78,7 @@ namespace oly
 	};
 
 	template<>
-	struct Tolerance_V<PowerInterval>
+	struct ToleranceImpl<PowerInterval>
 	{
 		static constexpr double TOL = 1e-7;
 	};

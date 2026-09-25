@@ -131,19 +131,19 @@ namespace oly
 			transformer.get_handle().clear_children();
 		}
 
-		template<PolymorphicBaseOf<TransformModifier2D> T>
+		template<std::derived_from<TransformModifier2D> T>
 		const T& get_modifier() const
 		{
 			return transformer.get_modifier<T>();
 		}
 
-		Polymorphic<TransformModifier2D>& set_modifier()
+		imp::poly<TransformModifier2D>& set_modifier()
 			requires (exposure::NONZERO(Params.modifier & exposure::modifier::SetModifier))
 		{
 			return transformer.set_modifier();
 		}
 
-		template<PolymorphicBaseOf<TransformModifier2D> T>
+		template<std::derived_from<TransformModifier2D> T>
 		T& ref_modifier()
 			requires (exposure::NONZERO(Params.modifier & exposure::modifier::RefModifier))
 		{

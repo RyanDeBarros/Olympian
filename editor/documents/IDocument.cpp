@@ -1,28 +1,35 @@
 #include "IDocument.h"
 
-#include "desc/DoubleDescriptor.h"
+#include "core/editor/Editor.h"
+
+#include "desc/PreferencesDesc.h"
 
 #include <imgui.h>
 
 namespace oly::editor
 {
-	IDocument::IDocument(detail::ResourcePath&& oly_path)
-		: _oly_path(std::move(oly_path))
+	IDocument::IDocument(detail::ResourcePath oly_path)
+		: imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path)),
+		_undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
 	{
+		_preferences_listener = Editor::OnPreferencesChanged().subscribe([this]() {
+			_undo_history.set_limits(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit());
+		});
+
+		_uh_listener = _undo_history.on_potential_clean.subscribe([this]() { query_dirty(); });
 	}
 
 	void IDocument::Init()
 	{
-		_undo_history.emplace();
 		InitImpl();
 		_initialized = true;
 	}
 
 	void IDocument::DrawMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Save Changes", "Ctrl+S"))
 					DumpAsset();
@@ -32,48 +39,45 @@ namespace oly::editor
 
 				if (ImGui::MenuItem("Reset Asset"))
 					ResetAsset();
-
-				ImGui::EndMenu();
 			}
-
-			ImGui::EndMenuBar();
 		}
 	}
 
 	void IDocument::ResetAsset()
 	{
-		auto original = GetDoubleDescriptor().CopyScratch();
+		auto original = GetDoubleDescriptor().copy_scratch();
 
 		ResetAssetImpl();
-		QueryDirty();
+		query_dirty();
 
-		std::unique_ptr<UndoAction> action;
-		if (GetDoubleDescriptor().ScratchUndoActionQuery(std::move(original), action))
+		std::unique_ptr<imp::undo_action> action;
+		if (GetDoubleDescriptor().scratch_undo_action_query(std::move(original), action))
 		{
 			if (action)
-				_undo_history->Push(std::move(action));
+				_undo_history.push(std::move(action));
 			else
-				_undo_history->Clear();
+				_undo_history.clear();
 		}
 	}
 
 	void IDocument::LoadAsset()
 	{
-		auto original = GetDoubleDescriptor().CopyScratch();
+		auto original = GetDoubleDescriptor().copy_scratch();
 
 		LoadImpl();
 
 		if (_initialized)
 		{
-			if (auto action = GetDoubleDescriptor().ScratchUndoAction(std::move(original)))
-				_undo_history->Push(std::move(action));
+			if (auto action = GetDoubleDescriptor().scratch_undo_action(std::move(original)))
+				_undo_history.push(std::move(action));
 			else
-				_undo_history->Clear();
+				_undo_history.clear();
 		}
 	}
 
 	void IDocument::DumpAsset()
 	{
+		imtk::signal_publish_editing_sessions();
 		DumpImpl();
 	}
 
@@ -82,27 +86,19 @@ namespace oly::editor
 		return _oly_path.exists();
 	}
 
-	void* IDocument::PathGet(DataPath path, std::type_index type)
+	void* IDocument::resolve(imtk::datapath_view path, imp::type_erasure type)
 	{
-		return GetDoubleDescriptor().PathGet(path, type);
+		return GetDoubleDescriptor().resolve(path, type);
 	}
 
-	void IDocument::PrintPath(std::ostream& os, DataPath path) const
+	void IDocument::describe(std::ostream& os, imtk::datapath_view path) const
 	{
-		GetDoubleDescriptor().PrintPath(os, path);
+		GetDoubleDescriptor().describe(os, path);
 	}
 	
-	std::string IDocument::PathString(DataPath path) const
+	void IDocument::on_last_process_frame()
 	{
-		std::stringstream ss;
-		PrintPath(ss, path);
-		return ss.str();
-	}
-
-	void IDocument::DrawFinalize()
-	{
-		if (GetDoubleDescriptor().DrawFinalize())
-			MarkDirty();
+		query_dirty();
 	}
 
 	const detail::ResourcePath& IDocument::GetOlyPath() const
@@ -128,7 +124,7 @@ namespace oly::editor
 	void IDocument::MarkClean()
 	{
 		_dirty = false;
-		_undo_history->MarkClean();
+		_undo_history.mark_clean();
 	}
 
 	bool IDocument::IsDirty() const
@@ -136,31 +132,31 @@ namespace oly::editor
 		return _dirty;
 	}
 
-	void IDocument::QueryDirty()
+	void IDocument::query_dirty()
 	{
-		_dirty = GetDoubleDescriptor().QueryDirty();
+		_dirty = GetDoubleDescriptor().query_dirty();
 	}
 
 	void IDocument::Undo()
 	{
-		ActiveDocument active(*this);
-		_undo_history->Undo();
+		imtk::active_data_accessor active(*this);
+		_undo_history.undo();
 	}
 
 	void IDocument::Redo()
 	{
-		ActiveDocument active(*this);
-		_undo_history->Redo();
+		imtk::active_data_accessor active(*this);
+		_undo_history.redo();
 	}
 
 	IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
-		_doc(doc), _uh_scope(*doc._undo_history), _active_instance(doc)
+		_doc(doc), _uh(doc._undo_history), _active_instance(doc)
 	{
 	}
 
 	IDocument::PreDrawImpl::~PreDrawImpl()
 	{
-		if (gui::PropertyGrid::DirtyGrid())
+		if (grid.dirty())
 			_doc.MarkDirty();
 	}
 

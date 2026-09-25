@@ -1,9 +1,13 @@
 #pragma once
 
-#include "external/GLM.h"
 #include "core/base/Errors.h"
-#include "core/types/DeferredFalse.h"
+
 #include "core/util/StringParam.h"
+
+#include "external/GLM.h"
+
+#include <imp/dependent_false.hpp>
+#include <imp/hetero.hpp>
 
 namespace oly::input
 {
@@ -12,7 +16,7 @@ namespace oly::input
 	class SignalTable
 	{
 		SignalID next = 1;
-		std::unordered_map<std::string, SignalID, StringParamHeteroHash, StringParamHeteroEqual> table;
+        imp::hetero::string_umap<SignalID> table;
 
 	public:
 		SignalID insert(const StringParam& name)
@@ -24,7 +28,7 @@ namespace oly::input
 
 		SignalID get(const StringParam& name) const
 		{
-			auto it = table.find(name);
+			auto it = table.find(name.view());
 			if (it != table.end())
 				return it->second;
 			else
@@ -32,7 +36,7 @@ namespace oly::input
 		}
 	};
 
-	typedef std::unordered_map<std::string, std::vector<std::string>, StringParamHeteroHash, StringParamHeteroEqual> SignalRoutingTable;
+	typedef imp::hetero::string_umap<std::vector<std::string>> SignalRoutingTable;
 
 	enum class Phase
 	{
@@ -81,7 +85,7 @@ namespace oly::input
 		template<typename T>
 		T get() const
 		{
-			static_assert(deferred_false<T>, "oly::input::Signal::get<T>() does not support the invoked type.");
+			static_assert(imp::dependent_false_v<T>, "oly::input::Signal::get<T>() does not support the invoked type.");
 		}
 
 		template<>

@@ -1,61 +1,9 @@
 #include "Types.h"
 
-#include <stdexcept>
 #include <string>
 
 namespace oly::editor
 {
-	Color4::Color4()
-		: r(0.f), g(0.f), b(0.f), a(1.f)
-	{
-	}
-
-	Color4::Color4(float r, float g, float b, float a)
-		: r(r), g(g), b(b), a(a)
-	{
-	}
-
-	bool Color4::operator==(const Color4& o) const
-	{
-		return r == o.r && g == o.g && b == o.b && a == o.a;
-	}
-
-	bool Color4::operator!=(const Color4& o) const
-	{
-		return r != o.r || g != o.g || b != o.b || a != o.a;
-	}
-
-	float* Color4::ValuePtr()
-	{
-		return v;
-	}
-
-	const float* Color4::ValuePtr() const
-	{
-		return v;
-	}
-
-	float& Color4::operator[](size_t i)
-	{
-		if (i < N)
-			return v[i];
-		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
-	}
-
-	float Color4::operator[](size_t i) const
-	{
-		if (i < N)
-			return v[i];
-		else
-			throw std::out_of_range(std::to_string(i) + " is invalid index for Color4");
-	}
-
-	std::ostream& operator<<(std::ostream& os, Color4 color)
-	{
-		return os << "Color4(" << color.r << ", " << color.g << ", " << color.b << ", " << color.a << ")";
-	}
-
 	Rect::Rect()
 		: x1(0.f), x2(0.f), y1(0.f), y2(0.f)
 	{

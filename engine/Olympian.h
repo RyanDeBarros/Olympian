@@ -11,8 +11,8 @@
 #include "core/util/Timers.h"
 #include "core/util/Loader.h"
 
-#include "core/types/Approximate.h"
-#include "core/types/SmartReference.h"
+#include "core/base/Approximate.h"
+#include "core/base/SmartReference.h"
 
 #include "graphics/backend/basic/Framebuffers.h"
 #include "graphics/resources/Samplers.h"

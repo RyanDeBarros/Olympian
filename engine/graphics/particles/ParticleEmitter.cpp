@@ -8,15 +8,15 @@
 namespace oly::particles
 {
 	ParticleEmitter::ParticleEmitter()
-		: max_particles(2000),
-		attached(false),
-		lifetime({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(3.0f) }),
-		position({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{}) }),
-		rotation({ .sampler = make_polymorphic<UniformSampler1D>(), .domain = make_polymorphic<ConstantDomain1D>(0.0f) }),
-		size({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 10.0f }) }),
-		velocity({ .sampler = make_polymorphic<UniformSampler2D>(), .domain = make_polymorphic<ConstantDomain2D>(glm::vec2{ 10.0f, 0.0f }) }),
-		color({ .sampler = make_polymorphic<UniformSampler4D>(), .domain = make_polymorphic<ConstantDomain4D>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }) }),
-		spawner(make_polymorphic<ConstantParticleSpawner>(10.0f))
+		: max_particles(2000)
+        , attached(false)
+        , lifetime({ .sampler = imp::make_poly<UniformSampler1D>(), .domain = imp::make_poly<ConstantDomain1D>(3.0f) })
+        , position({ .sampler = imp::make_poly<UniformSampler2D>(), .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{}) })
+        , rotation({ .sampler = imp::make_poly<UniformSampler1D>(), .domain = imp::make_poly<ConstantDomain1D>(0.0f) })
+        , size({ .sampler = imp::make_poly<UniformSampler2D>(), .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.0f, 10.0f }) })
+        , velocity({ .sampler = imp::make_poly<UniformSampler2D>(), .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.0f, 0.0f }) })
+        , color({ .sampler = imp::make_poly<UniformSampler4D>(), .domain = imp::make_poly<ConstantDomain4D>(glm::vec4{ 1.0f, 0.0f, 0.0f, 1.0f }) })
+        , spawner(imp::make_poly<ConstantParticleSpawner>(10.0f))
 	{
 	}
 

@@ -1,11 +1,6 @@
 #pragma once
 
-#include "core/editor/Notifier.h"
-
-#include <imgui.h>
-
-#include <memory>
-#include <vector>
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -26,7 +21,8 @@ namespace oly::editor
 
 		std::unique_ptr<MainMenuBar> _main_menu_bar;
 
-		std::vector<Notification> _notifications;
+		imp::event_listener _notif_handle;
+		std::vector<imtk::notification> _notifications;
 
 	public:
 		MainWindow();
@@ -45,8 +41,6 @@ namespace oly::editor
 		DocumentManager& GetDocumentManager();
 
 		MainMenuBar& GetMainMenuBar();
-
-		void PushNotification(Notification notif);
 
 	private:
 		void DrawNotifications();

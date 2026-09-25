@@ -21,13 +21,13 @@ namespace oly::col2d
 		fpair projection_interval(UnitVector2D axis) const { return element.projection_interval(axis); }
 		ContactManifold deepest_manifold(UnitVector2D axis) const { return element.deepest_manifold(axis); }
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		const Shape& element_as() const
 		{
 			return *element.variant().get<const Shape*>();
 		}
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		Shape& element_as()
 		{
 			return *element.variant().get<Shape*>();
@@ -86,13 +86,13 @@ namespace oly::col2d
 		fpair projection_interval(UnitVector2D axis) const { return get_baked().projection_interval(axis); }
 		ContactManifold deepest_manifold(UnitVector2D axis) const { return get_baked().deepest_manifold(axis); }
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		const Shape& element_as() const
 		{
 			return get_primitive().element_as<Shape>();
 		}
 
-		template<internal::ElementShape Shape>
+		template<internal::Elem_check Shape>
 		Shape& element_as()
 		{
 			return set_primitive().element_as<Shape>();

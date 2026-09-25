@@ -1,9 +1,11 @@
 #include "OBB.h"
 
+#include "core/base/Approximate.h"
 #include "core/base/Errors.h"
 #include "core/base/Transforms.h"
+
 #include "core/math/Solvers.h"
-#include "core/types/Approximate.h"
+
 #include "physics/collision/elements/Common.h"
 #include "physics/collision/elements/ConvexHull.h"
 

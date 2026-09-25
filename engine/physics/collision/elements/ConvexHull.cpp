@@ -1,6 +1,6 @@
 #include "ConvexHull.h"
 
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 
 #include <algorithm>
 

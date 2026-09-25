@@ -2,8 +2,6 @@
 
 #include "panels/IPanel.h"
 
-#include "gui/graphics/Texture.h"
-
 #include "assets/ResourcePath.h"
 
 namespace oly::editor
@@ -12,7 +10,7 @@ namespace oly::editor
 	{
 		std::filesystem::path path;
 		std::vector<std::unique_ptr<TreeViewNode>> subnodes;
-		Texture icon;
+		imtk::texture icon;
 		bool dropdown_open = false;
 		bool is_import = false;
 		float timer = 0.f;
@@ -35,7 +33,9 @@ namespace oly::editor
 
 	struct TreeViewConfig
 	{
-		bool ignore_imports = true;
+		imtk::w::icon_button ignore_imports;
+
+		TreeViewConfig();
 	};
 
 	class TreeViewPanel : public IPanel
@@ -61,4 +61,20 @@ namespace oly::editor
 		void DrawNodePrefix(TreeViewNode& node);
 		void DrawRowBg(TreeViewNode& node, int& local_file_index);
 	};
+
+	struct TreeViewPathDDP : public imtk::drag_droppable
+	{
+		std::string path;
+
+		TreeViewPathDDP(std::string path);
+
+		void send(const std::function<void(const void*, size_t)>& dump) const override;
+	};
 }
+
+template<>
+struct imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>
+{
+	using payload_view = std::string_view;
+	payload_view view(const void* buf, size_t size) const;
+};

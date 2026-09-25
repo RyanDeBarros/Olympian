@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/types/SmartReference.h"
-#include "core/containers/TreeNode.h"
+#include "core/base/SmartReference.h"
+
+#include <imp/tree_node.hpp>
 
 #include <map>
 
@@ -10,7 +11,7 @@ namespace oly::rendering
 {
 	// DOC for all these classes
 
-	struct IDrawable : public TreeNode<IDrawable>
+	struct IDrawable : public imp::tree_node<IDrawable>
 	{
 		virtual ~IDrawable() = default;
 

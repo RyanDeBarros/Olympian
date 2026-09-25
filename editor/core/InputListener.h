@@ -1,16 +1,12 @@
 #pragma once
 
-#include "gui/DrawResult.h"
-
-#include "external/GL.h"
-
 #include "definitions/enums/GamepadAxis2D.h"
 #include "definitions/enums/KeyInput.h"
 #include "definitions/enums/MouseButton.h"
 
 #include <optional>
 
-#include <imgui.h>
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -38,10 +34,10 @@ namespace oly::editor
 		static std::optional<GLenum> ListenForGamepadAxis1D();
 		static std::optional<detail::GamepadAxis2D> ListenForGamepadAxis2D();
 
-		static DrawResult DrawKeyListener(ListenMode& mode, std::optional<detail::KeyInput>& input);
-		static DrawResult DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input);
-		static DrawResult DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input);
-		static DrawResult DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input);
-		static DrawResult DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input);
+		static imtk::item_result DrawKeyListener(ListenMode& mode, std::optional<detail::KeyInput>& input);
+		static imtk::item_result DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input);
+		static imtk::item_result DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input);
+		static imtk::item_result DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input);
+		static imtk::item_result DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input);
 	};
 }

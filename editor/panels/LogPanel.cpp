@@ -1,9 +1,9 @@
 #include "LogPanel.h"
 
 #include "core/windows/MainWindow.h"
-#include "core/Errors.h"
-#include "core/editor/Logger.h"
 #include "panels/PanelManager.h"
+
+#include <imtk.hpp>
 
 namespace oly::editor
 {
@@ -12,7 +12,7 @@ namespace oly::editor
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<LogPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of LogPanel");
+			imtk::breakout_error::throw_("No instance of LogPanel");
 	}
 
 	void LogPanel::InitImpl()
@@ -30,27 +30,23 @@ namespace oly::editor
 		auto window = DrawDockedWindow();
 		if (window.IsVisible())
 		{
-			if (ImGui::BeginChild("##LogBox", ImVec2(), ImGuiChildFlags_Borders))
+			if (auto _ = imtk::child("##LogBox", ImVec2(), ImGuiChildFlags_Borders))
 			{
-				for (const LogEntry& entry : Logger::Instance().Lines())
+				for (const imtk::log_entry& entry : imtk::log_entries())
 				{
-					ImGui::PushStyleColor(ImGuiCol_Text, LogLevelColor(entry.level));
-					ImGui::TextUnformatted(LogLevelPrefix(entry.level));
-					ImGui::PopStyleColor();
+					if (auto _ = imtk::style_color(ImGuiCol_Text, imtk::log_level_color(entry.level)))
+						ImGui::TextUnformatted(imtk::log_level_prefix(entry.level));
+
 					ImGui::SameLine();
 					ImGui::TextUnformatted(entry.msg.c_str());
 				}
 
-				if (ImGui::BeginPopupContextWindow("##LogContextMenu"))
+				if (auto _ = imtk::context_menu::window("##LogContextMenu"))
 				{
 					if (ImGui::MenuItem("Clear log"))
-						Logger::Instance().ClearLog();
-
-					ImGui::EndPopup();
+						imtk::clear_log();
 				}
 			}
-
-			ImGui::EndChild();
 		}
 	}
 }

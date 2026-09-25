@@ -1,8 +1,6 @@
 #include "Textures.h"
 
 #include "core/context/rendering/Sprites.h"
-#include "core/containers/Bijection.h"
-#include "core/types/Meta.h"
 #include "core/util/LoggerOperators.h"
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
@@ -11,6 +9,8 @@
 #include "definitions/Keys.h"
 #include "definitions/enums/StorageMode.h"
 #include "definitions/enums/SVGMipmapGenerationMode.h"
+
+#include <imp/bijection.hpp>
 
 namespace oly::context
 {
@@ -37,7 +37,7 @@ namespace oly::context
 
 		std::unordered_map<detail::ResourcePath, graphics::NSVGAbstract> nsvg_abstracts;
 
-		Bijection<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
+		imp::bijection<TextureKey, graphics::BindlessTextureRef, TextureHash> textures;
 	}
 
 	struct TexturesOnTerminate
@@ -171,9 +171,8 @@ namespace oly::context
 		}
 
 		internal::TextureKey key{ file, texture_index };
-		auto it = internal::textures.find_forward_iterator(key);
-		if (it != internal::textures.forward_end())
-			return it->second;
+		if (auto tex = internal::textures.left_get(key))
+			return *tex;
 
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
@@ -228,9 +227,8 @@ namespace oly::context
 			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
 
 		internal::TextureKey key{ file, texture_index };
-		auto it = internal::textures.find_forward_iterator(key);
-		if (it != internal::textures.forward_end())
-			return it->second;
+        if (auto tex = internal::textures.left_get(key))
+            return *tex;
 
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
@@ -491,42 +489,42 @@ namespace oly::context
 
 	glm::vec2 get_texture_dimensions(const graphics::BindlessTextureRef& texture)
 	{
-		auto it = internal::textures.find_backward_iterator(texture);
-		if (it == internal::textures.backward_end())
+        if (auto key = internal::textures.right_get(texture))
+            return get_texture_dimensions(*key);
+        else
 			throw Error(ErrorCode::UnregisteredTexture);
-		return get_texture_dimensions(it->second);
 	}
 
 	graphics::ImageDimensions get_image_dimensions(const graphics::BindlessTextureRef& texture)
 	{
-		auto it = internal::textures.find_backward_iterator(texture);
-		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UnregisteredTexture);
-		return get_image_dimensions(it->second);
+        if (auto key = internal::textures.right_get(texture))
+            return get_image_dimensions(*key);
+        else
+            throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	SmartReference<graphics::AnimDimensions> get_anim_dimensions(const graphics::BindlessTextureRef& texture)
 	{
-		auto it = internal::textures.find_backward_iterator(texture);
-		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UnregisteredTexture);
-		return get_anim_dimensions(it->second);
+        if (auto key = internal::textures.right_get(texture))
+            return get_anim_dimensions(*key);
+        else
+            throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	graphics::ImageRef get_image_pixel_buffer(const graphics::BindlessTextureRef& texture)
 	{
-		auto it = internal::textures.find_backward_iterator(texture);
-		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UnregisteredTexture);
-		return get_image_pixel_buffer(it->second);
+        if (auto key = internal::textures.right_get(texture))
+            return get_image_pixel_buffer(*key);
+        else
+            throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	graphics::AnimRef get_anim_pixel_buffer(const graphics::BindlessTextureRef& texture)
 	{
-		auto it = internal::textures.find_backward_iterator(texture);
-		if (it == internal::textures.backward_end())
-			throw Error(ErrorCode::UnregisteredTexture);
-		return get_anim_pixel_buffer(it->second);
+        if (auto key = internal::textures.right_get(texture))
+            return get_anim_pixel_buffer(*key);
+        else
+            throw Error(ErrorCode::UnregisteredTexture);
 	}
 
 	const graphics::NSVGAbstract& get_nsvg_abstract(const detail::ResourcePath& file)
@@ -542,13 +540,13 @@ namespace oly::context
 		internal::TextureKey key{ file, texture_index };
 
 		{
-			auto it = internal::textures.find_forward_iterator(key);
-			if (it == internal::textures.forward_end())
+			auto it = internal::textures.left_find(key);
+			if (it == internal::textures.left_end())
 			{
 				free_svg_texture(file, texture_index);
 				return;
 			}
-			internal::textures.forward_erase(it);
+			internal::textures.left_erase(it);
 		}
 
 		{
@@ -575,10 +573,10 @@ namespace oly::context
 		internal::TextureKey key{ file, texture_index };
 
 		{
-			auto it = internal::textures.find_forward_iterator(key);
-			if (it == internal::textures.forward_end())
+			auto it = internal::textures.left_find(key);
+			if (it == internal::textures.left_end())
 				return;
-			internal::textures.forward_erase(it);
+			internal::textures.left_erase(it);
 		}
 
 		{

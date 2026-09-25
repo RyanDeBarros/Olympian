@@ -1,8 +1,10 @@
 #include "Shapes.h"
 
-#include "core/math/Geometry.h"
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 #include "core/base/Transforms.h"
+
+#include "core/math/Geometry.h"
+
 #include "core/util/Parser.h"
 #include "core/util/Logger.h"
 

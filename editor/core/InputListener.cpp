@@ -1,7 +1,5 @@
 #include "InputListener.h"
 
-#include "core/editor/Notifier.h"
-
 namespace oly::editor
 {
 	std::optional<detail::KeyInput> InputListener::ConvertKey(ImGuiKey key)
@@ -357,7 +355,7 @@ namespace oly::editor
 				if (auto k = ConvertKey(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -375,7 +373,7 @@ namespace oly::editor
 				if (auto b = ConvertMouseButton(mb))
 					return *b;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -393,7 +391,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadButton(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -411,7 +409,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis1D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -429,7 +427,7 @@ namespace oly::editor
 				if (auto k = ConvertGamepadAxis2D(static_cast<ImGuiKey>(key)))
 					return *k;
 				else
-					Notifier::NotifyError("Unrecognized input");
+					imtk::notify_error("Unrecognized input");
 
 				break;
 			}
@@ -438,21 +436,21 @@ namespace oly::editor
 		return std::nullopt;
 	}
 
-	static DrawResult DrawActiveListenButton()
+	static imtk::item_result DrawActiveListenButton()
 	{
-		return DrawResult(ImGui::Button("Listening...")).Query();
+		return imtk::item_result::query(ImGui::Button("Listening..."));
 	}
 
-	static DrawResult DrawInactiveListenButton()
+	static imtk::item_result DrawInactiveListenButton()
 	{
-		DrawResult result = DrawResult(ImGui::Button("...")).Query();
-		if (result.IsHovered())
+		auto result = imtk::item_result::query(ImGui::Button("..."));
+		if (result.state.hovered())
 			ImGui::SetTooltip("Listen for input");
 
 		return result;
 	}
 
-	DrawResult InputListener::DrawKeyListener(ListenMode& mode, std::optional<detail::KeyInput>& input)
+	imtk::item_result InputListener::DrawKeyListener(ListenMode& mode, std::optional<detail::KeyInput>& input)
 	{
 		input.reset();
 		if (mode == ListenMode::Key)
@@ -478,7 +476,7 @@ namespace oly::editor
 		}
 	}
 
-	DrawResult InputListener::DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input)
+	imtk::item_result InputListener::DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input)
 	{
 		input.reset();
 		if (mode == ListenMode::MouseButton)
@@ -503,7 +501,7 @@ namespace oly::editor
 		}
 	}
 	
-	DrawResult InputListener::DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input)
+	imtk::item_result InputListener::DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input)
 	{
 		input.reset();
 		if (mode == ListenMode::GamepadButton)
@@ -529,7 +527,7 @@ namespace oly::editor
 		}
 	}
 	
-	DrawResult InputListener::DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input)
+	imtk::item_result InputListener::DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input)
 	{
 		input.reset();
 		if (mode == ListenMode::GamepadAxis1D)
@@ -555,7 +553,7 @@ namespace oly::editor
 		}
 	}
 	
-	DrawResult InputListener::DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input)
+	imtk::item_result InputListener::DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input)
 	{
 		input.reset();
 		if (mode == ListenMode::GamepadAxis2D)

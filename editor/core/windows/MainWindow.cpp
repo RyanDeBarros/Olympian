@@ -1,9 +1,7 @@
 #include "MainWindow.h"
 
 #include "core/editor/Editor.h"
-#include "core/windows/DockTree.h"
 #include "core/windows/MainMenuBar.h"
-#include "core/editor/Logger.h"
 
 #include "panels/PanelManager.h"
 #include "panels/IPanel.h"
@@ -34,6 +32,11 @@ namespace oly::editor
 
     void MainWindow::Init()
     {
+        _notif_handle = imtk::on_receive_notification().subscribe([this](imtk::notification notif) {
+            imtk::log(notif.level, notif.message);
+            _notifications.push_back(std::move(notif));
+        });
+
         _panel_manager->Add<AssetEditorPanel>().Open();
         _panel_manager->Add<ContentBrowserPanel>().Open();
         _panel_manager->Add<LogPanel>().Open();
@@ -42,27 +45,25 @@ namespace oly::editor
 
         _dockspace_id = ImGui::GetID("MainWindowDockspace");
 
-        DockTree tree = DockNode::MakeBranch(
+        imtk::dock::make_branch(
             ImGuiDir_Down,
-            DockNode::MakeBranch(
+            imtk::dock::make_branch(
                 ImGuiDir_Right,
-                DockNode::MakeLeaf({
-                    typeid(TreeViewPanel)
+                imtk::dock::make_leaf({
+                    TreeViewPanel::Instance().GetTitle()
                 }),
-                DockNode::MakeLeaf({
-                    typeid(AssetEditorPanel),
-                    typeid(PreferencesPanel)
+                imtk::dock::make_leaf({
+                    AssetEditorPanel::Instance().GetTitle(),
+                    PreferencesPanel::Instance().GetTitle()
                 }),
                 0.2f
             ),
-            DockNode::MakeLeaf({
-                typeid(LogPanel),
-                typeid(ContentBrowserPanel)
+            imtk::dock::make_leaf({
+                LogPanel::Instance().GetTitle(),
+                ContentBrowserPanel::Instance().GetTitle()
             }),
             0.75f
-        );
-
-        tree.SetupLayout(_dockspace_id, *_panel_manager);
+        )->setup_layout(_dockspace_id);
 
         _panel_manager->Init();
         _main_menu_bar->Init();
@@ -86,8 +87,9 @@ namespace oly::editor
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        auto window_styling = imtk::style_stack().
+            push(ImGuiStyleVar_WindowRounding, 0.0f).
+            push(ImGuiStyleVar_WindowBorderSize, 0.0f).apply();
 
         ImGuiWindowFlags window_flags =
             ImGuiWindowFlags_NoDocking |
@@ -98,16 +100,15 @@ namespace oly::editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        if (ImGui::Begin("Main Window", nullptr, window_flags))
+        if (auto _ = imtk::window("Main Window", window_flags))
         {
-            ImGui::PopStyleVar(2);
+            window_styling.kill();
 
             _main_menu_bar->Draw();
 
             ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
             _panel_manager->Draw();
             DrawNotifications();
-            ImGui::End();
         }
     }
 
@@ -126,36 +127,27 @@ namespace oly::editor
         return *_main_menu_bar;
     }
 
-    void MainWindow::PushNotification(Notification notif)
-    {
-        Logger::Log(notif.level, notif.message);
-        _notifications.push_back(std::move(notif));
-    }
-
     void MainWindow::DrawNotifications()
     {
         for (size_t i = 0; i < _notifications.size(); ++i)
         {
-            Notification& notif = _notifications[i];
+            auto& notif = _notifications[i];
 
-            float alpha = std::clamp(1.f - notif.age / notif.timer, 0.f, 1.f);
-            ImGui::PushStyleVar(ImGuiStyleVar_Alpha, alpha);
-            ImGuiWindowFlags flags =
-                ImGuiWindowFlags_AlwaysAutoResize |
-                ImGuiWindowFlags_NoDecoration |
-                ImGuiWindowFlags_NoInputs;
+            imtk::style_var alpha_var(ImGuiStyleVar_Alpha, notif.age_alpha());
+            ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
+                                     ImGuiWindowFlags_NoDecoration |
+                                     ImGuiWindowFlags_NoInputs;
 
-            ImGui::Begin(("##notif" + std::to_string(i)).c_str(), nullptr, flags);
-            ImGui::PushStyleColor(ImGuiCol_Text, LogLevelColor(notif.level));
-            ImGui::TextUnformatted(notif.message.c_str());
-            ImGui::PopStyleColor();
-            ImGui::End();
-            ImGui::PopStyleVar();
+            if (auto _ = imtk::window("##notif" + std::to_string(i), flags))
+            {
+                if (auto _ = imtk::style_color(ImGuiCol_Text, imtk::log_level_color(notif.level)))
+                    ImGui::TextUnformatted(notif.message.c_str());
+            }
 
-            notif.age += ImGui::GetIO().DeltaTime;
+            notif.update();
         }
         
-        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const Notification& notif) { return notif.age >= notif.timer; });
+        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const imtk::notification& notif) { return notif.expired(); });
         _notifications.erase(it, _notifications.end());
     }
 }

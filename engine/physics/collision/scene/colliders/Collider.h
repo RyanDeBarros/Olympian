@@ -33,7 +33,7 @@ namespace oly::col2d
 		internal::TreeHandleMap handles = internal::TreeHandleMap(*this);
 
 		Collider() : dispatch_handle(*this) {}
-		template<internal::ColliderObjectShape CObj>
+		template<internal::CObj_check CObj>
 		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)), dispatch_handle(*this) {}
 		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)), dispatch_handle(*this) {}
 		Collider(const Collider&);
@@ -41,12 +41,12 @@ namespace oly::col2d
 		Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
-		template<internal::ColliderObjectShape CObj>
+		template<internal::CObj_check CObj>
 		const CObj& get() const { return obj.get<CObj>(); }
-		template<internal::ColliderObjectShape CObj>
+		template<internal::CObj_check CObj>
 		CObj& set() { dirty = true; return obj.set<CObj>(); }
 		void emplace(internal::ColliderObject&& obj) { dirty = true; this->obj = std::move(obj); }
-		template<internal::ColliderObjectShape CObj>
+		template<internal::CObj_check CObj>
 		void emplace(CObj&& obj) { dirty = true; this->obj = internal::ColliderObject(std::forward<CObj>(obj)); }
 
 		void flag() { dirty = true; }

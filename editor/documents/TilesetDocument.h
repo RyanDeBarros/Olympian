@@ -2,11 +2,7 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/TilesetDesc.h"
-#include "desc/DoubleDescriptor.h"
-
-#include "gui/scopes/Form.h"
-#include "gui/graphics/Texture.h"
+#include "desc/TilesetDesc.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -119,7 +115,7 @@ namespace oly::editor
 
 	class TilesetDocument : public IDocument
 	{
-		DoubleDescriptor<TilesetDesc> _desc;
+		imtk::desc::doubler<TilesetDesc> _desc;
 		detail::MetaMap _meta;
 		IndividualEditorState _individual_editor;
 		GroupEditorsState _group_editors;
@@ -138,7 +134,7 @@ namespace oly::editor
 
 		struct ActiveTexture
 		{
-			Texture texture;
+			imtk::texture texture;
 			TextureError error = TextureError::None;
 			std::string current_texture = "";
 			unsigned int current_texture_index = 0;
@@ -156,8 +152,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 	private:
 		void DrawGroupEditor();
@@ -165,16 +161,16 @@ namespace oly::editor
 		void DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
 		void Draw(const detail::TileConfigGrid grid);
 
-		void Load(TOMLNode node, TilesetDesc& desc);
-		void Load(TOMLNode node, TilesetAssignmentDesc& desc);
+		void Load(imtk::toml_node node, TilesetDesc& desc);
+		void Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc);
+		void Load(imtk::toml_node node, TilesetAssignmentDesc& desc);
 		
 		void Dump(toml::table& table, TilesetDesc& desc);
+		void Dump(toml::table& table, TilesetAssignmentMapDesc& desc);
 		void Dump(toml::table& table, TilesetAssignmentDesc& desc);
 
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfigGrid grid);
 		TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
-		DataPathSource GetAssignmentPath(const detail::TileConfigGrid grid);
-		DataPathSource GetAssignmentPath(const detail::TileConfig config);
 		void UpdateActiveTextures();
 
 		static bool TextureErrorIsWarning(TilesetDocument::TextureError error);

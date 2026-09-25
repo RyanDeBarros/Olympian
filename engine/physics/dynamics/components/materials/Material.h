@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/Parameters.h"
-#include "core/types/SmartReference.h"
+#include "core/base/SmartReference.h"
 
 namespace oly::physics
 {

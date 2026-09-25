@@ -1,7 +1,8 @@
 #pragma once
 
 #include "graphics/backend/basic/Textures.h"
-#include "core/types/Variant.h"
+
+#include <imp/variant.hpp>
 
 namespace oly::context
 {
@@ -16,7 +17,7 @@ namespace oly::context
 
 	namespace tex
 	{
-		typedef Variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
+		typedef imp::variant<graphics::ImageRef, graphics::AnimRef, graphics::VectorImageRef> CPUBuffer;
 
 		enum class ImageStorageOverride
 		{

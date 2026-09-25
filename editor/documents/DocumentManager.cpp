@@ -2,7 +2,6 @@
 
 #include "documents/IDocument.h"
 
-#include "core/Errors.h"
 #include "core/windows/MainWindow.h"
 #include "panels/AssetEditorPanel.h"
 
@@ -103,8 +102,9 @@ namespace oly::editor
 			doc.DumpAsset();
 			return true;
 		}
-		catch (const BreakoutError&)
+		catch (const imtk::breakout_error& e)
 		{
+			e.log();
 			return false;
 		}
 	}
@@ -140,8 +140,9 @@ namespace oly::editor
 				doc.DumpAsset();
 			}) == OpenAssetCode::Success;
 		}
-		catch (const BreakoutError&)
+		catch (const imtk::breakout_error& e)
 		{
+			e.log();
 			return false;
 		}
 	}

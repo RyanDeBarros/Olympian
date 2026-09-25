@@ -11,7 +11,8 @@
 #include "definitions/Keys.h"
 #include "definitions/enums/CommonBufferPreset.h"
 #include "definitions/enums/StorageMode.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 // TODO v10 put actual loading logic in load/overload methods
 
@@ -59,8 +60,8 @@ namespace oly::context
 
 	static auto make_nonnull_codepoint_validator()
 	{
-		return assets::make_single_validator<utf::Codepoint>([](utf::Codepoint c) { return c != utf::Codepoint(0); },
-			[](utf::Codepoint c) { return DeferredStringList{ "-> null codepoint not allowed" }; });
+		return assets::make_single_validator<imp::utf::codepoint>([](imp::utf::codepoint c) { return c != imp::utf::codepoint(0); },
+			[](imp::utf::codepoint c) { return DeferredStringList{ "-> null codepoint not allowed" }; });
 	}
 
 	static rendering::Kerning parse_kerning(TOMLNode node)
@@ -77,7 +78,7 @@ namespace oly::context
 			{
 				const size_t k_idx = _k_idx++;
 				assets::Parser parser((TOMLNode)node, { "in kerning #", k_idx });
-				const auto pair = parser.required<std::array<utf::Codepoint, 2>>(detail::Key::CodepointPair, make_nonnull_codepoint_validator())();
+				const auto pair = parser.required<std::array<imp::utf::codepoint, 2>>(detail::Key::CodepointPair, make_nonnull_codepoint_validator())();
 				const auto dist = parser.required<int>(detail::Key::CodepointDistance)();
 				kerning.map.emplace(std::make_pair(pair.at(0), pair.at(1)), dist);
 			}
@@ -167,7 +168,7 @@ namespace oly::context
 		parser.required(detail::Key::MagFilter)(options.mag_filter);
 		parser.optional(detail::Key::GenerateMipmaps)(options.auto_generate_mipmaps);
 
-		utf::String common_buffer;
+		imp::utf::string common_buffer;
 		auto _common_buffer = parser.optional<std::string>(detail::Key::CommonBuffer)();
 		if (parser.defaulted(detail::Key::UseCommonBufferPreset)(false) && _common_buffer)
 			common_buffer = *_common_buffer;
@@ -214,7 +215,7 @@ namespace oly::context
 		const auto line_height = parser.required<float>(detail::Key::LineHeight)();
 		const auto font_scale = parser.defaulted(detail::Key::FontScale)(glm::vec2(1.0f));
 
-		std::unordered_map<utf::Codepoint, rendering::RasterFontGlyph> glyphs;
+		std::unordered_map<imp::utf::codepoint, rendering::RasterFontGlyph> glyphs;
 		if (auto glyph_array = parser.optional<TOMLArray>(detail::Key::GlyphArray)())
 		{
 			glyph_array->for_each([&glyphs](auto&& g) {
@@ -222,7 +223,7 @@ namespace oly::context
 				{
 					assets::Parser parser((TOMLNode)g);
 
-					utf::Codepoint codepoint = parser.required<utf::Codepoint>(detail::Key::Codepoint, make_nonnull_codepoint_validator())();
+					imp::utf::codepoint codepoint = parser.required<imp::utf::codepoint>(detail::Key::Codepoint, make_nonnull_codepoint_validator())();
 
 					std::string texture_file = parser.required<std::string>(detail::Key::TextureFile)();
 					unsigned int texture_index = parser.defaulted(detail::Key::TextureIndex)(0u);
@@ -282,7 +283,7 @@ namespace oly::context
 			{
 				for (auto&& [key, node] : *styles->as_table())
 				{
-					auto style = stoi(key.str());
+					auto style = imp::stoi(key.str());
 					if (!style)
 						continue;
 

@@ -2,7 +2,8 @@
 
 #include "physics/collision/scene/dispatch/CollisionController.h"
 #include "physics/collision/scene/dispatch/CollisionTree.h"
-#include "core/containers/SymmetricRefMap.h"
+
+#include <imp/symmetric_umap.hpp>
 
 namespace oly::col2d
 {
@@ -51,11 +52,20 @@ namespace oly::col2d
 		CollisionEventData(const CollisionResult& result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
 
 		CollisionEventData(Phase phase, float penetration_depth, UnitVector2D unit_impulse, const Collider& active_collider, const Collider& passive_collider)
-			: phase(phase), penetration_depth(penetration_depth), unit_impulse(unit_impulse), active_collider(active_collider), passive_collider(passive_collider) {}
+			: phase(phase)
+            , penetration_depth(penetration_depth)
+            , unit_impulse(unit_impulse)
+            , active_collider(active_collider)
+            , passive_collider(passive_collider)
+        {}
 
 		CollisionEventData(const CollisionEventData& other)
-			: phase(other.phase), penetration_depth(other.penetration_depth), unit_impulse(other.unit_impulse),
-			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
+			: phase(other.phase)
+            , penetration_depth(other.penetration_depth)
+            , unit_impulse(other.unit_impulse)
+            , active_collider(other.active_collider)
+            , passive_collider(other.passive_collider)
+        {}
 
 		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
 
@@ -106,8 +116,8 @@ namespace oly::col2d
 	{
 		class CollisionPhaseTracker
 		{
-			SymmetricRefMap<Collider, Phase> map;
-			SymmetricRefMap<Collider, Phase>::MapType lazy_updates;
+			imp::symmetric_umap<const Collider*, Phase> map;
+			imp::symmetric_umap<const Collider*, Phase>::map_ty lazy_updates;
 
 		public:
 			Phase prior_phase(const Collider& c1, const Collider& c2);
@@ -122,9 +132,9 @@ namespace oly::col2d
 
 		class CollisionCache
 		{
-			SymmetricRefMap<Collider, OverlapEventData> overlaps;
-			SymmetricRefMap<Collider, CollisionEventData> collisions;
-			SymmetricRefMap<Collider, ContactEventData> contacts;
+            imp::symmetric_umap<const Collider*, OverlapEventData> overlaps;
+            imp::symmetric_umap<const Collider*, CollisionEventData> collisions;
+            imp::symmetric_umap<const Collider*, ContactEventData> contacts;
 
 		public:
 			void update(const Collider& c1, const Collider& c2, const OverlapEventData& data);
@@ -134,27 +144,27 @@ namespace oly::col2d
 			template<typename T>
 			std::optional<T> get(const Collider& c1, const Collider& c2) const
 			{
-				static_assert(deferred_false<T>, "CollisionCache::get<T>() does not support the invoked type.");
+				static_assert(imp::dependent_false_v<T>, "CollisionCache::get<T>() does not support the invoked type.");
 			}
 
 			template<>
 			std::optional<OverlapEventData> get<OverlapEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = overlaps.get(c1, c2))
+				if (auto data = overlaps.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
 					else
 						return invert_event_data(*data);
 				}
-				else if (auto data = collisions.get(c1, c2))
+				else if (auto data = collisions.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->overlap_event();
 					else
 						return invert_event_data(data->overlap_event());
 				}
-				else if (auto data = contacts.get(c1, c2))
+				else if (auto data = contacts.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->overlap_event();
@@ -168,14 +178,14 @@ namespace oly::col2d
 			template<>
 			std::optional<CollisionEventData> get<CollisionEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = collisions.get(c1, c2))
+				if (auto data = collisions.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
 					else
 						return invert_event_data(*data);
 				}
-				else if (auto data = contacts.get(c1, c2))
+				else if (auto data = contacts.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->collision_event();
@@ -189,7 +199,7 @@ namespace oly::col2d
 			template<>
 			std::optional<ContactEventData> get<ContactEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = contacts.get(c1, c2))
+				if (auto data = contacts.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
@@ -209,9 +219,9 @@ namespace oly::col2d
 
 	}
 
-	class CollisionDispatcher final : public Singleton<CollisionDispatcher>, public ITickService
+	class CollisionDispatcher final : public imp::soft_singleton<CollisionDispatcher>, public ITickService
 	{
-		friend class Singleton<CollisionDispatcher>;
+		friend class imp::soft_singleton<CollisionDispatcher>;
 
 #define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
 		{\

@@ -4,16 +4,13 @@
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
 
+#include <imp/util.hpp>
+
 namespace oly::col2d
 {
-#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class)\
-	case internal::ElementIDTrait<Class>::ID:\
-		Macro(obj.cast<Class>())\
-		break;
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) if (auto my_obj = _obj.as<Class>()) { Macro(my_obj); }
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
-	switch (id)\
-	{\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, AABB);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, OBB);\
@@ -25,9 +22,7 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP6);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP7);\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, KDOP8);\
-		default:\
-			throw Error(ErrorCode::UnsupportedSwitchCase);\
-	}
+		throw Error(ErrorCode::UnsupportedSwitchCase);\
 
 	float Element::projection_max(UnitVector2D axis) const
 	{
@@ -161,10 +156,10 @@ namespace oly::col2d
 			{
 				// AABB
 				return AABB{
-					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
-					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
-					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
-					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+					.x1 = imp::min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = imp::max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = imp::min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = imp::max(points[1].y, points[1].y, points[2].y, points[3].y)
 				};
 			}
 			else
@@ -176,10 +171,10 @@ namespace oly::col2d
 					points[i] = inverse_rotation * points[i];
 
 				AABB aabb{
-					.x1 = min(points[0].x, points[1].x, points[2].x, points[3].x),
-					.x2 = max(points[0].x, points[1].x, points[2].x, points[3].x),
-					.y1 = min(points[1].y, points[1].y, points[2].y, points[3].y),
-					.y2 = max(points[1].y, points[1].y, points[2].y, points[3].y)
+					.x1 = imp::min(points[0].x, points[1].x, points[2].x, points[3].x),
+					.x2 = imp::max(points[0].x, points[1].x, points[2].x, points[3].x),
+					.y1 = imp::min(points[1].y, points[1].y, points[2].y, points[3].y),
+					.y2 = imp::max(points[1].y, points[1].y, points[2].y, points[3].y)
 				};
 
 				return OBB{ .center = rot.rotation_matrix() * aabb.center(), .width = aabb.width(), .height = aabb.height(), .rotation = rot.rotation() };
@@ -223,8 +218,8 @@ namespace oly::col2d
 
 	AABB Element::aabb_wrap() const
 	{
-		if (id == internal::ElementID::AABB)
-			return *obj.cast<AABB>();
+        if (auto obj = _obj.as<AABB>())
+            return *obj;
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
 		{\
@@ -258,14 +253,9 @@ namespace oly::col2d
 #undef OLY_ELEMENT_RAYCAST
 	}
 
-#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class)\
-	case internal::ElementIDTrait<Class>::ID:\
-		Macro(p, c.obj.cast<Class>())\
-		break;
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) if (auto their_obj = c._obj.as<Class>()) { Macro(p, their_obj); }
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
-	switch (c.id)\
-	{\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, AABB);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, OBB);\
@@ -277,9 +267,6 @@ namespace oly::col2d
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP6);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP7);\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, KDOP8);\
-		default:\
-			throw Error(ErrorCode::UnsupportedSwitchCase);\
-	}
 
 	OverlapResult Element::overlaps(const Element& c) const
 	{

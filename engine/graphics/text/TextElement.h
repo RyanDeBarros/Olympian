@@ -2,9 +2,10 @@
 
 #include "core/base/Parameters.h"
 #include "core/base/Color.h"
-#include "core/util/UTF.h"
 
 #include "graphics/text/FontFamily.h"
+
+#include <imp/utf.hpp>
 
 namespace oly::rendering
 {
@@ -12,7 +13,7 @@ namespace oly::rendering
 	
 	struct Font
 	{
-		using Variant = Variant<FontSelection, FontAtlasRef, RasterFontRef>;
+		using Variant = imp::variant<FontSelection, FontAtlasRef, RasterFontRef>;
 
 		Variant f;
 
@@ -36,15 +37,15 @@ namespace oly::rendering
 		bool operator==(const Font& other) const;
 
 		bool adj_compat(const Font& other) const;
-		bool support(utf::Codepoint c) const;
-		void set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos, glm::vec2 scale) const;
-		float advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const;
+		bool support(imp::utf::codepoint c) const;
+		void set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos, glm::vec2 scale) const;
+		float advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const;
 	};
 
 	struct TextElement
 	{
 		Font font;
-		utf::String text = "";
+		imp::utf::string text = "";
 		Color text_color = colors::WHITE;
 		float adj_offset = 0.0f;
 		glm::vec2 scale = glm::vec2(1.0f);
@@ -56,7 +57,7 @@ namespace oly::rendering
 		static std::vector<TextElement> expand(const TextElement& element);
 		static void expand(const TextElement& element, std::vector<TextElement>& to);
 
-		void set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos) const { font.set_glyph(glyph, c, pos, scale); }
-		float advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const { return font.advance_width(c, next_codepoint) * scale.x; }
+		void set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos) const { font.set_glyph(glyph, c, pos, scale); }
+		float advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const { return font.advance_width(c, next_codepoint) * scale.x; }
 	};
 }

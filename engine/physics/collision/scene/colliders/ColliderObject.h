@@ -4,134 +4,67 @@
 #include "physics/collision/objects/Combinations.h"
 
 #include "core/math/Shapes.h"
-#include "core/containers/BlackBox.h"
+
+#include <imp/type_delimiter.hpp>
 
 namespace oly::col2d::internal
 {
-	enum class CObjID : unsigned int
-	{
-		TPRIMITIVE,
-		TCOMPOUND,
-		TBVH_AABB,
-		TBVH_OBB,
-		TBVH_KDOP2,
-		TBVH_KDOP3,
-		TBVH_KDOP4,
-		TBVH_KDOP5,
-		TBVH_KDOP6,
-		TBVH_KDOP7,
-		TBVH_KDOP8,
-		_c
-	};
+#define _OLY_COBJ_GENERATOR(M) \
+        M((TPrimitive)) \
+        M((TCompound)) \
+        M((TBVH<AABB>)) \
+        M((TBVH<OBB>)) \
+        M((TBVH<KDOP2>)) \
+        M((TBVH<KDOP3>)) \
+        M((TBVH<KDOP4>)) \
+        M((TBVH<KDOP5>)) \
+        M((TBVH<KDOP6>)) \
+        M((TBVH<KDOP7>)) \
+        M((TBVH<KDOP8>))
 
-	template<typename T>
-	struct CObjIDTrait;
-
-	template<typename T>
-	constexpr size_t cobj_id_of = (size_t)CObjIDTrait<std::decay_t<T>>::ID;
-
-	template<>
-	struct CObjIDTrait<TPrimitive>
-	{
-		static constexpr CObjID ID = CObjID::TPRIMITIVE;
-	};
-
-	template<>
-	struct CObjIDTrait<TCompound>
-	{
-		static constexpr CObjID ID = CObjID::TCOMPOUND;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<AABB>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_AABB;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<OBB>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_OBB;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP2>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP2;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP3>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP3;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP4>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP5>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP6>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP7>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
-	};
-
-	template<>
-	struct CObjIDTrait<TBVH<KDOP8>>
-	{
-		static constexpr CObjID ID = CObjID::TBVH_KDOP4;
-	};
-
-	template<typename T>
-	concept ColliderObjectShape = requires { { CObjIDTrait<std::decay_t<T>>::ID } -> std::convertible_to<CObjID>; };
+    IMP_TYPE_DELIMITER(_OLY_COBJ_GENERATOR, CObj);
 
 	class ColliderObject
 	{
-		BlackBox _obj;
-		CObjID _id;
+        imp::box _obj;
 
 	public:
-		template<ColliderObjectShape CObj>
-		ColliderObject(CObj&& obj) : _obj(std::forward<CObj>(obj)), _id(CObjIDTrait<std::decay_t<CObj>>::ID) {}
+		template<CObj_check CObj>
+		ColliderObject(CObj&& obj) : _obj(imp::forward_to_box(std::forward<CObj>(obj))) {}
 
-		ColliderObject() : _obj(TPrimitive()), _id(CObjIDTrait<TPrimitive>::ID) {}
-		ColliderObject(const ColliderObject& other) : _obj(other._obj), _id(other._id) {}
-		ColliderObject(ColliderObject&& other) noexcept : _obj(std::move(other._obj)), _id(other._id) {}
-		ColliderObject& operator=(const ColliderObject& other) { if (this != &other) { _obj = other._obj; _id = other._id; } return *this; }
-		ColliderObject& operator=(ColliderObject&& other) noexcept { if (this != &other) { _obj = std::move(other._obj); _id = other._id; } return *this; }
+		ColliderObject()
+            : _obj(imp::make_box<TPrimitive>())
+        {}
+		
+		const void* raw_obj() const
+        {
+            return _obj.unsafe_raw();
+        }
 
-		const void* raw_obj() const { return _obj.raw(); }
-		void* raw_obj() { return _obj.raw(); }
-		size_t id() const { return (size_t)_id; }
+        void* raw_obj()
+        {
+            return _obj.unsafe_raw();
+        }
+		
+        size_t type_index() const
+        {
+            return CObj_index(_obj.type());
+        }
 
-		template<ColliderObjectShape CObj>
+		template<CObj_check CObj>
 		const CObj& get() const
 		{
-			if (CObjIDTrait<CObj>::ID == _id)
-				return *_obj.cast<CObj>();
+            if (auto obj = _obj.as<CObj>())
+                return *obj;
 			else
 				throw Error(ErrorCode::INVALID_TYPE);
 		}
 
-		template<ColliderObjectShape CObj>
+		template<CObj_check CObj>
 		CObj& set()
 		{
-			if (CObjIDTrait<CObj>::ID == _id)
-				return *_obj.cast<CObj>();
+            if (auto obj = _obj.as<CObj>())
+                return *obj;
 			else
 				throw Error(ErrorCode::INVALID_TYPE);
 		}

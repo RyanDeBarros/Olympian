@@ -1,8 +1,9 @@
 #include "Compound.h"
 
 #include "core/algorithms/GoldenSectionSearch.h"
-#include "core/containers/FixedVector.h"
 #include "physics/collision/methods/Collide.h"
+
+#include <imp/fixed_array.hpp>
 
 namespace oly::col2d
 {
@@ -63,17 +64,17 @@ namespace oly::col2d
 		}
 	}
 
-	static FixedVector<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element& static_element)
+	static imp::fixed_array<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element& static_element)
 	{
-		FixedVector<MTVPosNeg> mtvs(num_active_elements);
+		imp::fixed_array<MTVPosNeg> mtvs(num_active_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
 			mtvs[i] = generate_mtv(active_elements[i], static_element);
 		return mtvs;
 	}
 
-	static FixedVector<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
+	static imp::fixed_array<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element* static_elements, const size_t num_static_elements)
 	{
-		FixedVector<MTVPosNeg> mtvs(num_active_elements * num_static_elements);
+		imp::fixed_array<MTVPosNeg> mtvs(num_active_elements * num_static_elements);
 		for (size_t i = 0; i < num_active_elements; ++i)
 			for (size_t j = 0; j < num_static_elements; ++j)
 				mtvs[i * num_static_elements + j] = generate_mtv(active_elements[i], static_elements[j]);
@@ -117,7 +118,7 @@ namespace oly::col2d
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const Element& static_element, const FixedVector<MTVPosNeg>& mtvs)
+		const Element& static_element, const imp::fixed_array<MTVPosNeg>& mtvs)
 	{
 		float max_sep = 0.0f;
 		for (size_t i = 0; i < num_active_elements; ++i)
@@ -126,7 +127,7 @@ namespace oly::col2d
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const Element* static_elements, const size_t num_static_elements, const FixedVector<MTVPosNeg>& mtvs)
+		const Element* static_elements, const size_t num_static_elements, const imp::fixed_array<MTVPosNeg>& mtvs)
 	{
 		float max_sep = 0.0f;
 		for (size_t i = 0; i < num_active_elements; ++i)
@@ -138,19 +139,19 @@ namespace oly::col2d
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
 		const Element& static_element, const CompoundPerfParameters perf)
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
+		const imp::fixed_array<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
 		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_element, mtvs); }, perf);
 	}
 
 	CollisionResult compound_collision(const Element* active_elements, const size_t num_active_elements,
 		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
+		const imp::fixed_array<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
 		return compound_collision_generic([&](UnitVector2D axis) { return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements, mtvs); }, perf);
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements,
-		const Element& static_element, size_t& most_significant_active_element, const FixedVector<MTVPosNeg>& mtvs)
+		const Element& static_element, size_t& most_significant_active_element, const imp::fixed_array<MTVPosNeg>& mtvs)
 	{
 		float max_sep = 0.0f;
 		for (size_t i = 0; i < num_active_elements; ++i)
@@ -166,7 +167,7 @@ namespace oly::col2d
 	}
 
 	static float separation(const UnitVector2D& axis, const Element* active_elements, const size_t num_active_elements, const Element* static_elements,
-		const size_t num_static_elements, size_t& most_significant_active_element, size_t& most_significant_static_element, const FixedVector<MTVPosNeg>& mtvs)
+		const size_t num_static_elements, size_t& most_significant_active_element, size_t& most_significant_static_element, const imp::fixed_array<MTVPosNeg>& mtvs)
 	{
 		float max_sep = 0.0f;
 		for (size_t i = 0; i < num_active_elements; ++i)
@@ -207,7 +208,7 @@ namespace oly::col2d
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
 		const Element& static_element, const CompoundPerfParameters perf)
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
+		const imp::fixed_array<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_element);
 		size_t most_significant_active_element = 0;
 		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
 			{ return separation(axis, active_elements, num_active_elements, static_element, most_significant_active_element, mtvs); }, perf);
@@ -217,7 +218,7 @@ namespace oly::col2d
 	ContactResult compound_contact(const Element* active_elements, const size_t num_active_elements,
 		const Element* static_elements, const size_t num_static_elements, const CompoundPerfParameters perf)
 	{
-		const FixedVector<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
+		const imp::fixed_array<MTVPosNeg> mtvs = generate_mtvs(active_elements, num_active_elements, static_elements, num_static_elements);
 		size_t most_significant_active_element = 0, most_significant_static_element = 0;
 		CollisionResult collision = compound_collision_generic([&](UnitVector2D axis)
 			{ return separation(axis, active_elements, num_active_elements, static_elements, num_static_elements,

@@ -2,32 +2,33 @@
 
 #include "panels/IPanel.h"
 
-#include "core/UndoHistory.h"
 #include "core/SpecialUndoActions.h"
 
 #include "assets/ResourcePath.h"
 #include "assets/KeyDecl.h"
-#include "util/TimelineQueue.h"
-#include "util/FunctionalEvent.h"
-
-#include <set>
 
 #include <imtk.hpp>
+
+#include <imp/event.hpp>
+#include <imp/timeline_queue.hpp>
+#include <imp/undo_history.hpp>
+
+#include <set>
 
 namespace oly::editor
 {
 	class ContentBrowserPanel : public IPanel
 	{
 		std::filesystem::path _folder;
-		bool _favorited = false;
+		imtk::w::icon_button _favorited;
 		bool _on_res_root = true;
 		std::vector<std::filesystem::path> _selectable_entry_paths;
 		std::vector<std::filesystem::path> _selected_paths;
 		std::optional<std::filesystem::path> _active_selected_path;
-		TimelineQueue<std::filesystem::path> _folder_history;
-		UndoHistory _undo_history;
+		imp::timeline_queue<std::filesystem::path> _folder_history;
+		imp::undo_history _undo_history;
 		std::string _rename_buffer;
-		FunctionalEvent<>::Handle _listener;
+		imp::event_listener _listener;
 
 		struct NewAssetInfo
 		{
@@ -113,4 +114,20 @@ namespace oly::editor
 		void PrunePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue);
 		void DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue);
 	};
+
+	struct ContentBrowserPathDDP : public imtk::drag_droppable
+	{
+		std::string path;
+
+		ContentBrowserPathDDP(std::string path);
+
+		void send(const std::function<void(const void*, size_t)>& dump) const override;
+	};
 }
+
+template<>
+struct imtk::drag_drop_convert<oly::editor::ContentBrowserPathDDP>
+{
+	using payload_view = std::string_view;
+	payload_view view(const void* buf, size_t size) const;
+};

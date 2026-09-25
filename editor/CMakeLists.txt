@@ -14,14 +14,24 @@ endif()
 #    imgui-toolkit
 # ====================
 
-FetchContent_Declare(
-    imtk
-    GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
-    GIT_TAG        main
-    # TODO v9.3 use specific tag
-)
+set(IMTK_LOCAL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.submodule/imgui-toolkit")
 
-FetchContent_MakeAvailable(imtk)
+if (EXISTS "${IMTK_LOCAL_DIR}/CMakeLists.txt")
+    message(STATUS "Using imgui-toolkit local submodule")
+    add_subdirectory(
+        "${IMTK_LOCAL_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/imgui-toolkit"
+    )
+else()
+    FetchContent_Declare(
+        imtk
+        GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
+        GIT_TAG        main
+        # TODO LATER use specific tag
+    )
+
+    FetchContent_MakeAvailable(imtk)
+endif()
 
 
 # ====================
@@ -157,6 +167,8 @@ endif()
 target_compile_definitions(OlympianEditor PUBLIC
 	GLEW_STATIC
 	IMGUI_DEFINE_MATH_OPERATORS
+    IMTK_KEY_TYPE=oly::detail::Key
+    IMTK_KEY_DECL_PATH="assets/KeyDecl.h"
 )
 
 target_link_libraries(OlympianEditor PRIVATE
@@ -165,6 +177,7 @@ target_link_libraries(OlympianEditor PRIVATE
     glm::glm
 	libglew_static
     tomlplusplus::tomlplusplus
+    imperious
 )
 
 target_link_libraries(OlympianEditor PUBLIC OlympianDetail)
@@ -180,12 +193,11 @@ target_sources(OlympianEditor PRIVATE
 )
 
 # Add subdirectories
+add_subdirectory(bindings)
 add_subdirectory(core)
 add_subdirectory(desc)
 add_subdirectory(documents)
-add_subdirectory(external)
 add_subdirectory(fio)
-add_subdirectory(gui)
 add_subdirectory(panels)
 
 add_custom_command(TARGET OlympianEditor POST_BUILD

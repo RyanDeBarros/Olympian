@@ -4,13 +4,15 @@
 #include "graphics/particles/implementations/Spawners.h"
 #include "graphics/particles/implementations/Samplers.h"
 #include "graphics/particles/implementations/Domains.h"
+
 #include "core/util/StringParam.h"
+#include "core/util/Polyklass.h"
 
 #include "definitions/Keys.h"
 
 namespace oly::particles
 {
-	void IParticleSpawner::overload(Polymorphic<IParticleSpawner>& spawner, TOMLNode node)
+	void IParticleSpawner::overload(imp::poly<IParticleSpawner>& spawner, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -24,7 +26,7 @@ namespace oly::particles
 			spawner->overload(node);
 	}
 
-	void ISampler1D::overload(Polymorphic<ISampler1D>& sampler, TOMLNode node)
+	void ISampler1D::overload(imp::poly<ISampler1D>& sampler, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -37,7 +39,7 @@ namespace oly::particles
 			sampler->overload(node);
 	}
 
-	void IDomain1D::overload(Polymorphic<IDomain1D>& domain, TOMLNode node)
+	void IDomain1D::overload(imp::poly<IDomain1D>& domain, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -64,7 +66,7 @@ namespace oly::particles
 		domain->overload(parser.field(detail::Key::Domain));
 	}
 
-	void ISampler2D::overload(Polymorphic<ISampler2D>& sampler, TOMLNode node)
+	void ISampler2D::overload(imp::poly<ISampler2D>& sampler, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -76,7 +78,7 @@ namespace oly::particles
 			sampler->overload(node);
 	}
 
-	void IDomain2D::overload(Polymorphic<IDomain2D>& domain, TOMLNode node)
+	void IDomain2D::overload(imp::poly<IDomain2D>& domain, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -101,7 +103,7 @@ namespace oly::particles
 		domain->overload(parser.field(detail::Key::Domain));
 	}
 
-	void ISampler3D::overload(Polymorphic<ISampler3D>& sampler, TOMLNode node)
+	void ISampler3D::overload(imp::poly<ISampler3D>& sampler, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -113,7 +115,7 @@ namespace oly::particles
 			sampler->overload(node);
 	}
 
-	void IDomain3D::overload(Polymorphic<IDomain3D>& domain, TOMLNode node)
+	void IDomain3D::overload(imp::poly<IDomain3D>& domain, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -138,7 +140,7 @@ namespace oly::particles
 		domain->overload(parser.field(detail::Key::Domain));
 	}
 
-	void ISampler4D::overload(Polymorphic<ISampler4D>& sampler, TOMLNode node)
+	void ISampler4D::overload(imp::poly<ISampler4D>& sampler, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
@@ -150,7 +152,7 @@ namespace oly::particles
 			sampler->overload(node);
 	}
 
-	void IDomain4D::overload(Polymorphic<IDomain4D>& domain, TOMLNode node)
+	void IDomain4D::overload(imp::poly<IDomain4D>& domain, TOMLNode node)
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 

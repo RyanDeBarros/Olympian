@@ -7,7 +7,7 @@ namespace oly::rendering
 {
 	class NineSlice
 	{
-		mutable FixedVector<Sprite> sprites;
+		mutable imp::fixed_vector<Sprite> sprites;
 
 		Sprite& sprite(unsigned char x, unsigned char y) const;
 

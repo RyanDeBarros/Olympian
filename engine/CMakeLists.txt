@@ -152,6 +152,7 @@ target_link_libraries(OlympianEngine PUBLIC
     glm::glm
     tomlplusplus::tomlplusplus
     quartic
+    imperious
 )
 
 target_link_libraries(OlympianEngine PUBLIC OlympianDetail)

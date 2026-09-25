@@ -1,6 +1,5 @@
 #include "LiveSettings.h"
 
-#include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
 #include "definitions/Keys.h"
@@ -31,17 +30,17 @@ namespace oly::editor
 			}
 			catch (const toml::parse_error& e)
 			{
-				Logger::LogWarning("Cannot load editor live settings: " + std::string(e.what()));
+				imtk::log_warning("Cannot load editor live settings: " + std::string(e.what()));
 			}
 		}
 
-		desc.Load(TOMLNode(table));
+		desc.load(imtk::toml_node(table));
 	}
 
 	void LiveSettings::Dump()
 	{
 		toml::table table;
-		desc.Dump(table);
+		desc.dump(table);
 		std::filesystem::path path = GetPath().get_absolute();
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);

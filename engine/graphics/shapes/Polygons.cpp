@@ -1,7 +1,5 @@
 #include "Polygons.h"
 
-#include <algorithm>
-
 #include "core/context/rendering/Rendering.h"
 #include "core/math/Triangulation.h"
 #include "core/cmath/Triangulation.h"
@@ -10,6 +8,10 @@
 #include "graphics/shapes/Definitions.h"
 
 #include "definitions/Keys.h"
+
+#include <imp/util.hpp>
+
+#include <algorithm>
 
 namespace oly::rendering
 {

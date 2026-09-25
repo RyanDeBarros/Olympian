@@ -24,7 +24,7 @@ namespace oly::physics
 	float moment_of_inertia(const col2d::Element& e, float mass, bool relative_to_cm)
 	{
 		return e.variant().visit([mass, relative_to_cm](const auto& e) {
-			if constexpr (visiting_class_is<decltype(*e), col2d::Circle>)
+			if constexpr (imp::decays_one_of<decltype(*e), col2d::Circle>)
 			{
 				if (relative_to_cm)
 				{
@@ -49,7 +49,7 @@ namespace oly::physics
 			}
 			else if (relative_to_cm)
 			{
-				if constexpr (visiting_class_is<decltype(*e), col2d::OBB>)
+				if constexpr (imp::decays_one_of<decltype(*e), col2d::OBB>)
 					return moment_of_inertia(e->points(), mass, e->center);
 				else
 					return moment_of_inertia(e->points(), mass, e->center());

@@ -2,8 +2,6 @@
 
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
-#include "gui/ImGuiWrapper.h"
-#include "gui/properties/PropertyGrid.h"
 
 #include "assets/MetaSplitter.h"
 #include "definitions/Keys.h"
@@ -30,8 +28,9 @@ namespace oly::editor
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        auto style_stack = imtk::style_stack().
+            push(ImGuiStyleVar_WindowRounding, 0.0f).
+            push(ImGuiStyleVar_WindowBorderSize, 0.0f).apply();
 
         ImGuiWindowFlags window_flags =
             ImGuiWindowFlags_NoDocking |
@@ -42,26 +41,24 @@ namespace oly::editor
             ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus;
 
-        ImGui::Begin("Project Select Window", nullptr, window_flags);
-        ImGui::PopStyleVar(2);
-
+        if (auto _ = imtk::window("Project Select Window", window_flags))
         {
-            gui::PropertyGrid grid;
-            DrawOpenExistingGroup();
-        }
+            style_stack.kill();
 
-        ImGui::End();
+            if (auto grid = imtk::prop::grid())
+                DrawOpenExistingGroup();
+        }
 	}
 
     void ProjectSelectWindow::DrawOpenExistingGroup()
     {
-        ImGui::BeginGroup();
-        ImGui::TextUnformatted("Open Existing Project");
+        imtk::group group;
 
+        ImGui::TextUnformatted("Open Existing Project");
         ImGui::TextUnformatted("Project File");
 
         ImGui::SameLine();
-        if (gui::InputText("##ProjectFile", _project_file))
+        if (imtk::controls::input_text("##ProjectFile", _project_file))
             CheckProjectFile();
 
         ImGui::SameLine();
@@ -87,12 +84,11 @@ namespace oly::editor
             ImGuiFileDialog::Instance()->Close();
         }
 
-        ImGui::BeginDisabled(!_valid_project_file);
-        if (ImGui::Button("Open"))
-            OpenProject();
-        ImGui::EndDisabled();
-
-        ImGui::EndGroup();
+        if (auto d = imtk::disabled(!_valid_project_file))
+        {
+            if (ImGui::Button("Open"))
+                OpenProject();
+        }
     }
 
     void ProjectSelectWindow::CheckProjectFile()

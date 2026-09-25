@@ -1,12 +1,9 @@
 #include "FontFamilyDocument.h"
 
-#include "core/editor/Notifier.h"
-
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
-#include "util/Parser.h"
+
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
@@ -18,7 +15,7 @@ namespace oly::editor
 	void FontFamilyDocument::InitImpl()
 	{
 		if (!GetOlyPath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
 		LoadAsset();
 	}
@@ -28,13 +25,12 @@ namespace oly::editor
 		auto pre_draw = PreDraw();
 
 		imtk::id_scope scope(this);
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
-			DataPath path;
-			Draw(path, _desc.scratch, "Regular", detail::FontStyleMode::Regular);
-			Draw(path, _desc.scratch, "Bold", detail::FontStyleMode::Bold);
-			Draw(path, _desc.scratch, "Italic", detail::FontStyleMode::Italic);
-			Draw(path, _desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+			Draw(_desc.scratch, "Regular", detail::FontStyleMode::Regular);
+			Draw(_desc.scratch, "Bold", detail::FontStyleMode::Bold);
+			Draw(_desc.scratch, "Italic", detail::FontStyleMode::Italic);
+			Draw(_desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
 		}
 	}
 
@@ -47,15 +43,15 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load font family - corrupted asset: " + _oly_path.string());
+				imtk::notify_error("cannot load font family - corrupted asset: " + _oly_path.string());
 
 			MarkClean();
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -65,7 +61,7 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 	}
 
 	void FontFamilyDocument::DumpImpl()
@@ -73,58 +69,53 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
 	void FontFamilyDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& FontFamilyDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& FontFamilyDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& FontFamilyDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}
 
-	void FontFamilyDocument::Draw(DataPath path, FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
+	void FontFamilyDocument::Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)
 	{
-		if (auto section = Subform(subform_header))
-			Draw(path / desc.subpaths.styles / desc.styles.Subpath(style), desc.styles[style]);
+		if (auto subform = imtk::prop::subform(subform_header))
+			Draw(desc.styles[style]);
 	}
 
-	void FontFamilyDocument::Draw(DataPath path, FontStyleDesc& desc)
+	void FontFamilyDocument::Draw(FontStyleDesc& desc)
 	{
-		DRAW_FIELDS(STYLE_GENERATOR);
+		IMTK_DRAW_FIELDS(STYLE_GENERATOR);
 	}
 
-	void FontFamilyDocument::Load(TOMLNode node, FontFamilyDesc& desc)
+	void FontFamilyDocument::Load(imtk::toml_node node, FontFamilyDesc& desc)
 	{
-		desc.styles.Clear();
+		desc.styles.clear();
 
-		if (auto table = node[detail::encode_key(desc.styles_key)].as_table())
+		if (auto table = desc.styles.subnode(node).as_table())
 		{
 			for (auto&& [key, subnode] : *table)
 			{
-				auto style = stoi(key.str());
-				if (!style)
-					continue;
-
-				FontStyleDesc subdesc;
-				Load(TOMLNode(subnode), subdesc);
-				desc.styles.map.emplace(static_cast<detail::FontStyleMode>(*style), std::move(subdesc));
+				if (auto style = imp::stoi(key.str()))
+					Load(imtk::toml_node(subnode), desc.styles[static_cast<detail::FontStyleMode>(*style)]);
 			}
 		}
 	}
 
-	void FontFamilyDocument::Load(TOMLNode node, FontStyleDesc& desc)
+	void FontFamilyDocument::Load(imtk::toml_node node, FontStyleDesc& desc)
 	{
-		LOAD_FIELDS(STYLE_GENERATOR);
+		IMTK_LOAD_FIELDS(STYLE_GENERATOR);
 	}
 
 	void FontFamilyDocument::Dump(toml::table& table, FontFamilyDesc& desc)
@@ -136,11 +127,11 @@ namespace oly::editor
 			Dump(inner, subdesc);
 			subtable.insert_or_assign(std::to_string(style), std::move(inner));
 		}
-		table.insert_or_assign(detail::encode_key(desc.styles_key), std::move(subtable));
+		desc.styles.dump_into(table, std::move(subtable));
 	}
 
 	void FontFamilyDocument::Dump(toml::table& table, FontStyleDesc& desc)
 	{
-		DUMP_FIELDS(STYLE_GENERATOR);
+		IMTK_DUMP_FIELDS(STYLE_GENERATOR);
 	}
 }

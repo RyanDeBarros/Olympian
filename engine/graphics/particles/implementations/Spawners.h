@@ -6,6 +6,8 @@ namespace oly::particles
 {
 	struct ConstantParticleSpawner : public IParticleSpawner
 	{
+        IMP_POLYMORPHIC_IMPL((ConstantParticleSpawner));
+
 		float rate = 0.0f;
 
 		ConstantParticleSpawner(float rate = 10.0f) : rate(rate) {}
@@ -13,12 +15,12 @@ namespace oly::particles
 		float spawn_debt(float time, float delta_time, float period) const override;
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(ConstantParticleSpawner);
 	};
 
 	struct BurstParticleSpawner : public IParticleSpawner
 	{
+        IMP_POLYMORPHIC_IMPL((BurstParticleSpawner));
+
 		float rate = 0.0f;
 		float duration = 0.0f;
 		float time_offset = 0.0f;
@@ -28,7 +30,5 @@ namespace oly::particles
 		float spawn_debt(float time, float delta_time, float period) const override;
 
 		void overload(TOMLNode node) override;
-
-		OLY_POLYMORPHIC_CLONE_OVERRIDE(BurstParticleSpawner);
 	};
 }

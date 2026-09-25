@@ -2,28 +2,33 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/SignalDesc.h"
-#include "desc/DoubleDescriptor.h"
+#include "desc/SignalDesc.h"
 
 #include "core/InputListener.h"
 
 #include "assets/MetaSplitter.h"
-#include "util/Counter.h"
+
+#include <imp/counter.hpp>
 
 namespace oly::editor
 {
 	class SignalDocument : public IDocument
 	{
-		DoubleDescriptor<SignalFullDesc> _desc;
+		imtk::desc::doubler<SignalFullDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListModel _signal_slots;
-		gui::ListModel _route_slots;
+		imtk::w::owned_list_indexer _signal_slots;
+		imtk::w::owned_list_indexer _route_slots;
 
 		ListenMode _listen_mode = ListenMode::None;
 		bool _stop_listening = true;
 
+		imp::counter<std::string> _signal_id_counter;
+		imp::counter<std::string> _route_id_counter;
+		imp::counter<std::string> _id_counter;
+		imp::counter<std::string> _route_local_signal_id_counter;
+
 	public:
-		using IDocument::IDocument;
+		SignalDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 
@@ -32,44 +37,41 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 	private:
-		void Draw(DataPath path, VectorDesc<SignalDesc>& desc);
-		void Draw(DataPath path, VectorDesc<RouteDesc>& desc);
-		Counter<std::string> GetSignalIDCounter() const;
-		Counter<std::string> GetRouteIDCounter() const;
-		Counter<std::string> GetIDCounter() const;
+		void Draw(imtk::desc::vector<SignalDesc>& desc);
+		void Draw(imtk::desc::vector<RouteDesc>& desc);
 
-		void Draw(DataPath path, SignalDesc& desc);
-		void Draw(DataPath path, RouteDesc& desc);
-		void Draw(DataPath path, KeyDesc& desc);
-		void Draw(DataPath path, MouseButtonDesc& desc);
-		void Draw(DataPath path, GamepadButtonDesc& desc);
-		void Draw(DataPath path, GamepadAxis1DDesc& desc);
-		void Draw(DataPath path, GamepadAxis2DDesc& desc);
-		void Draw(DataPath path, CursorPosDesc& desc);
-		void Draw(DataPath path, ScrollDesc& desc);
-		void Draw(DataPath path, Modifier0dDesc& desc);
-		void Draw(DataPath path, Modifier1dDesc& desc);
-		void Draw(DataPath path, Modifier2dDesc& desc);
-		void Draw(DataPath path, ModifierBaseDesc& desc);
+		void Draw(SignalDesc& desc);
+		void Draw(RouteDesc& desc);
+		void Draw(KeyDesc& desc);
+		void Draw(MouseButtonDesc& desc);
+		void Draw(GamepadButtonDesc& desc);
+		void Draw(GamepadAxis1DDesc& desc);
+		void Draw(GamepadAxis2DDesc& desc);
+		void Draw(CursorPosDesc& desc);
+		void Draw(ScrollDesc& desc);
+		void Draw(Modifier0dDesc& desc);
+		void Draw(Modifier1dDesc& desc);
+		void Draw(Modifier2dDesc& desc);
+		void Draw(ModifierBaseDesc& desc);
 
-		void Load(TOMLNode node, SignalFullDesc& desc);
-		void Load(TOMLNode node, SignalDesc& desc);
-		void Load(TOMLNode node, RouteDesc& desc);
-		void Load(TOMLNode node, KeyDesc& desc);
-		void Load(TOMLNode node, MouseButtonDesc& desc);
-		void Load(TOMLNode node, GamepadButtonDesc& desc);
-		void Load(TOMLNode node, GamepadAxis1DDesc& desc);
-		void Load(TOMLNode node, GamepadAxis2DDesc& desc);
-		void Load(TOMLNode node, CursorPosDesc& desc);
-		void Load(TOMLNode node, ScrollDesc& desc);
-		void Load(TOMLNode node, Modifier0dDesc& desc);
-		void Load(TOMLNode node, Modifier1dDesc& desc);
-		void Load(TOMLNode node, Modifier2dDesc& desc);
-		void Load(TOMLNode node, ModifierBaseDesc& desc);
+		void Load(imtk::toml_node node, SignalFullDesc& desc);
+		void Load(imtk::toml_node node, SignalDesc& desc);
+		void Load(imtk::toml_node node, RouteDesc& desc);
+		void Load(imtk::toml_node node, KeyDesc& desc);
+		void Load(imtk::toml_node node, MouseButtonDesc& desc);
+		void Load(imtk::toml_node node, GamepadButtonDesc& desc);
+		void Load(imtk::toml_node node, GamepadAxis1DDesc& desc);
+		void Load(imtk::toml_node node, GamepadAxis2DDesc& desc);
+		void Load(imtk::toml_node node, CursorPosDesc& desc);
+		void Load(imtk::toml_node node, ScrollDesc& desc);
+		void Load(imtk::toml_node node, Modifier0dDesc& desc);
+		void Load(imtk::toml_node node, Modifier1dDesc& desc);
+		void Load(imtk::toml_node node, Modifier2dDesc& desc);
+		void Load(imtk::toml_node node, ModifierBaseDesc& desc);
 
 		void Dump(toml::table& table, SignalFullDesc& desc);
 		void Dump(toml::table& table, SignalDesc& desc);

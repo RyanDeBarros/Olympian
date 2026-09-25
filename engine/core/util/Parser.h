@@ -345,7 +345,10 @@ namespace oly::assets
 
 			typename Translator::EnumType operator()(typename Translator::EnumType def = Translator::val(), std::source_location location = std::source_location::current()) const
 			{
-				return get_from_optional(this->parse_enum<true, Translator>(location, def), std::move(def));
+                if (auto e = this->parse_enum<true, Translator>(location, def))
+                    return *e;
+                else
+                    return std::move(def);
 			}
 		};
 
@@ -395,7 +398,13 @@ namespace oly::assets
 
 			bool operator()(typename Translator::EnumType& obj, std::source_location location = std::source_location::current()) const
 			{
-				return set_from_optional(obj, this->parse_enum<TypeFallback, Translator>(location));
+                if (auto e = this->parse_enum<TypeFallback, Translator>(location))
+                {
+                    obj = *e;
+                    return true;
+                }
+                else
+                    return false;
 			}
 
 			std::optional<typename Translator::EnumType> operator()(std::source_location location = std::source_location::current()) const
@@ -468,7 +477,13 @@ namespace oly::assets
 
 			bool operator()(TOMLNode& obj, std::source_location location = std::source_location::current()) const
 			{
-				return set_from_optional(obj, this->optional_node(location));
+                if (auto o = this->optional_node(location))
+                {
+                    obj = *o;
+                    return true;
+                }
+                else
+                    return false;
 			}
 
 			bool operator()(std::optional<TOMLNode>& obj, std::source_location location = std::source_location::current()) const

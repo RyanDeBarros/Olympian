@@ -9,7 +9,9 @@
 
 #include "core/math/Shapes.h"
 #include "core/base/Constants.h"
-#include "core/types/Issuer.h"
+
+#include <imp/auto_tracker.hpp>
+#include <imp/id_generator.hpp>
 
 namespace oly::rendering
 {
@@ -19,7 +21,7 @@ namespace oly::rendering
 
 		class SpriteReference;
 
-		class SpriteBatch : public AutoRegistrable<SpriteBatch>, public oly::internal::Issuer<SpriteBatch>
+		class SpriteBatch : public imp::auto_trackable<SpriteBatch>, public imp::issuer<SpriteBatch>
 		{
 			friend class SpriteReference;
 
@@ -118,7 +120,7 @@ namespace oly::rendering
 			void render() const;
 
 		private:
-			SoftIDGenerator<GLuint> id_generator;
+			imp::soft_id_generator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);
 			static void assert_valid_id(GLuint id);
 			GLuint gen_sprite_id();
@@ -172,13 +174,13 @@ namespace oly::rendering
 		};
 	}
 
-	using SpriteBatch = PublicIssuer<internal::SpriteBatch>;
+	using SpriteBatch = imp::issuer_instance<internal::SpriteBatch>;
 
 	namespace internal
 	{
-		class SpriteReference : public PublicIssuerHandle<SpriteBatch>
+		class SpriteReference : public imp::ticket<SpriteBatch>
 		{
-			using Super = PublicIssuerHandle<SpriteBatch>;
+			using Super = imp::ticket<SpriteBatch>;
 			GLuint id = SpriteBatch::NULL_ID;
 
 		public:

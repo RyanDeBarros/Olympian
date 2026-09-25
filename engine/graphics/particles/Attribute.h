@@ -1,8 +1,9 @@
 #pragma once
 
 #include "external/GLM.h"
-#include "core/types/Polymorphic.h"
 #include "core/util/Parser.h"
+
+#include <imp/polymorphic.hpp>
 
 #include <unordered_set>
 #include <functional>
@@ -270,14 +271,14 @@ namespace oly::particles
 	using AttributeSpan = TAttributeSpan<false>;
 	using ConstAttributeSpan = TAttributeSpan<true>;
 
-	struct IAttributeOperation
+	struct IAttributeOperation : public imp::polymorphic
 	{
+        IMP_POLYMORPHIC_IMPL((IAttributeOperation));
+
 		virtual ~IAttributeOperation() = default;
 		virtual void op(const ParticleEmitter& emitter, AttributeSpan attribute) const {}
 
-		OLY_POLYMORPHIC_CLONE_DEFINITION(IAttributeOperation);
-
-		static Polymorphic<IAttributeOperation> load(TOMLNode node);
+		static imp::poly<IAttributeOperation> load(TOMLNode node);
 	};
 
 	namespace internal
@@ -289,7 +290,7 @@ namespace oly::particles
 	struct Attribute
 	{
 		T value;
-		Polymorphic<IAttributeOperation> op;
+		imp::poly<IAttributeOperation> op = nullptr;
 
 		void on_tick(const ParticleEmitter& emitter) { if (op) op->op(emitter, AttributeSpan(value)); }
 
@@ -343,7 +344,9 @@ namespace oly::particles
 		template<size_t N>
 		struct Sequence : public IAttributeOperation
 		{
-			std::array<Polymorphic<IAttributeOperation>, N> ops;
+            IMP_POLYMORPHIC_IMPL((Sequence<N>));
+
+			std::array<imp::poly<IAttributeOperation>, N> ops;
 
 			Sequence() = default;
 
@@ -353,7 +356,7 @@ namespace oly::particles
 			{
 			}
 
-			explicit Sequence(std::array<Polymorphic<IAttributeOperation>, N>&& operations)
+			explicit Sequence(std::array<imp::poly<IAttributeOperation>, N>&& operations)
 				: ops(std::move(operations))
 			{
 			}
@@ -364,14 +367,14 @@ namespace oly::particles
 					if (ops[i])
 						ops[i]->op(emitter, attribute);
 			}
-
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<N>);
 		};
 
 		template<>
 		struct Sequence<0> : public IAttributeOperation
 		{
-			std::vector<Polymorphic<IAttributeOperation>> ops;
+            IMP_POLYMORPHIC_IMPL((Sequence<0>));
+
+			std::vector<imp::poly<IAttributeOperation>> ops;
 
 			Sequence() = default;
 
@@ -381,7 +384,7 @@ namespace oly::particles
 			{
 			}
 
-			explicit Sequence(std::vector<Polymorphic<IAttributeOperation>>&& operations)
+			explicit Sequence(std::vector<imp::poly<IAttributeOperation>>&& operations)
 				: ops(std::move(operations))
 			{
 			}
@@ -392,21 +395,21 @@ namespace oly::particles
 					op->op(emitter, attribute);
 			}
 
-			static Polymorphic<Sequence<0>> load(TOMLNode node);
-			static Polymorphic<IAttributeOperation> load_fixed(TOMLNode node);
-
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(Sequence<0>);
+			static imp::poly<Sequence<0>> load(TOMLNode node);
+			static imp::poly<IAttributeOperation> load_fixed(TOMLNode node);
 		};
 
 		struct Selector : public IAttributeOperation
 		{
-			Polymorphic<IAttributeOperation> inner_op;
+            IMP_POLYMORPHIC_IMPL((Selector));
+
+			imp::poly<IAttributeOperation> inner_op;
 
 			SubSelector selector = SubSelector::None;
 
 			Selector() = default;
-			Selector(const Polymorphic<IAttributeOperation>& inner_op, SubSelector selector) : inner_op(inner_op), selector(selector) {}
-			Selector(Polymorphic<IAttributeOperation>&& inner_op, SubSelector selector) : inner_op(std::move(inner_op)), selector(selector) {}
+			Selector(const imp::poly<IAttributeOperation>& inner_op, SubSelector selector) : inner_op(inner_op), selector(selector) {}
+			Selector(imp::poly<IAttributeOperation>&& inner_op, SubSelector selector) : inner_op(std::move(inner_op)), selector(selector) {}
 
 			void op(const ParticleEmitter& emitter, AttributeSpan attribute) const override
 			{
@@ -414,13 +417,13 @@ namespace oly::particles
 					inner_op->op(emitter, attribute.select(selector));
 			}
 
-			static Polymorphic<Selector> load(TOMLNode node);
-
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(Selector);
+			static imp::poly<Selector> load(TOMLNode node);
 		};
 
 		struct GenericFunction : public IAttributeOperation
 		{
+            IMP_POLYMORPHIC_IMPL((GenericFunction));
+
 			using Function = std::function<void(const ParticleEmitter&, AttributeSpan)>;
 			Function fn;
 
@@ -432,8 +435,6 @@ namespace oly::particles
 			{
 				fn(emitter, attribute);
 			}
-
-			OLY_POLYMORPHIC_CLONE_OVERRIDE(GenericFunction);
 		};
 	}
 }

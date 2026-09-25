@@ -2,14 +2,13 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/PreferencesDesc.h"
-#include "desc/DoubleDescriptor.h"
+#include "desc/PreferencesDesc.h"
 
 namespace oly::editor
 {
 	class PreferencesDocument : public IDocument
 	{
-		DoubleDescriptor<PreferencesDesc> _desc;
+		imtk::desc::doubler<PreferencesDesc> _desc;
 
 	public:
 		static const char* GetVersion();
@@ -22,8 +21,8 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		void ApplyEditorPreferences();
 		void RevertEditorPreferences();
@@ -31,21 +30,21 @@ namespace oly::editor
 	private:
 		void ActiveDescChanged();
 
-		void Draw(DataPath path, PreferencesDesc& desc);
-		void Draw(DataPath path, EditSettingsDesc& desc);
-		void Draw(DataPath path, UndoHistorySettingsDesc& desc);
-		void Draw(DataPath path, ContentBrowserSettingsDesc& desc);
-		void Draw(DataPath path, TreeViewSettingsDesc& desc);
-		void Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc);
-		void Draw(DataPath path, FilesystemSettingsDesc& desc);
+		void Draw(PreferencesDesc& desc);
+		void Draw(EditSettingsDesc& desc);
+		void Draw(UndoHistorySettingsDesc& desc);
+		void Draw(ContentBrowserSettingsDesc& desc);
+		void Draw(TreeViewSettingsDesc& desc);
+		void Draw(TreeViewAdvancedSettingsDesc& desc);
+		void Draw(FilesystemSettingsDesc& desc);
 
-		void Load(TOMLNode node, PreferencesDesc& desc);
-		void Load(TOMLNode node, EditSettingsDesc& desc);
-		void Load(TOMLNode node, UndoHistorySettingsDesc& desc);
-		void Load(TOMLNode node, ContentBrowserSettingsDesc& desc);
-		void Load(TOMLNode node, TreeViewSettingsDesc& desc);
-		void Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc);
-		void Load(TOMLNode node, FilesystemSettingsDesc& desc);
+		void Load(imtk::toml_node node, PreferencesDesc& desc);
+		void Load(imtk::toml_node node, EditSettingsDesc& desc);
+		void Load(imtk::toml_node node, UndoHistorySettingsDesc& desc);
+		void Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc);
+		void Load(imtk::toml_node node, TreeViewSettingsDesc& desc);
+		void Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc);
+		void Load(imtk::toml_node node, FilesystemSettingsDesc& desc);
 
 		void Dump(toml::table& table, PreferencesDesc& desc);
 		void Dump(toml::table& table, EditSettingsDesc& desc);

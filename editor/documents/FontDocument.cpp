@@ -1,38 +1,40 @@
 #include "FontDocument.h"
 
-#include "core/editor/Notifier.h"
-
-#include "gui/InlineWidget.h"
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-#include "gui/graphics/Outline.h"
-
+#include "assets/TranslateKey.h"
 #include "definitions/Keys.h"
 
-#include "util/Counter.h"
-#include "util/Hash.h"
-#include "util/Parser.h"
-#include "util/DynamicArray.h"
+#include <imp/hash.hpp>
 
 namespace oly::editor
 {
+    static imtk::w::list_indexer::config AtlasListConfig()
+    {
+        return {
+            .prompt         = "Select atlas",
+            .create_tooltip = "Create atlas",
+            .delete_tooltip = "Delete atlas",
+            .clear_tooltip  = "Clear atlases"
+        };
+    }
+    
+	FontDocument::FontDocument(detail::ResourcePath oly_path)
+		: IDocument(std::move(oly_path)), _atlas_slots(AtlasListConfig(), "Atlas")
+	{
+	}
+
 	const char* FontDocument::GetVersion()
 	{
 		return "1.0";
 	}
 
-	FontDocument::~FontDocument()
-	{
-		DestroyFont();
-	}
-
 	void FontDocument::InitImpl()
 	{
 		if (!GetSourcePath().is_resource())
-			Notifier::NotifyWarning("Asset is not located in resource folder");
+			imtk::notify_warning("Asset is not located in resource folder");
 
-		_atlas_slots.policy = gui::ListPolicy::MinimumOne;
-		_display_text = "Abc 123";
+		_atlas_slots.model.policy = imtk::list_policy::minimum_one;
+		_display_text.value = "Abc 123";
+		_display_text.config().label = "Display text";
 		LoadAsset();
 	}
 
@@ -42,21 +44,13 @@ namespace oly::editor
 
 		imtk::id_scope scope(this);
 
-		if (ImGui::BeginTabBar(""))
+		if (auto _ = imtk::tab_bar(""))
 		{
-			if (ImGui::BeginTabItem("Font Face"))
-			{
+			if (auto _ = imtk::tab_item("Font Face"))
 				DrawFontFace();
-				ImGui::EndTabItem();
-			}
 
-			if (ImGui::BeginTabItem("Font Atlases"))
-			{
+			if (auto _ = imtk::tab_item("Font Atlases"))
 				DrawFontAtlases();
-				ImGui::EndTabItem();
-			}
-
-			ImGui::EndTabBar();
 		}
 	}
 
@@ -69,15 +63,15 @@ namespace oly::editor
 			toml::table table;
 			std::string err = _oly_path.load_toml(table);
 			if (err.empty())
-				Load(TOMLNode(table), _desc.disk);
+				Load(imtk::toml_node(table), _desc.disk);
 			else
-				Notifier::NotifyError("cannot load font - corrupted asset: " + GetSourcePath().string());
+				imtk::notify_error("cannot load font - corrupted asset: " + GetSourcePath().string());
 
 			MarkClean();
 		}
 		else
 		{
-			Load(TOMLNode(), _desc.disk);
+			Load(imtk::toml_node(), _desc.disk);
 
 			_meta = {};
 			_meta.map[detail::Key::Meta_Version] = GetVersion();
@@ -87,9 +81,9 @@ namespace oly::editor
 			MarkDirty();
 		}
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 
-		_atlas_slots.Init(*FontAtlasListAdapter());
+		_atlas_slots.model.init(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
 	}
 
 	void FontDocument::DumpImpl()
@@ -97,21 +91,21 @@ namespace oly::editor
 		toml::table table;
 		Dump(table, _desc.scratch);
 		_oly_path.dump_toml(table, _meta);
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		MarkClean();
 	}
 
 	void FontDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& FontDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& FontDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& FontDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& FontDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}
@@ -121,335 +115,246 @@ namespace oly::editor
 		return _oly_path.get_source_path();
 	}
 
-	void FontDocument::ReloadFont()
-	{
-		DestroyFont();
-		_preview_font = ImGui::GetIO().Fonts->AddFontFromFileTTF(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.active_index].font_size.value);
-	}
-
-	void FontDocument::DestroyFont()
-	{
-		if (_preview_font)
-		{
-			ImGui::GetIO().Fonts->RemoveFont(_preview_font);
-			_preview_font = nullptr;
-		}
-	}
-
 	void FontDocument::DrawFontFace()
 	{
-		if (auto form = Form())
-			Draw(DataPath() / _desc.scratch.subpaths.font_face, _desc.scratch.font_face);
+		if (auto form = imtk::prop::form())
+			Draw(*_desc.scratch.font_face);
 	}
 
 	void FontDocument::DrawFontAtlases()
 	{
-		if (ImGui::BeginTable("", 2))
+		if (auto _ = imtk::table("", 2))
 		{
 			ImGui::TableNextColumn();
 				
-			_atlas_slots.Update(*FontAtlasListAdapter());
+			_atlas_slots.model.sync(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
 			if (auto scope = imtk::id_scope("##Atlas"))
-				_atlas_slots.DrawComboHeader({ .prompt = "Select atlas", .create_tooltip = "New atlas", .delete_tooltip = "Delete atlas", .clear_tooltip = "Clear atlases" }, "Atlas");
+				_atlas_slots.draw();
 				
-			if (auto form = Form())
+			if (auto form = imtk::prop::form())
 			{
-				if (!_desc.scratch.font_atlases.Empty())
-					Draw(DataPath() / _desc.scratch.subpaths.font_atlases, _desc.scratch.font_atlases[_atlas_slots.active_index]);
+				if (!_desc.scratch.font_atlases.empty())
+					Draw(_desc.scratch.font_atlases[_atlas_slots.model.index()]);
 
-				if (_atlas_slots.ConsumeOps(*FontAtlasListAdapter()))
+				if (_atlas_slots.model.consume_ops(imtk::make_vector_op_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases)))
 					MarkDirty();
 
-				if (_atlas_slots.active_index.ConsumeModified())
-					DestroyFont();
+				if (_atlas_slots.model.consume_index_modified())
+					_preview_font.reset();
 			}
 
 			ImGui::TableNextColumn();
 			DrawAtlasPreview();
-
-			ImGui::EndTable();
 		}
 	}
 
 	void FontDocument::DrawAtlasPreview()
 	{
-		if (ImGui::BeginChild("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
+		if (auto _ = imtk::child("Preview", ImVec2(0, 0), ImGuiChildFlags_Borders))
 		{
 			ImGui::TextUnformatted("Preview");
 			ImGui::Separator();
 
-			gui::InputData<std::string>{}("Display text", _display_text);
+			_display_text.draw();
 
 			if (!_preview_font)
-				ReloadFont();
+				_preview_font = imtk::font_instance(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.model.index()].font_size.value);
 
-			ImGui::PushFont(_preview_font);
-			ImGui::TextUnformatted(_display_text.c_str());
-			ImGui::PopFont();
+			if (auto _ = imtk::font_scope(_preview_font))
+				ImGui::TextUnformatted(_display_text.value.c_str());
 		}
-
-		ImGui::EndChild();
 	}
 
-	void FontDocument::Draw(DataPath path, FontFaceDesc& desc)
+	void FontDocument::Draw(FontFaceDesc& desc)
 	{
-		DRAW_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.draw();
 
-		struct CodepointHash
+		_glyph_counter.clear();
+		for (auto& k : desc.kerning)
+			_glyph_counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
+
+		if (!desc.kerning_widget.body.row_draw)
 		{
-			size_t operator()(const std::string& str) const
-			{
-				if (auto v = stocdpt(str))
-					return std::hash<int>{}(*v);
-				else
-					return 0;
-			}
-		};
+			desc.kerning_widget.body.row_draw = [this, &desc](imtk::dynamic_row& row) -> imtk::item_result {
+				imtk::w::widget_row components;
+				auto& k = desc.kerning[row.index()];
 
-		struct CodepointPairEquality
-		{
-			bool operator()(const std::array<std::string, 2>& lhs, const std::array<std::string, 2>& rhs) const
-			{
-				return stocdpt(lhs[0]) == stocdpt(rhs[0]) && stocdpt(lhs[1]) == stocdpt(rhs[1]);
-			}
-		};
+				bool dup_warning = _glyph_counter.count({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
+				imtk::outline dup_outline;
+				for (size_t i = 0; i < 2; ++i)
+				{
+					components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
+						bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
+						if (bad_codepoint)
+							dup_warning = false;
 
-		Counter<std::array<std::string, 2>, ArrayHash<std::string, CodepointHash>, CodepointPairEquality> counter;
-		for (auto& k : desc.kerning.vector)
-		{
-			k.distance.edit.PreEdit();
-			k.pair.edits[0].PreEdit();
-			k.pair.edits[1].PreEdit();
-			counter.increment({ k.pair.edits[0].buffer, k.pair.edits[1].buffer });
-		}
+						imtk::item_result result;
 
-		for (size_t i = 0; i < desc.kerning.Size(); ++i)
-		{
-			auto& k = desc.kerning[i];
-			if (k.distance.edit.buffer != k.distance.def || k.pair.edits[0].buffer != k.pair.def[0] || k.pair.edits[1].buffer != k.pair.def[1])
-				gui::PropertyGrid::Reset::Button(1 + i);
-		}
+						if (i == 0)
+						{
+							ImGui::TextUnformatted(k.pair.label.c_str());
+							result |= imtk::item_result::query(false);
+							ImGui::SameLine();
+						}
 
-		DescIO::DrawDynamicList(path / desc.subpaths.kerning, "Kerning", desc.kerning.vector, {}, [&desc, &counter](gui::DynamicRow& row) -> DrawResult {
-			DynamicArray<gui::WidgetComponent> components;
-			auto& k = desc.kerning[row.Index()];
+						imtk::outline bad_outline;
+						result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer()).draw();
 
-			bool dup_warning = counter.count({ k.pair.edits[0].buffer, k.pair.edits[1].buffer }) > 1;
-			gui::Outline dup_outline;
-			for (size_t i = 0; i < 2; ++i)
-			{
-				components.push_back(comp::Generic([&k, i, &dup_warning, &dup_outline]() -> DrawResult {
-					bool bad_codepoint = !stocdpt(k.pair.edits[i].buffer).has_value();
-					gui::Outline bad_outline;
-					if (bad_codepoint)
-						dup_warning = false;
+						if (dup_warning && result.state.hovered())
+							ImGui::SetTooltip("Duplicate codepoint pair");
 
-					DrawResult result;
+						if (bad_codepoint)
+						{
+							if (result.state.hovered())
+								ImGui::SetTooltip("Bad codepoint format");
 
-					if (i == 0)
-					{
-						ImGui::TextUnformatted(k.pair.label);
-						ImGui::SameLine();
-						result.Query();
-					}
+							bad_outline.draw(imtk::col::error);
+						}
 
-					result |= gui::InputData<std::string>{}(k.pair.sublabels ? k.pair.sublabels[i] : ("##" + std::to_string(i)).c_str(), k.pair.edits[i].buffer);
-					k.pair.edits[i].PostEdit(result);
+						if (i == 1)
+						{
+							if (dup_warning)
+								dup_outline.draw(imtk::col::error);
+						}
 
-					if (dup_warning && result.IsHovered())
-						ImGui::SetTooltip("Duplicate codepoint pair");
+						return result;
+					}));
+				}
 
-					if (bad_codepoint)
-					{
-						if (result.IsHovered())
-							ImGui::SetTooltip("Bad codepoint format");
-
-						bad_outline.Draw(Color::Error);
-					}
-
-					if (i == 1)
-					{
-						if (dup_warning)
-							dup_outline.Draw(Color::Error);
-					}
-
+				components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
+					imtk::controls::vertical_separator();
+					ImGui::TextUnformatted(k.distance.label.c_str());
+					auto result = imtk::item_result::query(false);
+					ImGui::SameLine();
+					result |= imtk::w::bound_widget<int>(k.distance.edit.buffer()).draw();
 					return result;
 				}));
-			}
 
-			components.push_back(comp::Generic([&k]() -> DrawResult {
-				DrawResult result;
-				gui::VerticalSeparator();
-				ImGui::TextUnformatted(k.distance.label);
-				result.Query();
-				ImGui::SameLine();
-				result |= gui::InputData<int>{}("##Distance", k.distance.edit.buffer);
-				k.distance.edit.PostEdit(result);
+				auto result = components.draw();
+				k.pair.fields[0].edit.post_edit(result.state);
+				k.pair.fields[1].edit.post_edit(result.state);
+				k.distance.edit.post_edit(result.state);
 				return result;
-			}));
-
-			return gui::InlineWidget::Draw(components);
-		}, desc.kerning_ui_state);
-
-		auto kerning_path = path / desc.subpaths.kerning;
-		for (size_t i = 0; i < desc.kerning.Size(); ++i)
-		{
-			KerningDesc& k = desc.kerning[i];
-			auto kerning_subpath = kerning_path / desc.kerning.Subpath(i);
-			if (gui::PropertyGrid::Reset::Activated(1 + i))
-			{
-				k.distance.edit.PublishReset(k.distance.def);
-				k.pair.edits[0].PublishReset(k.pair.def[0]);
-				k.pair.edits[1].PublishReset(k.pair.def[1]);
-				MarkDirty();
-			}
-
-			bool publish_action = false;
-			publish_action |= k.distance.edit.ConsumeModified();
-			publish_action |= k.pair.edits[0].ConsumeModified();
-			publish_action |= k.pair.edits[1].ConsumeModified();
-			if (publish_action)
-			{
-				KerningDesc original;
-				original.distance.value = std::move(k.distance.edit.original);
-				original.pair.value[0] = std::move(k.pair.edits[0].original);
-				original.pair.value[1] = std::move(k.pair.edits[1].original);
-				PushFieldSetAction(kerning_subpath, std::move(original), k);
-			}
+			};
 		}
+
+		std::vector<std::unique_ptr<imtk::prop::iresettable>> resetters;
+		resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, 0));
+
+		for (auto& k : desc.kerning)
+            resetters.push_back(k.make_resetter());
+
+		if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
+			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.kerning_widget, desc.kerning.size()));
+
+		desc.kerning.consume_ops(desc.kerning_widget.model);
+
+		for (size_t i = 0; i < desc.kerning.size(); ++i)
+			desc.kerning[i].check_undo_action();
 	}
 	
-	void FontDocument::Draw(DataPath path, FontAtlasDesc& desc)
+	void FontDocument::Draw(FontAtlasDesc& desc)
 	{
-		DRAW_FIELD(font_size);
-		if (gui::PropertyGrid::DirtyRow())
-			DestroyFont();
+		desc.font_size.draw();
+		if (imtk::prop::row::dirty())
+			_preview_font.reset();
 
-		DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
+		IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
-		if (auto subform = Subform("Common buffer"))
+		if (auto subform = imtk::prop::subform("Common buffer"))
 		{
-			DRAW_FIELD(use_common_buffer_preset);
-
+			desc.use_common_buffer_preset.draw();
 			bool preset = desc.use_common_buffer_preset.value;
 			
-			if (auto disabled = DisabledSection(!preset))
+			if (auto d = imtk::disabled(!preset))
 			{
-				DRAW_FIELD(common_buffer_preset);
-
+				desc.common_buffer_preset.draw();
 				if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
 				{
-					gui::PropertyGrid::Value::AddComponent(comp::Generic([&desc]() -> DrawResult {
-						std::string buf = detail::buffer_of(desc.common_buffer_preset.value);
-						ImGui::InputText("##PresetBuffer", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-						return false;
-					}));
-					gui::PropertyGrid::SubmitRow();
+					imtk::prop::value::add_component(std::make_unique<imtk::w::readonly_text_owned>(detail::buffer_of(desc.common_buffer_preset.value)));
+					imtk::prop::row::submit();
 				}
 			}
 
-			if (auto disabled = DisabledSection(preset))
-			{
-				DRAW_FIELD(common_buffer);
-			}
+			if (auto d = imtk::disabled(preset))
+				desc.common_buffer.draw();
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, FullFontDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FullFontDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.font_face_key)], desc.font_face);
+		Load(desc.font_face.subnode(node), *desc.font_face);
 
-		TOMLArray array = node[detail::encode_key(desc.font_atlas_key)].as_array();
+		const toml::array* array = desc.font_atlases.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
-				desc.font_atlases.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.font_atlases.vector.back());
+				desc.font_atlases.push_back();
+				Load(imtk::toml_node(*array->get(i)), desc.font_atlases.back());
 			}
 		}
 		else
 		{
-			desc.font_atlases.PushBack();
-			Load(TOMLNode(), desc.font_atlases.vector.back());
+			desc.font_atlases.push_back();
+			Load(imtk::toml_node(), desc.font_atlases.back());
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, FontFaceDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FontFaceDesc& desc)
 	{
-		LOAD_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.load(node);
 
-		TOMLArray array = node[detail::encode_key(desc.kerning_key)].as_array();
+		const toml::array* array = desc.kerning.subnode(node).as_array();
 		if (array && !array->empty())
 		{
 			for (size_t i = 0; i < array->size(); ++i)
 			{
-				desc.kerning.PushBack();
-				Load(TOMLNode(*array->get(i)), desc.kerning.vector.back());
+				desc.kerning.push_back();
+				Load(imtk::toml_node(*array->get(i)), desc.kerning.back());
 			}
 		}
 	}
 
-	void FontDocument::Load(TOMLNode node, KerningDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, KerningDesc& desc)
 	{
-		LOAD_FIELDS(KERNING_GENERATOR);
+		IMTK_LOAD_FIELDS(KERNING_GENERATOR);
 	}
 
-	void FontDocument::Load(TOMLNode node, FontAtlasDesc& desc)
+	void FontDocument::Load(imtk::toml_node node, FontAtlasDesc& desc)
 	{
-		LOAD_FIELDS(FONT_ATLAS_GENERATOR);
+		IMTK_LOAD_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FullFontDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.font_face);
-		table.insert_or_assign(detail::encode_key(desc.font_face_key), std::move(subtable));
+		Dump(subtable, *desc.font_face);
+		desc.font_face.dump_into(table, std::move(subtable));
 
 		toml::array array;
 		for (auto& d : desc.font_atlases)
-		{
-			toml::table subtable;
-			Dump(subtable, d);
-			array.push_back(std::move(subtable));
-		}
-		table.insert_or_assign(detail::encode_key(desc.font_atlas_key), std::move(array));
+			Dump(array.emplace_back<toml::table>(), d);
+		desc.font_atlases.dump_into(table, std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, FontFaceDesc& desc)
 	{
-		DUMP_FIELDS(FONT_FACE_PARTIAL_GENERATOR);
+		desc.storage.dump(table);
 		
 		toml::array array;
 		for (auto& d : desc.kerning)
-		{
-			toml::table subtable;
-			Dump(subtable, d);
-			array.push_back(std::move(subtable));
-		}
-		table.insert_or_assign(detail::encode_key(desc.kerning_key), std::move(array));
+			Dump(array.emplace_back<toml::table>(), d);
+		desc.kerning.dump_into(table, std::move(array));
 	}
 
 	void FontDocument::Dump(toml::table& table, KerningDesc& desc)
 	{
-		DUMP_FIELDS(KERNING_GENERATOR);
+		IMTK_DUMP_FIELDS(KERNING_GENERATOR);
 	}
 
 	void FontDocument::Dump(toml::table& table, FontAtlasDesc& desc)
 	{
-		DUMP_FIELDS(FONT_ATLAS_GENERATOR);
-	}
-
-	struct BriefDescPrinter
-	{
-		void operator()(std::ostream& os, const FontAtlasDesc& desc) const
-		{
-			os << "FontAtlasDesc[font_size=" << desc.font_size.value << ", ...]";
-		}
-	};
-
-	std::unique_ptr<gui::IListAdapter> FontDocument::FontAtlasListAdapter()
-	{
-		return _desc.scratch.font_atlases.ListAdapter<BriefDescPrinter>(DataPath() / _desc.scratch.subpaths.font_atlases);
+		IMTK_DUMP_FIELDS(FONT_ATLAS_GENERATOR);
 	}
 }

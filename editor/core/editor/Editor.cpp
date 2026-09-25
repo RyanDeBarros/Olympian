@@ -4,13 +4,9 @@
 #include "core/windows/MainWindow.h"
 
 #include "core/editor/LiveSettings.h"
-#include "core/editor/Logger.h"
-#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 #include "core/editor/ShortcutManager.h"
-
-#include "gui/graphics/Texture.h"
 
 #include "documents/DocumentManager.h"
 
@@ -22,22 +18,39 @@
 #include "panels/AssetEditorPanel.h"
 #include "panels/PreferencesPanel.h"
 
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include "definitions/Keys.h"
+#include "assets/TranslateKey.h"
 
 namespace oly::editor
-{
-	static size_t FRAME_COUNTER = 0;
-
+{	
 	Editor::Editor() :
 		_project_select_window(std::make_unique<ProjectSelectWindow>()),
-		_logger(std::make_unique<Logger>()),
 		_main_window(std::make_unique<MainWindow>()),
 		_shortcut_manager(std::make_unique<ShortcutManager>()),
 		_project_info(std::make_unique<ProjectInfo>())
 	{
 		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
+
+		LoadAllIcons();
+
+		imtk::post_window_init({
+			.reset_icon = Icon(IconResource::Revert),
+			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
+			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); },
+			.dynamic_lists = {
+				.drag_icon = Icon(IconResource::Handle),
+				.create_icon = Icon(IconResource::Plus),
+				.delete_icon = Icon(IconResource::Minus),
+				.clear_icon = Icon(IconResource::Close),
+			},
+			.list_indexers = {
+				.create_icon = Icon(IconResource::Plus),
+				.delete_icon = Icon(IconResource::Minus),
+				.clear_icon = Icon(IconResource::Close),
+			},
+		});
 
 		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
 			ShortcutManager::Instance().HandlePathDrop(count, paths);
@@ -48,14 +61,13 @@ namespace oly::editor
 			Editor::instance().RequestShutdown();
 		});
 
-		ResourceLoader::LoadAll();
 		_app_state = AppState::ProjectSelect;
 		_project_select_window->Open();
 	}
 
 	Editor::~Editor() = default;
 
-	FunctionalEvent<>& Editor::OnPreferencesChanged()
+	imp::event<>& Editor::OnPreferencesChanged()
 	{
 		return instance()._on_preferences_changed;
 	}
@@ -65,31 +77,28 @@ namespace oly::editor
 		return _os_window->should_close();
 	}
 
+	// TODO v9.4 using imtk::handle_error throughout project - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();
+		imtk::begin_frame();
 
-		_shortcut_manager->PollShortcuts();
-		Texture::Update();
+		imtk::handle_errors([this]() {
+			_shortcut_manager->PollShortcuts();
 
-		switch (_app_state)
-		{
-		case AppState::ProjectSelect:
-			_project_select_window->Draw();
-			break;
-		case AppState::Main:
-			_main_window->Draw();
-			break;
-		}
+			switch (_app_state)
+			{
+			case AppState::ProjectSelect:
+				_project_select_window->Draw();
+				break;
+			case AppState::Main:
+				_main_window->Draw();
+				break;
+			}
+		});
 
-		++FRAME_COUNTER;
-
+		imtk::end_frame();
 		_os_window->end_frame();
-	}
-
-	size_t Editor::GetFrame() const
-	{
-		return FRAME_COUNTER;
 	}
 	
 	void Editor::SetOSWindowSize(int width, int height)
@@ -149,11 +158,6 @@ namespace oly::editor
 		return *instance()._project_select_window;
 	}
 
-	Logger& Editor::GetLogger()
-	{
-		return *instance()._logger;
-	}
-
 	MainWindow& Editor::GetMainWindow()
 	{
 		return *instance()._main_window;
@@ -210,7 +214,7 @@ namespace oly::editor
 			break;
 		}
 
-		Notifier::NotifyError(std::move(message));
+		imtk::notify_error(std::move(message));
 	}
 
 	bool Editor::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)

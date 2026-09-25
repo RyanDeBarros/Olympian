@@ -1,16 +1,13 @@
 #pragma once
 
-#include "external/GL.h"
-
-#include "util/FunctionalEvent.h"
-
 #include "assets/KeyDecl.h"
 #include "assets/ResourcePath.h"
 
 #include <imtk.hpp>
 
+#include <imp/event.hpp>
+
 #include <filesystem>
-#include <memory>
 
 namespace oly::editor
 {
@@ -29,31 +26,28 @@ namespace oly::editor
 		Main
 	};
 
-	class Editor : public imtk::instance_guard<Editor>
+	class Editor : public imp::instance_guard<Editor>
 	{
-		// TODO v9.3 own os_window. Make Editor an active instance singleton instead of this static singleton
 		std::unique_ptr<imtk::os_window> _os_window;
 		AppState _app_state = AppState::ProjectSelect;
 
 		std::unique_ptr<ProjectSelectWindow> _project_select_window;
 
-		std::unique_ptr<Logger> _logger;
 		std::unique_ptr<MainWindow> _main_window;
 		std::unique_ptr<ShortcutManager> _shortcut_manager;
 		std::unique_ptr<ProjectInfo> _project_info;
 		std::unique_ptr<PreferencesDesc> _preferences_desc;
 		std::unique_ptr<LiveSettings> _live_settings;
-		FunctionalEvent<> _on_preferences_changed;
+		imp::event<> _on_preferences_changed;
 
 	public:
 		Editor();
 		~Editor();
 
-		static FunctionalEvent<>& OnPreferencesChanged();
+		static imp::event<>& OnPreferencesChanged();
 
 		bool ShouldClose() const;
 		void Tick();
-		size_t GetFrame() const;
 
 		static void SetOSWindowSize(int width, int height);
 		static void SetOSWindowMaximized(bool maximized);

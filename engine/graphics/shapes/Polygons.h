@@ -1,16 +1,19 @@
 #pragma once
 
 #include "core/base/Constants.h"
+#include "core/base/FreeSpaceTracker.h"
+
 #include "core/cmath/ColoredGeometry.h"
-#include "core/containers/FreeSpaceTracker.h"
-#include "core/containers/IDGenerator.h"
-#include "core/types/Issuer.h"
+
 #include "core/util/DebugTrace.h"
+
+#include "graphics/Tags.h"
+#include "graphics/Camera.h"
 
 #include "graphics/backend/specialized/ElementBuffers.h"
 #include "graphics/backend/specialized/VertexBuffers.h"
-#include "graphics/Tags.h"
-#include "graphics/Camera.h"
+
+#include <imp/id_generator.hpp>
 
 namespace oly::rendering
 {
@@ -18,7 +21,7 @@ namespace oly::rendering
 	{
 		class PolygonReference;
 
-		class PolygonBatch : public oly::internal::Issuer<PolygonBatch>
+		class PolygonBatch : public imp::issuer<PolygonBatch>
 		{
 			friend class internal::PolygonReference;
 
@@ -71,19 +74,19 @@ namespace oly::rendering
 
 			StrictFreeSpaceTracker<GLuint> vertex_free_space;
 			std::unordered_map<GLuint, Range<GLuint>> polygon_indexer;
-			SoftIDGenerator<GLuint> id_generator;
+			imp::soft_id_generator<GLuint> id_generator;
 			static const GLuint NULL_ID = GLuint(-1);
 			void assert_valid_id(GLuint id) const;
 		};
 	}
 
-	using PolygonBatch = PublicIssuer<internal::PolygonBatch>;
+	using PolygonBatch = imp::issuer_instance<internal::PolygonBatch>;
 
 	namespace internal
 	{
-		class PolygonReference : public PublicIssuerHandle<PolygonBatch>
+		class PolygonReference : public imp::ticket<PolygonBatch>
 		{
-			using Super = PublicIssuerHandle<PolygonBatch>;
+			using Super = imp::ticket<PolygonBatch>;
 			// ID refers to the index of a polygon in transform SSBO. It also indexes the set of ranges in the VBO block.
 			mutable GLuint id = PolygonBatch::NULL_ID;
 			

@@ -1,8 +1,10 @@
 #pragma once
 
-#include "external/GL.h"
+#include "core/base/SmartReference.h"
+
 #include "graphics/backend/basic/Shader.h"
-#include "core/types/SmartReference.h"
+
+#include "external/GL.h"
 
 namespace oly::graphics::internal_shaders
 {

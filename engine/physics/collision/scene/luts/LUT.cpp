@@ -5,47 +5,47 @@
 
 namespace oly::col2d::internal
 {
-	using PointHitsFn = OverlapResult(*)(const void*, glm::vec2);
-	using RayHitsFn = OverlapResult(*)(const void*, Ray);
-	using RaycastFn = RaycastResult(*)(const void*, Ray);
-	using OverlapsFn = OverlapResult(*)(const void*, const void*);
-	using CollidesFn = CollisionResult(*)(const void*, const void*);
-	using ContactsFn = ContactResult(*)(const void*, const void*);
-	using CircleCastHitsFn = OverlapResult(*)(const void*, const CircleCast&);
-	using RectCastHitsFn = OverlapResult(*)(const void*, const RectCast&);
+	using PointHitsFn      = OverlapResult   (*)(const void*, glm::vec2);
+	using RayHitsFn        = OverlapResult   (*)(const void*, Ray);
+	using RaycastFn        = RaycastResult   (*)(const void*, Ray);
+	using OverlapsFn       = OverlapResult   (*)(const void*, const void*);
+	using CollidesFn       = CollisionResult (*)(const void*, const void*);
+	using ContactsFn       = ContactResult   (*)(const void*, const void*);
+	using CircleCastHitsFn = OverlapResult   (*)(const void*, const CircleCast&);
+	using RectCastHitsFn   = OverlapResult   (*)(const void*, const RectCast&);
 	
-	using FlushFn = math::Rect2D(*)(const void*);
-	using IsDirtyFn = bool(*)(const void*);
+	using FlushFn        = math::Rect2D(*)(const void*);
+	using IsDirtyFn      = bool(*)(const void*);
 	using DebugOverlayFn = debug::DebugShapeGroup(*)(const void*, glm::vec4);
-	using UpdateViewFn = void(*)(debug::DebugOverlay&, const void*, size_t);
+	using UpdateViewFn   = void(*)(debug::DebugOverlay&, const void*, size_t);
 
 	using TransformerFn = const Transformer2D& (*)(const void*);
-	using ConstLayerFn = Layer (*)(const void*);
-	using LayerFn = Layer& (*)(void*);
-	using ConstMaskFn = Mask (*)(const void*);
-	using MaskFn = Mask& (*)(void*);
+	using ConstLayerFn  = Layer  (*)(const void*);
+	using LayerFn       = Layer& (*)(void*);
+	using ConstMaskFn   = Mask   (*)(const void*);
+	using MaskFn        = Mask&  (*)(void*);
 		
 	struct LUT
 	{
-		PointHitsFn point_hits_[(size_t)CObjID::_c];
-		RayHitsFn ray_hits_[(size_t)CObjID::_c];
-		RaycastFn raycast_[(size_t)CObjID::_c];
-		OverlapsFn overlaps_[(size_t)CObjID::_c][(size_t)CObjID::_c];
-		CollidesFn collides_[(size_t)CObjID::_c][(size_t)CObjID::_c];
-		ContactsFn contacts_[(size_t)CObjID::_c][(size_t)CObjID::_c];
-		CircleCastHitsFn circle_cast_hits_[(size_t)CObjID::_c];
-		RectCastHitsFn rect_cast_hits_[(size_t)CObjID::_c];
+		PointHitsFn      point_hits_       [CObj_count];
+		RayHitsFn        ray_hits_         [CObj_count];
+		RaycastFn        raycast_          [CObj_count];
+		OverlapsFn       overlaps_         [CObj_count][CObj_count];
+		CollidesFn       collides_         [CObj_count][CObj_count];
+		ContactsFn       contacts_         [CObj_count][CObj_count];
+		CircleCastHitsFn circle_cast_hits_ [CObj_count];
+		RectCastHitsFn   rect_cast_hits_   [CObj_count];
 
-		FlushFn flush_[(size_t)CObjID::_c];
-		IsDirtyFn is_dirty_[(size_t)CObjID::_c];
-		DebugOverlayFn create_debug_overlay_[(size_t)CObjID::_c];
-		UpdateViewFn modify_debug_overlay_[(size_t)CObjID::_c];
+		FlushFn        flush_                [CObj_count];
+		IsDirtyFn      is_dirty_             [CObj_count];
+		DebugOverlayFn create_debug_overlay_ [CObj_count];
+		UpdateViewFn   modify_debug_overlay_ [CObj_count];
 
-		TransformerFn transformer_[(size_t)CObjID::_c];
-		ConstLayerFn layer_const_[(size_t)CObjID::_c];
-		LayerFn layer_[(size_t)CObjID::_c];
-		ConstMaskFn mask_const_[(size_t)CObjID::_c];
-		MaskFn mask_[(size_t)CObjID::_c];
+		TransformerFn transformer_ [CObj_count];
+		ConstLayerFn  layer_const_ [CObj_count];
+		LayerFn       layer_       [CObj_count];
+		ConstMaskFn   mask_const_  [CObj_count];
+		MaskFn        mask_        [CObj_count];
 
 #define OLY_LUT_LIST_TBVH(Macro)\
 			Macro(TBVH<AABB>)\
@@ -81,28 +81,28 @@ namespace oly::col2d::internal
 
 		void load_point_hits()
 		{
-#define OLY_LUT_POINT_HITS(Class) point_hits_[cobj_id_of<Class>] = [](const void* ptr, glm::vec2 test) { return point_hits(*static_cast<const Class*>(ptr), test); };
+#define OLY_LUT_POINT_HITS(Class) point_hits_[CObj_index<Class>()] = [](const void* ptr, glm::vec2 test) { return point_hits(*static_cast<const Class*>(ptr), test); };
 			OLY_LUT_LIST(OLY_LUT_POINT_HITS);
 #undef OLY_LUT_POINT_HITS
 		}
 
 		void load_ray_hits()
 		{
-#define OLY_LUT_RAY_HITS(Class) ray_hits_[cobj_id_of<Class>] = [](const void* ptr, Ray ray) { return ray_hits(*static_cast<const Class*>(ptr), ray); };
+#define OLY_LUT_RAY_HITS(Class) ray_hits_[CObj_index<Class>()] = [](const void* ptr, Ray ray) { return ray_hits(*static_cast<const Class*>(ptr), ray); };
 			OLY_LUT_LIST(OLY_LUT_RAY_HITS);
 #undef OLY_LUT_RAY_HITS
 		}
 
 		void load_raycast()
 		{
-#define OLY_LUT_RAYCAST(Class) raycast_[cobj_id_of<Class>] = [](const void* ptr, Ray ray) { return raycast(*static_cast<const Class*>(ptr), ray); };
+#define OLY_LUT_RAYCAST(Class) raycast_[CObj_index<Class>()] = [](const void* ptr, Ray ray) { return raycast(*static_cast<const Class*>(ptr), ray); };
 			OLY_LUT_LIST(OLY_LUT_RAYCAST);
 #undef OLY_LUT_RAYCAST
 		}
 
 		void load_overlaps()
 		{
-#define OLY_LUT_OVERLAPS(Class1, Class2) overlaps_[cobj_id_of<Class1>][cobj_id_of<Class2>] = [](const void* ptr1, const void* ptr2)\
+#define OLY_LUT_OVERLAPS(Class1, Class2) overlaps_[CObj_index<Class1>()][CObj_index<Class2>()] = [](const void* ptr1, const void* ptr2)\
 				{ return overlaps(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
 #define OLY_LUT_OVERLAPS_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_OVERLAPS, Class);
 			OLY_LUT_LIST(OLY_LUT_OVERLAPS_INNER);
@@ -112,7 +112,7 @@ namespace oly::col2d::internal
 
 		void load_collides()
 		{
-#define OLY_LUT_COLLIDES(Class1, Class2) collides_[cobj_id_of<Class1>][cobj_id_of<Class2>] = [](const void* ptr1, const void* ptr2)\
+#define OLY_LUT_COLLIDES(Class1, Class2) collides_[CObj_index<Class1>()][CObj_index<Class2>()] = [](const void* ptr1, const void* ptr2)\
 				{ return collides(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
 #define OLY_LUT_COLLIDES_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_COLLIDES, Class);
 			OLY_LUT_LIST(OLY_LUT_COLLIDES_INNER);
@@ -122,7 +122,7 @@ namespace oly::col2d::internal
 
 		void load_contacts()
 		{
-#define OLY_LUT_CONTACTS(Class1, Class2) contacts_[cobj_id_of<Class1>][cobj_id_of<Class2>] = [](const void* ptr1, const void* ptr2)\
+#define OLY_LUT_CONTACTS(Class1, Class2) contacts_[CObj_index<Class1>()][CObj_index<Class2>()] = [](const void* ptr1, const void* ptr2)\
 				{ return contacts(*static_cast<const Class1*>(ptr1), *static_cast<const Class2*>(ptr2)); };
 #define OLY_LUT_CONTACTS_INNER(Class) OLY_LUT_LIST_INNER(OLY_LUT_CONTACTS, Class);
 			OLY_LUT_LIST(OLY_LUT_CONTACTS_INNER);
@@ -132,39 +132,39 @@ namespace oly::col2d::internal
 
 		void load_circle_cast_hits()
 		{
-#define OLY_LUT_CIRCLE_CAST_HITS(Class) circle_cast_hits_[cobj_id_of<Class>] = [](const void* ptr, const CircleCast& cast) { return circle_cast_hits(*static_cast<const Class*>(ptr), cast); };
+#define OLY_LUT_CIRCLE_CAST_HITS(Class) circle_cast_hits_[CObj_index<Class>()] = [](const void* ptr, const CircleCast& cast) { return circle_cast_hits(*static_cast<const Class*>(ptr), cast); };
 			OLY_LUT_LIST(OLY_LUT_CIRCLE_CAST_HITS);
 #undef OLY_LUT_CIRCLE_CAST_HITS
 		}
 
 		void load_rect_cast_hits()
 		{
-#define OLY_LUT_RECT_CAST_HITS(Class) rect_cast_hits_[cobj_id_of<Class>] = [](const void* ptr, const RectCast& cast) { return rect_cast_hits(*static_cast<const Class*>(ptr), cast); };
+#define OLY_LUT_RECT_CAST_HITS(Class) rect_cast_hits_[CObj_index<Class>()] = [](const void* ptr, const RectCast& cast) { return rect_cast_hits(*static_cast<const Class*>(ptr), cast); };
 			OLY_LUT_LIST(OLY_LUT_RECT_CAST_HITS);
 #undef OLY_LUT_RECT_CAST_HITS
 		}
 
 		void load_flush()
 		{
-			flush_[cobj_id_of<TPrimitive>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TPrimitive*>(ptr)->get_baked()).rect(); };
-			flush_[cobj_id_of<TCompound>] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(),
+			flush_[CObj_index<TPrimitive>()] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TPrimitive*>(ptr)->get_baked()).rect(); };
+			flush_[CObj_index<TCompound>()] = [](const void* ptr) -> math::Rect2D { return Wrap<AABB>{}(static_cast<const TCompound*>(ptr)->get_baked().data(),
 				static_cast<const TCompound*>(ptr)->get_baked().size()).rect(); };
 
-#define OLY_LUT_FLUSH_BVH(Class) flush_[cobj_id_of<Class>] = [](const void* ptr) { return Wrap<AABB>{}(static_cast<const Class*>(ptr)->root_shape()).rect(); };
+#define OLY_LUT_FLUSH_BVH(Class) flush_[CObj_index<Class>()] = [](const void* ptr) { return Wrap<AABB>{}(static_cast<const Class*>(ptr)->root_shape()).rect(); };
 			OLY_LUT_LIST_TBVH(OLY_LUT_FLUSH_BVH);
 #undef OLY_LUT_FLUSH_BVH
 		}
 
 		void load_is_dirty()
 		{
-#define OLY_LUT_IS_DIRTY(Class) is_dirty_[cobj_id_of<Class>] = [](const void* ptr) { return static_cast<const Class*>(ptr)->is_dirty(); };
+#define OLY_LUT_IS_DIRTY(Class) is_dirty_[CObj_index<Class>()] = [](const void* ptr) { return static_cast<const Class*>(ptr)->is_dirty(); };
 			OLY_LUT_LIST(OLY_LUT_IS_DIRTY)
 #undef OLY_LUT_IS_DIRTY
 		}
 
 		void load_collision_view()
 		{
-#define OLY_LUT_COLLISION_VIEW(Class) create_debug_overlay_[cobj_id_of<Class>] = [](const void* ptr, glm::vec4 color)\
+#define OLY_LUT_COLLISION_VIEW(Class) create_debug_overlay_[CObj_index<Class>()] = [](const void* ptr, glm::vec4 color)\
 				{ return debug::create_shape_group(*static_cast<const Class*>(ptr), color); };
 			OLY_LUT_LIST(OLY_LUT_COLLISION_VIEW);
 #undef OLY_LUT_COLLISION_VIEW
@@ -172,7 +172,7 @@ namespace oly::col2d::internal
 
 		void load_update_view()
 		{
-#define OLY_LUT_UPDATE_VIEW(Class) modify_debug_overlay_[cobj_id_of<Class>] = [](debug::DebugOverlay& overlay, const void* ptr, size_t shape_index)\
+#define OLY_LUT_UPDATE_VIEW(Class) modify_debug_overlay_[CObj_index<Class>()] = [](debug::DebugOverlay& overlay, const void* ptr, size_t shape_index)\
 				{ debug::modify_shape_group(overlay, *static_cast<const Class*>(ptr), shape_index); };
 			OLY_LUT_LIST(OLY_LUT_UPDATE_VIEW)
 #undef OLY_LUT_UPDATE_VIEW
@@ -180,29 +180,29 @@ namespace oly::col2d::internal
 
 		void load_transformer()
 		{
-#define OLY_LUT_TRANSFORMER(Class) transformer_[cobj_id_of<Class>] = [](const void* ptr) -> const Transformer2D& { return static_cast<const Class*>(ptr)->transformer; };
+#define OLY_LUT_TRANSFORMER(Class) transformer_[CObj_index<Class>()] = [](const void* ptr) -> const Transformer2D& { return static_cast<const Class*>(ptr)->transformer; };
 			OLY_LUT_LIST(OLY_LUT_TRANSFORMER);
 #undef OLY_LUT_TRANSFORMER
 		}
 
 		void load_layer()
 		{
-#define OLY_LUT_CONST_LAYER(Class) layer_const_[cobj_id_of<Class>] = [](const void* ptr) -> Layer { return static_cast<const Class*>(ptr)->layer(); };
+#define OLY_LUT_CONST_LAYER(Class) layer_const_[CObj_index<Class>()] = [](const void* ptr) -> Layer { return static_cast<const Class*>(ptr)->layer(); };
 			OLY_LUT_LIST(OLY_LUT_CONST_LAYER);
 #undef OLY_LUT_CONST_LAYER
 
-#define OLY_LUT_LAYER(Class) layer_[cobj_id_of<Class>] = [](void* ptr) -> Layer& { return static_cast<Class*>(ptr)->layer(); };
+#define OLY_LUT_LAYER(Class) layer_[CObj_index<Class>()] = [](void* ptr) -> Layer& { return static_cast<Class*>(ptr)->layer(); };
 			OLY_LUT_LIST(OLY_LUT_LAYER);
 #undef OLY_LUT_LAYER
 		}
 
 		void load_mask()
 		{
-#define OLY_LUT_CONST_MASK(Class) mask_const_[cobj_id_of<Class>] = [](const void* ptr) -> Mask { return static_cast<const Class*>(ptr)->mask(); };
+#define OLY_LUT_CONST_MASK(Class) mask_const_[CObj_index<Class>()] = [](const void* ptr) -> Mask { return static_cast<const Class*>(ptr)->mask(); };
 			OLY_LUT_LIST(OLY_LUT_CONST_MASK);
 #undef OLY_LUT_CONST_MASK
 
-#define OLY_LUT_MASK(Class) mask_[cobj_id_of<Class>] = [](void* ptr) -> Mask& { return static_cast<Class*>(ptr)->mask(); };
+#define OLY_LUT_MASK(Class) mask_[CObj_index<Class>()] = [](void* ptr) -> Mask& { return static_cast<Class*>(ptr)->mask(); };
 			OLY_LUT_LIST(OLY_LUT_MASK);
 #undef OLY_LUT_MASK
 		}
@@ -238,91 +238,91 @@ namespace oly::col2d::internal
 
 	OverlapResult lut_point_hits(const ColliderObject& c, glm::vec2 test)
 	{
-		return (lut.point_hits_[c.id()])(c.raw_obj(), test);
+		return (lut.point_hits_[c.type_index()])(c.raw_obj(), test);
 	}
 
 	OverlapResult lut_ray_hits(const ColliderObject& c, Ray ray)
 	{
-		return (lut.ray_hits_[c.id()])(c.raw_obj(), ray);
+		return (lut.ray_hits_[c.type_index()])(c.raw_obj(), ray);
 	}
 
 	RaycastResult lut_raycast(const ColliderObject& c, Ray ray)
 	{
-		return (lut.raycast_[c.id()])(c.raw_obj(), ray);
+		return (lut.raycast_[c.type_index()])(c.raw_obj(), ray);
 	}
 
 	OverlapResult lut_overlaps(const ColliderObject& c1, const ColliderObject& c2)
 	{
-		return (lut.overlaps_[c1.id()][c2.id()])(c1.raw_obj(), c2.raw_obj());
+		return (lut.overlaps_[c1.type_index()][c2.type_index()])(c1.raw_obj(), c2.raw_obj());
 	}
 	
 	CollisionResult lut_collides(const ColliderObject& c1, const ColliderObject& c2)
 	{
-		return (lut.collides_[c1.id()][c2.id()])(c1.raw_obj(), c2.raw_obj());
+		return (lut.collides_[c1.type_index()][c2.type_index()])(c1.raw_obj(), c2.raw_obj());
 	}
 	
 	ContactResult lut_contacts(const ColliderObject& c1, const ColliderObject& c2)
 	{
-		return (lut.contacts_[c1.id()][c2.id()])(c1.raw_obj(), c2.raw_obj());
+		return (lut.contacts_[c1.type_index()][c2.type_index()])(c1.raw_obj(), c2.raw_obj());
 	}
 
 	OverlapResult lut_circle_cast_hits(const ColliderObject& c, const CircleCast& cast)
 	{
-		return (lut.circle_cast_hits_[c.id()])(c.raw_obj(), cast);
+		return (lut.circle_cast_hits_[c.type_index()])(c.raw_obj(), cast);
 	}
 
 	OverlapResult lut_rect_cast_hits(const ColliderObject& c, const RectCast& cast)
 	{
-		return (lut.rect_cast_hits_[c.id()])(c.raw_obj(), cast);
+		return (lut.rect_cast_hits_[c.type_index()])(c.raw_obj(), cast);
 	}
 
 	math::Rect2D lut_flush(const ColliderObject& c)
 	{
-		return (lut.flush_[c.id()])(c.raw_obj());
+		return (lut.flush_[c.type_index()])(c.raw_obj());
 	}
 	
 	bool lut_is_dirty(const ColliderObject& c)
 	{
-		return (lut.is_dirty_[c.id()])(c.raw_obj());
+		return (lut.is_dirty_[c.type_index()])(c.raw_obj());
 	}
 
 	debug::DebugOverlay lut_create_debug_overlay(debug::DebugOverlayLayer& layer, const ColliderObject& c, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options)
 	{
-		return debug::DebugOverlay(layer, (lut.create_debug_overlay_[c.id()])(c.raw_obj(), color), paint_options);
+		return debug::DebugOverlay(layer, (lut.create_debug_overlay_[c.type_index()])(c.raw_obj(), color), paint_options);
 	}
 
 	void lut_modify_debug_overlay(debug::DebugOverlay& view, const ColliderObject& c, size_t view_index)
 	{
-		(lut.modify_debug_overlay_[c.id()])(view, c.raw_obj(), view_index);
+		(lut.modify_debug_overlay_[c.type_index()])(view, c.raw_obj(), view_index);
 	}
 
 	const Transformer2D& lut_transformer(const ColliderObject& c)
 	{
-		return (lut.transformer_[c.id()])(c.raw_obj());
+		return (lut.transformer_[c.type_index()])(c.raw_obj());
 	}
 
 	Transformer2D& lut_transformer(ColliderObject& c)
 	{
-		return *const_cast<Transformer2D*>(&(lut.transformer_[c.id()])(c.raw_obj()));
+		return *const_cast<Transformer2D*>(&(lut.transformer_[c.type_index()])(c.raw_obj()));
 	}
 
 	Layer lut_layer(const ColliderObject& c)
 	{
-		return (lut.layer_const_[c.id()])(c.raw_obj());
+		return (lut.layer_const_[c.type_index()])(c.raw_obj());
 	}
 
 	Layer& lut_layer(ColliderObject& c)
 	{
-		return (lut.layer_[c.id()])(c.raw_obj());
+		return (lut.layer_[c.type_index()])(c.raw_obj());
 	}
 
 	Mask lut_mask(const ColliderObject& c)
 	{
-		return (lut.mask_const_[c.id()])(c.raw_obj());
+		return (lut.mask_const_[c.type_index()])(c.raw_obj());
 	}
 
 	Mask& lut_mask(ColliderObject& c)
 	{
-		return (lut.mask_[c.id()])(c.raw_obj());
+		return (lut.mask_[c.type_index()])(c.raw_obj());
 	}
 }

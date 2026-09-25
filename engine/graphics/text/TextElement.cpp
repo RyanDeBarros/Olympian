@@ -82,16 +82,16 @@ namespace oly::rendering
 	bool Font::adj_compat(const Font& other) const
 	{
 		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) {
-			if constexpr (visiting_class_is<decltype(f1), FontAtlasRef>)
+			if constexpr (imp::decays_one_of<decltype(f1), FontAtlasRef>)
 			{
-				if constexpr (visiting_class_is<decltype(f2), FontAtlasRef>)
+				if constexpr (imp::decays_one_of<decltype(f2), FontAtlasRef>)
 					return f1->font_face() == f2->font_face();
 				else
 					return false;
 			}
-			else if constexpr (visiting_class_is<decltype(f1), RasterFontRef>)
+			else if constexpr (imp::decays_one_of<decltype(f1), RasterFontRef>)
 			{
-				if constexpr (visiting_class_is<decltype(f2), RasterFontRef>)
+				if constexpr (imp::decays_one_of<decltype(f2), RasterFontRef>)
 					return f1 == f2;
 				else
 					return false;
@@ -101,27 +101,27 @@ namespace oly::rendering
 			});
 	}
 
-	bool Font::support(utf::Codepoint c) const
+	bool Font::support(imp::utf::codepoint c) const
 	{
 		return visit_font(f, [c](const auto& f) {
-			if constexpr (visiting_class_is<decltype(f), FontAtlasRef>)
+			if constexpr (imp::decays_one_of<decltype(f), FontAtlasRef>)
 				return f->cache(c);
 			else
 				return f->supports(c);
 			});
 	}
 
-	void Font::set_glyph(TextGlyph& glyph, utf::Codepoint c, glm::vec2 pos, glm::vec2 scale) const
+	void Font::set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos, glm::vec2 scale) const
 	{
 		visit_font(f, [&glyph, c, pos, scale](const auto& f) { glyph.set_glyph(*f, f->get_glyph(c), pos, scale); });
 	}
 
-	float Font::advance_width(utf::Codepoint c, utf::Codepoint next_codepoint) const
+	float Font::advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const
 	{
 		float adv = 0.0f;
-		if (c != utf::Codepoint(' '))
+		if (c != imp::utf::codepoint(' '))
 			adv = visit_font(f, [c](const auto& font) {
-				if constexpr (visiting_class_is<decltype(font), FontAtlasRef>)
+				if constexpr (imp::decays_one_of<decltype(font), FontAtlasRef>)
 					return font->get_glyph(c).advance_width() * font->get_scale();
 				else
 					return font->get_glyph(c).advance_width() * font->get_scale().x;
@@ -312,9 +312,9 @@ namespace oly::rendering
 			std::vector<std::string> style_tags;
 			while (!group.tags.empty())
 			{
-				utf::String tag = group.tags.top();
+				imp::utf::string tag = group.tags.top();
 				group.tags.pop();
-				apply_tag(tag.string(), e, overrides, style_tags);
+				apply_tag(tag.str(), e, overrides, style_tags);
 				if (overrides.all())
 					break;
 			}

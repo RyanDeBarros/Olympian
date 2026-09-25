@@ -419,11 +419,6 @@ FodyWeavers.xsd
 
 
 
-# LaTeX
-doc/*.aux
-doc/*.pdf
-doc/*.synctex.gz
-doc/*.toc
 
 # PyCharm
 **/.idea/

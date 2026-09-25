@@ -1,21 +1,5 @@
 # Branches
 
-## v9.2
-* Content Browser Panel
-
-## v9.3
-* Move stuff from `Olympian` editor into `imgui-toolkit`
-	* Wrap push/pop into RAII
-	* Undo/redo
-	* Copy/paste
-	* DrawResult: persistent classes for widgets with methods that return `bool hovered()`, `bool clicked()`, etc. after calling `bool draw()`.
-	* DockTree
-	* `std::string` combos or other widgets that need adapting to C++
-	* Window
-	* Table
-	* Popups (allow opening from any imgui id scope, option to always center to viewport, etc.)
-	* More...
-
 ## v9.4
 * More editor work
 	* Project manager
@@ -68,6 +52,7 @@
 * Graphics API expansion/separation
 	* GL_NV_gpu_shader5 is only supported on NVIDIA GPUs. Add support for other GPUs.
 	* Separate OpenGL/GLFW into independent module - so that different API backends can be implemented, like DirectX and Vulkan
+* In editor, popup inside document window / content browser panel to view list of undo actions so you can click on a certain action to rollback/forward to
 
 ## Tech debt
 

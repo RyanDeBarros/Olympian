@@ -1,10 +1,11 @@
 #pragma once
 
 #include "external/GL.h"
-#include "core/types/Meta.h"
 #include "graphics/backend/basic/Buffers.h"
 #include "graphics/backend/specialized/Mutability.h"
 #include "core/base/Errors.h"
+
+#include <imp/util.hpp>
 
 namespace oly::graphics
 {
@@ -60,7 +61,7 @@ namespace oly::graphics
 		void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const
 		{
 			assert_in_range(pos);
-			glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+			glNamedBufferSubData(buf, pos * sizeof(StructType) + imp::member_offset(member), sizeof(MemberType), &obj);
 		}
 		
 		template<typename StructType>
@@ -77,7 +78,7 @@ namespace oly::graphics
 		{
 			assert_in_range(pos);
 			MemberType obj;
-			glGetNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+			glGetNamedBufferSubData(buf, pos * sizeof(StructType) + imp::member_offset(member), sizeof(MemberType), &obj);
 			return obj;
 		}
 
@@ -139,7 +140,7 @@ namespace oly::graphics
 		void send(GLintptr pos, MemberType StructType::* member, const MemberType& obj) const
 		{
 			assert_in_range(pos);
-			glNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+			glNamedBufferSubData(buf, pos * sizeof(StructType) + imp::member_offset(member), sizeof(MemberType), &obj);
 		}
 
 		template<typename StructType>
@@ -156,7 +157,7 @@ namespace oly::graphics
 		{
 			assert_in_range(pos);
 			MemberType obj;
-			glGetNamedBufferSubData(buf, pos * sizeof(StructType) + member_offset(member), sizeof(MemberType), &obj);
+			glGetNamedBufferSubData(buf, pos * sizeof(StructType) + imp::member_offset(member), sizeof(MemberType), &obj);
 			return obj;
 		}
 

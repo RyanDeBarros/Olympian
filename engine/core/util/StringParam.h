@@ -1,12 +1,14 @@
 #pragma once
 
+#include "core/base/Errors.h"
+
+#include <imp/traits.hpp>
+#include <imp/variant.hpp>
+
+#include <regex>
+#include <span>
 #include <string>
 #include <string_view>
-#include <span>
-#include <regex>
-
-#include "core/types/Variant.h"
-#include "core/types/Meta.h"
 
 namespace oly
 {
@@ -14,7 +16,7 @@ namespace oly
 	struct StringParam
 	{
 	private:
-		using VariantType = Variant<std::span<char>, std::span<const char>, std::string>;
+		using VariantType = imp::variant<std::span<char>, std::span<const char>, std::string>;
 		mutable VariantType storage;
 
 	public:
@@ -31,7 +33,7 @@ namespace oly
 		StringParam(const StringParam& other) : storage(copy_from(other)) {}
 		StringParam(StringParam&& other) noexcept : storage(move_from(std::move(other))) {}
 
-		template<numeric T>
+		template<imp::numeric T>
 		StringParam(T n) : storage(std::to_string(n)) {}
 
 		StringParam& operator=(const StringParam& other)
@@ -140,20 +142,6 @@ namespace oly
 		unsigned int to_uint(const int base = 10) const;
 		float to_float() const;
 	};
-
-	struct StringParamHeteroHash
-	{
-		using is_transparent = void;
-		size_t operator()(const StringParam& s) const { return s.hash(); }
-	};
-
-	struct StringParamHeteroEqual
-	{
-		using is_transparent = void;
-		bool operator()(const StringParam& s1, const StringParam& s2) const { return s1 == s2; }
-	};
-
-	inline const StringParam a = StringParam("a");
 }
 
 template<>

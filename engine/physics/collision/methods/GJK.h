@@ -1,11 +1,14 @@
 #pragma once
 
-#include "physics/collision/methods/CollisionInfo.h"
-#include "core/math/Geometry.h"
-#include "core/types/Approximate.h"
+#include "core/base/Approximate.h"
 #include "core/base/Errors.h"
+
+#include "core/math/Geometry.h"
+
 #include "core/util/Logger.h"
+
 #include "physics/collision/Tolerance.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
 #include <optional>
 

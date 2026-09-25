@@ -1,13 +1,11 @@
 #include "PreferencesDocument.h"
 
 #include "core/editor/Editor.h"
-#include "core/editor/Logger.h"
 #include "core/editor/ProjectInfo.h"
 
-#include "gui/scopes/Form.h"
-#include "gui/scopes/Subform.h"
-
 #include "fio/Trashcan.h"
+
+#include "assets/TranslateKey.h"
 
 // TODO v9.4 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
 
@@ -32,17 +30,17 @@ namespace oly::editor
 	{
 		auto pre_draw = PreDraw();
 
-		Draw(DataPath(), _desc.scratch);
+		Draw(_desc.scratch);
 
-		if (gui::PropertyGrid::DirtyGrid())
+		if (pre_draw.grid.dirty())
 			MarkDirty();
 	}
 
 	void PreferencesDocument::DrawMenuBar()
 	{
-		if (ImGui::BeginMenuBar())
+		if (auto _ = imtk::menu_bar())
 		{
-			if (ImGui::BeginMenu("File"))
+			if (auto _ = imtk::menu("File"))
 			{
 				if (ImGui::MenuItem("Apply Changes"))
 					ApplyEditorPreferences();
@@ -55,11 +53,7 @@ namespace oly::editor
 
 				if (ImGui::MenuItem("Reset Preferences"))
 					ResetAsset();
-
-				ImGui::EndMenu();
 			}
-
-			ImGui::EndMenuBar();
 		}
 	}
 
@@ -75,13 +69,13 @@ namespace oly::editor
 			}
 			catch (const toml::parse_error& e)
 			{
-				Logger::LogWarning("Cannot load editor preferences: " + std::string(e.what()));
+				imtk::log_warning("Cannot load editor preferences: " + std::string(e.what()));
 			}
 		}
 
-		Load(TOMLNode(table), _desc.disk);
+		Load(imtk::toml_node(table), _desc.disk);
 
-		_desc.LoadFromDisk();
+		_desc.load_from_disk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
@@ -94,35 +88,35 @@ namespace oly::editor
 		std::filesystem::create_directories(path.parent_path());
 		std::ofstream file(path);
 		file << table;
-		_desc.WriteToDisk();
+		_desc.write_to_disk();
 		RevertEditorPreferences();
 		MarkClean();
 	}
 
 	void PreferencesDocument::ResetAssetImpl()
 	{
-		Load(TOMLNode(), _desc.scratch);
+		Load(imtk::toml_node(), _desc.scratch);
 	}
 
-	const IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor() const
+	const imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor() const
 	{
 		return _desc;
 	}
 
-	IDoubleDescriptor& PreferencesDocument::GetDoubleDescriptor()
+	imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor()
 	{
 		return _desc;
 	}
 
 	void PreferencesDocument::ApplyEditorPreferences()
 	{
-		Editor::GetPreferences() = _desc.scratch;
+		Editor::GetPreferences().copy_data(_desc.scratch);
 		ActiveDescChanged();
 	}
 
 	void PreferencesDocument::RevertEditorPreferences()
 	{
-		Editor::GetPreferences() = _desc.disk;
+		Editor::GetPreferences().copy_data(_desc.disk);
 		ActiveDescChanged();
 	}
 
@@ -131,83 +125,79 @@ namespace oly::editor
 		Editor::OnPreferencesChanged().invoke();
 	}
 
-	void PreferencesDocument::Draw(DataPath path, PreferencesDesc& desc)
+	void PreferencesDocument::Draw(PreferencesDesc& desc)
 	{
-		if (auto form = Form())
+		if (auto form = imtk::prop::form())
 		{
-			if (auto pause = FormPause())
+			if (auto pause = imtk::prop::form::pause())
 				ImGui::SeparatorText("Editor Preferences");
 
-			if (Form::ValidActiveForm())
+			if (imtk::prop::in_form())
 			{
-				if (auto subform = Subform("Edit"))
-					Draw(path / desc.subpaths.edit, desc.edit);
+				if (auto subform = imtk::prop::subform("Edit"))
+					Draw(*desc.edit);
 
-				if (auto subform = Subform("Content Browser"))
-					Draw(path / desc.subpaths.content_browser, desc.content_browser);
+				if (auto subform = imtk::prop::subform("Content Browser"))
+					Draw(*desc.content_browser);
 
-				if (auto subform = Subform("Tree View"))
-					Draw(path / desc.subpaths.tree_view, desc.tree_view);
+				if (auto subform = imtk::prop::subform("Tree View"))
+					Draw(*desc.tree_view);
 
-				if (auto subform = Subform("Filesystem"))
-					Draw(path / desc.subpaths.filesystem, desc.filesystem);
+				if (auto subform = imtk::prop::subform("Filesystem"))
+					Draw(*desc.filesystem);
 			}
 		}
 	}
 
-	void PreferencesDocument::Draw(DataPath path, EditSettingsDesc& desc)
+	void PreferencesDocument::Draw(EditSettingsDesc& desc)
 	{
-		if (auto subform = Subform("Undo History"))
-			Draw(path / desc.subpaths.undo_history, desc.undo_history);
+		if (auto subform = imtk::prop::subform("Undo History"))
+			Draw(*desc.undo_history);
 	}
 	
-	void PreferencesDocument::Draw(DataPath path, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Draw(UndoHistorySettingsDesc& desc)
 	{
-		DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, ContentBrowserSettingsDesc& desc)
+	void PreferencesDocument::Draw(ContentBrowserSettingsDesc& desc)
 	{
-		DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		if (auto subform = imtk::prop::subform("Undo History"))
+			Draw(*desc.undo_history);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, TreeViewSettingsDesc& desc)
+	void PreferencesDocument::Draw(TreeViewSettingsDesc& desc)
 	{
-		if (auto subform = Subform("Advanced##TreeView"))
-			Draw(path / desc.subpaths.advanced, desc.advanced);
+		if (auto subform = imtk::prop::subform("Advanced##TreeView"))
+			Draw(*desc.advanced);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesDocument::Draw(TreeViewAdvancedSettingsDesc& desc)
 	{
-		DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Draw(DataPath path, FilesystemSettingsDesc& desc)
+	void PreferencesDocument::Draw(FilesystemSettingsDesc& desc)
 	{
-		DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_DRAW_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 
-		if (auto subform = Subform("Advanced"))
+		if (auto subform = imtk::prop::subform("Advanced"))
 		{
-			gui::PropertyGrid::Key::SetLabel("Estimated trash folder size");
-			gui::PropertyGrid::Value::AddComponent(comp::Generic([]() -> DrawResult {
-				std::string buf = std::to_string(fio::Trashcan::EstimatedSize()) + " bytes";
-				ImGui::InputText("##", buf.data(), buf.size() + 1, ImGuiInputTextFlags_ReadOnly);
-				return DrawResult().Query();
-			}));
-			gui::PropertyGrid::SubmitRow();
+			imtk::prop::key::set_label("Estimated trash folder size");
+			imtk::prop::value::add_component(std::make_unique<imtk::w::readonly_text_owned>(std::to_string(fio::Trashcan::EstimatedSize()) + " bytes"));
+			imtk::prop::row::submit();
 
-			imtk::popup clear_trash_popup("Clear trash folder");
+			imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
 
-			if (auto pause = FormPause())
+			if (auto pause = imtk::prop::form::pause())
 			{
 				if (ImGui::Button("Clear trash folder"))
 					clear_trash_popup.open();
 			}
 
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-
-
-			if (auto d = clear_trash_popup.draw(true, ImGuiWindowFlags_AlwaysAutoResize))
+			if (auto d = clear_trash_popup.draw())
 			{
 				ImGui::TextUnformatted("Are you sure? This action is irreversible.");
 
@@ -225,42 +215,44 @@ namespace oly::editor
 		}
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, PreferencesDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, PreferencesDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.edit_key)], desc.edit);
-		Load(node[detail::encode_key(desc.content_browser_key)], desc.content_browser);
-		Load(node[detail::encode_key(desc.tree_view_key)], desc.tree_view);
-		Load(node[detail::encode_key(desc.filesystem_key)], desc.filesystem);
+		Load(desc.edit.subnode(node), *desc.edit);
+		Load(desc.content_browser.subnode(node), *desc.content_browser);
+		Load(desc.tree_view.subnode(node), *desc.tree_view);
+		Load(desc.filesystem.subnode(node), *desc.filesystem);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, EditSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, EditSettingsDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.undo_history_key)], desc.undo_history);
+		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, UndoHistorySettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, UndoHistorySettingsDesc& desc)
 	{
-		LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, ContentBrowserSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, ContentBrowserSettingsDesc& desc)
 	{
-		LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		Load(desc.undo_history.subnode(node), *desc.undo_history);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, TreeViewSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, TreeViewSettingsDesc& desc)
 	{
-		Load(node[detail::encode_key(desc.advanced_key)], desc.advanced);
+		Load(desc.advanced.subnode(node), *desc.advanced);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, TreeViewAdvancedSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, TreeViewAdvancedSettingsDesc& desc)
 	{
-		LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
-	void PreferencesDocument::Load(TOMLNode node, FilesystemSettingsDesc& desc)
+	void PreferencesDocument::Load(imtk::toml_node node, FilesystemSettingsDesc& desc)
 	{
-		LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_LOAD_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, PreferencesDesc& desc)
@@ -268,53 +260,57 @@ namespace oly::editor
 		toml::table subtable;
 
 		subtable.clear();
-		Dump(subtable, desc.edit);
-		table.insert_or_assign(detail::encode_key(desc.edit_key), std::move(subtable));
+		Dump(subtable, *desc.edit);
+		desc.edit.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.content_browser);
-		table.insert_or_assign(detail::encode_key(desc.content_browser_key), std::move(subtable));
+		Dump(subtable, *desc.content_browser);
+		desc.content_browser.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.tree_view);
-		table.insert_or_assign(detail::encode_key(desc.tree_view_key), std::move(subtable));
+		Dump(subtable, *desc.tree_view);
+		desc.tree_view.dump_into(table, std::move(subtable));
 
 		subtable.clear();
-		Dump(subtable, desc.filesystem);
-		table.insert_or_assign(detail::encode_key(desc.filesystem_key), std::move(subtable));
+		Dump(subtable, *desc.filesystem);
+		desc.filesystem.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, EditSettingsDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.undo_history);
-		table.insert_or_assign(detail::encode_key(desc.undo_history_key), std::move(subtable));
+		Dump(subtable, *desc.undo_history);
+		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, UndoHistorySettingsDesc& desc)
 	{
-		DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(UNDO_HISTORY_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, ContentBrowserSettingsDesc& desc)
 	{
-		DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR);
+
+		toml::table subtable;
+		Dump(subtable, *desc.undo_history);
+		desc.undo_history.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewSettingsDesc& desc)
 	{
 		toml::table subtable;
-		Dump(subtable, desc.advanced);
-		table.insert_or_assign(detail::encode_key(desc.advanced_key), std::move(subtable));
+		Dump(subtable, *desc.advanced);
+		desc.advanced.dump_into(table, std::move(subtable));
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, TreeViewAdvancedSettingsDesc& desc)
 	{
-		DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(TREE_VIEW_ADVANCED_SETTINGS_GENERATOR);
 	}
 
 	void PreferencesDocument::Dump(toml::table& table, FilesystemSettingsDesc& desc)
 	{
-		DUMP_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
+		IMTK_DUMP_FIELDS(FILESYSTEM_SETTINGS_GENERATOR);
 	}
 }

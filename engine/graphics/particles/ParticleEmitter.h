@@ -24,7 +24,7 @@ namespace oly::particles
 		AttributeGenerator2D velocity;
 		AttributeGenerator4D color;
 
-		Polymorphic<IParticleSpawner> spawner;
+		imp::poly<IParticleSpawner> spawner;
 		float spawn_period = 1.0f;
 		enum class Loop
 		{

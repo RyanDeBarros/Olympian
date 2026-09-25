@@ -2,24 +2,27 @@
 
 #include "documents/IDocument.h"
 
-#include "desc/impl/FontDesc.h"
-#include "desc/DoubleDescriptor.h"
+#include "desc/FontDesc.h"
 
 #include "assets/MetaSplitter.h"
+
+#include <imp/counter.hpp>
+#include <imp/equal.hpp>
+#include <imp/parser.hpp>
 
 namespace oly::editor
 {
 	class FontDocument : public IDocument
 	{
-		DoubleDescriptor<FullFontDesc> _desc;
+		imtk::desc::doubler<FullFontDesc> _desc;
 		detail::MetaMap _meta;
-		gui::ListModel _atlas_slots;
-		std::string _display_text;
-		ImFont* _preview_font = nullptr;
+		imtk::w::owned_list_indexer _atlas_slots;
+		imtk::w::simple_widget<std::string> _display_text;
+		imtk::font_instance _preview_font;
+		imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> _glyph_counter;
 		
 	public:
-		using IDocument::IDocument;
-		~FontDocument();
+		FontDocument(detail::ResourcePath oly_path);
 
 		static const char* GetVersion();
 
@@ -28,32 +31,27 @@ namespace oly::editor
 		void LoadImpl() override;
 		void DumpImpl() override;
 		void ResetAssetImpl() override;
-		const IDoubleDescriptor& GetDoubleDescriptor() const override;
-		IDoubleDescriptor& GetDoubleDescriptor() override;
+		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+		imtk::desc::idoubler& GetDoubleDescriptor() override;
 
 		detail::ResourcePath GetSourcePath() const;
 
 	private:
-		void ReloadFont();
-		void DestroyFont();
-
 		void DrawFontFace();
 		void DrawFontAtlases();
 		void DrawAtlasPreview();
 		
-		void Draw(DataPath path, FontFaceDesc& desc);
-		void Draw(DataPath path, FontAtlasDesc& desc);
+		void Draw(FontFaceDesc& desc);
+		void Draw(FontAtlasDesc& desc);
 
-		void Load(TOMLNode node, FullFontDesc& desc);
-		void Load(TOMLNode node, FontFaceDesc& desc);
-		void Load(TOMLNode node, KerningDesc& desc);
-		void Load(TOMLNode node, FontAtlasDesc& desc);
+		void Load(imtk::toml_node node, FullFontDesc& desc);
+		void Load(imtk::toml_node node, FontFaceDesc& desc);
+		void Load(imtk::toml_node node, KerningDesc& desc);
+		void Load(imtk::toml_node node, FontAtlasDesc& desc);
 
 		void Dump(toml::table& table, FullFontDesc& desc);
 		void Dump(toml::table& table, FontFaceDesc& desc);
 		void Dump(toml::table& table, KerningDesc& desc);
 		void Dump(toml::table& table, FontAtlasDesc& desc);
-
-		std::unique_ptr<gui::IListAdapter> FontAtlasListAdapter();
 	};
 }

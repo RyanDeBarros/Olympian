@@ -36,7 +36,7 @@ namespace oly::rendering
 			for (unsigned char y = 0; y < 3; ++y)
 			{
 				sprite(x, y).transformer.attach_parent(&transformer);
-				Polymorphic<PivotTransformModifier2D> modifier;
+                imp::poly<PivotTransformModifier2D> modifier = imp::poly_default;
 				modifier->pivot.x = -0.5f * x + 1.0f;
 				modifier->pivot.y = -0.5f * y + 1.0f;
 				sprite(x, y).transformer.set_modifier() = std::move(modifier);

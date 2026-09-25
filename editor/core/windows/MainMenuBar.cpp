@@ -20,28 +20,25 @@ namespace oly::editor
 
 	void MainMenuBar::Draw()
 	{
-		if (ImGui::BeginMainMenuBar())
+		if (auto _ = imtk::main_menu_bar())
 		{
 			DrawFileMenu();
 			DrawViewMenu();
-			ImGui::EndMainMenuBar();
 		}
 	}
 
 	void MainMenuBar::DrawFileMenu()
 	{
-		if (ImGui::BeginMenu("File"))
+		if (auto _ = imtk::menu("File"))
 		{
 			if (ImGui::MenuItem("Project Settings"))
 				DocumentManager::Instance().Add<ProjectDocument>();
-
-			ImGui::EndMenu();
 		}
 	}
 
 	void MainMenuBar::DrawViewMenu()
 	{
-		if (ImGui::BeginMenu("View"))
+		if (auto _ = imtk::menu("View"))
 		{
 			if (ImGui::MenuItem("Asset Editor"))
 				AssetEditorPanel::Instance().Open();
@@ -57,8 +54,6 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Tree View"))
 				TreeViewPanel::Instance().Open();
-
-			ImGui::EndMenu();
 		}
 	}
 }

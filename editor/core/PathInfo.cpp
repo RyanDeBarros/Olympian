@@ -1,7 +1,6 @@
 #include "PathInfo.h"
 
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/Logger.h"
 
 #include "core/Macros.h"
 
@@ -32,9 +31,9 @@ namespace oly::editor
         return PathInfo::GetAssetIcon(detail::MetaSplitter::decode_meta(path.string().c_str()).get_type());
     }
 
-    Texture PathInfo::GetIcon(const std::filesystem::path& path)
+    imtk::texture PathInfo::GetIcon(const std::filesystem::path& path)
     {
-        return ResourceLoader::GetTexture(GetIconResource(path));
+        return GetIconTexture(GetIconResource(path));
     }
 
     IconResource PathInfo::GetAssetIcon(detail::Key meta_type)
@@ -88,7 +87,7 @@ namespace oly::editor
             ILFree(pidl);
         }
         else
-            Logger::LogError("Failed to reveal path " + path.generic_string());
+            imtk::log_error("Failed to reveal path " + path.generic_string());
 
 #elif OLY_OS_APPLE
         std::string cmd;

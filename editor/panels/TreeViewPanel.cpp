@@ -1,23 +1,17 @@
 #include "TreeViewPanel.h"
 
 #include "core/editor/Editor.h"
-#include "core/editor/Logger.h"
-#include "core/editor/Notifier.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
-#include "core/editor/UID.h"
 
 #include "core/windows/MainWindow.h"
 
-#include "core/Errors.h"
 #include "core/PathInfo.h"
 
 #include "panels/PanelManager.h"
 #include "panels/ContentBrowserPanel.h"
 
-#include "gui/graphics/Toolbar.h"
-
-#include "desc/impl/PreferencesDesc.h"
+#include "desc/PreferencesDesc.h"
 
 #include <algorithm>
 #include <stack>
@@ -44,7 +38,7 @@ namespace oly::editor
 
 	void TreeViewNode::Update()
 	{
-		const float update_interval = Editor::GetPreferences().tree_view.advanced.AnalysisInterval();
+		const float update_interval = Editor::GetPreferences().tree_view->advanced->AnalysisInterval();
 		timer += ImGui::GetIO().DeltaTime;
 		if (timer >= update_interval)
 		{
@@ -119,7 +113,7 @@ namespace oly::editor
 		{
 			if (ec)
 			{
-				Logger::LogError("TreeViewNode::RefreshSubnodes(): " + ec.message());
+				imtk::log_error("TreeViewNode::RefreshSubnodes(): " + ec.message());
 				subnodes.clear();
 				return;
 			}
@@ -176,12 +170,23 @@ namespace oly::editor
 		return true;
 	}
 
+	TreeViewConfig::TreeViewConfig()
+	{
+		ignore_imports.config.selected = true;
+		ignore_imports.config.icon = Icon(IconResource::FilterOff);
+		ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
+		ignore_imports.config.str_id = "##IgnoreImports";
+		ignore_imports.config.tooltip = "Ignore import files";
+
+		// TODO v9.4 option to "Sync with open asset" (open in tree view and have it selected - selection outline around single-clicked item)
+	}
+
 	TreeViewPanel& TreeViewPanel::Instance()
 	{
 		if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
 			return *panel;
 		else
-			BreakoutError::Throw("No instance of TreeViewPanel");
+			imtk::breakout_error::throw_("No instance of TreeViewPanel");
 	}
 
 	void TreeViewPanel::InitImpl()
@@ -246,13 +251,13 @@ namespace oly::editor
 		{
 			if (!folder.is_directory())
 			{
-				Notifier::NotifyError("\"" + folder.string() + "\" is not a folder");
+				imtk::notify_error("\"" + folder.string() + "\" is not a folder");
 				return;
 			}
 
 			if (!folder.resource_parents(parts))
 			{
-				Notifier::NotifyError("\"" + folder.string() + "\" is not located in the project resource folder");
+				imtk::notify_error("\"" + folder.string() + "\" is not located in the project resource folder");
 				return;
 			}
 
@@ -280,7 +285,7 @@ namespace oly::editor
 
 			if (!found)
 			{
-				Notifier::NotifyError("Could not locate \"" + folder.string() + "\" in tree view");
+				imtk::notify_error("Could not locate \"" + folder.string() + "\" in tree view");
 				return;
 			}
 		}
@@ -291,7 +296,7 @@ namespace oly::editor
 
 	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
 	{
-		if (_config.ignore_imports && node.is_import)
+		if (_config.ignore_imports.selected() && node.is_import)
 			return false;
 
 		if (node.Name()[0] == '.')
@@ -302,10 +307,10 @@ namespace oly::editor
 
 	void TreeViewPanel::DrawHeader()
 	{
-		Toolbar::DrawIconToggleButton(IconResource::FilterOn, IconResource::FilterOff, _config.ignore_imports, "Ignore import files");
+		_config.ignore_imports.draw();
 		
 		ImGui::SameLine();
-		if (Toolbar::DrawIconButton(IconResource::CollapseAll, "Collapse all", "##CollapseAll"))
+		if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
 			_root->CollapseAll();
 		
 		ImGui::Separator();
@@ -321,15 +326,13 @@ namespace oly::editor
 		imtk::id_scope scope(&node);
 		ImGui::Selectable(node.DisplayName().c_str());
 
-		if (ImGui::BeginDragDropSource())
+		if (auto _ = imtk::drag_drop_source())
 		{
-			std::string path = node.path.string();
-			ImGui::SetDragDropPayload(StringID(UID::PathDragFromTV), path.c_str(), path.size());
+			imtk::send_drag_drop_payload(TreeViewPathDDP(node.path.string()));
 			ImGui::TextUnformatted("Drag path");
-			ImGui::EndDragDropSource();
 		}
 
-		if (ImGui::BeginPopupContextItem("##NodeContextMenu"))
+		if (auto _ = imtk::context_menu::item("##NodeContextMenu"))
 		{
 			if (ImGui::MenuItem("Open"))
 				node.Open();
@@ -339,13 +342,11 @@ namespace oly::editor
 
 			if (ImGui::MenuItem("Reveal in Explorer"))
 				PathInfo::RevealInExplorer(node.path, false);
-
-			ImGui::EndPopup();
 		}
 
 		if (ImGui::IsItemHovered())
 		{
-			if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+			if (imtk::nav::lmb().double_clicked)
 				node.Open();
 		}
 	}
@@ -357,12 +358,12 @@ namespace oly::editor
 			imtk::id_scope scope(&node);
 			if (node.dropdown_open)
 			{
-				if (Toolbar::DrawIconButton(IconResource::ChevronDown, nullptr, "##Dropdown-Down"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronDown), .str_id = "##Dropdown-Down"}).draw())
 					node.CloseBranch();
 			}
 			else
 			{
-				if (Toolbar::DrawIconButton(IconResource::ChevronRight, nullptr, "##Dropdown-Right"))
+				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronRight), .str_id = "##Dropdown-Right"}).draw())
 					node.OpenBranch();
 			}
 			ImGui::SameLine();
@@ -375,7 +376,7 @@ namespace oly::editor
 
 		ImVec2 cursor = ImGui::GetCursorScreenPos();
 		ImVec2 size(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::GetWindowDrawList()->AddImage(node.icon.ID(), cursor, cursor + size);
+		ImGui::GetWindowDrawList()->AddImage(node.icon.id(), cursor, cursor + size);
 		ImGui::Dummy(size);
 		ImGui::SameLine();
 	}
@@ -398,4 +399,19 @@ namespace oly::editor
 			++local_file_index;
 		}
 	}
+
+	TreeViewPathDDP::TreeViewPathDDP(std::string path)
+		: path(std::move(path))
+	{
+	}
+
+	void TreeViewPathDDP::send(const std::function<void(const void*, size_t)>& dump) const
+	{
+		dump(path.data(), path.size());
+	}
+}
+
+std::string_view imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>::view(const void* buf, size_t size) const
+{
+	return std::string_view(static_cast<const char*>(buf), size);
 }

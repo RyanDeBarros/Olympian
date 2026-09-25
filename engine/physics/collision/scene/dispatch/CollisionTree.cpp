@@ -20,7 +20,7 @@ namespace oly::col2d
 			for (const Collider* collider : other.get_colliders())
 			{
 				set_colliders().insert(collider);
-				collider->handles.handles[tree] = this;
+				collider->handles.handles.assign(tree, this);
 			}
 
 			for (size_t i = 0; i < other.subnodes.size(); ++i)
@@ -36,7 +36,7 @@ namespace oly::col2d
 			for (const Collider* collider : get_colliders())
 			{
 				collider->handles.handles.erase(tree);
-				collider->handles.handles[new_tree] = this;
+				collider->handles.handles.assign(new_tree, this);
 			}
 
 			tree = new_tree;
@@ -57,11 +57,16 @@ namespace oly::col2d
 			return std::unique_ptr<CollisionNode>(new CollisionNode(tree, bounds));
 		}
 
-		ContiguousSet<const Collider*>& CollisionNode::set_colliders()
+        imp::contiguous_set<const Collider*>& CollisionNode::set_colliders()
 		{
 			tree->invalidate_iterators();
 			return _colliders;
 		}
+
+        const imp::contiguous_set<const Collider*>& CollisionNode::get_colliders() const
+        {
+            return _colliders;
+        }
 
 		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
 		{
@@ -101,10 +106,15 @@ namespace oly::col2d
 							sub->parent = this;
 						}
 						sub->set_colliders().insert(get_colliders()[i]);
-						get_colliders()[i]->handles.handles.get(tree) = sub.get();
-						set_colliders().remove(i);
-						if (get_colliders().size() < tree->cell_capacity)
-							return;
+                        if (auto ptr = get_colliders()[i]->handles.handles.try_get(tree))
+                        {
+                            *ptr = sub.get();
+                            set_colliders().remove(i);
+                            if (get_colliders().size() < tree->cell_capacity)
+                                return;
+                        }
+                        else
+                            throw Error(ErrorCode::NullPointer);
 					}
 					else
 						++i;
@@ -290,7 +300,10 @@ namespace oly::col2d
 							if (const Collider* collider = indexer.node->set_colliders().pop())
 							{
 								parent->set_colliders().insert(collider);
-								collider->handles.handles.get(this) = parent;
+                                if (auto ptr = collider->handles.handles.try_get(this))
+                                    *ptr = parent;
+                                else
+                                    throw Error(ErrorCode::NullPointer);
 							}
 						}
 					}
