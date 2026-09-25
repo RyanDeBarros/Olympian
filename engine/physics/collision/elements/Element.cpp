@@ -8,9 +8,7 @@
 
 namespace oly::col2d
 {
-#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) \
-    if (auto obj = _obj.as<Class>()) \
-        Macro(obj);
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) if (auto my_obj = _obj.as<Class>()) { Macro(my_obj); }
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
@@ -255,9 +253,7 @@ namespace oly::col2d
 #undef OLY_ELEMENT_RAYCAST
 	}
 
-#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) \
-    if (auto obj = c._obj.as<Class>()) \
-        Macro(p, obj);
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) if (auto their_obj = c._obj.as<Class>()) { Macro(p, their_obj); }
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\

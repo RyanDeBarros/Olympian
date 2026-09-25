@@ -44,8 +44,6 @@ namespace oly::col2d
         IMP_TYPE_DELIMITER(_OLY_ELEM_GENERATOR, Elem);
 	}
 
-    // TODO v9.3 imp::box addition seems to mess up physics in Tester, perhaps because of imp::empty
-
 	class Element
 	{
 		imp::box _obj;

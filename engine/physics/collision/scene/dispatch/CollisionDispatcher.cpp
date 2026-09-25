@@ -143,9 +143,11 @@ namespace oly::col2d
 		phase_tracker.lazy_update_phase(c1, c2, data1.phase);
 		if (data1.phase != Phase::Expired)
 		{
-			if (it_1 != handlers.end())
+            if (it_1 != handlers.end())
+            {
 				for (const auto& handler : it_1->second)
 					handler->invoke(data1);
+            }
 		
 			if (it_2 != handlers.end())
 			{
