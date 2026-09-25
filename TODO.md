@@ -1,12 +1,5 @@
 # Branches
 
-## v9.3
-* Move stuff from `Olympian` editor into `imgui-toolkit`
-	* Undo/redo
-	* Copy/paste
-	* DrawResult: persistent classes for widgets with methods that return `bool hovered()`, `bool clicked()`, etc. after calling `bool draw()`.
-	* More...
-
 ## v9.4
 * More editor work
 	* Project manager
