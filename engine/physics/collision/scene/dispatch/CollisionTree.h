@@ -1,12 +1,12 @@
 #pragma once
 
 #include "core/containers/FixedVector.h"
-#include "core/containers/ContiguousSet.h"
-#include "core/containers/ContiguousMap.h"
 
 #include "physics/collision/scene/luts/LUT.h"
 #include "physics/collision/scene/luts/LUTVariant.h"
 #include "physics/collision/Tolerance.h"
+
+#include <imp/contiguous_set.hpp>
 
 #include <memory>
 #include <queue>
@@ -30,7 +30,7 @@ namespace oly::col2d
 			math::Rect2D bounds;
 			CollisionNode* parent = nullptr;
 			FixedVector<std::unique_ptr<CollisionNode>> subnodes;
-			ContiguousSet<const Collider*> _colliders;
+			imp::contiguous_set<const Collider*> _colliders;
 
 			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
 			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
@@ -55,8 +55,8 @@ namespace oly::col2d
 			void set_bounds(math::Rect2D b);
 
 		public:
-			ContiguousSet<const Collider*>& set_colliders();
-			const ContiguousSet<const Collider*>& get_colliders() const { return _colliders; }
+            imp::contiguous_set<const Collider*>& set_colliders();
+            const imp::contiguous_set<const Collider*>& get_colliders() const;
 		};
 	}
 
