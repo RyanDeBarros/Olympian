@@ -1,11 +1,12 @@
 #pragma once
 
-#include <memory>
-
 #include "external/TOML.h"
 #include "core/platform/Window.h"
 #include "core/platform/Gamepad.h"
-#include "core/containers/FixedVector.h"
+
+#include <imp/fixed_vector.hpp>
+
+#include <memory>
 
 namespace oly::platform
 {
@@ -30,7 +31,7 @@ namespace oly::platform
 	class Platform
 	{
 		Window _window;
-		FixedVector<Gamepad> _gamepads;
+		imp::fixed_vector<Gamepad> _gamepads;
 		int _num_gamepads = 0;
 
 		friend std::unique_ptr<Platform> internal::create_platform(const PlatformSetup&);

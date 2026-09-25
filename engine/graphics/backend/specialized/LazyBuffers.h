@@ -1,11 +1,12 @@
 #pragma once
 
-#include <set>
-
 #include "external/GL.h"
-#include "core/containers/FixedVector.h"
 #include "graphics/backend/basic/Buffers.h"
 #include "graphics/backend/specialized/Mutability.h"
+
+#include <imp/fixed_vector.hpp>
+
+#include <set>
 
 namespace oly::graphics
 {
@@ -67,7 +68,7 @@ namespace oly::graphics
 	}
 
 	template<typename Iterator, typename StructType>
-	inline void batch_send(Iterator dirty_begin, Iterator dirty_end, GLuint buf, const FixedVector<StructType>& cpudata, BufferSendType send_type = BufferSendType::SUBDATA)
+	inline void batch_send(Iterator dirty_begin, Iterator dirty_end, GLuint buf, const imp::fixed_vector<StructType>& cpudata, BufferSendType send_type = BufferSendType::SUBDATA)
 	{
 		batch_send(dirty_begin, dirty_end, buf, cpudata.data(), sizeof(StructType), cpudata.size(), send_type);
 	}
@@ -76,7 +77,7 @@ namespace oly::graphics
 	class CPUSideBuffer
 	{
 	public:
-		using VectorAlias = std::conditional_t<M == Mutability::Immutable, FixedVector<StructType>, std::vector<StructType>>;
+		using VectorAlias = std::conditional_t<M == Mutability::Immutable, imp::fixed_vector<StructType>, std::vector<StructType>>;
 		using StructAlias = StructType;
 
 	protected:

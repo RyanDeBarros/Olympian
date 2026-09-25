@@ -1,12 +1,11 @@
 #pragma once
 
-#include "core/containers/FixedVector.h"
-
 #include "physics/collision/scene/luts/LUT.h"
 #include "physics/collision/scene/luts/LUTVariant.h"
 #include "physics/collision/Tolerance.h"
 
 #include <imp/contiguous_set.hpp>
+#include <imp/fixed_vector.hpp>
 
 #include <memory>
 #include <queue>
@@ -29,7 +28,7 @@ namespace oly::col2d
 			const CollisionTree* tree;
 			math::Rect2D bounds;
 			CollisionNode* parent = nullptr;
-			FixedVector<std::unique_ptr<CollisionNode>> subnodes;
+			imp::fixed_vector<std::unique_ptr<CollisionNode>> subnodes;
 			imp::contiguous_set<const Collider*> _colliders;
 
 			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);

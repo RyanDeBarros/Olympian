@@ -4,10 +4,11 @@
 #include "core/platform/Gamepad.h"
 #include "core/platform/WindowEvents.h"
 #include "core/platform/EventHandler.h"
-#include "core/containers/FixedVector.h"
 
 #include "definitions/enums/AxisConversions.h"
 #include "definitions/enums/GamepadAxis2D.h"
+
+#include <imp/fixed_vector.hpp>
 
 #include <vector>
 #include <array>
@@ -231,7 +232,7 @@ namespace oly
 					std::array<Axis2DPoll, static_cast<size_t>(detail::GamepadAxis2D::_LAST) + 1> axis_2d_polls;
 				};
 
-				FixedVector<GamepadPoll> gamepad_polls;
+				imp::fixed_vector<GamepadPoll> gamepad_polls;
 
 				struct ControllerHandler
 				{
