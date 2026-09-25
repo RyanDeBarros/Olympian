@@ -9,11 +9,11 @@
 #include "physics/collision/Tolerance.h"
 
 #include "core/base/Parameters.h"
-#include "core/types/Variant.h"
 
 #include <imp/box.hpp>
 #include <imp/empty.hpp>
 #include <imp/type_delimiter.hpp>
+#include <imp/variant.hpp>
 
 namespace oly::col2d
 {
@@ -69,7 +69,7 @@ namespace oly::col2d
 		ContactManifold deepest_manifold(UnitVector2D axis) const;
 		Element transformed(const glm::mat3& m) const;
 
-		using ConstElementVariant = Variant<
+		using ConstElementVariant = imp::variant<
 			const Circle*,
 			const AABB*,
 			const OBB*,
@@ -83,7 +83,7 @@ namespace oly::col2d
 			const KDOP8*
 		>;
 
-		using ElementVariant = Variant<
+		using ElementVariant = imp::variant<
 			Circle*,
 			AABB*,
 			OBB*,

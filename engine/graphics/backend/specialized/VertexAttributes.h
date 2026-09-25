@@ -1,10 +1,9 @@
 #pragma once
 
-#include "core/types/Variant.h"
-
 #include "external/GL.h"
 
 #include <imp/dependent_false.hpp>
+#include <imp/variant.hpp>
 
 namespace oly::graphics
 {
@@ -99,5 +98,5 @@ namespace oly::graphics
 		}
 	};
 
-	typedef Variant<VertexAttribute<VertexAttributeType::Float>, VertexAttribute<VertexAttributeType::Int>, VertexAttribute<VertexAttributeType::Double>> VertexAttributeVariant;
+	typedef imp::variant<VertexAttribute<VertexAttributeType::Float>, VertexAttribute<VertexAttributeType::Int>, VertexAttribute<VertexAttributeType::Double>> VertexAttributeVariant;
 }

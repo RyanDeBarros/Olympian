@@ -12,5 +12,10 @@
 #define _OLY_POLYKLASS_ELSE_IF_CASE(name)\
 		else _OLY_POLYKLASS_IF_CASE(name)
 
+#define _OLY_POLYKLASS_CASES_BEGIN(obj) \
+    auto& _polyklass_obj = obj; \
+    do\
+	{
+
 #define _OLY_POLYKLASS_CASES_END \
     } while(false);

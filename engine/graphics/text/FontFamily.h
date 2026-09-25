@@ -2,9 +2,10 @@
 
 #include "graphics/text/Font.h"
 #include "graphics/text/RasterFont.h"
-#include "core/types/Variant.h"
 
 #include "definitions/enums/FontStyle.h"
+
+#include <imp/variant.hpp>
 
 #include <optional>
 
@@ -52,7 +53,7 @@ namespace oly::rendering
 {
 	struct FontFamily
 	{
-		using FontRef = Variant<FontAtlasRef, RasterFontRef>;
+		using FontRef = imp::variant<FontAtlasRef, RasterFontRef>;
 
 		std::unordered_map<FontStyle, FontRef> styles;
 

@@ -14,7 +14,7 @@ namespace oly::debug
 
 	struct DebugShape
 	{
-		using Variant = Variant<rendering::StaticEllipse, rendering::StaticPolygon, rendering::StaticArrowExtension>;
+		using Variant = imp::variant<rendering::StaticEllipse, rendering::StaticPolygon, rendering::StaticArrowExtension>;
 
 		Variant shape;
 

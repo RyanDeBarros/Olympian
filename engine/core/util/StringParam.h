@@ -1,13 +1,14 @@
 #pragma once
 
-#include "core/types/Variant.h"
+#include "core/base/Errors.h"
 
 #include <imp/traits.hpp>
+#include <imp/variant.hpp>
 
+#include <regex>
+#include <span>
 #include <string>
 #include <string_view>
-#include <span>
-#include <regex>
 
 namespace oly
 {
@@ -15,7 +16,7 @@ namespace oly
 	struct StringParam
 	{
 	private:
-		using VariantType = Variant<std::span<char>, std::span<const char>, std::string>;
+		using VariantType = imp::variant<std::span<char>, std::span<const char>, std::string>;
 		mutable VariantType storage;
 
 	public:

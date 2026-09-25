@@ -11,7 +11,7 @@ namespace oly
 
 	class DeferredStringParam
 	{
-		using V = Variant<StringParam, std::vector<StringParam>>;
+		using V = imp::variant<StringParam, std::vector<StringParam>>;
 		mutable V data;
 
 	public:

@@ -13,7 +13,7 @@ namespace oly::rendering
 	
 	struct Font
 	{
-		using Variant = Variant<FontSelection, FontAtlasRef, RasterFontRef>;
+		using Variant = imp::variant<FontSelection, FontAtlasRef, RasterFontRef>;
 
 		Variant f;
 
