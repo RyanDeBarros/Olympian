@@ -2,7 +2,6 @@
 
 ## v10
 * Physics updates
-* Coroutine system
 * Clean up code in each class - consistent style, put methods in CPP, etc.
 
 ## v11
@@ -51,7 +50,7 @@
 * In editor, popup inside document window / content browser panel to view list of undo actions so you can click on a certain action to rollback/forward to
 * Utilities
 	* TypewriterEffect
-	* Dialog/decision trees
+	* Dialog / decision trees / state machine (custom markup language to define states, transitions, conditions - can link to them in code unless basic built-in conditions like trigger, bool, int comparison, etc.)
 	* Push/pop text styles instead of embedded tags for code-based text input
 	* FuzzySearch
 

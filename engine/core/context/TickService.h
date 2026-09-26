@@ -10,17 +10,18 @@ namespace oly
 {
 	enum class TickPhase : char
 	{
+		None = 0,
 		PreFrame,
 		TimerPoll,
 		Collision,
 		Physics,
 		Logic,
 		PostFrame,
-		None
 	};
 
 	enum class TerminatePhase : char
 	{
+		None = 0,
 		Vault,
 		Logic,
 		Graphics,
@@ -28,7 +29,6 @@ namespace oly
 		Resources,
 		ReferencePool,
 		Finalization,
-		None
 	};
 
 	struct ITickService;
@@ -73,17 +73,23 @@ namespace oly
 		std::function<void()> terminate = []() {};
 
 		explicit GenericTickService(TickPhase tick_phase, std::function<void()>&& tick, TerminatePhase terminate_phase, std::function<void()>&& terminate)
-			: ITickService(tick_phase, terminate_phase), tick(std::move(tick)), terminate(std::move(terminate)) {
+			: ITickService(tick_phase, terminate_phase), tick(std::move(tick)), terminate(std::move(terminate))
+        {
 		}
 
 		explicit GenericTickService(TickPhase tick_phase, std::function<void()>&& tick)
-			: ITickService(tick_phase, TerminatePhase::None), tick(std::move(tick)) {}
+			: ITickService(tick_phase, TerminatePhase::None), tick(std::move(tick))
+        {
+        }
 
 		explicit GenericTickService(TerminatePhase terminate_phase, std::function<void()>&& terminate)
-			: ITickService(TickPhase::None, terminate_phase), terminate(std::move(terminate)) {}
+			: ITickService(TickPhase::None, terminate_phase), terminate(std::move(terminate))
+        {
+        }
 
 		explicit GenericTickService(std::function<void()>&& tick, std::function<void()>&& terminate)
-			: ITickService(), tick(std::move(tick)), terminate(std::move(terminate)) {
+			: ITickService(), tick(std::move(tick)), terminate(std::move(terminate))
+        {
 		}
 
 		void on_tick() override { tick(); }

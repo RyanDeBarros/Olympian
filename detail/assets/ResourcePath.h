@@ -5,8 +5,6 @@
 
 #include <toml++/toml.h>
 
-// TODO v10 put all method implementations in ResourcePath.cpp
-
 namespace oly::detail
 {
 	class MetaMap;
@@ -19,22 +17,20 @@ namespace oly::detail
 
 	class ResourcePath
 	{
-		static std::filesystem::path resource_root;
-
-		std::filesystem::path absolute;
+		std::filesystem::path _absolute;
 
 	public:
 		ResourcePath();
 
-		ResourcePath(const std::string_view path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
-		ResourcePath(const std::string& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
-		ResourcePath(const char* path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
-		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {}) { set(path, relative_to); }
+        ResourcePath(const std::string_view path, const ResourcePath& relative_to = {});
+		ResourcePath(const std::string& path, const ResourcePath& relative_to = {});
+		ResourcePath(const char* path, const ResourcePath& relative_to = {});
+		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {});
 
-		ResourcePath& operator=(const std::string_view path) { set(path, {}); return *this; }
-		ResourcePath& operator=(const std::string& path) { set(path, {}); return *this; }
-		ResourcePath& operator=(const char* path) { set(path, {}); return *this; }
-		ResourcePath& operator=(const std::filesystem::path& path) { set(path, {}); return *this; }
+        ResourcePath& operator=(const std::string_view path);
+		ResourcePath& operator=(const std::string& path);
+		ResourcePath& operator=(const char* path);
+		ResourcePath& operator=(const std::filesystem::path& path);
 
 	private:
 		void set(const std::filesystem::path& path, const ResourcePath& relative_to);
@@ -46,9 +42,9 @@ namespace oly::detail
 		std::string string() const;
 		std::string get_resource_shorthand() const;
 		std::filesystem::path get_absolute() const;
-		bool has_extension() const { return absolute.has_extension(); }
-		std::string extension() const { return absolute.extension().generic_string(); }
-		void create_parents() const { std::filesystem::create_directories(absolute.parent_path()); }
+        bool has_extension() const;
+        std::string extension() const;
+        void create_parents() const;
 
 		template<typename... Extensions>
 		bool extension_matches(const Extensions&... extensions) const
@@ -69,15 +65,15 @@ namespace oly::detail
 		bool resource_parents(std::vector<std::string>& parents) const;
 		std::string filename() const;
 
-		std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const { return std::ifstream(absolute, mode); }
-		std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const { return std::ofstream(absolute, mode); }
-		std::fstream get_fstream(std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const { return std::fstream(absolute, mode); }
+        std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const;
+        std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const;
+        std::fstream get_fstream(std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const;
 
 		std::string load_toml(toml::table& table) const;
 		void dump_toml(toml::table& table, const MetaMap& meta) const;
 
-		bool empty() const { return absolute.empty(); }
-		size_t hash() const { return std::hash<std::filesystem::path>{}(absolute); }
+        bool empty() const;
+        size_t hash() const;
 		bool operator==(const ResourcePath& o) const;
 		bool operator<(const ResourcePath& o) const;
 	};
