@@ -1,5 +1,7 @@
 #pragma once
 
+#include "external/GLM.h"
+
 #include <imp/traits.hpp>
 
 #include <random>
@@ -32,7 +34,7 @@ namespace oly
             return range(T(0), T(1));
         }
 
-        static T angle() requires std::floating_point<T>()
+        static T angle() requires std::floating_point<T>
         {
             return range(0, 2 * glm::pi<T>());
         }

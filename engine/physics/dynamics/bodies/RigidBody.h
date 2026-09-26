@@ -17,20 +17,22 @@ namespace oly::physics
 	{
 	protected:
 		std::vector<col2d::Collider> colliders;
-		Transformer2D transformer;
+		Transformer2DRef transformer = REF_INIT;
 
 	public:
 		RigidBody();
+		RigidBody(const Transformer2DRef& ref);
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
 		virtual ~RigidBody() = default;
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
+        Transformer2DConstExposure get_transformer() const;
+		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer();
+        void assign_transformer(const Transformer2DRef& ref);
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
 		col2d::Collider& add_collider(col2d::Collider&& collider);
 		

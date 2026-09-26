@@ -33,13 +33,19 @@ namespace oly::physics
 		internal::RigidBodyTickService::instance(); // only need to call once in non-copy/move ctor.
 	}
 
+    RigidBody::RigidBody(const Transformer2DRef& ref)
+        : transformer(ref)
+    {
+        internal::RigidBodyTickService::instance(); // only need to call once in non-copy/move ctor.
+    }
+
 	RigidBody::RigidBody(const RigidBody& other)
 		: colliders(other.colliders), transformer(other.transformer)
 	{
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			it->rigid_body = this;
-			it->set_transformer().attach_parent(&transformer);
+			it->set_transformer().attach_parent(transformer.base());
 		}
 	}
 	
@@ -49,7 +55,7 @@ namespace oly::physics
 		for (auto it = colliders.begin(); it != colliders.end(); ++it)
 		{
 			it->rigid_body = this;
-			it->set_transformer().attach_parent(&transformer);
+			it->set_transformer().attach_parent(transformer.base());
 			other.unbind(*it);
 		}
 	}
@@ -64,7 +70,7 @@ namespace oly::physics
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
 				it->rigid_body = this;
-				it->set_transformer().attach_parent(&transformer);
+				it->set_transformer().attach_parent(transformer.base());
 				bind(*it);
 			}
 		}
@@ -81,13 +87,38 @@ namespace oly::physics
 			for (auto it = colliders.begin(); it != colliders.end(); ++it)
 			{
 				it->rigid_body = this;
-				it->set_transformer().attach_parent(&transformer);
+				it->set_transformer().attach_parent(transformer.base());
 				bind(*it);
 				other.unbind(*it);
 			}
 		}
 		return *this;
 	}
+
+    Transformer2DConstExposure RigidBody::get_transformer() const
+    {
+        return *transformer;
+    }
+
+    Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> RigidBody::set_transformer()
+    {
+        return *transformer;
+    }
+
+    void RigidBody::assign_transformer(const Transformer2DRef& ref)
+    {
+        transformer = ref;
+    }
+
+    const Transform2D& RigidBody::get_local() const
+    {
+        return transformer->get_local();
+    }
+
+    Transform2D& RigidBody::set_local()
+    {
+        return transformer->set_local();
+    }
 	
 	col2d::Collider& RigidBody::add_collider(col2d::Collider&& collider)
 	{
@@ -95,7 +126,7 @@ namespace oly::physics
 			collider.rigid_body->remove_collider(collider);
 		col2d::Collider& c = colliders.emplace_back(std::move(collider));
 		c.rigid_body = this;
-		c.set_transformer().attach_parent(&transformer);
+		c.set_transformer().attach_parent(transformer.base());
 		c.handles.attach();
 		bind(c);
 		return c;

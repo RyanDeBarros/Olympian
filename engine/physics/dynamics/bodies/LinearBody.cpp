@@ -26,13 +26,17 @@ namespace oly::physics
 
 	void LinearBody::physics_pre_tick()
 	{
-		dynamics.pre_tick(transformer.global());
+		dynamics.pre_tick(transformer->global());
 	}
 
 	void LinearBody::physics_post_tick()
 	{
 		dynamics.post_tick();
-		transformer.set_global(Transform2D{ .position = dynamics.get_state().position, .rotation = dynamics.get_state().rotation, .scale = transformer.get_local().scale }.matrix());
+		transformer->set_global(Transform2D{
+            .position = dynamics.get_state().position,
+            .rotation = dynamics.get_state().rotation,
+            .scale = transformer->get_local().scale
+        }.matrix());
 	}
 
 	void LinearBody::handle_collides(const col2d::CollisionEventData& data) const

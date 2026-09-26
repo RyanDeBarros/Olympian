@@ -3,6 +3,7 @@
 ## v10
 * Physics updates
 * Coroutine system
+* Clean up code in each class - consistent style, put methods in CPP, etc.
 
 ## v11
 * More editor work

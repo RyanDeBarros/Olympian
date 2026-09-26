@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
+#include "core/base/SmartReference.h"
+#include "core/base/UnitVector.h"
 
 #include "external/TOML.h"
 #include "external/GLM.h"
@@ -209,6 +210,8 @@ namespace oly
 
 		static Transformer2D load(TOMLNode node);
 	};
+
+    using Transformer2DRef = SmartReference<Transformer2D>;
 
 	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
 	{
