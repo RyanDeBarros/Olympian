@@ -49,9 +49,7 @@ namespace oly
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
 
-	// TODO v10 Random class for random properties, similar to Unity
 	// TODO v10 Coroutine system (including WaitForSeconds(), YieldFrame(), etc.)
-	// TODO v10 various utilities, including FuzzySearch
     // TODO v10 RigidBody should use TransformerRef, not Transformer, to allow for driving physics on any transformer outside of the game object hierarchy.
 	// TODO v10 texture import metadata should have some additional size scale that affects any sprites using the texture
 
@@ -72,6 +70,7 @@ namespace oly
 	// TODO v13 UI widgets
 	// TODO v13 more of a ImGui style functional programming system for things like text rendering (among other things). For example, with text styling, no need to encode tags when building text from code - define a StyleBuilder that can push/pop styles. When parsing from an asset, it's simple to use. No need for compound font styles possibly.
 	
+	// TODO LATER various utilities, including FuzzySearch
     // TODO LATER Dialog/decision trees
 	// TODO LATER Gameplay utilities such as TypewriterEffect, etc.
 	// TODO LATER Rigid Body skeletons (joints, bones/springs, etc.)
