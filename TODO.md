@@ -30,6 +30,7 @@
 
 ## v13
 * Font size caching/rounding + manual mipmap generation
+* Anti aliasing
 * UI widget system
 * Lighting/shadow/post-processing module
 * AI: navigation, blackboard trees, etc.

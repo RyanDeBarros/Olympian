@@ -17,31 +17,31 @@ namespace oly::col2d
 		{
 			UnitVector2D tangent = axis.get_quarter_turn();
 
-			float v12 = tangent.dot(c1.p1);
-			float v13 = c1.Single ? v12 : tangent.dot(c1.p2);
-			if (v12 > v13)
-				std::swap(v12, v13);
+			float v11 = tangent.dot(c1.p1);
+			float v12 = c1.Single ? v11 : tangent.dot(c1.p2);
+			if (v11 > v12)
+				std::swap(v11, v12);
 			float v21 = tangent.dot(c2.p1);
 			float v22 = c2.Single ? v21 : tangent.dot(c2.p2);
 			if (v21 > v22)
 				std::swap(v21, v22);
 
 			float w1, w2;
-			if (v13 < v21)
-			{
-				w1 = v13;
-				w2 = v21;
-			}
-			else if (v12 > v22)
+			if (v12 < v21)
 			{
 				w1 = v12;
+				w2 = v21;
+			}
+			else if (v11 > v22)
+			{
+				w1 = v11;
 				w2 = v22;
 			}
 			else
 			{
+				v11 = glm::clamp(v11, v21, v22);
 				v12 = glm::clamp(v12, v21, v22);
-				v13 = glm::clamp(v13, v21, v22);
-				w1 = 0.5f * (v12 + v13);
+				w1 = 0.5f * (v11 + v12);
 				w2 = w1;
 			}
 

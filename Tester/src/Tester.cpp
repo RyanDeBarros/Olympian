@@ -111,7 +111,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 		glEnable(GL_BLEND);
 
-		// TODO v10 anti-aliasing settings
+		// TODO v13 anti-aliasing settings
 	}
 
 	void render() const override
