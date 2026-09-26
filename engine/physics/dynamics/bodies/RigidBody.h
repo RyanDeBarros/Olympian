@@ -20,6 +20,8 @@ namespace oly::physics
 		Transformer2DRef transformer = REF_INIT;
 
 	public:
+        bool collision_enabled = true;
+
 		RigidBody();
 		RigidBody(const Transformer2DRef& ref);
 		RigidBody(const RigidBody&);
