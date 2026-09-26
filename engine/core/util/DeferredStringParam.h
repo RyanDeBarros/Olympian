@@ -6,8 +6,65 @@
 
 namespace oly
 {
-	// TODO v10 wrap vector instead of simple typedef, to not clash the operator<<s
-	using DeferredStringList = std::vector<std::string>;
+    struct DeferredStringList
+    {
+        std::vector<std::string> list;
+
+        DeferredStringList(std::initializer_list<std::string> list)
+            : list(std::move(list))
+        {
+        }
+
+        size_t size() const
+        {
+            return list.size();
+        }
+
+        bool empty() const
+        {
+            return list.empty();
+        }
+
+        const std::string& operator[](size_t i) const
+        {
+            return list[i];
+        }
+
+        void push_back(std::string string)
+        {
+            list.push_back(std::move(string));
+        }
+
+        auto begin()
+        {
+            return list.begin();
+        }
+
+        auto begin() const
+        {
+            return list.begin();
+        }
+
+        auto cbegin() const
+        {
+            return list.cbegin();
+        }
+
+        auto end()
+        {
+            return list.end();
+        }
+
+        auto end() const
+        {
+            return list.end();
+        }
+
+        auto cend() const
+        {
+            return list.cend();
+        }
+    };
 
 	class DeferredStringParam
 	{
