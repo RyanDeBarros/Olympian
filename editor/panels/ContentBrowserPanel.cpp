@@ -18,7 +18,7 @@
 
 #include "definitions/Keys.h"
 
-// TODO v9.4 options in editor filesystem settings to auto-prune/auto-import
+// TODO v11 options in editor filesystem settings to auto-prune/auto-import
 
 namespace oly::editor
 {
@@ -528,9 +528,9 @@ namespace oly::editor
 				}
 
 				if (entry_table_state.delete_consumed)
-					DeletePath(path, fio_queue); // TODO v9.4 confirmation popup
+					DeletePath(path, fio_queue); // TODO v11 confirmation popup
 
-				// TODO v9.4 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
+				// TODO v11 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
 			}
 
 			ImGui::InvisibleButton("##DragDropItem", entry_table_state.entry_size);

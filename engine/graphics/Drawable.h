@@ -6,7 +6,7 @@
 
 #include <map>
 
-// TODO v11 currently it's necessary to attach actors' transforms and drawables, even though the structure is likely nearly identical. Maybe associate Drawables with Transforms through some kind of ECS system? Or create specialized Drawable class that automatically attaches transformers.
+// TODO v12 currently it's necessary to attach actors' transforms and drawables, even though the structure is likely nearly identical. Maybe associate Drawables with Transforms through some kind of ECS system? Or create specialized Drawable class that automatically attaches transformers.
 namespace oly::rendering
 {
 	// DOC for all these classes

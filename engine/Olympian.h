@@ -55,7 +55,7 @@ namespace oly
 	// TODO v10 various utilities, including FuzzySearch
 	// TODO v10 more of a ImGui style functional programming system for things like text rendering (among other things). For example, with text styling, no need to encode tags when building text from code - define a StyleBuilder that can push/pop styles. When parsing from an asset, it's simple to use. No need for compound font styles possibly.
 
-	// TODO v11 lifetime/archetype design:
+	// TODO v12 lifetime/archetype design:
 	// - no ECS
 	// - behaviour is implemented in code, attributes are configured in assets
 	// - define Archetype asset files: in GUI, it has a name (namespace + class name) and a list of data members (sprites, rigid bodies, other archetypes, primitives (bool/int/etc.), etc.).
@@ -70,8 +70,8 @@ namespace oly
 	// TODO v10 Dialog/decision trees
 	// TODO v10 Gameplay utilities such as TypewriterEffect, etc.
 	// TODO v10 Rigid Body skeletons (joints, bones/springs, etc.)
-	// TODO v12 AI: Navigation, Blackboard Trees, etc.
-	// TODO v12 Lighting engine
-	// TODO v12 UI widgets
+	// TODO v13 AI: Navigation, Blackboard Trees, etc.
+	// TODO v13 Lighting engine
+	// TODO v13 UI widgets
 	// TODO v10 change license to the same as used in Lexico
 }

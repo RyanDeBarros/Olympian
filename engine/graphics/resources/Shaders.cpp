@@ -10,7 +10,7 @@ namespace oly::graphics::internal_shaders
 #error "OLYMPIAN_ENGINE_ABS_PATH macro is not defined! Did you forget to configure CMake?"
 #endif
 
-	// TODO v13 embed shaders into built binary - or at least copy shaders to project folder under '.detail' subfolder or something
+	// TODO v14 embed shaders into built binary - or at least copy shaders to project folder under '.detail' subfolder or something
 	static std::string shaders_dir = OLYMPIAN_ENGINE_ABS_PATH + std::string("/internal/shaders/");
 
 	// --------------------------------------------------------------------------------------------------------------------------------

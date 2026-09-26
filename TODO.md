@@ -1,11 +1,5 @@
 # Branches
 
-## v9.4
-* More editor work
-	* Project manager
-		* Generate new project files
-		* Recent project manifest
-	
 ## v10
 * Physics updates
 * Utilities
@@ -17,6 +11,12 @@
 * Coroutine system
 
 ## v11
+* More editor work
+	* Project manager
+		* Generate new project files
+		* Recent project manifest
+
+## v12
 * Assets
 	* Rigid body
 	* Material
@@ -28,13 +28,13 @@
 	* Lifetime methods
 	* Scene graph
 
-## v12
+## v13
 * Font size caching/rounding + manual mipmap generation
 * UI widget system
 * Lighting/shadow/post-processing module
 * AI: navigation, blackboard trees, etc.
 
-## v13
+## v14
 * Separation of Tester project into separate repo
 * Texture streaming
 * Shader embedding

@@ -315,31 +315,31 @@ namespace oly::col2d
 
 			static bool compatible_globals(const KDOP<K>& c1, const KDOP<K>& c2, int& offset2, int& sign2)
 			{
-				static const auto nonrotated_compatible_globals = [](UnitVector2D v10, UnitVector2D v11, UnitVector2D v20, UnitVector2D v21, int& offset2, int& sign2) -> bool {
-					if (approx(v10.x(), v20.x()) && approx(v11.x(), v21.x()))
+				static const auto nonrotated_compatible_globals = [](UnitVector2D v10, UnitVector2D v12, UnitVector2D v20, UnitVector2D v21, int& offset2, int& sign2) -> bool {
+					if (approx(v10.x(), v20.x()) && approx(v12.x(), v21.x()))
 					{
-						if (approx(v10.y(), v20.y()) && approx(v11.y(), v21.y()))
+						if (approx(v10.y(), v20.y()) && approx(v12.y(), v21.y()))
 						{
 							offset2 = 0;
 							sign2 = 1;
 							return true;
 						}
-						else if (approx(v10.y(), -v20.y()) && approx(v11.y(), -v21.y()))
+						else if (approx(v10.y(), -v20.y()) && approx(v12.y(), -v21.y()))
 						{
 							offset2 = 0;
 							sign2 = -1;
 							return true;
 						}
 					}
-					else if (approx(v10.x(), -v20.x()) && approx(v11.x(), -v21.x()))
+					else if (approx(v10.x(), -v20.x()) && approx(v12.x(), -v21.x()))
 					{
-						if (approx(v10.y(), v20.y()) && approx(v11.y(), v21.y()))
+						if (approx(v10.y(), v20.y()) && approx(v12.y(), v21.y()))
 						{
 							offset2 = K;
 							sign2 = -1;
 							return true;
 						}
-						else if (approx(v10.y(), -v20.y()) && approx(v11.y(), -v21.y()))
+						else if (approx(v10.y(), -v20.y()) && approx(v12.y(), -v21.y()))
 						{
 							offset2 = K;
 							sign2 = 1;
@@ -357,18 +357,18 @@ namespace oly::col2d
 				if (approx(m10, m11) && approx(m20, m21)) // uniform scaling
 				{
 					UnitVector2D v10(c1.global[0]);
-					UnitVector2D v11(c1.global[1]);
+					UnitVector2D v12(c1.global[1]);
 					UnitVector2D v20(c2.global[0]);
 					UnitVector2D v21(c2.global[1]);
 
 					float rotation_offset = v20.rotation() - v10.rotation();
-					if (!approx(rotation_offset, v21.rotation() - v11.rotation()) || !near_multiple(rotation_offset, KDOP<K>::PI_OVER_K))
+					if (!approx(rotation_offset, v21.rotation() - v12.rotation()) || !near_multiple(rotation_offset, KDOP<K>::PI_OVER_K))
 						return false;
 
 					v20.rotate(-rotation_offset);
 					v21.rotate(-rotation_offset);
 					
-					if (nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2))
+					if (nonrotated_compatible_globals(v10, v12, v20, v21, offset2, sign2))
 					{
 						offset2 += roundi(rotation_offset / KDOP<K>::PI_OVER_K);
 						return true;
@@ -378,10 +378,10 @@ namespace oly::col2d
 				else if (approx(m10 * m21, m20 * m11)) // proportional scaling
 				{
 					UnitVector2D v10(c1.global[0]);
-					UnitVector2D v11(c1.global[1]);
+					UnitVector2D v12(c1.global[1]);
 					UnitVector2D v20(c2.global[0]);
 					UnitVector2D v21(c2.global[1]);
-					return nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2);
+					return nonrotated_compatible_globals(v10, v12, v20, v21, offset2, sign2);
 				}
 				else
 					return false;

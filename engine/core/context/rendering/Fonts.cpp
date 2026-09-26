@@ -185,7 +185,7 @@ namespace oly::context
 		return font_atlas;
 	}
 
-	// TODO v11 move load logic to RasterFont::Load()
+	// TODO v12 move load logic to RasterFont::Load()
 	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -252,7 +252,7 @@ namespace oly::context
 		return raster_font;
 	}
 
-	// TODO v11 move load logic to RasterFont::Load()
+	// TODO v12 move load logic to RasterFont::Load()
 	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())

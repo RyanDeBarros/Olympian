@@ -7,7 +7,7 @@
 
 #include "assets/TranslateKey.h"
 
-// TODO v9.4 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
+// TODO v11 Defaults for descriptors should come from preferences sub-descriptors -> Create an "Asset Defaults" subform.
 
 namespace oly::editor
 {

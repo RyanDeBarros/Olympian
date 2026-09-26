@@ -384,7 +384,7 @@ namespace oly::editor
 
 						imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
 
-						// TODO v9.4 support dropping files directly on grid cells
+						// TODO v11 support dropping files directly on grid cells
 						if (auto target = imtk::drag_drop_target())
 						{
 							std::optional<detail::ResourcePath> path;

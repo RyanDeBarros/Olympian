@@ -180,7 +180,7 @@ namespace oly::editor
 						if (ImGui::MenuItem("Reveal in explorer"))
 							PathInfo::RevealInExplorer(path.get_absolute(), false);
 
-						// TODO v9.4 'Close tab', 'Close other tabs', 'Close all tabs'
+						// TODO v11 'Close tab', 'Close other tabs', 'Close all tabs'
 					}
 
 					doc.Draw();
