@@ -42,14 +42,12 @@
 
 namespace oly
 {
-	using context::run;
+    using context::Context;
 
 	inline platform::Window& context_window() { return context::get_platform().window(); }
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
-
-	// TODO v10 texture import metadata should have some additional size scale that affects any sprites using the texture
 
     // TODO v11 change license to the same as used in Lexico
 

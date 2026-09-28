@@ -133,7 +133,6 @@ endif()
 # Engine compile definitions
 target_compile_definitions(OlympianEngine PUBLIC
 	GLEW_STATIC
-    OLYMPIAN_ENGINE_ABS_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\"
 )
 
 # Include directories

@@ -32,12 +32,19 @@ namespace oly::detail
 		ResourcePath& operator=(const char* path);
 		ResourcePath& operator=(const std::filesystem::path& path);
 
+        static ResourcePath _cmake_ported(const std::string_view path);
+
 	private:
 		void set(const std::filesystem::path& path, const ResourcePath& relative_to);
 
 	public:
 		static void set_resource_root(const std::filesystem::path& root);
 		bool is_resource_root() const;
+
+        ResourcePath operator/(const std::string_view subpath) const;
+        ResourcePath operator/(const std::string& subpath) const;
+        ResourcePath operator/(const char* subpath) const;
+        ResourcePath operator/(const std::filesystem::path& subpath) const;
 
 		std::string string() const;
 		std::string get_resource_shorthand() const;

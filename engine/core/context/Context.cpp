@@ -28,11 +28,6 @@
 
 namespace oly::context
 {
-	namespace internal
-	{
-		std::string resource_root;
-	}
-
 	static void init_logger(const assets::Parser& parser)
 	{
 		LoggerOptions options;
@@ -78,74 +73,64 @@ namespace oly::context
 		}
 	};
 
-	static void init(const char* project_file, const std::string& resource_root)
+	Context::Context()
 	{
-		if (glfwInit() != GLFW_TRUE)
-		{
-			_OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << LOG.nl;
-			throw Error(ErrorCode::GlfwInit);
-		}
-		stbi_set_flip_vertically_on_load(true);
+        if (glfwInit() != GLFW_TRUE)
+        {
+            _OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << LOG.nl;
+            throw Error(ErrorCode::GlfwInit);
+        }
+        stbi_set_flip_vertically_on_load(true);
 
-		detail::ResourcePath::set_resource_root(resource_root);
-		internal::resource_root = resource_root;
-		
-		auto toml = io::load_toml(project_file);
-		assets::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
-		TOMLNode toml_context = project_parser.required<TOMLNode>(detail::Key::Context)();
+        detail::ResourcePath::set_resource_root("res/");
 
-		assets::Parser context_parser(toml_context);
+        auto toml = io::load_toml(detail::ResourcePath::_cmake_ported("Project.oly"));
+        assets::Parser project_parser(toml, { "(project file)" }, ErrorCode::ContextInit, true);
+        TOMLNode toml_context = project_parser.required<TOMLNode>(detail::Key::Context)();
 
-		init_logger(context_parser);
-		SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();
+        assets::Parser context_parser(toml_context);
 
-		internal::init_platform(toml_context);
-		init_time(context_parser);
-		graphics::internal::load_resources();
+        init_logger(context_parser);
+        SingletonTickService<TickPhase::None, void, TerminatePhase::Finalization, TerminationFinalization>::instance();
 
-		internal::init_collision(toml_context);
-		internal::init_viewport(toml_context);
-		internal::init_vault();
+        internal::init_platform(toml_context);
+        init_time(context_parser);
+        graphics::internal::load_resources();
 
-		internal::init_textures();
-		internal::init_sprites();
-		internal::init_fonts();
+        internal::init_collision(toml_context);
+        internal::init_viewport(toml_context);
+        internal::init_vault();
 
-		oly::internal::check_errors();
-	}
+        internal::init_textures();
+        internal::init_sprites();
+        internal::init_fonts();
 
-	static bool active_context = false;
-
-	Context::Context(const char* project_file, const char* resource_root)
-	{
-		if (active_context)
-			throw Error(ErrorCode::ContextInit, "Context was already initialized");
-
-		active_context = true;
-		init(project_file, resource_root);
+        oly::internal::check_errors();
 	}
 
 	Context::~Context()
 	{
-		internal::TickServiceRegistry::instance().terminate();
-		active_context = false;
+        internal::TickServiceRegistry::instance().terminate();
 	}
 
-	namespace internal
-	{
-		bool render_frame()
-		{
-			TIME.sync();
-			internal::render_pipeline();
-			return internal::platform_frame();
-		}
-	}
-
-	void run()
+	void Context::run()
 	{
 		// TODO v12 begin play on initial actors here
 		LOG.flush();
-		while (internal::render_frame())
-			internal::TickServiceRegistry::instance().tick();
+
+        while (internal::render_frame())
+            internal::TickServiceRegistry::instance().tick();
+		
+        LOG.flush();
 	}
+
+    namespace internal
+    {
+        bool render_frame()
+        {
+            TIME.sync();
+            internal::render_pipeline();
+            return internal::platform_frame();
+        }
+    }
 }

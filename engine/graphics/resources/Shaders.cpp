@@ -6,12 +6,11 @@
 
 namespace oly::graphics::internal_shaders
 {
-#ifndef OLYMPIAN_ENGINE_ABS_PATH
-#error "OLYMPIAN_ENGINE_ABS_PATH macro is not defined! Did you forget to configure CMake?"
-#endif
-
-	// TODO v14 embed shaders into built binary - or at least copy shaders to project folder under '.detail' subfolder or something
-	static std::string shaders_dir = OLYMPIAN_ENGINE_ABS_PATH + std::string("/internal/shaders/");
+    static const detail::ResourcePath& shaders_dir()
+    {
+        static const detail::ResourcePath dir = detail::ResourcePath::_cmake_ported("internal/shaders/");
+        return dir;
+    }
 
 	// --------------------------------------------------------------------------------------------------------------------------------
 
@@ -25,11 +24,11 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			ShaderBufferSource vertex = {
-				.buffer = io::read_template_file(shaders_dir + "sprite_batch.vert", { { "/*$MODULATIONS*/", std::to_string(modulations) }, { "/*$ANIMS*/", std::to_string(anims) } }),
+				.buffer = io::read_template_file(shaders_dir() / "sprite_batch.vert", { { "/*$MODULATIONS*/", std::to_string(modulations) }, { "/*$ANIMS*/", std::to_string(anims) } }),
 				.type = ShaderType::Vertex
 			};
 			ShaderBufferSource fragment = {
-				.buffer = io::read_file(shaders_dir + "sprite_batch.frag"),
+				.buffer = io::read_file(shaders_dir() / "sprite_batch.frag"),
 				.type = ShaderType::Fragment
 			};
 			return Shader({ std::move(vertex), std::move(fragment) });
@@ -72,7 +71,7 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			return Shader({ {
-				.buffer = io::read_template_file(shaders_dir + "particles/spawn.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
+				.buffer = io::read_template_file(shaders_dir() / "particles/spawn.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
 				.type = ShaderType::Compute
 			} });
 		}
@@ -101,7 +100,7 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			return Shader({ {
-				.buffer = io::read_template_file(shaders_dir + "particles/update.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
+				.buffer = io::read_template_file(shaders_dir() / "particles/update.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
 				.type = ShaderType::Compute
 			} });
 		}
@@ -124,20 +123,20 @@ namespace oly::graphics::internal_shaders
 	void load()
 	{
 		_polygon_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "polygon_batch.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir + "polygon_batch.frag", .type = ShaderType::Fragment }
+			{ .path = shaders_dir() / "polygon_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "polygon_batch.frag", .type = ShaderType::Fragment }
 		});
 		polygon_batch = *_polygon_batch;
 
 		_ellipse_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "ellipse_batch.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir + "ellipse_batch.frag", .type = ShaderType::Fragment }
+			{ .path = shaders_dir() / "ellipse_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "ellipse_batch.frag", .type = ShaderType::Fragment }
 		});
 		ellipse_batch = *_ellipse_batch;
 
 		_particle_renderer = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir + "particles/particle.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir + "particles/particle.frag", .type = ShaderType::Fragment }
+			{ .path = shaders_dir() / "particles/particle.vert", .type = ShaderType::Vertex },
+            { .path = shaders_dir() / "particles/particle.frag", .type = ShaderType::Fragment }
 		});
 		particle_renderer = *_particle_renderer;
 	}

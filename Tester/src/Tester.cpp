@@ -1,7 +1,5 @@
 ﻿#include <Olympian.h>
 
-#include "ProjectContext.h"
-
 #include "SpriteMatch.h"
 #include "Jumble.h"
 
@@ -167,7 +165,7 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 int main()
 {
-	oly::ProjectContext context;
+	oly::Context context;
 
     const auto player_layer = oly::context::get_collision_layer("player");
     const auto player_mask = oly::context::get_collision_mask("player");
@@ -339,6 +337,5 @@ int main()
 		obstacle4->modify_debug_overlay(0, cv_obstacle4);
 	});
 
-	oly::run();
-	oly::LOG.flush();
+	context.run();
 }

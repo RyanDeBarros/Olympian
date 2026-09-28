@@ -202,7 +202,7 @@ namespace oly::editor
 			break;
 
 		case OpenAssetCode::UnsupportedAssetVersion:
-			message += "asset meta version not supported"; // TODO v10 version mismatch handling
+			message += "asset meta version not supported"; // TODO v11 version mismatch handling
 			break;
 
 		case OpenAssetCode::UnsupportedExtension:

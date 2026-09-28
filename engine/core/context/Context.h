@@ -1,22 +1,19 @@
 #pragma once
 
-#include "core/base/SimpleMath.h"
+#include <imp/instance_guard.hpp>
 
 namespace oly::context
 {
-	class Context
+	class Context : public imp::instance_guard<Context>
 	{
 	public:
-		Context(const char* project_file, const char* resource_root);
-		Context(const Context&) = delete;
-		Context(Context&&) noexcept = delete;
+		Context();
 		~Context();
+	    void run();
 	};
 
-	namespace internal
-	{
-		extern bool render_frame();
-	}
-
-	extern void run();
+    namespace internal
+    {
+        extern bool render_frame();
+    }
 }

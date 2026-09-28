@@ -13,8 +13,8 @@ endif()
 # ====================
 
 # TODO v11 this won't be the case for ENGINE_DIR when building project separately.
-set(ENGINE_DIR ${CMAKE_SOURCE_DIR})
-set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+set(ENGINE_DIR "${CMAKE_SOURCE_DIR}/engine")
+set(PROJECT_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
 
 
 # ====================
@@ -23,16 +23,29 @@ set(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(OlympianTester)
 
-# Project context macros
-# TODO v11 Option in editor to re-generate CMakeLists.txt/other auto-generate files if project was moved, or to rename the project.
-target_compile_definitions(OlympianTester PUBLIC
-	OLYMPIAN_CONTEXT_PROJECT_FILE="${PROJECT_DIR}/OlympianTester.oly"
-	OLYMPIAN_CONTEXT_PROJECT_RESOURCE_DIR="${PROJECT_DIR}/res/"
-)
-
 target_include_directories(OlympianTester PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Link engine
 target_link_libraries(OlympianTester PUBLIC OlympianEngine)
 
 add_subdirectory(src)
+
+add_custom_command(TARGET OlympianTester POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_FILE_DIR:OlympianTester>/res"
+
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${PROJECT_DIR}/res"
+            "$<TARGET_FILE_DIR:OlympianTester>/res"
+
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${PROJECT_DIR}/OlympianTester.oly"
+            "$<TARGET_FILE_DIR:OlympianTester>/Project.oly"
+
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_FILE_DIR:OlympianTester>/internal/shaders"
+
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${ENGINE_DIR}/internal/shaders"
+            "$<TARGET_FILE_DIR:OlympianTester>/internal/shaders"
+)

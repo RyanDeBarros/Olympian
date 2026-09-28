@@ -17,6 +17,7 @@ namespace oly
 		Physics,
 		Logic,
 		PostFrame,
+        _c
 	};
 
 	enum class TerminatePhase : char
@@ -29,6 +30,7 @@ namespace oly
 		Resources,
 		ReferencePool,
 		Finalization,
+        _c
 	};
 
 	struct ITickService;
@@ -40,8 +42,8 @@ namespace oly
 			friend class imp::soft_singleton<TickServiceRegistry>;
 
 			friend struct ITickService;
-			std::array<std::unordered_set<ITickService*>, (size_t)TickPhase::None> tick_services;
-			std::array<std::unordered_set<ITickService*>, (size_t)TerminatePhase::None> terminate_services;
+			std::array<std::unordered_set<ITickService*>, (size_t)TickPhase::_c> tick_services;
+			std::array<std::unordered_set<ITickService*>, (size_t)TerminatePhase::_c> terminate_services;
 
 		public:
 			void tick();

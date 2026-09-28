@@ -200,8 +200,11 @@ add_subdirectory(documents)
 add_subdirectory(fio)
 add_subdirectory(panels)
 
+# Copy resources folder
 add_custom_command(TARGET OlympianEditor POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E remove_directory
+            "$<TARGET_FILE_DIR:OlympianEditor>/res"
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/res
-    $<TARGET_FILE_DIR:OlympianEditor>/res
+            "${CMAKE_CURRENT_SOURCE_DIR}/res"
+            "$<TARGET_FILE_DIR:OlympianEditor>/res"
 )
