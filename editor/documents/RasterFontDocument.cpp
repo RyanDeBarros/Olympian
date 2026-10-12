@@ -132,8 +132,6 @@ namespace oly::editor
 				{
 					if (!desc.glyphs.empty())
 						Draw(desc.glyphs[_glyphs.model.index()]);
-
-					// TODO v12 preview of glyph (also in other font-related documents - e.g. preview character distance for kerning table)
 				}
 
 				if (_glyphs.model.consume_ops(*ListOpAdapter()))

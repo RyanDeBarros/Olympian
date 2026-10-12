@@ -1,3 +1,2 @@
 .trash/
-# TODO v11 Advanced option in editor preferences to ignore LiveSettings.toml or not, or even Preferences.toml. Default behaviour is to include preferences but exclude live settings.
 LiveSettings.toml

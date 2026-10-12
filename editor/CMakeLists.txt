@@ -27,7 +27,6 @@ else()
         imtk
         GIT_REPOSITORY https://github.com/RyanDeBarros/imgui-toolkit.git
         GIT_TAG        main
-        # TODO LATER use specific tag
     )
 
     FetchContent_MakeAvailable(imtk)

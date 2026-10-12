@@ -48,26 +48,4 @@ namespace oly
 	inline platform::Gamepad& context_gamepad() { return context::get_platform().gamepad(); }
 
 	inline rendering::Camera2D& default_camera() { return *rendering::Camera2DRef(REF_DEFAULT); }
-
-    // TODO v11 change license to the same as used in Lexico
-
-	// TODO v12 lifetime/archetype design:
-	// - no ECS
-	// - behaviour is implemented in code, attributes are configured in assets
-	// - define Archetype asset files: in GUI, it has a name (namespace + class name) and a list of data members (sprites, rigid bodies, other archetypes, primitives (bool/int/etc.), etc.).
-	//   - You can open a member to set up all its attributes
-	//   - You can open the draw view to set up the draw order of the members
-	//   - You can open the tick view to set up the tick order of the members
-	// - Editor will auto-generate Archetype files that implement draw and tick in the correct ordering of its members.
-	// - Code-based behaviour scripts will extend a GameObject class that has virtual OnSpawn()/OnDespawn()/OnTick()/OnDraw()/etc. methods. The GameObject base class will auto-register those methods to the proper services.
-
-	// TODO v13 AI: Navigation, Blackboard Trees, etc.
-	// TODO v13 Lighting engine
-	// TODO v13 UI widgets
-	// TODO v13 more of a ImGui style functional programming system for things like text rendering (among other things). For example, with text styling, no need to encode tags when building text from code - define a StyleBuilder that can push/pop styles. When parsing from an asset, it's simple to use. No need for compound font styles possibly.
-	
-	// TODO LATER various utilities, including FuzzySearch
-    // TODO LATER Dialog/decision trees
-	// TODO LATER Gameplay utilities such as TypewriterEffect, etc.
-	// TODO LATER Rigid Body skeletons (joints, bones/springs, etc.)
 }

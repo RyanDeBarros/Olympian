@@ -16,7 +16,6 @@ namespace oly::particles
 	{
 		std::string klass = assets::Parser(node).defaulted<std::string>(detail::Key::Klass)();
 
-		// TODO v12 use polyklass macros more often
 		_OLY_POLYKLASS_CASES_BEGIN(spawner)
 			_OLY_POLYKLASS_IF_CASE(ConstantParticleSpawner)
 			_OLY_POLYKLASS_ELSE_IF_CASE(BurstParticleSpawner)

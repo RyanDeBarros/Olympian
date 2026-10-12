@@ -77,7 +77,6 @@ namespace oly::editor
 		return _os_window->should_close();
 	}
 
-	// TODO v11 using imtk::handle_error throughout project - handle at closest convenience, for example each document handles its own breakout errors, each panel does, etc. so that one breakout error doesn't cut the full frame short.
 	void Editor::Tick()
 	{
 		_os_window->begin_frame();
@@ -202,7 +201,7 @@ namespace oly::editor
 			break;
 
 		case OpenAssetCode::UnsupportedAssetVersion:
-			message += "asset meta version not supported"; // TODO v11 version mismatch handling
+			message += "asset meta version not supported";
 			break;
 
 		case OpenAssetCode::UnsupportedExtension:

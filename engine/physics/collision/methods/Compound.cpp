@@ -56,12 +56,7 @@ namespace oly::col2d
 			}
 		}
 		else
-		{
-			// TODO v10 ? pre-emptive check if active will overlap static if travelling on some separation interval.
-			// If direction is away from static, then can return 0.0. Otherwise, if overall max_sep is less than separation between objects, can return 0.0,
-			// else return additional separation needed for active to overtake/pass static.
 			return 0.0f;
-		}
 	}
 
 	static imp::fixed_array<MTVPosNeg> generate_mtvs(const Element* active_elements, const size_t num_active_elements, const Element& static_element)

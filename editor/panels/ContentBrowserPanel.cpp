@@ -18,8 +18,6 @@
 
 #include "definitions/Keys.h"
 
-// TODO v11 options in editor filesystem settings to auto-prune/auto-import
-
 namespace oly::editor
 {
 	ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
@@ -528,9 +526,7 @@ namespace oly::editor
 				}
 
 				if (entry_table_state.delete_consumed)
-					DeletePath(path, fio_queue); // TODO v11 confirmation popup
-
-				// TODO v11 FIO operations: ctrl+c, ctrl+x, ctrl+v, etc.
+					DeletePath(path, fio_queue);
 			}
 
 			ImGui::InvisibleButton("##DragDropItem", entry_table_state.entry_size);

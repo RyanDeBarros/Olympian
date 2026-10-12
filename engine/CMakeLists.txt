@@ -121,7 +121,6 @@ add_library(quartic STATIC ${quartic_SOURCE_DIR}/quartic.cpp)
 #     Build Engine
 # ====================
 
-# TODO v14 licensing may require engine to be dynamically linked?
 # Create the engine as a static library
 add_library(OlympianEngine STATIC)
 
@@ -161,6 +160,3 @@ add_subdirectory(core)
 add_subdirectory(external)
 add_subdirectory(graphics)
 add_subdirectory(physics)
-
-
-# TODO v14 install OlympianEngine so as to use find_package(Olympian) in project cmake - or just link using FetchContent

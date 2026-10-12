@@ -290,7 +290,6 @@ namespace oly::assets::internal
 	template<>
 	bool try_parse(TOMLNode node, cmath::BorderPivot& v)
 	{
-		// TODO v12 in editor, either select from combo box or set float directly
 		return try_parse(node, v.v);
 	}
 

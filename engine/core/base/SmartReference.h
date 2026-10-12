@@ -74,7 +74,6 @@ namespace oly
 			SmartReferenceLink* next = nullptr;
 		};
 
-		// TODO v14 multi-threading and thread safety: smart reference should have some kind of lock() similar to Issuer<T>::Handle.
 		template<typename Object>
 		class SmartReferencePool final : public imp::soft_singleton<SmartReferencePool<Object>>, public IPool
 		{
@@ -574,7 +573,6 @@ namespace oly
 				throw Error(ErrorCode::NullPointer);
 		}
 
-		// TODO v14 define macros that enables pointer data member for base() so it can be easily queried during debugging. Here and in other classes that abstract away references, like PublicIssuer.
 		const PoolBase* base() const
 		{
 			if (valid())

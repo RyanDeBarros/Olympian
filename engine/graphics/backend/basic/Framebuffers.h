@@ -140,6 +140,4 @@ namespace oly::graphics
 		glCreateFramebuffers((GLsizei)N, ids);
 		return internal::framebuffer_block_impl(ids, std::make_index_sequence<N>{});
 	}
-
-	// TODO v14 Renderbuffer
 }

@@ -115,7 +115,6 @@ namespace oly::context
 
 	void Context::run()
 	{
-		// TODO v12 begin play on initial actors here
 		LOG.flush();
 
         while (internal::render_frame())

@@ -97,7 +97,6 @@ namespace oly
 			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v14 handle infinite recursion
 				for (const std::string& signal : it->second)
 					bind(signal, handler);
 			}
@@ -117,7 +116,6 @@ namespace oly
 			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v14 handle infinite recursion
 				for (const std::string& signal : it->second)
 					bind(signal, handler);
 			}
@@ -137,13 +135,12 @@ namespace oly
 			auto it = _signal_routing_table.find(signal.view());
 			if (it != _signal_routing_table.end())
 			{
-				// TODO v14 handle infinite recursion
 				for (const std::string& signal : it->second)
 					unbind(signal);
 			}
 			else
 			{
-				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl; // TODO v10 don't pass LOG.nl -> log access should do a new line at the beginning, and every frame should flush log -> print any pending newlines.
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
 			}
 		}
 	}

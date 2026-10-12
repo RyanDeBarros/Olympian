@@ -37,8 +37,6 @@ The editor uses the following libraries:
 - **marzer/tomlplusplus**
 - **memononen/nanosvg**
 
-TODO v10 use containing folders for licenses instead of writing the library name in the filename itself. Also add a detail/ licenses folder
-
 The editor also uses assets from the following resources:
 
 - [Google Icons](https://fonts.google.com/icons)

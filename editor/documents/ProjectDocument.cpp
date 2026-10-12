@@ -45,8 +45,6 @@ namespace oly::editor
 				if (ImGui::MenuItem("Reset Project Settings"))
 					ResetAsset();
 			}
-
-			// TODO v14 Run menu to configure cmake, build project, and run executable
 		}
 	}
 

@@ -14,8 +14,6 @@
 
 #include <imp/parser.hpp>
 
-// TODO v10 put actual loading logic in load/overload methods
-
 namespace oly::context
 {
 	namespace internal
@@ -107,7 +105,6 @@ namespace oly::context
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
-		// TODO v10 abstract away the error handling on meta.has_type()
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
@@ -179,13 +176,11 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
-		// TODO v10 add Trace log level for stuff like this, that is lower than Debug
 		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
 
 		return font_atlas;
 	}
 
-	// TODO v12 move load logic to RasterFont::Load()
 	rendering::RasterFontRef load_raster_font(const detail::ResourcePath& file)
 	{
 		if (file.empty())
@@ -252,7 +247,6 @@ namespace oly::context
 		return raster_font;
 	}
 
-	// TODO v12 move load logic to RasterFont::Load()
 	rendering::FontFamilyRef load_font_family(const detail::ResourcePath& file)
 	{
 		if (file.empty())
