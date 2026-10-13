@@ -1,12 +1,13 @@
 #pragma once
 
-#include "physics/collision/objects/Primitive.h"
-#include "physics/collision/objects/Compound.h"
-#include "physics/collision/objects/BVH.h"
+#include "graphics/shapes/Arrow.h"
+#include "graphics/shapes/GeometryPainter.h"
+
 #include "physics/collision/methods/SpecialCasting.h"
 
-#include "graphics/shapes/GeometryPainter.h"
-#include "graphics/shapes/Arrow.h"
+#include "physics/collision/objects/BVH.h"
+#include "physics/collision/objects/Compound.h"
+#include "physics/collision/objects/Primitive.h"
 
 namespace oly::debug
 {
@@ -21,10 +22,10 @@ namespace oly::debug
 		DebugShape(Variant&& shape);
 		DebugShape(Variant&& shape, DebugOverlayLayer& layer);
 		
-		Variant& operator*() { return shape; }
-		const Variant& operator*() const { return shape; }
-		Variant* operator->() { return &shape; }
-		const Variant* operator->() const { return &shape; }
+        Variant& operator*();
+		const Variant& operator*() const;
+		Variant* operator->();
+		const Variant* operator->() const;
 
 		void draw() const;
 		math::Rect2D bounds() const;
@@ -38,10 +39,10 @@ namespace oly::debug
 		std::vector<DebugShape> shapes;
 
 		DebugShapeGroup() = default;
-		DebugShapeGroup(DebugShape&& shape) { shapes.push_back(std::move(shape)); }
-		DebugShapeGroup(rendering::StaticEllipse&& shape) { shapes.push_back(DebugShape(std::move(shape))); }
-		DebugShapeGroup(rendering::StaticPolygon&& shape) { shapes.push_back(DebugShape(std::move(shape))); }
-		DebugShapeGroup(rendering::StaticArrowExtension&& v) { shapes.push_back(DebugShape(std::move(v))); }
+        DebugShapeGroup(DebugShape&& shape);
+        DebugShapeGroup(rendering::StaticEllipse&& shape);
+		DebugShapeGroup(rendering::StaticPolygon&& shape);
+		DebugShapeGroup(rendering::StaticArrowExtension&& v);
 
 		void align_layer_batch(DebugOverlayLayer& layer);
 		void merge(DebugShapeGroup&& other);
@@ -51,12 +52,11 @@ namespace oly::debug
 	{
 		friend class DebugOverlayLayer;
 
-		DebugOverlayLayer* layer;
-		DebugShapeGroup debug_group;
-		mutable rendering::StaticSprite sprite;
-		mutable bool dirty = true;
-
-		void invalidate_layer() { layer = nullptr; debug_group.shapes.clear(); }
+    private:
+		DebugOverlayLayer* layer_;
+		DebugShapeGroup debug_group_;
+		mutable rendering::StaticSprite sprite_;
+		mutable bool dirty_ = true;
 
 	public:
 		struct PaintOptions
@@ -84,24 +84,21 @@ namespace oly::debug
 		DebugOverlay(const DebugOverlay&);
 		DebugOverlay(DebugOverlay&&) noexcept;
 		~DebugOverlay();
+
 		DebugOverlay& operator=(const DebugOverlay&);
 		DebugOverlay& operator=(DebugOverlay&&) noexcept;
 
+	public:
 		const DebugOverlayLayer& get_layer() const;
 		DebugOverlayLayer& get_layer();
 		void set_layer(DebugOverlayLayer& layer);
 
-	private:
-		void draw_sprite() const;
-		void repaint() const;
-
-	public:
 		void clear_shape_group();
 		void set_shape_group(DebugShapeGroup&& group);
 		void set_shape_group(rendering::StaticEllipse&& shape);
 		void set_shape_group(rendering::StaticPolygon&& shape);
 		void set_shape_group(rendering::StaticArrowExtension&& shape);
-		size_t shape_count() const { return debug_group.shapes.size(); }
+        size_t shape_count() const;
 		void resize_shape_group(size_t size);
 
 		const DebugShape& operator[](size_t i) const;
@@ -111,6 +108,11 @@ namespace oly::debug
 
 		void update_color(glm::vec4 color);
 		void update_color(glm::vec4 color, size_t shape_index);
+
+    private:
+        void draw_sprite() const;
+        void repaint() const;
+        void invalidate_layer();
 	};
 
 	class DebugOverlayLayer
@@ -118,30 +120,31 @@ namespace oly::debug
 		friend struct DebugShape;
 		friend class DebugOverlay;
 
-		rendering::GeometryPainter painter;
-		rendering::SpriteBatch sprite_batch;
-		std::unordered_set<DebugOverlay*> collision_views;
+		rendering::GeometryPainter painter_;
+		rendering::SpriteBatch sprite_batch_;
+		std::unordered_set<DebugOverlay*> collision_views_;
 
 	public:
 		DebugOverlayLayer() = default;
 		DebugOverlayLayer(const DebugOverlayLayer&);
 		DebugOverlayLayer(DebugOverlayLayer&&) noexcept;
 		~DebugOverlayLayer();
+
 		DebugOverlayLayer& operator=(const DebugOverlayLayer&);
 		DebugOverlayLayer& operator=(DebugOverlayLayer&&) noexcept;
 
-		const rendering::SpriteBatch& get_sprite_batch() const { return sprite_batch; }
+    public:
+        const rendering::SpriteBatch& get_sprite_batch() const;
 
-	private:
-		void assign(DebugOverlay* view);
-		void unassign(DebugOverlay* view);
-
-	public:
 		void draw() const;
 
 		DebugShape default_debug_shape();
 		rendering::StaticEllipse create_ellipse();
 		rendering::StaticPolygon create_polygon();
 		rendering::StaticArrowExtension create_arrow();
+
+    private:
+        void assign(DebugOverlay* view);
+        void unassign(DebugOverlay* view);
 	};
 }

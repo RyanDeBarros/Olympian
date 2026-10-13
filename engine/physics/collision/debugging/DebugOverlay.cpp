@@ -7,11 +7,31 @@ namespace oly::debug
 	{
 	}
 	
-	DebugShape::DebugShape(Variant&& shape, DebugOverlayLayer& layer)
+	DebugShape::DebugShape(Variant&& shape, DebugOverlayLayer& layer_)
 		: shape(std::move(shape))
 	{
-		align_layer_batch(layer);
+		align_layer_batch(layer_);
 	}
+
+    DebugShape::Variant& DebugShape::operator*()
+    {
+        return shape;
+    }
+
+    const DebugShape::Variant& DebugShape::operator*() const
+    {
+        return shape;
+    }
+
+    DebugShape::Variant* DebugShape::operator->()
+    {
+        return &shape;
+    }
+
+    const DebugShape::Variant* DebugShape::operator->() const
+    {
+        return &shape;
+    }
 
 	void DebugShape::draw() const
 	{
@@ -52,19 +72,39 @@ namespace oly::debug
 		);
 	}
 
-	void DebugShape::align_layer_batch(DebugOverlayLayer& layer)
+	void DebugShape::align_layer_batch(DebugOverlayLayer& layer_)
 	{
 		shape.visit(
-			[&layer](rendering::StaticEllipse& v) { v.set_batch(layer.painter.get_ellipse_batch()); },
-			[&layer](rendering::StaticPolygon& v) { v.set_batch(layer.painter.get_polygon_batch()); },
-			[&layer](rendering::StaticArrowExtension& v) { v.set_batch(layer.painter.get_polygon_batch()); }
+			[&layer_](rendering::StaticEllipse& v) { v.set_batch(layer_.painter_.get_ellipse_batch()); },
+			[&layer_](rendering::StaticPolygon& v) { v.set_batch(layer_.painter_.get_polygon_batch()); },
+			[&layer_](rendering::StaticArrowExtension& v) { v.set_batch(layer_.painter_.get_polygon_batch()); }
 		);
 	}
 
-	void DebugShapeGroup::align_layer_batch(DebugOverlayLayer& layer)
+    DebugShapeGroup::DebugShapeGroup(DebugShape&& shape)
+    {
+        shapes.push_back(std::move(shape));
+    }
+
+    DebugShapeGroup::DebugShapeGroup(rendering::StaticEllipse&& shape)
+    {
+        shapes.push_back(DebugShape(std::move(shape)));
+    }
+
+    DebugShapeGroup::DebugShapeGroup(rendering::StaticPolygon&& shape)
+    {
+        shapes.push_back(DebugShape(std::move(shape)));
+    }
+
+    DebugShapeGroup::DebugShapeGroup(rendering::StaticArrowExtension&& v)
+    {
+        shapes.push_back(DebugShape(std::move(v)));
+    }
+
+	void DebugShapeGroup::align_layer_batch(DebugOverlayLayer& layer_)
 	{
 		for (DebugShape& shape : shapes)
-			shape.align_layer_batch(layer);
+			shape.align_layer_batch(layer_);
 	}
 
 	void DebugShapeGroup::merge(DebugShapeGroup&& other)
@@ -81,67 +121,88 @@ namespace oly::debug
 		shapes.insert(shapes.end(), std::make_move_iterator(other.shapes.begin()), std::make_move_iterator(other.shapes.end()));
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, PaintOptions paint_options)
-		: layer(&layer), sprite(rendering::UNBATCHED), paint_options(paint_options)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, PaintOptions paint_options)
+		: layer_(&layer_)
+        , sprite_(rendering::UNBATCHED)
+        , paint_options(paint_options)
 	{
-		layer.assign(this);
+		layer_.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticEllipse&& shape, PaintOptions paint_options)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticEllipse&& shape, PaintOptions paint_options)
+		: layer_(&layer_)
+        , debug_group_(DebugShape(std::move(shape), layer_))
+        , sprite_(rendering::UNBATCHED)
+        , paint_options(paint_options)
 	{
-		layer.assign(this);
+		layer_.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticPolygon&& shape, PaintOptions paint_options)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticPolygon&& shape, PaintOptions paint_options)
+		: layer_(&layer_)
+        , debug_group_(DebugShape(std::move(shape), layer_))
+        , sprite_(rendering::UNBATCHED)
+        , paint_options(paint_options)
 	{
-		layer.assign(this);
+		layer_.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, rendering::StaticArrowExtension&& shape, PaintOptions paint_options)
-		: layer(&layer), debug_group(DebugShape(std::move(shape), layer)), sprite(rendering::UNBATCHED), paint_options(paint_options)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticArrowExtension&& shape, PaintOptions paint_options)
+		: layer_(&layer_)
+        , debug_group_(DebugShape(std::move(shape), layer_))
+        , sprite_(rendering::UNBATCHED)
+        , paint_options(paint_options)
 	{
-		layer.assign(this);
+		layer_.assign(this);
 	}
 
-	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer, DebugShapeGroup&& group, PaintOptions paint_options)
-		: layer(&layer), debug_group(std::move(group)), sprite(rendering::UNBATCHED), paint_options(paint_options)
+	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, DebugShapeGroup&& group, PaintOptions paint_options)
+		: layer_(&layer_)
+        , debug_group_(std::move(group))
+        , sprite_(rendering::UNBATCHED)
+        , paint_options(paint_options)
 	{
-		debug_group.align_layer_batch(layer);
-		layer.assign(this);
+		debug_group_.align_layer_batch(layer_);
+		layer_.assign(this);
 	}
 
 	DebugOverlay::DebugOverlay(const DebugOverlay& other)
-		: layer(other.layer), debug_group(other.debug_group), sprite(other.sprite), dirty(other.dirty)
+		: layer_(other.layer_)
+        , debug_group_(other.debug_group_)
+        , sprite_(other.sprite_)
+        , dirty_(other.dirty_)
 	{
-		if (layer)
-			layer->assign(this);
+		if (layer_)
+			layer_->assign(this);
 	}
 
 	DebugOverlay::DebugOverlay(DebugOverlay&& other) noexcept
-		: layer(other.layer), debug_group(std::move(other.debug_group)), sprite(std::move(other.sprite)), dirty(other.dirty)
+		: layer_(other.layer_)
+        , debug_group_(std::move(other.debug_group_))
+        , sprite_(std::move(other.sprite_))
+        , dirty_(other.dirty_)
 	{
-		if (layer)
+		if (layer_)
 		{
-			layer->collision_views.erase(&other);
-			layer->collision_views.insert(this);
+			layer_->collision_views_.erase(&other);
+			layer_->collision_views_.insert(this);
 		}
 	}
 
 	DebugOverlay::~DebugOverlay()
 	{
-		if (layer)
-			layer->unassign(this);
+		if (layer_)
+			layer_->unassign(this);
 	}
 
 	DebugOverlay& DebugOverlay::operator=(const DebugOverlay& other)
 	{
 		if (this != &other)
 		{
-			debug_group = other.debug_group;
+			debug_group_ = other.debug_group_;
 			shapes_modified();
 		}
+
 		return *this;
 	}
 
@@ -149,49 +210,43 @@ namespace oly::debug
 	{
 		if (this != &other)
 		{
-			debug_group = std::move(other.debug_group);
+			debug_group_ = std::move(other.debug_group_);
 			shapes_modified();
 		}
+
 		return *this;
 	}
 
 	const DebugOverlayLayer& DebugOverlay::get_layer() const
 	{
-		if (layer)
-			return *layer;
+		if (layer_)
+			return *layer_;
 		else
 			throw Error(ErrorCode::NullPointer);
 	}
 
 	DebugOverlayLayer& DebugOverlay::get_layer()
 	{
-		if (layer)
-			return *layer;
+		if (layer_)
+			return *layer_;
 		else
 			throw Error(ErrorCode::NullPointer);
 	}
 
-	void DebugOverlay::set_layer(DebugOverlayLayer& layer)
+	void DebugOverlay::set_layer(DebugOverlayLayer& layer_)
 	{
-		if (this->layer)
+		if (this->layer_)
 		{
-			if (this->layer == &layer)
+			if (this->layer_ == &layer_)
 				return;
 
-			this->layer->unassign(this);
+			this->layer_->unassign(this);
 		}
-		this->layer = &layer;
-		this->layer->assign(this);
 
-		debug_group.align_layer_batch(layer);
-	}
+		this->layer_ = &layer_;
+		this->layer_->assign(this);
 
-	void DebugOverlay::draw_sprite() const
-	{
-		if (dirty)
-			repaint();
-
-		sprite.draw();
+		debug_group_.align_layer_batch(layer_);
 	}
 
 	glm::vec2 DebugOverlay::PaintOptions::compress(math::Rect2D& bounds) const
@@ -222,124 +277,61 @@ namespace oly::debug
 		return scale;
 	}
 
-	void DebugOverlay::repaint() const
-	{
-		auto sprite_batch = sprite.get_batch();
-		if (!sprite_batch)
-		{
-			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot write texture to using null sprite batch" << LOG.nl;
-			return;
-		}
-
-		dirty = false;
-		
-		if (debug_group.shapes.empty())
-		{
-			sprite.set_texture(REF_NULL);
-			return;
-		}
-
-		math::Rect2D bounds;
-		float rotation = 0.0f;
-
-		if (paint_options.bounds_use_rotation)
-		{
-			math::RotatedRect2D obb;
-			if (debug_group.shapes.size() == 1)
-				obb = debug_group.shapes[0].rotated_bounds();
-			else
-			{
-				std::vector<glm::vec2> points;
-				for (size_t i = 0; i < debug_group.shapes.size(); ++i)
-				{
-					auto pts = debug_group.shapes[i].rotated_bounds().points();
-					points.insert(points.end(), pts.begin(), pts.end());
-				}
-				obb = col2d::OBB::fast_wrap(points.data(), points.size()).rect();
-			}
-				
-			bounds = {
-				.x1 = obb.center.x - 0.5f * obb.size.x,
-				.x2 = obb.center.x + 0.5f * obb.size.x,
-				.y1 = obb.center.y - 0.5f * obb.size.y,
-				.y2 = obb.center.y + 0.5f * obb.size.y
-			};
-			rotation = obb.rotation;
-		}
-		else
-		{
-			bounds = debug_group.shapes[0].bounds();
-			for (size_t i = 1; i < debug_group.shapes.size(); ++i)
-				bounds.include_rect(debug_group.shapes[i].bounds());
-		}
-
-		if (bounds.width() <= 0 || bounds.height() <= 0)
-		{
-			sprite.set_texture(REF_NULL);
-			return;
-		}
-
-		glm::vec2 scale = paint_options.compress(bounds);
-		auto paint_context = layer->painter.paint_context(sprite_batch->camera, math::IRect2D::round_out(bounds), rotation, scale);
-		
-		for (const auto& shape : debug_group.shapes)
-			shape.draw();
-		
-		paint_context.render();
-		paint_context.set_texture(sprite);
-		sprite.set_transform(Transform2D{ .position = bounds.center(), .rotation = rotation, .scale = scale }.matrix());
-	}
-
 	void DebugOverlay::clear_shape_group()
 	{
-		debug_group.shapes.clear();
+		debug_group_.shapes.clear();
 		shapes_modified();
 	}
 
 	void DebugOverlay::set_shape_group(DebugShapeGroup&& group)
 	{
-		debug_group = std::move(group);
+		debug_group_ = std::move(group);
 		shapes_modified();
 	}
 
 	void DebugOverlay::set_shape_group(rendering::StaticEllipse&& shape)
 	{
-		if (layer)
-			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer)));
+		if (layer_)
+			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer_)));
 	}
 
 	void DebugOverlay::set_shape_group(rendering::StaticPolygon&& shape)
 	{
-		if (layer)
-			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer)));
+		if (layer_)
+			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer_)));
 	}
 
 	void DebugOverlay::set_shape_group(rendering::StaticArrowExtension&& shape)
 	{
-		if (layer)
-			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer)));
+		if (layer_)
+			set_shape_group(DebugShapeGroup(DebugShape(std::move(shape), *layer_)));
 	}
+
+    size_t DebugOverlay::shape_count() const
+    {
+        return debug_group_.shapes.size();
+    }
 
 	void DebugOverlay::resize_shape_group(size_t size)
 	{
-		debug_group.shapes.resize(size, layer->default_debug_shape());
+		debug_group_.shapes.resize(size, layer_->default_debug_shape());
 		shapes_modified();
 	}
 
 	const DebugShape& DebugOverlay::operator[](size_t i) const
 	{
-		return debug_group.shapes[i];
+		return debug_group_.shapes[i];
 	}
 
 	DebugShape& DebugOverlay::operator[](size_t i)
 	{
 		shapes_modified();
-		return debug_group.shapes[i];
+		return debug_group_.shapes[i];
 	}
 
 	void DebugOverlay::shapes_modified() const
 	{
-		dirty = true;
+		dirty_ = true;
 	}
 
 	static bool update_view_color(DebugShape& obj, glm::vec4 color)
@@ -379,7 +371,7 @@ namespace oly::debug
 	void DebugOverlay::update_color(glm::vec4 color)
 	{
 		bool updated = false;
-		for (DebugShape& shape : debug_group.shapes)
+		for (DebugShape& shape : debug_group_.shapes)
 			updated |= update_view_color(shape, color);
 
 		if (updated)
@@ -388,28 +380,111 @@ namespace oly::debug
 
 	void DebugOverlay::update_color(glm::vec4 color, size_t shape_index)
 	{
-		if (update_view_color(debug_group.shapes[shape_index], color))
+		if (update_view_color(debug_group_.shapes[shape_index], color))
 			shapes_modified();
 	}
 
+    void DebugOverlay::draw_sprite() const
+    {
+        if (dirty_)
+            repaint();
+
+        sprite_.draw();
+    }
+
+    void DebugOverlay::repaint() const
+    {
+        auto sprite_batch_ = sprite_.get_batch();
+        if (!sprite_batch_)
+        {
+            _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot write texture to using null sprite_ batch" << LOG.nl;
+            return;
+        }
+
+        dirty_ = false;
+
+        if (debug_group_.shapes.empty())
+        {
+            sprite_.set_texture(REF_NULL);
+            return;
+        }
+
+        math::Rect2D bounds;
+        float rotation = 0.0f;
+
+        if (paint_options.bounds_use_rotation)
+        {
+            math::RotatedRect2D obb;
+            if (debug_group_.shapes.size() == 1)
+                obb = debug_group_.shapes[0].rotated_bounds();
+            else
+            {
+                std::vector<glm::vec2> points;
+                for (size_t i = 0; i < debug_group_.shapes.size(); ++i)
+                {
+                    auto pts = debug_group_.shapes[i].rotated_bounds().points();
+                    points.insert(points.end(), pts.begin(), pts.end());
+                }
+                obb = col2d::OBB::fast_wrap(points.data(), points.size()).rect();
+            }
+
+            bounds = {
+                .x1 = obb.center.x - 0.5f * obb.size.x,
+                .x2 = obb.center.x + 0.5f * obb.size.x,
+                .y1 = obb.center.y - 0.5f * obb.size.y,
+                .y2 = obb.center.y + 0.5f * obb.size.y
+            };
+            rotation = obb.rotation;
+        }
+        else
+        {
+            bounds = debug_group_.shapes[0].bounds();
+            for (size_t i = 1; i < debug_group_.shapes.size(); ++i)
+                bounds.include_rect(debug_group_.shapes[i].bounds());
+        }
+
+        if (bounds.width() <= 0 || bounds.height() <= 0)
+        {
+            sprite_.set_texture(REF_NULL);
+            return;
+        }
+
+        glm::vec2 scale = paint_options.compress(bounds);
+        auto paint_context = layer_->painter_.paint_context(sprite_batch_->camera, math::IRect2D::round_out(bounds), rotation, scale);
+
+        for (const auto& shape : debug_group_.shapes)
+            shape.draw();
+
+        paint_context.render();
+        paint_context.set_texture(sprite_);
+        sprite_.set_transform(Transform2D{ .position = bounds.center(), .rotation = rotation, .scale = scale }.matrix());
+    }
+
+    void DebugOverlay::invalidate_layer()
+    {
+        layer_ = nullptr;
+        debug_group_.shapes.clear();
+    }
+
 	DebugOverlayLayer::DebugOverlayLayer(const DebugOverlayLayer& other)
-		: painter(other.painter)
+		: painter_(other.painter_)
 	{
 	}
 	
 	DebugOverlayLayer::DebugOverlayLayer(DebugOverlayLayer&& other) noexcept
-		: painter(std::move(other.painter)), collision_views(std::move(other.collision_views))
+		: painter_(std::move(other.painter_))
+        , collision_views_(std::move(other.collision_views_))
 	{
-		for (DebugOverlay* view : collision_views)
+		for (DebugOverlay* view : collision_views_)
 		{
-			view->layer = this;
-			view->sprite.set_batch(sprite_batch);
+			view->layer_ = this;
+			view->sprite_.set_batch(sprite_batch_);
 		}
 	}
 
 	DebugOverlayLayer::~DebugOverlayLayer()
 	{
-		for (DebugOverlay* view : collision_views)
+		for (DebugOverlay* view : collision_views_)
 			view->invalidate_layer();
 	}
 
@@ -417,11 +492,11 @@ namespace oly::debug
 	{
 		if (this != &other)
 		{
-			for (DebugOverlay* view : collision_views)
+			for (DebugOverlay* view : collision_views_)
 				view->invalidate_layer();
-			collision_views.clear();
+			collision_views_.clear();
 
-			painter = other.painter;
+			painter_ = other.painter_;
 		}
 		return *this;
 	}
@@ -430,58 +505,63 @@ namespace oly::debug
 	{
 		if (this != &other)
 		{
-			for (DebugOverlay* view : collision_views)
+			for (DebugOverlay* view : collision_views_)
 				view->invalidate_layer();
-			collision_views.clear();
+			collision_views_.clear();
 
-			painter = std::move(other.painter);
-			collision_views = std::move(other.collision_views);
+			painter_ = std::move(other.painter_);
+			collision_views_ = std::move(other.collision_views_);
 
-			for (DebugOverlay* view : collision_views)
+			for (DebugOverlay* view : collision_views_)
 			{
-				view->layer = this;
-				view->sprite.set_batch(sprite_batch);
+				view->layer_ = this;
+				view->sprite_.set_batch(sprite_batch_);
 			}
 		}
 		return *this;
 	}
 
-	void DebugOverlayLayer::assign(DebugOverlay* view)
-	{
-		if (collision_views.insert(view).second)
-			view->sprite.set_batch(sprite_batch);
-	}
-
-	void DebugOverlayLayer::unassign(DebugOverlay* view)
-	{
-		if (collision_views.erase(view))
-			view->sprite.set_batch(rendering::UNBATCHED);
-	}
+    const rendering::SpriteBatch& DebugOverlayLayer::get_sprite_batch() const
+    {
+        return sprite_batch_;
+    }
 
 	void DebugOverlayLayer::draw() const
 	{
-		for (DebugOverlay* view : collision_views)
+		for (DebugOverlay* view : collision_views_)
 			view->draw_sprite();
-		sprite_batch->render();
+		sprite_batch_->render();
 	}
 
 	DebugShape DebugOverlayLayer::default_debug_shape()
 	{
-		return DebugShape(rendering::StaticEllipse(painter.get_ellipse_batch()), *this);
+		return DebugShape(rendering::StaticEllipse(painter_.get_ellipse_batch()), *this);
 	}
 
 	rendering::StaticEllipse DebugOverlayLayer::create_ellipse()
 	{
-		return rendering::StaticEllipse(painter.get_ellipse_batch());
+		return rendering::StaticEllipse(painter_.get_ellipse_batch());
 	}
 
 	rendering::StaticPolygon DebugOverlayLayer::create_polygon()
 	{
-		return rendering::StaticPolygon(painter.get_polygon_batch());
+		return rendering::StaticPolygon(painter_.get_polygon_batch());
 	}
 	
 	rendering::StaticArrowExtension DebugOverlayLayer::create_arrow()
 	{
-		return rendering::StaticArrowExtension(painter.get_polygon_batch());
+		return rendering::StaticArrowExtension(painter_.get_polygon_batch());
 	}
+
+    void DebugOverlayLayer::assign(DebugOverlay* view)
+    {
+        if (collision_views_.insert(view).second)
+            view->sprite_.set_batch(sprite_batch_);
+    }
+
+    void DebugOverlayLayer::unassign(DebugOverlay* view)
+    {
+        if (collision_views_.erase(view))
+            view->sprite_.set_batch(rendering::UNBATCHED);
+    }
 }

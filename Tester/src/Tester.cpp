@@ -299,11 +299,11 @@ int main()
         }
 	);
 
-	auto cv_obstacle0 = obstacle0->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle1 = obstacle1->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle2 = obstacle2->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle3 = obstacle3->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
-	auto cv_obstacle4 = obstacle4->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::STANDARD_BLUE);
+	auto cv_obstacle0 = obstacle0->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::kStandardBlue);
+	auto cv_obstacle1 = obstacle1->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::kStandardBlue);
+	auto cv_obstacle2 = obstacle2->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::kStandardBlue);
+	auto cv_obstacle3 = obstacle3->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::kStandardBlue);
+	auto cv_obstacle4 = obstacle4->create_debug_overlay(pipeline.obstacle_layer, 0, oly::debug::kStandardBlue);
 
 	auto ground_cv = ground->create_debug_overlay(pipeline.obstacle_layer, 0, glm::vec4{ 111.0f / 255.0f, 78.0f / 255.0f, 55.0f / 255.0f, 1.0f });
 

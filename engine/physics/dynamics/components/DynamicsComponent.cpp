@@ -97,7 +97,7 @@ namespace oly::physics
             pre_state_.linear_velocity - collision.dynamics->pre_state_.linear_velocity,
             pre_state_.angular_velocity,
             collision.dynamics->pre_state_.angular_velocity,
-            static_cast<float>(col2d::LINEAR_TOLERANCE));
+            static_cast<float>(col2d::kLinearTolerance));
 		
         return material->friction.friction_with(collision.dynamics->material->friction, friction_type);
 	}

@@ -152,7 +152,7 @@ namespace oly::col2d
 			for (size_t i = 0; i < 4; ++i)
 				points[i] = transform_point(m, points[i]);
 
-			if (right.near_cardinal(LINEAR_TOLERANCE))
+			if (right.near_cardinal(kLinearTolerance))
 			{
 				// AABB
 				return AABB{

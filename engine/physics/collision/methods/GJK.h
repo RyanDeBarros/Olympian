@@ -92,7 +92,7 @@ namespace oly::col2d::gjk
 	}
 
 	template<typename Shape1, typename Shape2>
-	inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = LINEAR_TOLERANCE)
+	inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
 	{
 		UnitVector2D axis;
 		std::vector<glm::vec2> simplex;
@@ -164,7 +164,7 @@ namespace oly::col2d::gjk
 	}
 
 	template<typename Shape1, typename Shape2>
-	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = LINEAR_TOLERANCE)
+	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
 	{
 		return standard_contact_result(c1, c2, collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon));
 	}

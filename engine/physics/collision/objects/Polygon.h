@@ -27,7 +27,7 @@ namespace oly::col2d
 			compound.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 			{
-				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
+				math::simplify(convex_polygons[i], kLinearTolerance);
 				compound.elements[i] = ConvexHull(std::move(convex_polygons[i]));
 			}
 			return compound;
@@ -40,7 +40,7 @@ namespace oly::col2d
 			compound.set_compound().elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 			{
-				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
+				math::simplify(convex_polygons[i], kLinearTolerance);
 				compound.set_compound().elements[i] = ConvexHull(std::move(convex_polygons[i]));
 			}
 			return compound;
@@ -54,7 +54,7 @@ namespace oly::col2d
 			bvh.elements.resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 			{
-				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
+				math::simplify(convex_polygons[i], kLinearTolerance);
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));
 			}
 			return bvh;
@@ -68,7 +68,7 @@ namespace oly::col2d
 			bvh.set_elements().resize(convex_polygons.size());
 			for (size_t i = 0; i < convex_polygons.size(); ++i)
 			{
-				math::simplify(convex_polygons[i], LINEAR_TOLERANCE);
+				math::simplify(convex_polygons[i], kLinearTolerance);
 				bvh.set_elements()[i] = ConvexHull(std::move(convex_polygons[i]));
 			}
 			return bvh;
