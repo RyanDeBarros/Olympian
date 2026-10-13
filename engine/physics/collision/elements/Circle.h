@@ -1,11 +1,14 @@
 #pragma once
 
-#include "core/base/UnitVector.h"
 #include "core/base/Constants.h"
 #include "core/base/SimpleMath.h"
 #include "core/base/Transforms.h"
+#include "core/base/UnitVector.h"
+
 #include "core/math/Geometry.h"
+
 #include "physics/collision/Tolerance.h"
+
 #include "physics/collision/methods/CollisionInfo.h"
 
 namespace oly::col2d
@@ -23,14 +26,12 @@ namespace oly::col2d
 	private:
 		friend struct internal::CircleGlobalAccess;
 
-		glm::mat2 global = 1.0f;
-		glm::vec2 global_offset = {};
-		glm::mat2 global_inverse = 1.0f;
+		glm::mat2 global_ = 1.0f;
+		glm::vec2 global_offset_ = {};
+		glm::mat2 global_inverse_ = 1.0f;
 
 	public:
-		Circle(glm::vec2 center = {}, float radius = 0.0f) : center(center), radius(radius) {}
-
-		float area() const { return glm::pi<float>() * radius * radius * glm::determinant(glm::mat2(global)); }
+        Circle(glm::vec2 center = {}, float radius = 0.0f);
 
 		static Circle fast_wrap(const math::Polygon2D& polygon);
 
@@ -57,10 +58,12 @@ namespace oly::col2d
 
 		ContactManifold deepest_manifold(const UnitVector2D& axis) const;
 
-		glm::mat3 compute_transform() const { return augment(global, global_offset) * translation_matrix(center); }
+        float area() const;
+        glm::mat3 compute_transform() const;
 	};
 
 	struct OBB;
+
 	namespace internal
 	{
 		struct CircleGlobalAccess

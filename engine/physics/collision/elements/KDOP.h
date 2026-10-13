@@ -10,9 +10,11 @@
 #include "core/math/Triangulation.h"
 
 #include "physics/collision/Tolerance.h"
-#include "physics/collision/elements/ConvexHull.h"
-#include "physics/collision/elements/Common.h"
+
 #include "physics/collision/methods/CollisionInfo.h"
+
+#include "physics/collision/elements/Common.h"
+#include "physics/collision/elements/ConvexHull.h"
 
 #include <array>
 #include <string>
@@ -25,139 +27,144 @@ namespace oly::col2d
 		template<size_t K>
 		struct KDOPGlobalAccess;
 
-		inline math::Polygon2D initial_kdop_polygon(const UnitVector2D& axis0, float min0, float max0, const UnitVector2D& axis1, float min1, float max1)
-		{
-			if (axis0.near_parallel(axis1, kLinearTolerance))
-				throw Error(ErrorCode::BadCollisionShape, "First 2 kDOP axes are parallel");
-
-			static const auto intersection = [](const UnitVector2D& axis0, float m0, const UnitVector2D& axis1, float m1) -> glm::vec2 {
-				glm::mat2 A = { { axis0.x(), axis1.x() }, { axis0.y(), axis1.y() } };
-				return glm::inverse(A) * glm::vec2{ m0, m1 };
-				};
-
-			return {
-				intersection(axis0, min0, axis1, min1),
-				intersection(axis0, max0, axis1, min1),
-				intersection(axis0, max0, axis1, max1),
-				intersection(axis0, min0, axis1, max1)
-			};
-		}
+        extern math::Polygon2D initial_kdop_polygon(const UnitVector2D& axis0, float min0, float max0, const UnitVector2D& axis1, float min1, float max1);
 	}
 
 	template<size_t K>
 	struct KDOP
 	{
 		static_assert(K >= 2, "kDOP must have degree at least 2.");
-		static constexpr float PI_OVER_K = glm::pi<float>() / K;
+		static constexpr float kPiOverK = glm::pi<float>() / K;
 
 	private:
 		friend struct internal::KDOPGlobalAccess<K>;
 
-		std::array<float, K> minima;
-		std::array<float, K> maxima;
-		mutable math::Polygon2D _cache;
-		mutable glm::vec2 _center{};
-		mutable bool dirty_cache = true;
-		mutable bool dirty_center = true;
-		mutable bool dirty_clipped = true;
-		mutable std::array<fpair, K> _clipped_extrema;
+		std::array<float, K> minima_;
+		std::array<float, K> maxima_;
+		mutable math::Polygon2D cache_;
+		mutable glm::vec2 center_{};
+		mutable bool dirty_cache_ = true;
+		mutable bool dirty_center_ = true;
+		mutable bool dirty_clipped_ = true;
+		mutable std::array<fpair, K> clipped_extrema_;
 
-		glm::mat2 global = 1.0f;
-		glm::vec2 global_offset = {};
-		glm::mat2 global_inverse = 1.0f;
-
-		void flag() const { dirty_cache = true; dirty_center = true; dirty_clipped = true; }
+		glm::mat2 global_ = 1.0f;
+		glm::vec2 global_offset_ = {};
+		glm::mat2 global_inverse_ = 1.0f;
 
 	public:
-		float get_minimum(size_t i) const { return minima[i]; }
-		float get_maximum(size_t i) const { return maxima[i]; }
-		float get_clipped_minimum(size_t i) const { return clipped_extrema()[i].first; }
-		float get_clipped_maximum(size_t i) const { return clipped_extrema()[i].second; }
-		void set_minimum(size_t i, float minimum) { minima[i] = minimum; flag(); }
-		void set_maximum(size_t i, float maximum) { maxima[i] = maximum; flag(); }
-		void set_minima(const std::array<float, K>& min) { minima = min; flag(); }
-		void set_maxima(const std::array<float, K>& max) { maxima = max; flag(); }
+		KDOP()
+        {
+            minima_.fill(0.0f);
+            maxima_.fill(0.0f);
+        }
 
-		KDOP() { minima.fill(0.0f); maxima.fill(0.0f); }
-		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima) : minima(minima), maxima(maxima) { flag(); }
-		explicit KDOP(const std::array<fpair, K>& extrema)
+		KDOP(const std::array<float, K>& minima, const std::array<float, K>& maxima)
+            : minima_(minima)
+            , maxima_(maxima)
+        {
+            flag();
+        }
+		
+        explicit KDOP(const std::array<fpair, K>& extrema)
 		{
 			for (size_t i = 0; i < K; ++i)
 			{
-				minima[i] = extrema[i].first;
-				maxima[i] = extrema[i].second;
+				minima_[i] = extrema[i].first;
+				maxima_[i] = extrema[i].second;
 			}
+
 			flag();
 		}
-		
+
+    public:
+        static constexpr UnitVector2D uniform_axis(size_t i)
+        {
+            return UnitVector2D((float)i * kPiOverK);
+        }
+
+        static KDOP<K> wrap(const math::Polygon2D& polygon)
+        {
+            KDOP<K> kdop;
+            kdop.fill_invalid();
+            for (glm::vec2 point : polygon)
+            {
+                for (size_t i = 0; i < K; ++i)
+                {
+                    float v = uniform_axis(i).dot(point);
+                    kdop.set_minimum(i, std::min(kdop.get_minimum(i), v));
+                    kdop.set_maximum(i, std::max(kdop.get_maximum(i), v));
+                }
+            }
+            return kdop;
+        }
+
+        float get_minimum(size_t i) const
+        {
+            return minima_[i];
+        }
+        
+        float get_maximum(size_t i) const
+        {
+            return maxima_[i];
+        }
+
+        float get_clipped_minimum(size_t i) const
+        {
+            return clipped_extrema()[i].first;
+        }
+        
+        float get_clipped_maximum(size_t i) const
+        {
+            return clipped_extrema()[i].second;
+        }
+
+        void set_minimum(size_t i, float minimum)
+        {
+            minima_[i] = minimum;
+            flag();
+        }
+
+        void set_maximum(size_t i, float maximum)
+        {
+            maxima_[i] = maximum;
+            flag();
+        }
+
+        void set_minima(const std::array<float, K>& min)
+        {
+            minima_ = min;
+            flag();
+        }
+
+        void set_maxima(const std::array<float, K>& max)
+        {
+            maxima_ = max;
+            flag();
+        }
+
 		void fill_invalid()
 		{
 			for (size_t i = 0; i < K; ++i)
 			{
-				minima[i] = nmax<float>();
-				maxima[i] = -nmax<float>();
+				minima_[i] = nmax<float>();
+				maxima_[i] = -nmax<float>();
 			}
-			flag();
+
+            flag();
 		}
 
 		glm::vec2 center() const
 		{
-			if (dirty_center)
+			if (dirty_center_)
 			{
-				dirty_center = false;
-				_center = {};
+				dirty_center_ = false;
+				center_ = {};
 				for (glm::vec2 p : cache())
-					_center += p;
-				_center /= (float)K;
+					center_ += p;
+				center_ /= (float)K;
 			}
-			return _center;
-		}
-
-	private:
-		const math::Polygon2D& cache() const
-		{
-			if (dirty_cache)
-			{
-				dirty_cache = false;
-				_cache = internal::initial_kdop_polygon(uniform_axis(0), minima[0], maxima[0], uniform_axis(1), minima[1], maxima[1]);
-				if constexpr (K > 2)
-				{
-					for (size_t i = 2; i < K; ++i)
-					{
-						UnitVector2D axis = uniform_axis(i);
-						_cache = math::clip_polygon(_cache, -axis, -minima[i]);
-						_cache = math::clip_polygon(_cache, axis, maxima[i]);
-						if (_cache.empty())
-							break;
-					}
-				}
-				math::simplify(_cache, kLinearTolerance);
-				for (size_t i = 0; i < _cache.size(); ++i)
-					_cache[i] = global * _cache[i] + global_offset;
-			}
-			return _cache;
-		}
-
-	public:
-		static constexpr UnitVector2D uniform_axis(size_t i)
-		{
-			return UnitVector2D((float)i * PI_OVER_K);
-		}
-
-		static KDOP<K> wrap(const math::Polygon2D& polygon)
-		{
-			KDOP<K> kdop;
-			kdop.fill_invalid();
-			for (glm::vec2 point : polygon)
-			{
-				for (size_t i = 0; i < K; ++i)
-				{
-					float v = uniform_axis(i).dot(point);
-					kdop.set_minimum(i, std::min(kdop.get_minimum(i), v));
-					kdop.set_maximum(i, std::max(kdop.get_maximum(i), v));
-				}
-			}
-			return kdop;
+			return center_;
 		}
 
 		const math::Polygon2D& points() const
@@ -165,37 +172,6 @@ namespace oly::col2d
 			return cache();
 		}
 
-	private:
-		const std::array<fpair, K>& clipped_extrema() const
-		{
-			if (dirty_clipped)
-			{
-				dirty_clipped = false;
-				for (size_t i = 0; i < K; ++i)
-				{
-					fpair global_clipped_extrema = internal::polygon_projection_interval(cache(), edge_normal(i));
-					_clipped_extrema[i] = { local_extremum(edge_normal(i), global_clipped_extrema.first), local_extremum(edge_normal(i), global_clipped_extrema.second) };
-				}
-			}
-			return _clipped_extrema;
-		}
-
-		UnitVector2D get_local_axis(UnitVector2D axis) const
-		{
-			return glm::transpose(global) * axis;
-		}
-
-		float local_extremum(UnitVector2D axis, float extremum) const
-		{
-			return (extremum - axis.dot(global_offset)) * math::inv_magnitude(glm::transpose(global) * (glm::vec2)axis);
-		}
-
-		float global_extremum(UnitVector2D axis, float extremum) const
-		{
-			return (extremum + axis.dot(global_inverse * global_offset)) * math::inv_magnitude(glm::transpose(global_inverse) * (glm::vec2)axis);
-		}
-
-	public:
 		float global_clipped_minimum(size_t i) const
 		{
 			return i < K ? global_extremum(uniform_axis(i), get_clipped_minimum(i)) : global_extremum(-uniform_axis(i - K), -get_clipped_maximum(i - K));
@@ -242,24 +218,84 @@ namespace oly::col2d
 
 		UnitVector2D edge_normal(size_t i) const
 		{
-			return UnitVector2D(glm::transpose(global_inverse) * uniform_axis(i));
+			return UnitVector2D(glm::transpose(global_inverse_) * uniform_axis(i));
 		}
 
 		ContactManifold deepest_manifold(const UnitVector2D& axis) const
 		{
 			ContactManifold local_manifold = local_deepest_manifold(get_local_axis(axis));
 			ContactManifold global_manifold;
-			global_manifold.p1 = global * local_manifold.p1 + global_offset;
+			global_manifold.p1 = global_ * local_manifold.p1 + global_offset_;
 			if (!local_manifold.Single)
 			{
 				global_manifold.Single = false;
-				global_manifold.p2 = global * local_manifold.p2 + global_offset;
+				global_manifold.p2 = global_ * local_manifold.p2 + global_offset_;
 			}
 			return global_manifold;
 		}
 		
 	private:
-		glm::vec2 Cornerintersection(int i1, int i2) const
+        void flag() const
+        {
+            dirty_cache_ = true;
+            dirty_center_ = true;
+            dirty_clipped_ = true;
+        }
+
+        const math::Polygon2D& cache() const
+        {
+            if (dirty_cache_)
+            {
+                dirty_cache_ = false;
+                cache_ = internal::initial_kdop_polygon(uniform_axis(0), minima_[0], maxima_[0], uniform_axis(1), minima_[1], maxima_[1]);
+                if constexpr (K > 2)
+                {
+                    for (size_t i = 2; i < K; ++i)
+                    {
+                        UnitVector2D axis = uniform_axis(i);
+                        cache_ = math::clip_polygon(cache_, -axis, -minima_[i]);
+                        cache_ = math::clip_polygon(cache_, axis, maxima_[i]);
+                        if (cache_.empty())
+                            break;
+                    }
+                }
+                math::simplify(cache_, kLinearTolerance);
+                for (size_t i = 0; i < cache_.size(); ++i)
+                    cache_[i] = global_ * cache_[i] + global_offset_;
+            }
+            return cache_;
+        }
+
+        const std::array<fpair, K>& clipped_extrema() const
+        {
+            if (dirty_clipped_)
+            {
+                dirty_clipped_ = false;
+                for (size_t i = 0; i < K; ++i)
+                {
+                    fpair global_clipped_extrema = internal::polygon_projection_interval(cache(), edge_normal(i));
+                    clipped_extrema_[i] = { local_extremum(edge_normal(i), global_clipped_extrema.first), local_extremum(edge_normal(i), global_clipped_extrema.second) };
+                }
+            }
+            return clipped_extrema_;
+        }
+
+        UnitVector2D get_local_axis(UnitVector2D axis) const
+        {
+            return glm::transpose(global_) * axis;
+        }
+
+        float local_extremum(UnitVector2D axis, float extremum) const
+        {
+            return (extremum - axis.dot(global_offset_)) * math::inv_magnitude(glm::transpose(global_) * (glm::vec2)axis);
+        }
+
+        float global_extremum(UnitVector2D axis, float extremum) const
+        {
+            return (extremum + axis.dot(global_inverse_ * global_offset_)) * math::inv_magnitude(glm::transpose(global_inverse_) * (glm::vec2)axis);
+        }
+
+		glm::vec2 corner_intersection(int i1, int i2) const
 		{
 			glm::vec2 p1 = (i1 < K ? get_clipped_maximum(i1) : get_clipped_minimum(i1 - K)) * (glm::vec2)uniform_axis(i1 % K);
 			glm::vec2 p2 = (i2 < K ? get_clipped_maximum(i2) : get_clipped_minimum(i2 - K)) * (glm::vec2)uniform_axis(i2 % K);
@@ -274,15 +310,15 @@ namespace oly::col2d
 				ContactManifold manifold;
 				manifold.Single = false;
 				int j = unsigned_mod(roundi(i), 2 * K);
-				manifold.p1 = Cornerintersection(j, unsigned_mod(j + 1, 2 * K));
-				manifold.p2 = Cornerintersection(unsigned_mod(j - 1, 2 * K), j);
+				manifold.p1 = corner_intersection(j, unsigned_mod(j + 1, 2 * K));
+				manifold.p2 = corner_intersection(unsigned_mod(j - 1, 2 * K), j);
 				return manifold;
 			}
 			else
 			{
 				int i1 = unsigned_mod((int)floorf(i), 2 * K);
 				int i2 = unsigned_mod((int)ceilf(i), 2 * K);
-				return { .p1 = Cornerintersection(i1, i2) };
+				return { .p1 = corner_intersection(i1, i2) };
 			}
 		}
 	};
@@ -294,21 +330,21 @@ namespace oly::col2d
 		{
 			static const glm::mat2& get_global(const KDOP<K>& c)
 			{
-				return c.global;
+				return c.global_;
 			}
 
 			static glm::vec2 get_global_offset(const KDOP<K>& c)
 			{
-				return c.global_offset;
+				return c.global_offset_;
 			}
 
 			static KDOP<K> create_affine_kdop(const KDOP<K>& c, const glm::mat3x2& g)
 			{
 				KDOP<K> tc = c;
-				glm::mat3x2 full = augment(g) * augment(c.global, c.global_offset);
-				tc.global = glm::mat2(full);
-				tc.global_offset = full[2];
-				tc.global_inverse = glm::inverse(tc.global);
+				glm::mat3x2 full = augment(g) * augment(c.global_, c.global_offset_);
+				tc.global_ = glm::mat2(full);
+				tc.global_offset_ = full[2];
+				tc.global_inverse_ = glm::inverse(tc.global_);
 				tc.flag();
 				return tc;
 			}
@@ -349,20 +385,20 @@ namespace oly::col2d
 					return false;
 					};
 
-				float m10 = math::mag_sqrd(c1.global[0]);
-				float m11 = math::mag_sqrd(c1.global[1]);
-				float m20 = math::mag_sqrd(c2.global[0]);
-				float m21 = math::mag_sqrd(c2.global[1]);
+				float m10 = math::mag_sqrd(c1.global_[0]);
+				float m11 = math::mag_sqrd(c1.global_[1]);
+				float m20 = math::mag_sqrd(c2.global_[0]);
+				float m21 = math::mag_sqrd(c2.global_[1]);
 
 				if (approx(m10, m11) && approx(m20, m21)) // uniform scaling
 				{
-					UnitVector2D v10(c1.global[0]);
-					UnitVector2D v11(c1.global[1]);
-					UnitVector2D v20(c2.global[0]);
-					UnitVector2D v21(c2.global[1]);
+					UnitVector2D v10(c1.global_[0]);
+					UnitVector2D v11(c1.global_[1]);
+					UnitVector2D v20(c2.global_[0]);
+					UnitVector2D v21(c2.global_[1]);
 
 					float rotation_offset = v20.rotation() - v10.rotation();
-					if (!approx(rotation_offset, v21.rotation() - v11.rotation()) || !near_multiple(rotation_offset, KDOP<K>::PI_OVER_K))
+					if (!approx(rotation_offset, v21.rotation() - v11.rotation()) || !near_multiple(rotation_offset, KDOP<K>::kPiOverK))
 						return false;
 
 					v20.rotate(-rotation_offset);
@@ -370,17 +406,17 @@ namespace oly::col2d
 					
 					if (nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2))
 					{
-						offset2 += roundi(rotation_offset / KDOP<K>::PI_OVER_K);
+						offset2 += roundi(rotation_offset / KDOP<K>::kPiOverK);
 						return true;
 					}
 					return false;
 				}
 				else if (approx(m10 * m21, m20 * m11)) // proportional scaling
 				{
-					UnitVector2D v10(c1.global[0]);
-					UnitVector2D v11(c1.global[1]);
-					UnitVector2D v20(c2.global[0]);
-					UnitVector2D v21(c2.global[1]);
+					UnitVector2D v10(c1.global_[0]);
+					UnitVector2D v11(c1.global_[1]);
+					UnitVector2D v20(c2.global_[0]);
+					UnitVector2D v21(c2.global_[1]);
 					return nonrotated_compatible_globals(v10, v11, v20, v21, offset2, sign2);
 				}
 				else
@@ -389,22 +425,22 @@ namespace oly::col2d
 
 			static glm::vec2 global_center(const KDOP<K>& c)
 			{
-				return c.global * c.center() + c.global_offset;
+				return c.global_ * c.center() + c.global_offset_;
 			}
 
 			static glm::vec2 local_point(const KDOP<K>& c, glm::vec2 v)
 			{
-				return c.global_inverse * (v - c.global_offset);
+				return c.global_inverse_ * (v - c.global_offset_);
 			}
 
 			static glm::vec2 local_direction(const KDOP<K>& c, glm::vec2 v)
 			{
-				return c.global_inverse * v;
+				return c.global_inverse_ * v;
 			}
 
 			static glm::vec2 local_normal(const KDOP<K>& c, glm::vec2 n)
 			{
-				return glm::transpose(c.global) * n;
+				return glm::transpose(c.global_) * n;
 			}
 
 			static Ray local_ray(const KDOP<K>& c, Ray ray)
@@ -424,17 +460,17 @@ namespace oly::col2d
 
 			static glm::vec2 global_point(const KDOP<K>& c, glm::vec2 v)
 			{
-				return c.global * v + c.global_offset;
+				return c.global_ * v + c.global_offset_;
 			}
 
 			static glm::vec2 global_direction(const KDOP<K>& c, glm::vec2 v)
 			{
-				return c.global * v;
+				return c.global_ * v;
 			}
 
 			static glm::vec2 global_normal(const KDOP<K>& c, glm::vec2 n)
 			{
-				return glm::transpose(c.global_inverse) * n;
+				return glm::transpose(c.global_inverse_) * n;
 			}
 		};
 	}

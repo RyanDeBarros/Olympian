@@ -35,7 +35,7 @@ namespace oly::col2d
 		UnitVector2D major_axis = eigenvectors[1];
 		UnitVector2D minor_axis = major_axis.get_quarter_turn();
 
-		AABB bounds = AABB::DEFAULT;
+		AABB bounds = AABB::kDefault;
 		for (size_t i = 0; i < count; ++i)
 		{
 			float x = major_axis.dot(polygon[i]);
@@ -52,7 +52,7 @@ namespace oly::col2d
 
 	OBB OBB::wrap_axis_aligned(const glm::vec2* polygon, size_t count, float rotation)
 	{
-		AABB bounds = AABB::DEFAULT;
+		AABB bounds = AABB::kDefault;
 		UnitVector2D major_axis(rotation);
 		for (size_t i = 0; i < count; ++i)
 		{
@@ -85,7 +85,7 @@ namespace oly::col2d
 			UnitVector2D major_axis = hull.points()[(i + 1) % n] - hull.points()[i];
 			UnitVector2D minor_axis = major_axis.get_quarter_turn();
 
-			AABB bounds = AABB::DEFAULT;
+			AABB bounds = AABB::kDefault;
 			for (size_t j = 0; j < n; ++j)
 			{
 				float w = major_axis.dot(hull.points()[j]);
@@ -109,6 +109,42 @@ namespace oly::col2d
 		return obb;
 	}
 
+    UnitVector2D OBB::get_major_axis() const
+    {
+        return UnitVector2D(rotation);
+    }
+
+    UnitVector2D OBB::get_minor_axis() const
+    {
+        return UnitVector2D(rotation).get_quarter_turn();
+    }
+
+    fpair OBB::get_major_axis_projection_interval() const
+    {
+        float c = UnitVector2D(rotation).dot(center);
+        return { c - 0.5f * width, c + 0.5f * width };
+    }
+
+    fpair OBB::get_minor_axis_projection_interval() const
+    {
+        float c = UnitVector2D(rotation).get_quarter_turn().dot(center);
+        return { c - 0.5f * height, c + 0.5f * height };
+    }
+
+    glm::mat2 OBB::get_rotation_matrix() const
+    {
+        float cos = glm::cos(rotation);
+        float sin = glm::sin(rotation);
+        return { { cos, sin }, { -sin, cos } };
+    }
+
+    glm::mat2 OBB::get_inv_rotation_matrix() const
+    {
+        float cos = glm::cos(rotation);
+        float sin = -glm::sin(rotation);
+        return { { cos, sin }, { -sin, cos } };
+    }
+
 	std::array<glm::vec2, 4> OBB::points() const
 	{
 		std::array<glm::vec2, 4> points{
@@ -122,6 +158,20 @@ namespace oly::col2d
 			point = center + rotation * point;
 		return points;
 	}
+
+    math::RotatedRect2D OBB::rect() const
+    {
+        return {
+            .center = center,
+            .size = { width, height },
+            .rotation = rotation
+        };
+    }
+
+    float OBB::area() const
+    {
+        return width * height;
+    }
 
 	fpair OBB::projection_interval(const UnitVector2D& axis) const
 	{

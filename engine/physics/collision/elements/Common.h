@@ -1,9 +1,11 @@
 #pragma once
 
-#include "core/base/UnitVector.h"
-#include "core/base/Constants.h"
 #include "core/base/Assert.h"
+#include "core/base/Constants.h"
+#include "core/base/UnitVector.h"
+
 #include "physics/collision/Tolerance.h"
+
 #include "physics/collision/methods/CollisionInfo.h"
 
 namespace oly::col2d::internal

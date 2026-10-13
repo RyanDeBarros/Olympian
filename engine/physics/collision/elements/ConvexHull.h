@@ -1,33 +1,36 @@
 #pragma once
 
-#include "core/base/UnitVector.h"
 #include "core/base/SimpleMath.h"
+#include "core/base/UnitVector.h"
+
 #include "core/math/Geometry.h"
+
 #include "physics/collision/Tolerance.h"
-#include "physics/collision/methods/CollisionInfo.h"
+
 #include "physics/collision/elements/Common.h"
+
+#include "physics/collision/methods/CollisionInfo.h"
 
 namespace oly::col2d
 {
 	class ConvexHull
 	{
 	private:
-		std::vector<glm::vec2> _points;
-		mutable bool dirty_center = true;
-		mutable glm::vec2 _center{};
-		mutable internal::ProjectionCache proj_cache;
+		std::vector<glm::vec2> points_;
+		mutable bool dirty_center_ = true;
+		mutable glm::vec2 center_{};
+		mutable internal::ProjectionCache proj_cache_;
 
 	public:
-		ConvexHull(const std::vector<glm::vec2>& points = {}) : _points(points) {}
-		ConvexHull(std::vector<glm::vec2>&& points) : _points(std::move(points)) {}
-
-		const std::vector<glm::vec2>& points() const { return _points; }
-		std::vector<glm::vec2>& set_points() { dirty_center = true; return _points; }
-		size_t size() const { return _points.size(); }
+        ConvexHull(std::vector<glm::vec2> points = {});
 
 		static ConvexHull wrap(const glm::vec2* polygon, size_t count);
 		static ConvexHull wrap(const math::Polygon2D& polygon);
 		static ConvexHull wrap(math::Polygon2D& polygon);
+
+        const std::vector<glm::vec2>& points() const;
+        std::vector<glm::vec2>& set_points();
+        size_t size() const;
 
 		glm::vec2 center() const;
 		

@@ -3,5 +3,6 @@ target_sources(OlympianEngine PRIVATE
 	Circle.cpp
 	ConvexHull.cpp
 	Element.cpp
+	KDOP.cpp
 	OBB.cpp
 )

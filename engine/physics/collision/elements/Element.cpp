@@ -1,6 +1,7 @@
 #include "Element.h"
 
 #include "core/base/Transforms.h"
+
 #include "physics/collision/methods/Collide.h"
 #include "physics/collision/methods/KDOPCollide.h"
 
@@ -8,7 +9,12 @@
 
 namespace oly::col2d
 {
-#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) if (auto my_obj = _obj.as<Class>()) { Macro(my_obj); }
+    Element::Element()
+        : obj_(imp::make_box<imp::empty>())
+    {
+    }
+
+#define OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Class) if (auto my_obj = obj_.as<Class>()) { Macro(my_obj); }
 
 #define OLY_ELEMENT_IMPL_FULL_SWITCH(Macro)\
 		OLY_ELEMENT_IMPL_SWITCH_CASE(Macro, Circle);\
@@ -218,7 +224,7 @@ namespace oly::col2d
 
 	AABB Element::aabb_wrap() const
 	{
-        if (auto obj = _obj.as<AABB>())
+        if (auto obj = obj_.as<AABB>())
             return *obj;
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
@@ -253,7 +259,7 @@ namespace oly::col2d
 #undef OLY_ELEMENT_RAYCAST
 	}
 
-#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) if (auto their_obj = c._obj.as<Class>()) { Macro(p, their_obj); }
+#define OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Class) if (auto their_obj = c.obj_.as<Class>()) { Macro(p, their_obj); }
 
 #define OLY_ELEMENT_IMPL_INNER_SWITCH(Macro, p)\
 		OLY_ELEMENT_IMPL_INNER_SWITCH_CASE(Macro, p, Circle);\

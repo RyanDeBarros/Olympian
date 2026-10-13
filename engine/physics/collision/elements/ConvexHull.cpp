@@ -6,6 +6,11 @@
 
 namespace oly::col2d
 {
+    ConvexHull::ConvexHull(std::vector<glm::vec2> points)
+        : points_(std::move(points))
+    {
+    }
+
 	ConvexHull ConvexHull::wrap(const glm::vec2* polygon, size_t count)
 	{
 		math::Polygon2D poly(count);
@@ -71,41 +76,57 @@ namespace oly::col2d
 		return { std::move(lower) };
 	}
 
+    const std::vector<glm::vec2>& ConvexHull::points() const
+    {
+        return points_;
+    }
+
+    std::vector<glm::vec2>& ConvexHull::set_points()
+    {
+        dirty_center_ = true;
+        return points_;
+    }
+    
+    size_t ConvexHull::size() const
+    {
+        return points_.size();
+    }
+
 	glm::vec2 ConvexHull::center() const
 	{
-		if (dirty_center)
+		if (dirty_center_)
 		{
-			dirty_center = false;
-			_center = {};
-			for (glm::vec2 p : _points)
-				_center += p;
-			_center /= (float)_points.size();
+			dirty_center_ = false;
+			center_ = {};
+			for (glm::vec2 p : points_)
+				center_ += p;
+			center_ /= (float)points_.size();
 		}
-		return _center;
+		return center_;
 	}
 
 	fpair ConvexHull::projection_interval(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_interval(_points, axis);
+		return internal::polygon_projection_interval(points_, axis);
 	}
 
 	float ConvexHull::projection_min(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_min(_points, axis, proj_cache);
+		return internal::polygon_projection_min(points_, axis, proj_cache_);
 	}
 
 	float ConvexHull::projection_max(const UnitVector2D& axis) const
 	{
-		return internal::polygon_projection_max(_points, axis, proj_cache);
+		return internal::polygon_projection_max(points_, axis, proj_cache_);
 	}
 
 	UnitVector2D ConvexHull::edge_normal(size_t i) const
 	{
-		return internal::polygon_edge_normal(_points, i);
+		return internal::polygon_edge_normal(points_, i);
 	}
 
 	ContactManifold ConvexHull::deepest_manifold(const UnitVector2D& axis) const
 	{
-		return internal::polygon_deepest_manifold(_points, axis, proj_cache);
+		return internal::polygon_deepest_manifold(points_, axis, proj_cache_);
 	}
 }

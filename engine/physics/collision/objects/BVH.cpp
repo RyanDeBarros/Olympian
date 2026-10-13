@@ -6,7 +6,7 @@ namespace oly::col2d
 	{
 		AABB Wrap<AABB>::operator()(const Element* elements, size_t count) const
 		{
-			AABB c = AABB::DEFAULT;
+			AABB c = AABB::kDefault;
 			for (size_t i = 0; i < count; ++i)
 			{
 				AABB sub = operator()(elements[i]);
@@ -82,7 +82,7 @@ namespace oly::col2d
 							 .y1 = (-minor_axis).dot(element->deepest_manifold(-minor_axis).pt()), .y2 = minor_axis.dot(element->deepest_manifold(minor_axis).pt()) };
 				else
 				{
-					AABB bounds = AABB::DEFAULT;
+					AABB bounds = AABB::kDefault;
 					for (glm::vec2 point : element->points())
 					{
 						float x = major_axis.dot(point);
@@ -120,7 +120,7 @@ namespace oly::col2d
 			UnitVector2D major_axis = eigenvectors[1];
 			UnitVector2D minor_axis = major_axis.get_quarter_turn();
 
-			AABB bounds = AABB::DEFAULT;
+			AABB bounds = AABB::kDefault;
 			for (size_t i = 0; i < count; ++i)
 			{
 				AABB sub = compute_obb_bounds(elements[i], major_axis, minor_axis);

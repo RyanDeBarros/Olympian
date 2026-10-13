@@ -1,13 +1,14 @@
 #include "AABB.h"
 
-#include "physics/collision/elements/Common.h"
 #include "core/math/Shapes.h"
+
+#include "physics/collision/elements/Common.h"
 
 namespace oly::col2d
 {
 	AABB AABB::wrap(const glm::vec2* polygon, size_t count)
 	{
-		AABB c = DEFAULT;
+		AABB c = kDefault;
 		for (size_t i = 0; i < count; ++i)
 		{
 			glm::vec2 point = polygon[i];
@@ -18,6 +19,26 @@ namespace oly::col2d
 		}
 		return c;
 	}
+
+    float AABB::area() const
+    {
+        return width() * height();
+    }
+
+    glm::vec2 AABB::center() const
+    {
+        return 0.5f * glm::vec2{ x1 + x2, y1 + y2 };
+    }
+
+    float AABB::width() const
+    {
+        return x2 - x1;
+    }
+
+    float AABB::height() const
+    {
+        return y2 - y1;
+    }
 
 	std::array<glm::vec2, 4> AABB::points() const
 	{

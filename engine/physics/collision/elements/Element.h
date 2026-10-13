@@ -1,14 +1,16 @@
 #pragma once
 
-#include "physics/collision/methods/CollisionInfo.h"
+#include "core/base/Parameters.h"
+
+#include "physics/collision/Tolerance.h"
+
 #include "physics/collision/elements/Circle.h"
 #include "physics/collision/elements/AABB.h"
 #include "physics/collision/elements/OBB.h"
 #include "physics/collision/elements/ConvexHull.h"
 #include "physics/collision/elements/KDOP.h"
-#include "physics/collision/Tolerance.h"
 
-#include "core/base/Parameters.h"
+#include "physics/collision/methods/CollisionInfo.h"
 
 #include <imp/box.hpp>
 #include <imp/empty.hpp>
@@ -46,18 +48,21 @@ namespace oly::col2d
 
 	class Element
 	{
-		imp::box _obj;
+		imp::box obj_;
 
 	public:
-        Element() : _obj(imp::make_box<imp::empty>()) {}
+        Element();
 
 		template<internal::Elem_check Shape>
-		Element(Shape&& shape) : _obj(imp::forward_to_box(std::forward<Shape>(shape))) {}
+		Element(Shape&& shape)
+            : obj_(imp::forward_to_box(std::forward<Shape>(shape)))
+        {
+        }
 
 		template<internal::Elem_check Shape>
 		Element& operator=(Shape&& shape)
 		{
-            imp::forward_into_box(_obj, std::forward<Shape>(shape));
+            imp::forward_into_box(obj_, std::forward<Shape>(shape));
 			return *this;
 		}
 
@@ -107,6 +112,6 @@ namespace oly::col2d
 		ContactResult contacts(const Element& c) const;
 	};
 
-	typedef unsigned int Mask;
-	typedef unsigned int Layer;
+	using Mask = unsigned int;
+    using Layer = unsigned int;
 }
