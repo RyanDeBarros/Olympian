@@ -4,5 +4,5 @@
 
 namespace oly::physics
 {
-	constexpr glm::vec2 GRAVITY = { 0.0f, -98.0f };
+	constexpr glm::vec2 kGravity = { 0.0f, -98.0f };
 }

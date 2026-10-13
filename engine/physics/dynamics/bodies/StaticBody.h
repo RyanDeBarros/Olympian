@@ -1,46 +1,51 @@
 #pragma once
 
-#include "physics/dynamics/bodies/RigidBody.h"
 #include "core/base/ActionDelegate.h"
+
+#include "physics/dynamics/bodies/RigidBody.h"
 
 namespace oly::physics
 {
-	class StaticBody : public RigidBody
+	class StaticBody
+        : public RigidBody
 	{
-		DynamicsComponent dynamics;
+    private:
+		DynamicsComponent dynamics_;
 
 	public:
 		ActionDelegator<col2d::OverlapEventData> delegator;
 
 		StaticBody();
-		StaticBody(const StaticBody&);
+		StaticBody(const StaticBody&) = delete;
 		StaticBody(StaticBody&&) noexcept;
 		~StaticBody();
+
+        StaticBody& operator=(const StaticBody&) = delete;
+        StaticBody& operator=(StaticBody&&) noexcept;
+
+    public:
+        State state() const override;
+        bool is_colliding() const override;
 
 	protected:
 		void physics_pre_tick() override;
 		void physics_post_tick() override;
 
-	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
+        void bind(const col2d::Collider& collider) const override;
+        void unbind(const col2d::Collider& collider) const override;
 
-		State state() const override { return dynamics.get_state(); }
-		bool is_colliding() const override { return dynamics.is_colliding(); }
-
-	protected:
-		void bind(const col2d::Collider& collider) const override;
-		void unbind(const col2d::Collider& collider) const override;
-
-		const DynamicsComponent& get_dynamics() const override { return dynamics; }
+        const DynamicsComponent& get_dynamics() const override;
 
 	public:
-		const DynamicsComponent& static_dynamics() const { return dynamics; }
-		DynamicsComponent& static_dynamics() { return dynamics; }
+        const DynamicsComponent& dynamics();
+        DynamicsComponent& dynamics();
+
+		const MaterialRef& material();
+        MaterialRef& material();
 
 	private:
 		void handle_overlaps(const col2d::OverlapEventData& data) const;
 	};
 
-	typedef SmartReference<StaticBody> StaticBodyRef;
+	using StaticBodyRef = SmartReference<StaticBody>;
 }

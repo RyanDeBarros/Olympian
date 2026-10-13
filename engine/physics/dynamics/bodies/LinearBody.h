@@ -1,51 +1,59 @@
 #pragma once
 
-#include "physics/dynamics/bodies/RigidBody.h"
-#include "physics/dynamics/components/LinearPhysicsComponent.h"
 #include "core/base/ActionDelegate.h"
+
+#include "physics/dynamics/bodies/RigidBody.h"
+
+#include "physics/dynamics/components/LinearPhysicsComponent.h"
 
 namespace oly::physics
 {
-	class LinearBody : public RigidBody
+	class LinearBody
+        : public RigidBody
 	{
-		LinearPhysicsComponent dynamics;
+    private:
+		LinearPhysicsComponent dynamics_;
 
 	public:
 		ActionDelegator<col2d::CollisionEventData> delegator;
 
 		LinearBody();
-		LinearBody(const LinearBody&);
+		LinearBody(const LinearBody&) = delete;
 		LinearBody(LinearBody&&) noexcept;
 		~LinearBody();
+
+        LinearBody& operator=(const LinearBody&) = delete;
+        LinearBody& operator=(LinearBody&&) noexcept;
+
+    public:
+        State state() const;
+        bool is_colliding() const;
 
 	protected:
 		void physics_pre_tick() override;
 		void physics_post_tick() override;
 
-	public:
-		const MaterialRef& material() const { return dynamics.material; }
-		MaterialRef& material() { return dynamics.material; }
-		const LinearSubMaterialRef& sub_material() const { return dynamics.submaterial; }
-		LinearSubMaterialRef& sub_material() { return dynamics.submaterial; }
-		const LinearPhysicsProperties& properties() const { return dynamics.properties; }
-		LinearPhysicsProperties& properties() { return dynamics.properties; }
+        void bind(const col2d::Collider& collider) const override;
+        void unbind(const col2d::Collider& collider) const override;
 
-		State state() const override { return dynamics.get_state(); }
-		bool is_colliding() const override { return dynamics.is_colliding(); }
-
-	protected:
-		void bind(const col2d::Collider& collider) const override;
-		void unbind(const col2d::Collider& collider) const override;
-
-		const DynamicsComponent& get_dynamics() const override { return dynamics; }
+        const DynamicsComponent& get_dynamics() const override;
 
 	public:
-		const LinearPhysicsComponent& linear_dynamics() const { return dynamics; }
-		LinearPhysicsComponent& linear_dynamics() { return dynamics; }
+        const LinearPhysicsComponent& dynamics() const;
+        LinearPhysicsComponent& dynamics();
+
+        const MaterialRef& material() const;
+		MaterialRef& material();
+
+        const LinearSubMaterialRef& sub_material() const;
+		LinearSubMaterialRef& sub_material();
+		
+        const LinearPhysicsProperties& properties() const;
+		LinearPhysicsProperties& properties();
 
 	private:
 		void handle_collides(const col2d::CollisionEventData& data) const;
 	};
 
-	typedef SmartReference<LinearBody> LinearBodyRef;
+	using LinearBodyRef = SmartReference<LinearBody>;
 }
