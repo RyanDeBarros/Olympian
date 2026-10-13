@@ -41,7 +41,9 @@ namespace oly
 	template<unsigned int Min, unsigned int Max>
 	using BoundedUInt = BoundedValue<unsigned int, Min, Max>;
 
+    // TODO rename to pfloat and move to imp
 	using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
+    // TODO rename to spfloat and move to imp
 	using StrictlyPositiveFloat = BoundedFloat<0.000001f, nmax<float>()>;
 	using BoundedUnitInterval = BoundedFloat<0.0f, 1.0f>;
 	using BoundedRadians = BoundedFloat<0.0f, glm::two_pi<float>()>;

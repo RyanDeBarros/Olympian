@@ -155,7 +155,11 @@ target_link_libraries(OlympianEngine PUBLIC
 
 target_link_libraries(OlympianEngine PUBLIC OlympianDetail)
 
-# Add subdirectories
+# Add sources and subdirectories
+target_sources(OlympianEngine PRIVATE
+	Olympian.cpp
+)
+
 add_subdirectory(core)
 add_subdirectory(external)
 add_subdirectory(graphics)
