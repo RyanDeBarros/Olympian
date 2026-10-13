@@ -1,12 +1,15 @@
 #pragma once
 
-#include "physics/collision/elements/Element.h"
-#include "physics/collision/methods/Collide.h"
-#include "physics/collision/methods/KDOPCollide.h"
-#include "physics/collision/methods/Compound.h"
-#include "physics/collision/Tolerance.h"
-#include "core/base/Transforms.h"
 #include "core/base/TransformerExposure.h"
+#include "core/base/Transforms.h"
+
+#include "physics/collision/Tolerance.h"
+
+#include "physics/collision/elements/Element.h"
+
+#include "physics/collision/methods/Collide.h"
+#include "physics/collision/methods/Compound.h"
+#include "physics/collision/methods/KDOPCollide.h"
 
 namespace oly::col2d
 {
@@ -41,36 +44,33 @@ namespace oly::col2d
 	{
 		friend struct internal::LUT;
 
-		Transformer2D transformer;
-		Compound compound;
-		mutable std::vector<Element> baked;
-		mutable bool dirty = true;
-
-		void bake() const;
+		Transformer2D transformer_;
+		Compound compound_;
+		mutable std::vector<Element> baked_;
+		mutable bool dirty_ = true;
 
 	public:
 		TCompound() = default;
-		explicit TCompound(const std::vector<Element>& elements) : compound({ elements }) {}
-		explicit TCompound(std::vector<Element>&& elements) : compound({ std::move(elements) }) {}
+        explicit TCompound(std::vector<Element> elements);
 
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
-		bool is_dirty() const { return dirty || transformer.dirty(); }
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
+        bool is_dirty() const;
 
-		Transformer2DExposure<> get_transformer() const { return transformer; }
-		Transformer2DExposure<ex::Full> set_transformer() { return transformer; }
+        Transformer2DExposure<> get_transformer() const;
+        Transformer2DExposure<ex::Full> set_transformer();
 
-		const Compound& get_compound() const { return compound; }
-		Compound& set_compound() { dirty = true; return compound; }
-		const std::vector<Element>& get_baked() const { if (dirty || transformer.flush()) { bake(); } return baked; }
+        const Compound& get_compound() const;
+        Compound& set_compound();
+        const std::vector<Element>& get_baked() const;
 
-		Mask mask() const { return compound.mask; }
-		Mask& mask() { return compound.mask; }
-		Layer layer() const { return compound.layer; }
-		Layer& layer() { return compound.layer; }
+        Mask mask() const;
+        Mask& mask();
+        Layer layer() const;
+        Layer& layer();
 
-		const CompoundPerfParameters& perf() const { return compound.perf; }
-		CompoundPerfParameters& perf() { return compound.perf; }
+        const CompoundPerfParameters& perf() const;
+        CompoundPerfParameters& perf();
 
 		float projection_max(UnitVector2D axis) const;
 		float projection_min(UnitVector2D axis) const;
@@ -86,14 +86,17 @@ namespace oly::col2d
 		{
 			return set_compound().element_as<Shape>(i);
 		}
+        
+    private:
+        void bake() const;
 	};
 
 	namespace internal
 	{
-		inline const std::vector<Element>& element_array(const Compound& c) { return c.elements; }
-		inline const std::vector<Element>& element_array(const TCompound& c) { return c.get_baked(); }
-		inline CompoundPerfParameters perf(const Compound& c) { return c.perf; }
-		inline CompoundPerfParameters perf(const TCompound& c) { return c.perf(); }
+        inline const std::vector<Element>& element_array(const Compound& c);
+        inline const std::vector<Element>& element_array(const TCompound& c);
+        inline CompoundPerfParameters perf(const Compound& c);
+        inline CompoundPerfParameters perf(const TCompound& c);
 
 		template<typename Comp1, typename Comp2>
 		inline OverlapResult overlaps(const Comp1& c1, const Comp2& c2)
@@ -109,7 +112,12 @@ namespace oly::col2d
 		inline CollisionResult collides(const Comp1& c1, const Comp2& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_collision(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size(), CompoundPerfParameters::greedy(perf(c1), perf(c2)));
+				return compound_collision(
+                    element_array(c1).data(),
+                    element_array(c1).size(),
+                    element_array(c2).data(),
+                    element_array(c2).size(),
+                    CompoundPerfParameters::greedy(perf(c1), perf(c2)));
 			else
 				return CollisionResult{ .overlap = false };
 		}
@@ -118,7 +126,12 @@ namespace oly::col2d
 		inline ContactResult contacts(const Comp1& c1, const Comp2& c2)
 		{
 			if (overlaps(c1, c2))
-				return compound_contact(element_array(c1).data(), element_array(c1).size(), element_array(c2).data(), element_array(c2).size(), CompoundPerfParameters::greedy(perf(c1), perf(c2)));
+				return compound_contact(
+                    element_array(c1).data(),
+                    element_array(c1).size(),
+                    element_array(c2).data(),
+                    element_array(c2).size(),
+                    CompoundPerfParameters::greedy(perf(c1), perf(c2)));
 			else
 				return ContactResult{ .overlap = false };
 		}
@@ -157,34 +170,34 @@ namespace oly::col2d
 	extern OverlapResult ray_hits(const Compound& c, Ray ray);
 	extern RaycastResult raycast(const Compound& c, Ray ray);
 
-	inline OverlapResult overlaps(const Compound& c1, const Element& c2) { return internal::overlaps(c1, c2); }
-	inline OverlapResult overlaps(const Element& c1, const Compound& c2) { return overlaps(c2, c1); }
-	inline CollisionResult collides(const Compound& c1, const Element& c2) { return internal::collides(c1, c2); }
-	inline CollisionResult collides(const Element& c1, const Compound& c2) { return collides(c2, c1).invert(); }
-	inline ContactResult contacts(const Compound& c1, const Element& c2) { return internal::contacts(c1, c2); }
-	inline ContactResult contacts(const Element& c1, const Compound& c2) { return contacts(c2, c1).invert(); }
+	extern OverlapResult overlaps(const Compound& c1, const Element& c2);
+	extern OverlapResult overlaps(const Element& c1, const Compound& c2);
+	extern CollisionResult collides(const Compound& c1, const Element& c2);
+	extern CollisionResult collides(const Element& c1, const Compound& c2);
+	extern ContactResult contacts(const Compound& c1, const Element& c2);
+	extern ContactResult contacts(const Element& c1, const Compound& c2);
 
 	extern OverlapResult point_hits(const TCompound& c, glm::vec2 test);
 	extern OverlapResult ray_hits(const TCompound& c, Ray ray);
 	extern RaycastResult raycast(const TCompound& c, Ray ray);
 
-	inline OverlapResult overlaps(const TCompound& c1, const Element& c2) { return internal::overlaps(c1, c2); }
-	inline OverlapResult overlaps(const Element& c1, const TCompound& c2) { return overlaps(c2, c1); }
-	inline CollisionResult collides(const TCompound& c1, const Element& c2) { return internal::collides(c1, c2); }
-	inline CollisionResult collides(const Element& c1, const TCompound& c2) { return collides(c2, c1).invert(); }
-	inline ContactResult contacts(const TCompound& c1, const Element& c2) { return internal::contacts(c1, c2); }
-	inline ContactResult contacts(const Element& c1, const TCompound& c2) { return contacts(c2, c1).invert(); }
+	extern OverlapResult overlaps(const TCompound& c1, const Element& c2);
+	extern OverlapResult overlaps(const Element& c1, const TCompound& c2);
+	extern CollisionResult collides(const TCompound& c1, const Element& c2);
+	extern CollisionResult collides(const Element& c1, const TCompound& c2);
+	extern ContactResult contacts(const TCompound& c1, const Element& c2);
+	extern ContactResult contacts(const Element& c1, const TCompound& c2);
 
-	inline OverlapResult overlaps(const Compound& c1, const Compound& c2) { return (c1.mask & c2.layer) && internal::overlaps(c1, c2); }
-	inline CollisionResult collides(const Compound& c1, const Compound& c2) { return (c1.mask & c2.layer) ? internal::collides(c1, c2) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const Compound& c1, const Compound& c2) { return (c1.mask & c2.layer) ? internal::contacts(c1, c2) : ContactResult{ .overlap = false }; }
-	inline OverlapResult overlaps(const TCompound& c1, const TCompound& c2) { return (c1.mask() & c2.layer()) && internal::overlaps(c1, c2); }
-	inline CollisionResult collides(const TCompound& c1, const TCompound& c2) { return (c1.mask() & c2.layer()) ? internal::collides(c1, c2) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const TCompound& c1, const TCompound& c2) { return (c1.mask() & c2.layer()) ? internal::contacts(c1, c2) : ContactResult{ .overlap = false }; }
-	inline OverlapResult overlaps(const TCompound& c1, const Compound& c2) { return (c1.mask() & c2.layer) && internal::overlaps(c1, c2); }
-	inline CollisionResult collides(const TCompound& c1, const Compound& c2) { return (c1.mask() & c2.layer) ? internal::collides(c1, c2) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const TCompound& c1, const Compound& c2) { return (c1.mask() & c2.layer) ? internal::contacts(c1, c2) : ContactResult{ .overlap = false }; }
-	inline OverlapResult overlaps(const Compound& c1, const TCompound& c2) { return (c1.mask & c2.layer()) && internal::overlaps(c1, c2); }
-	inline CollisionResult collides(const Compound& c1, const TCompound& c2) { return (c1.mask & c2.layer()) ? internal::collides(c1, c2) : CollisionResult{ .overlap = false }; }
-	inline ContactResult contacts(const Compound& c1, const TCompound& c2) { return (c1.mask & c2.layer()) ? internal::contacts(c1, c2) : ContactResult{ .overlap = false }; }
+	extern OverlapResult overlaps(const Compound& c1, const Compound& c2);
+	extern CollisionResult collides(const Compound& c1, const Compound& c2);
+	extern ContactResult contacts(const Compound& c1, const Compound& c2);
+	extern OverlapResult overlaps(const TCompound& c1, const TCompound& c2);
+	extern CollisionResult collides(const TCompound& c1, const TCompound& c2);
+	extern ContactResult contacts(const TCompound& c1, const TCompound& c2);
+	extern OverlapResult overlaps(const TCompound& c1, const Compound& c2);
+	extern CollisionResult collides(const TCompound& c1, const Compound& c2);
+	extern ContactResult contacts(const TCompound& c1, const Compound& c2);
+	extern OverlapResult overlaps(const Compound& c1, const TCompound& c2);
+	extern CollisionResult collides(const Compound& c1, const TCompound& c2);
+	extern ContactResult contacts(const Compound& c1, const TCompound& c2);
 }

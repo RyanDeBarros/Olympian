@@ -180,7 +180,7 @@ namespace oly::col2d::internal
 
 		void load_transformer()
 		{
-#define OLY_LUT_TRANSFORMER(Class) transformer_[CObj_index<Class>()] = [](const void* ptr) -> const Transformer2D& { return static_cast<const Class*>(ptr)->transformer; };
+#define OLY_LUT_TRANSFORMER(Class) transformer_[CObj_index<Class>()] = [](const void* ptr) -> const Transformer2D& { return static_cast<const Class*>(ptr)->transformer_; };
 			OLY_LUT_LIST(OLY_LUT_TRANSFORMER);
 #undef OLY_LUT_TRANSFORMER
 		}

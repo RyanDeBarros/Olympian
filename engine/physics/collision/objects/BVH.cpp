@@ -153,13 +153,40 @@ namespace oly::col2d
 			return Circle(centroid, radius);
 		}
 
+        Wrap<ConvexHull>::CirclePolygonEnclosure::CirclePolygonEnclosure(size_t degree)
+            : degree_(degree)
+        {
+            set_mult();
+        }
+
+        size_t Wrap<ConvexHull>::CirclePolygonEnclosure::get_degree() const
+        {
+            return degree_;
+        }
+        
+        void Wrap<ConvexHull>::CirclePolygonEnclosure::set_degree(size_t d)
+        {
+            degree_ = d;
+            set_mult();
+        }
+        
+        glm::vec2 Wrap<ConvexHull>::CirclePolygonEnclosure::get_point(const Circle& c, size_t i) const
+        {
+            return c.center + c.radius * overfitting_multiplier_ * (glm::vec2)UnitVector2D(i * glm::two_pi<float>() / degree_);
+        }
+
+        void Wrap<ConvexHull>::CirclePolygonEnclosure::set_mult()
+        {
+            overfitting_multiplier_ = 1.0f / glm::cos(glm::pi<float>() / float(degree_));
+        }
+
 		static void add_point_cloud(const Element& element, std::vector<glm::vec2>& point_cloud)
 		{
 			element.variant().visit([&point_cloud](const auto& e) -> void {
 				if constexpr (imp::decays_one_of<decltype(*e), Circle>)
 				{
 					size_t start = point_cloud.size();
-					static const auto& enclosure = Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
+					static const auto& enclosure = Wrap<ConvexHull>::kCirclePolygonEnclosure;
 					point_cloud.resize(point_cloud.size() + enclosure.get_degree());
 					for (size_t i = 0; i < enclosure.get_degree(); ++i)
 						point_cloud[start + i] = CircleGlobalAccess::global_point(*e, enclosure.get_point(*e, i));
@@ -194,7 +221,21 @@ namespace oly::col2d
 					return element->center;
 				else
 					return element->center();
-				});
+		    });
 		}
+
+        bool MidpointXY::operator()(const Element& lhs, const Element& rhs) const
+        {
+            glm::vec2 lm = midpoint(lhs);
+            glm::vec2 rm = midpoint(rhs);
+            return lm.x < rm.x || (lm.x == rm.x && lm.y <= rm.y);
+        }
+
+        bool MidpointYX::operator()(const Element& lhs, const Element& rhs) const
+        {
+            glm::vec2 lm = midpoint(lhs);
+            glm::vec2 rm = midpoint(rhs);
+            return lm.y < rm.y || (lm.y == rm.y && lm.x <= rm.x);
+        }
 	}
 }

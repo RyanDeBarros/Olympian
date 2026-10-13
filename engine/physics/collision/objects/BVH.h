@@ -1,22 +1,23 @@
 #pragma once
 
-#include "physics/collision/Tolerance.h"
-#include "physics/collision/elements/Element.h"
-#include "physics/collision/methods/Collide.h"
-#include "physics/collision/methods/KDOPCollide.h"
-#include "physics/collision/objects/Primitive.h"
-#include "physics/collision/objects/Compound.h"
-
-#include "core/base/Transforms.h"
-#include "core/base/TransformerExposure.h"
 #include "core/base/Assert.h"
+#include "core/base/TransformerExposure.h"
+#include "core/base/Transforms.h"
 
 #include "core/math/Solvers.h"
 
+#include "physics/collision/Tolerance.h"
+
+#include "physics/collision/elements/Element.h"
+
+#include "physics/collision/methods/Collide.h"
+#include "physics/collision/methods/KDOPCollide.h"
+
+#include "physics/collision/objects/Primitive.h"
+#include "physics/collision/objects/Compound.h"
+
 #include <imp/dependent_false.hpp>
 #include <imp/swapper.hpp>
-
-#include <algorithm>
 
 namespace oly::col2d
 {
@@ -55,26 +56,26 @@ namespace oly::col2d
 		{
 			class CirclePolygonEnclosure
 			{
-				size_t degree = 8;
-				float overfitting_multiplier;
-
-				void set_mult() { overfitting_multiplier = 1.0f / glm::cos(glm::pi<float>() / float(degree)); }
+				size_t degree_ = 8;
+				float overfitting_multiplier_ = 1.f;
 
 			public:
-				CirclePolygonEnclosure(size_t degree = 8) : degree(degree) { set_mult(); }
+                CirclePolygonEnclosure(size_t degree = 8);
 
-				size_t get_degree() const { return degree; }
-				void set_degree(size_t d) { degree = d; set_mult(); }
-				glm::vec2 get_point(const Circle& c, size_t i) const
-				{
-					return c.center + c.radius * overfitting_multiplier * (glm::vec2)UnitVector2D(i * glm::two_pi<float>() / get_degree());
-				}
+			public:
+                size_t get_degree() const;
+                void set_degree(size_t d);
+                glm::vec2 get_point(const Circle& c, size_t i) const;
+
+            private:
+                void set_mult();
 			};
 
-			static CirclePolygonEnclosure CIRCLE_POLYGON_ENCLOSURE;
+			static CirclePolygonEnclosure kCirclePolygonEnclosure;
+
 			ConvexHull operator()(const Element* elements, size_t count) const;
 		};
-		inline Wrap<ConvexHull>::CirclePolygonEnclosure Wrap<ConvexHull>::CIRCLE_POLYGON_ENCLOSURE;
+		inline Wrap<ConvexHull>::CirclePolygonEnclosure Wrap<ConvexHull>::kCirclePolygonEnclosure;
 
 		template<size_t K>
 		struct Wrap<KDOP<K>>
@@ -100,22 +101,12 @@ namespace oly::col2d
 
 		struct MidpointXY
 		{
-			bool operator()(const Element& lhs, const Element& rhs) const
-			{
-				glm::vec2 lm = midpoint(lhs);
-				glm::vec2 rm = midpoint(rhs);
-				return lm.x < rm.x || (lm.x == rm.x && lm.y <= rm.y);
-			}
+            bool operator()(const Element& lhs, const Element& rhs) const;
 		};
 
 		struct MidpointYX
 		{
-			bool operator()(const Element& lhs, const Element& rhs) const
-			{
-				glm::vec2 lm = midpoint(lhs);
-				glm::vec2 rm = midpoint(rhs);
-				return lm.y < rm.y || (lm.y == rm.y && lm.x <= rm.x);
-			}
+            bool operator()(const Element& lhs, const Element& rhs) const;
 		};
 
 		template<bool XY, bool MinX, bool MinY>
@@ -139,20 +130,26 @@ namespace oly::col2d
 				{
 					float lx = bx(lhs);
 					float rx = bx(rhs);
+
 					if (lx < rx)
 						return true;
-					if (lx > rx)
+					
+                    if (lx > rx)
 						return false;
-					return by(lhs) < by(rhs);
+					
+                    return by(lhs) < by(rhs);
 				}
 				else
 				{
 					float ly = by(lhs);
 					float ry = by(rhs);
-					if (ly < ry)
+					
+                    if (ly < ry)
 						return true;
-					if (ly > ry)
-						return false;
+					
+                    if (ly > ry)
+                        return false;
+					
 					return bx(lhs) < bx(rhs);
 				}
 			}
@@ -161,7 +158,7 @@ namespace oly::col2d
 
 	enum class Heuristic
 	{
-		NONE,
+		None,
 		MidpointXY,
 		MidpointYX,
 		MinXMinY,
@@ -189,7 +186,8 @@ namespace oly::col2d
 			Node() = default;
 
 			Node(const Element* elements, size_t start_index, size_t count)
-				: start_index(start_index), count(count)
+				: start_index(start_index)
+                , count(count)
 			{
 				OLY_ASSERT(count > 0);
 				if (count > 1)
@@ -201,13 +199,22 @@ namespace oly::col2d
 			}
 
 			Node(const Node& other)
-				: shape(other.shape), start_index(other.start_index), count(other.count), left(other.left ? std::make_unique<Node>(*other.left) : nullptr),
-				right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
-			{}
+				: shape(other.shape)
+                , start_index(other.start_index)
+                , count(other.count)
+                , left(other.left ? std::make_unique<Node>(*other.left) : nullptr)
+                , right(other.right ? std::make_unique<Node>(*other.right) : nullptr)
+			{
+            }
 
 			Node(Node&& other) noexcept
-				: shape(std::move(other.shape)), start_index(other.start_index), count(other.count), left(std::move(other.left)), right(std::move(other.right))
-			{}
+				: shape(std::move(other.shape))
+                , start_index(other.start_index)
+                , count(other.count)
+                , left(std::move(other.left))
+                , right(std::move(other.right))
+			{
+            }
 
 			Node& operator=(const Node& other)
 			{
@@ -219,6 +226,7 @@ namespace oly::col2d
 					left = other.left ? std::make_unique<Node>(*other.left) : nullptr;
 					right = other.right ? std::make_unique<Node>(*other.right) : nullptr;
 				}
+
 				return *this;
 			}
 
@@ -232,16 +240,20 @@ namespace oly::col2d
 					left = std::move(other.left);
 					right = std::move(other.right);
 				}
-				return *this;
+				
+                return *this;
 			}
 
-			bool is_leaf() const { return !shape.has_value(); }
+			bool is_leaf() const
+            {
+                return !shape.has_value();
+            }
 		};
 
-		mutable Node _root;
-		mutable std::vector<Element> elements;
-		mutable bool dirty = true;
-		Heuristic heuristic = Heuristic::MidpointXY;
+		mutable Node root_;
+		mutable std::vector<Element> elements_;
+		mutable bool dirty_ = true;
+		Heuristic heuristic_ = Heuristic::MidpointXY;
 
 	public:
 		Mask mask = 0;
@@ -250,11 +262,22 @@ namespace oly::col2d
 		CompoundPerfParameters perf = {};
 
 		BVH() = default;
-		explicit BVH(const std::vector<Element>& elements) : elements(elements) {}
-		explicit BVH(std::vector<Element>&& elements) : elements(std::move(elements)) {}
 
-		const std::vector<Element>& get_elements() const { return elements; }
-		std::vector<Element>& set_elements() { dirty = true; return elements; }
+        explicit BVH(std::vector<Element> elements)
+            : elements_(std::move(elements))
+        {
+        }
+
+		const std::vector<Element>& get_elements() const
+        {
+            return elements_;
+        }
+
+		std::vector<Element>& set_elements()
+        {
+            dirty_ = true;
+            return elements_;
+        }
 
 		template<internal::Elem_check Shape>
 		const Shape& element_as(size_t i) const
@@ -268,47 +291,27 @@ namespace oly::col2d
 			return *set_elements()[i].variant().get<Shape*>();
 		}
 
-		Heuristic get_heuristic() const { return heuristic; }
-		void set_heuristic(Heuristic heuristic) { dirty = true; this->heuristic = heuristic; }
+		Heuristic get_heuristic() const
+        {
+            return heuristic_;
+        }
 
-		size_t get_depth_cap() const { elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)elements.size())); }
+		void set_heuristic(Heuristic heuristic)
+        {
+            dirty_ = true;
+            this->heuristic_ = heuristic;
+        }
 
-		const Shape& root_shape() const { return *root().shape; }
+		size_t get_depth_cap() const
+        {
+            return elements_.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)elements_.size()));
+        }
 
-	private:
-		const Node& root() const
-		{
-			if (dirty)
-			{
-				dirty = false;
-				
-				if (heuristic == Heuristic::MidpointXY)
-					std::sort(elements.begin(), elements.end(), internal::MidpointXY{});
-				else if (heuristic == Heuristic::MidpointYX)
-					std::sort(elements.begin(), elements.end(), internal::MidpointYX{});
-				else if (heuristic == Heuristic::MinXMinY)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, true>{});
-				else if (heuristic == Heuristic::MinXMaxY)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, true, false>{});
-				else if (heuristic == Heuristic::MaxXMinY)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, true>{});
-				else if (heuristic == Heuristic::MaxXMaxY)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<true, false, false>{});
-				else if (heuristic == Heuristic::MinYMinX)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, true>{});
-				else if (heuristic == Heuristic::MinYMaxX)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, true>{});
-				else if (heuristic == Heuristic::MaxYMinX)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, true, false>{});
-				else if (heuristic == Heuristic::MaxYMaxX)
-					std::sort(elements.begin(), elements.end(), internal::ByBounds<false, false, false>{});
+		const Shape& root_shape() const
+        {
+            return *root().shape;
+        }
 
-				_root = Node(elements.data(), 0, elements.size());
-			}
-			return _root;
-		}
-
-	public:
 		std::vector<const Element*> build_layer(size_t at_depth) const
 		{
 			std::vector<const Element*> layer;
@@ -323,7 +326,7 @@ namespace oly::col2d
 				for (const Node* node : nodes.front)
 				{
 					if (node->is_leaf())
-						layer.push_back(elements[node->start_index]);
+						layer.push_back(elements_[node->start_index]);
 					else
 					{
 						nodes.back.push_back(node->left.get());
@@ -336,7 +339,7 @@ namespace oly::col2d
 			for (const Node* node : nodes.front)
 			{
 				if (node->is_leaf())
-					layer.push_back(elements[node->start_index]);
+					layer.push_back(elements_[node->start_index]);
 				else
 					layer.push_back(*node->shape);
 			}
@@ -346,7 +349,7 @@ namespace oly::col2d
 		float projection_max(const UnitVector2D& axis) const
 		{
 			float proj_max = -nmax<float>();
-			for (const Element& element : elements)
+			for (const Element& element : elements_)
 				proj_max = std::max(proj_max, element.projection_max(axis));
 			return proj_max;
 		}
@@ -354,37 +357,85 @@ namespace oly::col2d
 		float projection_min(const UnitVector2D& axis) const
 		{
 			float proj_min = nmax<float>();
-			for (const Element& element : elements)
+			for (const Element& element : elements_)
 				proj_min = std::max(proj_min, element.projection_min(axis));
 			return proj_min;
 		}
 
-		OverlapResult point_hits(glm::vec2 test) const { return point_hits(root(), elements.data(), test); }
-		OverlapResult ray_hits(Ray ray) const { return ray_hits(root(), elements.data(), ray); }
-		RaycastResult raycast(Ray ray) const { return raycast(root(), elements.data(), ray); }
+		OverlapResult point_hits(glm::vec2 test) const
+        {
+            return point_hits(root(), elements_.data(), test);
+        }
+
+		OverlapResult ray_hits(Ray ray) const
+        {
+            return ray_hits(root(), elements_.data(), ray);
+        }
 		
-		OverlapResult raw_overlaps(const Element& e) const { return overlaps(root(), elements.data(), e); }
-		template<typename Other>
-		OverlapResult raw_overlaps(const Other& c) const { return overlaps(root(), elements.data(), c); }
-		template<typename S>
-		OverlapResult raw_overlaps(const BVH<S>& bvh) const { return overlaps<S>(root(), elements.data(), bvh.root(), bvh.elements.data()); }
+        RaycastResult raycast(Ray ray) const
+        {
+            return raycast(root(), elements_.data(), ray);
+        }
+		
+		OverlapResult raw_overlaps(const Element& e) const
+        {
+            return overlaps(root(), elements_.data(), e);
+        }
+		
+        template<typename Other>
+		OverlapResult raw_overlaps(const Other& c) const
+        {
+            return overlaps(root(), elements_.data(), c);
+        }
+		
+        template<typename S>
+		OverlapResult raw_overlaps(const BVH<S>& bvh) const
+        {
+            return overlaps<S>(root(), elements_.data(), bvh.root(), bvh.elements_.data());
+        }
 
 		CollisionResult raw_collides(const Element& e) const
-			{ return raw_overlaps(e) ? compound_collision(elements.data(), elements.size(), e, perf) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const Primitive& c) const
-			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.element, perf) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const TPrimitive& c) const
-			{ return raw_overlaps(c) ? compound_collision(elements.data(), elements.size(), c.get_baked(), perf) : CollisionResult{ .overlap = false }; }
-		CollisionResult raw_collides(const Compound& c) const
+		{
+            return raw_overlaps(e)
+                ? compound_collision(elements_.data(), elements_.size(), e, perf)
+                : CollisionResult{ .overlap = false };
+        }
+		
+        CollisionResult raw_collides(const Primitive& c) const
+		{
+            return raw_overlaps(c)
+                ? compound_collision(elements_.data(), elements_.size(), c.element, perf)
+                : CollisionResult{ .overlap = false };
+        }
+		
+        CollisionResult raw_collides(const TPrimitive& c) const
+        {
+            return raw_overlaps(c)
+                ? compound_collision(elements_.data(), elements_.size(), c.get_baked(), perf)
+                : CollisionResult{ .overlap = false };
+        }
+		
+        CollisionResult raw_collides(const Compound& c) const
 		{
 			return raw_overlaps(c)
-				? compound_collision(elements.data(), elements.size(), c.elements.data(), c.elements.size(), CompoundPerfParameters::greedy(perf, c.perf))
+				? compound_collision(
+                    elements_.data(),
+                    elements_.size(),
+                    c.elements.data(),
+                    c.elements.size(),
+                    CompoundPerfParameters::greedy(perf, c.perf))
 				: CollisionResult{ .overlap = false };
 		}
+
 		CollisionResult raw_collides(const TCompound& c) const
 		{
 			return raw_overlaps(c)
-				? compound_collision(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size(), CompoundPerfParameters::greedy(perf, c.perf()))
+				? compound_collision(
+                    elements_.data(),
+                    elements_.size(),
+                    c.get_baked().data(),
+                    c.get_baked().size(),
+                    CompoundPerfParameters::greedy(perf, c.perf()))
 				: CollisionResult{ .overlap = false };
 		}
 
@@ -392,26 +443,56 @@ namespace oly::col2d
 		CollisionResult raw_collides(const BVH<S>& bvh) const
 		{
 			return raw_overlaps(bvh)
-				? compound_collision(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size(), CompoundPerfParameters::greedy(perf, bvh.perf))
+				? compound_collision(
+                    elements_.data(),
+                    elements_.size(),
+                    bvh.elements_.data(),
+                    bvh.elements_.size(),
+                    CompoundPerfParameters::greedy(perf, bvh.perf))
 				: CollisionResult{.overlap = false};
 		}
 
 		ContactResult raw_contacts(const Element& e) const
-			{ return raw_overlaps(e) ? compound_contact(elements.data(), elements.size(), e, perf) : ContactResult{ .overlap = false }; }
+		{
+            return raw_overlaps(e)
+                ? compound_contact(elements_.data(), elements_.size(), e, perf)
+                : ContactResult{ .overlap = false };
+        }
+
 		ContactResult raw_contacts(const Primitive& c) const
-			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.element, perf) : ContactResult{ .overlap = false }; }
-		ContactResult raw_contacts(const TPrimitive& c) const
-			{ return raw_overlaps(c) ? compound_contact(elements.data(), elements.size(), c.get_baked(), perf) : ContactResult{ .overlap = false }; }
+		{
+            return raw_overlaps(c)
+                ? compound_contact(elements_.data(), elements_.size(), c.element, perf)
+                : ContactResult{ .overlap = false };
+        }
+		
+        ContactResult raw_contacts(const TPrimitive& c) const
+        {
+            return raw_overlaps(c)
+                ? compound_contact(elements_.data(), elements_.size(), c.get_baked(), perf)
+                : ContactResult{ .overlap = false };
+        }
+		
 		ContactResult raw_contacts(const Compound& c) const
 		{
 			return raw_overlaps(c)
-				? compound_contact(elements.data(), elements.size(), c.elements.data(), c.elements.size(), CompoundPerfParameters::greedy(perf, c.perf))
+				? compound_contact(
+                    elements_.data(),
+                    elements_.size(),
+                    c.elements.data(),
+                    c.elements.size(),
+                    CompoundPerfParameters::greedy(perf, c.perf))
 				: ContactResult{ .overlap = false };
 		}
 		ContactResult raw_contacts(const TCompound& c) const
 		{
 			return raw_overlaps(c)
-				? compound_contact(elements.data(), elements.size(), c.get_baked().data(), c.get_baked().size(), CompoundPerfParameters::greedy(perf, c.perf()))
+				? compound_contact(
+                    elements_.data(),
+                    elements_.size(),
+                    c.get_baked().data(),
+                    c.get_baked().size(),
+                    CompoundPerfParameters::greedy(perf, c.perf()))
 				: ContactResult{ .overlap = false };
 		}
 
@@ -419,11 +500,16 @@ namespace oly::col2d
 		ContactResult raw_contacts(const BVH<S>& bvh) const
 		{
 			return raw_overlaps(bvh)
-				? compound_contact(elements.data(), elements.size(), bvh.elements.data(), bvh.elements.size(), CompoundPerfParameters::greedy(perf, bvh.perf))
+				? compound_contact(
+                    elements_.data(),
+                    elements_.size(),
+                    bvh.elements_.data(),
+                    bvh.elements_.size(),
+                    CompoundPerfParameters::greedy(perf, bvh.perf))
 				: ContactResult{ .overlap = false };
 		}
 
-	private:
+    private:
 		static OverlapResult point_hits(const Node& node, const Element* elements, glm::vec2 test)
 		{
 			if (node.is_leaf())
@@ -513,6 +599,52 @@ namespace oly::col2d
 			else
 				return overlaps(*node.left, elements, c) || overlaps(*node.right, elements, c);
 		}
+
+        const Node& root() const
+        {
+            if (dirty_)
+            {
+                dirty_ = false;
+
+                switch (heuristic_)
+                {
+                case Heuristic::MidpointXY:
+                    std::sort(elements_.begin(), elements_.end(), internal::MidpointXY{});
+                    break;
+                case Heuristic::MidpointYX:
+                    std::sort(elements_.begin(), elements_.end(), internal::MidpointYX{});
+                    break;
+                case Heuristic::MinXMinY:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<true, true, true>{});
+                    break;
+                case Heuristic::MinXMaxY:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<true, true, false>{});
+                    break;
+                case Heuristic::MaxXMinY:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<true, false, true>{});
+                    break;
+                case Heuristic::MaxXMaxY:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<true, false, false>{});
+                    break;
+                case Heuristic::MinYMinX:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<false, true, true>{});
+                    break;
+                case Heuristic::MinYMaxX:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<false, false, true>{});
+                    break;
+                case Heuristic::MaxYMinX:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<false, true, false>{});
+                    break;
+                case Heuristic::MaxYMaxX:
+                    std::sort(elements_.begin(), elements_.end(), internal::ByBounds<false, false, false>{});
+                    break;
+                }
+
+                root_ = Node(elements_.data(), 0, elements_.size());
+            }
+
+            return root_;
+        }
 	};
 
 	namespace internal { struct LUT; };
@@ -525,41 +657,71 @@ namespace oly::col2d
 
 		friend struct internal::LUT;
 
-		Transformer2D transformer;
-		mutable BVH<Shape> _bvh;
-		mutable bool local_dirty = true;
-		std::vector<Element> local_elements;
-
-		const BVH<Shape>& bvh() const
-		{
-			if (local_dirty || transformer.flush())
-			{
-				local_dirty = false;
-				const glm::mat3 m = transformer.global();
-				std::vector<Element>& global_elements = _bvh.set_elements();
-				global_elements.resize(local_elements.size());
-				for (size_t i = 0; i < local_elements.size(); ++i)
-					global_elements[i] = local_elements[i].transformed(m);
-			}
-			return _bvh;
-		}
+		Transformer2D transformer_;
+		mutable BVH<Shape> bvh_;
+		mutable bool local_dirty_ = true;
+		std::vector<Element> local_elements_;
 
 	public:
 		TBVH() = default;
-		explicit TBVH(const std::vector<Element>& elements) : local_elements(elements) {}
-		explicit TBVH(std::vector<Element>&& elements) : local_elements(std::move(elements)) {}
-		explicit TBVH(const BVH<Shape>& bvh) : local_elements(bvh.get_elements()) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
-		explicit TBVH(BVH<Shape>&& bvh) : local_elements(std::move(bvh.set_elements())) { _bvh.mask = bvh.mask; _bvh.layer = bvh.layer; _bvh.set_heuristic(bvh.get_heuristic()); }
 
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
-		bool is_dirty() const { return local_dirty || transformer.dirty(); }
+        explicit TBVH(std::vector<Element> elements)
+            : local_elements_(std::move(elements))
+        {
+        }
+		
+        explicit TBVH(const BVH<Shape>& bvh)
+            : local_elements_(bvh.get_elements())
+        {
+            bvh_.mask = bvh.mask;
+            bvh_.layer = bvh.layer;
+            bvh_.set_heuristic(bvh.get_heuristic());
+        }
+		
+        explicit TBVH(BVH<Shape>&& bvh)
+            : local_elements_(std::move(bvh.set_elements()))
+        {
+            bvh_.mask = bvh.mask;
+            bvh_.layer = bvh.layer;
+            bvh_.set_heuristic(bvh.get_heuristic());
+        }
 
-		Transformer2DExposure<> get_transformer() const { return transformer; }
-		Transformer2DExposure<ex::Full> set_transformer() { return transformer; }
+    public:
+		const Transform2D& get_local() const
+        {
+            return transformer_.get_local();
+        }
 
-		const std::vector<Element>& get_elements() const { return local_elements; }
-		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }
+		Transform2D& set_local()
+        {
+            return transformer_.set_local();
+        }
+
+		bool is_dirty() const
+        {
+            return local_dirty_ || transformer_.dirty();
+        }
+
+		Transformer2DExposure<> get_transformer() const
+        {
+            return transformer_;
+        }
+		
+        Transformer2DExposure<ex::Full> set_transformer()
+        {
+            return transformer_;
+        }
+
+		const std::vector<Element>& get_elements() const
+        {
+            return local_elements_;
+        }
+		
+        std::vector<Element>& set_elements()
+        {
+            local_dirty_ = true;
+            return local_elements_;
+        }
 		
 		template<internal::Elem_check Shape>
 		const Shape& element_as(size_t i) const
@@ -573,23 +735,65 @@ namespace oly::col2d
 			return *set_elements()[i].variant().get<Shape*>();
 		}
 
-		const std::vector<Element>& get_baked() const { return bvh().get_elements(); }
+		const std::vector<Element>& get_baked() const
+        {
+            return bvh().get_elements();
+        }
 
-		const Shape& root_shape() const { return bvh().root_shape(); }
+		const Shape& root_shape() const
+        {
+            return bvh().root_shape();
+        }
 
-		Mask mask() const { return _bvh.mask; }
-		Mask& mask() { return _bvh.mask; }
-		Layer layer() const { return _bvh.layer; }
-		Layer& layer() { return _bvh.layer; }
+		Mask mask() const
+        {
+            return bvh_.mask;
+        }
 
-		const CompoundPerfParameters& perf() const { return _bvh.perf; }
-		CompoundPerfParameters& perf() { return _bvh.perf; }
+		Mask& mask()
+        {
+            return bvh_.mask;
+        }
 		
-		Heuristic get_heuristic() const { return _bvh.get_heuristic(); }
-		void set_heuristic(Heuristic heuristic) { _bvh.set_heuristic(heuristic); }
-		size_t get_depth_cap() const { return local_elements.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements.size())); }
+        Layer layer() const
+        {
+            return bvh_.layer;
+        }
+		
+        Layer& layer()
+        {
+            return bvh_.layer;
+        }
 
-		std::vector<const Element*> build_layer(size_t at_depth) const { return bvh().build_layer(at_depth); }
+		const CompoundPerfParameters& perf() const
+        {
+            return bvh_.perf;
+        }
+
+		CompoundPerfParameters& perf()
+        {
+            return bvh_.perf;
+        }
+		
+		Heuristic get_heuristic() const
+        {
+            return bvh_.get_heuristic();
+        }
+
+		void set_heuristic(Heuristic heuristic)
+        {
+            bvh_.set_heuristic(heuristic);
+        }
+		
+        size_t get_depth_cap() const
+        {
+            return local_elements_.empty() ? 0 : (size_t)glm::ceil(glm::log2((float)local_elements_.size()));
+        }
+
+		auto build_layer(size_t at_depth) const
+        {
+            return bvh().build_layer(at_depth);
+        }
 
 		float projection_max(const UnitVector2D& axis) const
 		{
@@ -607,29 +811,89 @@ namespace oly::col2d
 			return proj_min;
 		}
 
-		OverlapResult point_hits(glm::vec2 test) const { return bvh().point_hits(test); }
-		OverlapResult ray_hits(Ray ray) const { return bvh().ray_hits(ray); }
-		RaycastResult raycast(Ray ray) const { return bvh().raycast(ray); }
+		OverlapResult point_hits(glm::vec2 test) const
+        {
+            return bvh().point_hits(test);
+        }
+
+        OverlapResult ray_hits(Ray ray) const
+        {
+            return bvh().ray_hits(ray);
+        }
+		
+        RaycastResult raycast(Ray ray) const
+        {
+            return bvh().raycast(ray);
+        }
 
 		template<typename Other>
-		OverlapResult raw_overlaps(const Other& c) const { return bvh().raw_overlaps(c); }
-		template<typename S>
-		OverlapResult raw_overlaps(const BVH<S>& c) const { return bvh().raw_overlaps(c); }
-		template<typename S>
-		OverlapResult raw_overlaps(const TBVH<S>& c) const { return bvh().raw_overlaps(c.bvh()); }
+		OverlapResult raw_overlaps(const Other& c) const
+        {
+            return bvh().raw_overlaps(c);
+        }
+		
+        template<typename S>
+		OverlapResult raw_overlaps(const BVH<S>& c) const
+        {
+            return bvh().raw_overlaps(c);
+        }
+		
+        template<typename S>
+		OverlapResult raw_overlaps(const TBVH<S>& c) const
+        {
+            return bvh().raw_overlaps(c.bvh());
+        }
 
 		template<typename Other>
-		CollisionResult raw_collides(const Other& c) const { return bvh().raw_collides(c); }
-		template<typename S>
-		CollisionResult raw_collides(const BVH<S>& c) const { return bvh().raw_collides(c); }
-		template<typename S>
-		CollisionResult raw_collides(const TBVH<S>& c) const { return bvh().raw_collides(c.bvh()); }
+		CollisionResult raw_collides(const Other& c) const
+        {
+            return bvh().raw_collides(c);
+        }
+		
+        template<typename S>
+		CollisionResult raw_collides(const BVH<S>& c) const
+        {
+            return bvh().raw_collides(c);
+        }
+		
+        template<typename S>
+		CollisionResult raw_collides(const TBVH<S>& c) const
+        {
+            return bvh().raw_collides(c.bvh());
+        }
 
 		template<typename Other>
-		ContactResult raw_contacts(const Other& c) const { return bvh().raw_contacts(c); }
+		ContactResult raw_contacts(const Other& c) const
+        {
+            return bvh().raw_contacts(c);
+        }
+		
+        template<typename S>
+        ContactResult raw_contacts(const BVH<S>& c) const
+        {
+            return bvh().raw_contacts(c);
+        }
+		
 		template<typename S>
-		ContactResult raw_contacts(const BVH<S>& c) const { return bvh().raw_contacts(c); }
-		template<typename S>
-		ContactResult raw_contacts(const TBVH<S>& c) const { return bvh().raw_contacts(c.bvh()); }
+		ContactResult raw_contacts(const TBVH<S>& c) const
+        {
+            return bvh().raw_contacts(c.bvh());
+        }
+
+    private:
+        const BVH<Shape>& bvh() const
+        {
+            if (local_dirty_ || transformer_.flush())
+            {
+                local_dirty_ = false;
+                const glm::mat3 m = transformer_.global();
+                std::vector<Element>& global_elements = bvh_.set_elements();
+                global_elements.resize(local_elements_.size());
+                for (size_t i = 0; i < local_elements_.size(); ++i)
+                    global_elements[i] = local_elements_[i].transformed(m);
+            }
+
+            return bvh_;
+        }
 	};
 }
