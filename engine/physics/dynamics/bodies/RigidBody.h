@@ -6,8 +6,6 @@
 
 #include "physics/dynamics/components/DynamicsComponent.h"
 
-#include <imp/auto_tracker.hpp>
-
 namespace oly::physics
 {
 	namespace internal
@@ -19,6 +17,8 @@ namespace oly::physics
         : public col2d::CollisionController
         , public imp::auto_trackable<RigidBody>
 	{
+        friend class internal::RigidBodyOnTick;
+
 	protected:
 		std::vector<col2d::Collider> colliders_;
 		Transformer2DRef transformer_ = REF_INIT;
@@ -35,55 +35,70 @@ namespace oly::physics
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
+    public:
+        virtual State state() const = 0;
+        virtual bool is_colliding() const = 0;
+
+    protected:
+        virtual void physics_pre_tick() = 0;
+        virtual void physics_post_tick() = 0;
+
+        virtual void bind(const col2d::Collider& collider) const = 0;
+        virtual void unbind(const col2d::Collider& collider) const = 0;
+
+        virtual const DynamicsComponent& get_dynamics() const = 0;
+
+    public:
         Transformer2DExposure<> get_transformer() const;
 		Transformer2DExposure<ex::Full> set_transformer();
         void assign_transformer(const Transformer2DRef& ref);
+
         const Transform2D& get_local() const;
         Transform2D& set_local();
 
 		col2d::Collider& add_collider(col2d::Collider&& collider);
 		
         template<col2d::internal::CObj_check CObj>
-		col2d::Collider& add_collider(CObj&& obj) { return add_collider(col2d::Collider(std::forward<CObj>(obj))); }
+		col2d::Collider& add_collider(CObj&& obj)
+        {
+            return add_collider(col2d::Collider(std::forward<CObj>(obj)));
+        }
 		
         template<col2d::internal::Elem_check Shape>
-		col2d::Collider& add_collider(Shape&& obj) { return add_collider(col2d::TPrimitive(std::forward<Shape>(obj))); }
+		col2d::Collider& add_collider(Shape&& obj)
+        {
+            return add_collider(col2d::TPrimitive(std::forward<Shape>(obj)));
+        }
 
-		col2d::Collider& add_collider(const col2d::Capsule& capsule) { return add_collider(capsule.tcompound()); }
-		col2d::Collider& add_collider(const col2d::PolygonCollision& polygon) { return add_collider(polygon.as_convex_tbvh<col2d::OBB>()); }
+        col2d::Collider& add_collider(const col2d::Capsule& capsule);
+        col2d::Collider& add_collider(const col2d::PolygonCollision& polygon);
 
 		void erase_collider(size_t i);
+        void clear_colliders();
+
+        const col2d::Collider& collider(size_t i = 0) const;
+        col2d::Collider& collider(size_t i = 0);
+        size_t collider_count() const;
+        size_t collider_index(const col2d::Collider& col) const;
+
+        debug::DebugOverlay create_debug_overlay(
+            debug::DebugOverlayLayer& layer,
+            size_t i,
+            glm::vec4 color,
+            debug::DebugOverlay::PaintOptions paint_options = {}) const;
+
+        void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
+
+    protected:
+        void bind_all() const;
+        void unbind_all() const;
+
+        static const RigidBody* rigid_body(const col2d::Collider& collider);
+        static const DynamicsComponent& dynamics_of(const RigidBody& other);
 
 	private:
 		void remove_collider(const col2d::Collider& collider);
-
-	public:
-		void clear_colliders();
-		const col2d::Collider& collider(size_t i = 0) const;
-		col2d::Collider& collider(size_t i = 0);
-		size_t num_colliders() const { return colliders_.size(); }
-		size_t collider_index(const col2d::Collider& col) const;
-
-		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const;
-		void modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const;
-
-	private:
-		friend class internal::RigidBodyOnTick;
-		virtual void physics_pre_tick() = 0;
-		virtual void physics_post_tick() = 0;
-
-	public:
-		virtual State state() const = 0;
-		virtual bool is_colliding() const = 0;
-
-	protected:
-		virtual void bind(const col2d::Collider& collider) const = 0;
-		virtual void unbind(const col2d::Collider& collider) const = 0;
-		void bind_all() const;
-		void unbind_all() const;
-
-		virtual const DynamicsComponent& get_dynamics() const = 0;
-		static const RigidBody* rigid_body(const col2d::Collider& collider);
-		static const DynamicsComponent& dynamics_of(const RigidBody& other) { return other.get_dynamics(); }
 	};
+
+    using RigidBodyRef = SmartReference<RigidBody>;
 }

@@ -72,8 +72,10 @@ namespace oly::physics
 		if (this != &o)
 		{
 			clear_colliders();
+
 			colliders_ = o.colliders_;
 			transformer_ = o.transformer_;
+
 			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
 				it->rigid_body = this;
@@ -81,6 +83,7 @@ namespace oly::physics
 				bind(*it);
 			}
 		}
+
 		return *this;
 	}
 	
@@ -89,8 +92,10 @@ namespace oly::physics
 		if (this != &o)
 		{
 			clear_colliders();
-			colliders_ = std::move(o.colliders_);
+			
+            colliders_ = std::move(o.colliders_);
 			transformer_ = std::move(o.transformer_);
+
 			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
 				it->rigid_body = this;
@@ -99,6 +104,7 @@ namespace oly::physics
 				o.unbind(*it);
 			}
 		}
+
 		return *this;
 	}
 
@@ -131,19 +137,97 @@ namespace oly::physics
 	{
 		if (collider.rigid_body)
 			collider.rigid_body->remove_collider(collider);
+
 		col2d::Collider& c = colliders_.emplace_back(std::move(collider));
 		c.rigid_body = this;
 		c.set_transformer().attach_parent(transformer_.base());
 		c.handles.attach();
 		bind(c);
-		return c;
+        return c;
 	}
 
-	void RigidBody::erase_collider(size_t i)
-	{
-		unbind(colliders_[i]);
-		colliders_.erase(colliders_.begin() + i);
-	}
+    col2d::Collider& RigidBody::add_collider(const col2d::Capsule& capsule)
+    {
+        return add_collider(capsule.tcompound());
+    }
+
+    col2d::Collider& RigidBody::add_collider(const col2d::PolygonCollision& polygon)
+    {
+        return add_collider(polygon.as_convex_tbvh<col2d::OBB>());
+    }
+
+    void RigidBody::erase_collider(size_t i)
+    {
+        unbind(colliders_[i]);
+        colliders_.erase(colliders_.begin() + i);
+    }
+
+    void RigidBody::clear_colliders()
+    {
+        for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+            unbind(*it);
+        colliders_.clear();
+    }
+
+    const col2d::Collider& RigidBody::collider(size_t i) const
+    {
+        return colliders_[i];
+    }
+
+    col2d::Collider& RigidBody::collider(size_t i)
+    {
+        return colliders_[i];
+    }
+
+    size_t RigidBody::collider_count() const
+    {
+        return colliders_.size();
+    }
+
+    size_t RigidBody::collider_index(const col2d::Collider& col) const
+    {
+        auto it = std::find_if(colliders_.begin(), colliders_.end(), [&col](const col2d::Collider& c) { return &c == &col; });
+        if (it != colliders_.end())
+            return it - colliders_.begin();
+        else
+            throw Error(ErrorCode::DoesNotExist);
+    }
+
+    debug::DebugOverlay RigidBody::create_debug_overlay(
+        debug::DebugOverlayLayer& layer,
+        size_t i,
+        glm::vec4 color,
+        debug::DebugOverlay::PaintOptions paint_options) const
+    {
+        return colliders_[i].create_debug_overlay(layer, color, paint_options);
+    }
+
+    void RigidBody::modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const
+    {
+        colliders_[i].modify_debug_overlay(overlay);
+    }
+
+    void RigidBody::bind_all() const
+    {
+        for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+            bind(*it);
+    }
+
+    void RigidBody::unbind_all() const
+    {
+        for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
+            unbind(*it);
+    }
+
+    const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
+    {
+        return collider.rigid_body;
+    }
+
+    const DynamicsComponent& RigidBody::dynamics_of(const RigidBody& other)
+    {
+        return other.get_dynamics();
+    }
 
 	void RigidBody::remove_collider(const col2d::Collider& collider)
 	{
@@ -156,58 +240,5 @@ namespace oly::physics
 				return;
 			}
 		}
-	}
-
-	void RigidBody::clear_colliders()
-	{
-		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
-			unbind(*it);
-		colliders_.clear();
-	}
-
-	const col2d::Collider& RigidBody::collider(size_t i) const
-	{
-		return colliders_[i];
-	}
-
-	col2d::Collider& RigidBody::collider(size_t i)
-	{
-		return colliders_[i];
-	}
-
-	size_t RigidBody::collider_index(const col2d::Collider& col) const
-	{
-		auto it = std::find_if(colliders_.begin(), colliders_.end(), [&col](const col2d::Collider& c) { return &c == &col; });
-		if (it != colliders_.end())
-			return it - colliders_.begin();
-		else
-			throw Error(ErrorCode::DoesNotExist);
-	}
-
-	debug::DebugOverlay RigidBody::create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options) const
-	{
-		return colliders_[i].create_debug_overlay(layer, color, paint_options);
-	}
-
-	void RigidBody::modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const
-	{
-		colliders_[i].modify_debug_overlay(overlay);
-	}
-
-	void RigidBody::bind_all() const
-	{
-		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
-			bind(*it);
-	}
-
-	void RigidBody::unbind_all() const
-	{
-		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
-			unbind(*it);
-	}
-
-	const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
-	{
-		return collider.rigid_body;
 	}
 }

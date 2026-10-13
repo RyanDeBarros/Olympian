@@ -54,8 +54,7 @@ namespace oly::physics
 		transformer_->set_global(Transform2D{
             .position = dynamics_.get_state().position,
             .rotation = dynamics_.get_state().rotation,
-            .scale = transformer_->get_local().scale
-        }.matrix());
+            .scale = transformer_->get_local().scale }.matrix());
 	}
 
 	void LinearBody::bind(const col2d::Collider& collider) const
