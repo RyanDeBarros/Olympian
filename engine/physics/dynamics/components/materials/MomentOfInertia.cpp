@@ -13,6 +13,7 @@ namespace oly::physics
 			glm::vec2 next = p[(i + 1) % p.size()] - offset;
 			sum += math::cross(curr, next) * (math::mag_sqrd(curr) + glm::dot(curr, next) + math::mag_sqrd(next));
 		}
+
 		return sum * mass / (6.0f * math::signed_area(p));
 	}
 
@@ -56,6 +57,6 @@ namespace oly::physics
 			}
 			else
 				return moment_of_inertia(e->points(), mass);
-			});
+		});
 	}
 }

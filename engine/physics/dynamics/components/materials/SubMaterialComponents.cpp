@@ -16,6 +16,7 @@ namespace oly::physics
 		const float multiple = glm::two_pi<float>() / angles;
 		for (size_t i = 0; i < angles; ++i)
 			snaps.insert(i * multiple + angle_offset);
+
 		angle_threshold = glm::pi<float>() / angles;
 	}
 }
