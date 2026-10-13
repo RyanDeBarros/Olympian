@@ -1,12 +1,14 @@
 #pragma once
 
-#include "physics/collision/methods/CollisionInfo.h"
-#include "physics/collision/elements/ConvexHull.h"
-#include "physics/collision/elements/Circle.h"
-#include "physics/collision/elements/AABB.h"
-#include "physics/collision/elements/OBB.h"
-#include "physics/collision/elements/KDOP.h"
 #include "physics/collision/Tolerance.h"
+
+#include "physics/collision/elements/AABB.h"
+#include "physics/collision/elements/Circle.h"
+#include "physics/collision/elements/ConvexHull.h"
+#include "physics/collision/elements/KDOP.h"
+#include "physics/collision/elements/OBB.h"
+
+#include "physics/collision/methods/CollisionInfo.h"
 
 #include <imp/dependent_false.hpp>
 
@@ -72,49 +74,7 @@ namespace oly::col2d::sat
 
 	namespace internal
 	{
-		static float sat(float min1, float max1, float min2, float max2, UnitVector2D& axis)
-		{
-			if (min1 > max2)
-				return max2 - min1;
-			if (min2 > max1)
-			{
-				axis = -axis;
-				return max1 - min2;
-			}
-			if (min1 < min2)
-			{
-				if (max1 < max2)
-				{
-					axis = -axis;
-					return max1 - min2;
-				}
-				else
-				{
-					if (min1 + max1 < min2 + max2)
-					{
-						axis = -axis;
-						return max1 - min2;
-					}
-					else
-						return max2 - min1;
-				}
-			}
-			else
-			{
-				if (max1 > max2)
-					return max2 - min1;
-				else
-				{
-					if (min1 + max1 < min2 + max2)
-					{
-						axis = -axis;
-						return max1 - min2;
-					}
-					else
-						return max2 - min1;
-				}
-			}
-		}
+        extern float sat(float min1, float max1, float min2, float max2, UnitVector2D& axis);
 
 		template<typename Shape1, typename Shape2>
 		static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)

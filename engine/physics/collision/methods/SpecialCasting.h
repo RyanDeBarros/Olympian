@@ -1,8 +1,10 @@
 #pragma once
 
-#include "physics/collision/methods/Collide.h"
-#include "physics/collision/objects/Capsule.h"
 #include "physics/collision/Tolerance.h"
+
+#include "physics/collision/methods/Collide.h"
+
+#include "physics/collision/objects/Capsule.h"
 
 namespace oly::col2d
 {
@@ -11,11 +13,7 @@ namespace oly::col2d
 		Ray ray;
 		float width, depth;
 
-		OBB finite_obb(float infinite_clip = 0.0f) const
-		{
-			float clip = ray.clip == 0.0f ? infinite_clip : ray.clip;
-			return OBB{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .width = depth + clip, .height = width, .rotation = ray.direction.rotation() };
-		}
+        OBB finite_obb(float infinite_clip = 0.0f) const;
 	};
 
 	struct CircleCast
@@ -23,12 +21,7 @@ namespace oly::col2d
 		Ray ray;
 		float radius;
 
-		Capsule finite_capsule(float infinite_clip = 0.0f) const
-		{
-			float clip = ray.clip == 0.0f ? infinite_clip : ray.clip;
-			return Capsule{ .center = ray.origin + 0.5f * clip * (glm::vec2)ray.direction, .obb_width = 2.0f * radius,
-				.obb_height = clip, .rotation = (-ray.direction.get_quarter_turn()).rotation()};
-		}
+        Capsule finite_capsule(float infinite_clip = 0.0f) const;
 	};
 
 	template<typename Shape>

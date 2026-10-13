@@ -2,19 +2,29 @@
 
 namespace oly::col2d
 {
+    CompoundPerfParameters CompoundPerfParameters::greedy(const CompoundPerfParameters p1, const CompoundPerfParameters p2)
+    {
+        CompoundPerfParameters perf;
+        perf.set_coarse_sweep_divisions(std::max(p1.get_coarse_sweep_divisions(), p2.get_coarse_sweep_divisions()));
+        perf.refinement_error_threshold = std::min(p1.refinement_error_threshold, p2.refinement_error_threshold);
+        return perf;
+    }
+
 	void CompoundPerfParameters::set_coarse_sweep_divisions(size_t divisions)
 	{
-		coarse_sweep_divisions = glm::clamp(divisions, MIN_DIVISIONS, MAX_DIVISIONS);
-		two_pi_over_divisions = glm::two_pi<float>() / coarse_sweep_divisions;
+		coarse_sweep_divisions_ = glm::clamp(divisions, 16ULL, 32ULL);
+		two_pi_over_divisions_ = glm::two_pi<float>() / coarse_sweep_divisions_;
 	}
-	
-	CompoundPerfParameters CompoundPerfParameters::greedy(const CompoundPerfParameters p1, const CompoundPerfParameters p2)
-	{
-		CompoundPerfParameters perf;
-		perf.set_coarse_sweep_divisions(std::max(p1.get_coarse_sweep_divisions(), p2.get_coarse_sweep_divisions()));
-		perf.refinement_error_threshold = std::min(p1.refinement_error_threshold, p2.refinement_error_threshold);
-		return perf;
-	}
+
+    size_t CompoundPerfParameters::get_coarse_sweep_divisions() const
+    {
+        return coarse_sweep_divisions_;
+    }
+
+    float CompoundPerfParameters::get_two_pi_over_divisions() const
+    {
+        return two_pi_over_divisions_;
+    }
 
 	namespace perf
 	{

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/base/Approximate.h"
+#include "core/base/Constants.h"
 #include "core/base/Errors.h"
 
 #include "core/math/Geometry.h"
@@ -8,13 +9,14 @@
 #include "core/util/Logger.h"
 
 #include "physics/collision/Tolerance.h"
+
 #include "physics/collision/methods/CollisionInfo.h"
 
 #include <optional>
 
 namespace oly::col2d::gjk
 {
-	inline static constexpr size_t VERTICES_THRESHOLD = 16;
+	inline static constexpr size_t kVerticesThreshold = 16;
 
 	template<typename Shape1, typename Shape2>
 	inline glm::vec2 support(const Shape1& c1, const Shape2& c2, const UnitVector2D& axis)
@@ -22,51 +24,7 @@ namespace oly::col2d::gjk
 		return c1.deepest_manifold(axis).pt() - c2.deepest_manifold(-axis).pt();
 	}
 
-	inline bool handle_simplex(std::vector<glm::vec2>& simplex, UnitVector2D& axis)
-	{
-		if (simplex.size() == 2)
-		{
-			// line segment case
-			glm::vec2 a = simplex[1];
-			glm::vec2 b = simplex[0];
-
-			// dir is orthogonal to (b - a) pointing towards origin
-			glm::vec2 dir = math::triple_cross(b - a, -a, b - a);
-			if (near_zero(dir))
-				axis = UnitVector2D(b - a).get_quarter_turn();
-			else
-				axis = dir;
-		}
-		else if (simplex.size() == 3)
-		{
-			// triangle case
-			glm::vec2 a = simplex[2];
-			glm::vec2 b = simplex[1];
-			glm::vec2 c = simplex[0];
-
-			glm::vec2 ab_ortho = math::triple_cross(c - a, b - a, b - a);
-			if (glm::dot(ab_ortho, -a) > 0.0f)
-			{
-				// remove c
-				simplex.erase(simplex.begin());
-				axis = ab_ortho;
-				return false;
-			}
-
-			glm::vec2 ac_ortho = math::triple_cross(b - a, c - a, c - a);
-			if (glm::dot(ac_ortho, -a) > 0.0f)
-			{
-				// remove b
-				simplex.erase(simplex.begin() + 1);
-				axis = ac_ortho;
-				return false;
-			}
-
-			// origin inside triangle
-			return true;
-		}
-		return false;
-	}
+    extern bool handle_simplex(std::vector<glm::vec2>& simplex, UnitVector2D& axis);
 
 	template<typename Shape1, typename Shape2>
 	inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2, size_t max_iterations = 20)

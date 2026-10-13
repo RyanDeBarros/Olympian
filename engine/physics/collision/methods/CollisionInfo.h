@@ -10,58 +10,22 @@ namespace oly::col2d
 	struct ContactManifold
 	{
 		glm::vec2 p1 = {}, p2 = {};
-		bool Single = true;
-		glm::vec2 pt() const { return Single ? p1 : 0.5f * (p1 + p2); }
+		bool single = true;
 
-		static void clamp(UnitVector2D axis, const ContactManifold c1, const ContactManifold c2, glm::vec2& p1, glm::vec2& p2)
-		{
-			UnitVector2D tangent = axis.get_quarter_turn();
-
-			float v11 = tangent.dot(c1.p1);
-			float v12 = c1.Single ? v11 : tangent.dot(c1.p2);
-			if (v11 > v12)
-				std::swap(v11, v12);
-			float v21 = tangent.dot(c2.p1);
-			float v22 = c2.Single ? v21 : tangent.dot(c2.p2);
-			if (v21 > v22)
-				std::swap(v21, v22);
-
-			float w1, w2;
-			if (v12 < v21)
-			{
-				w1 = v12;
-				w2 = v21;
-			}
-			else if (v11 > v22)
-			{
-				w1 = v11;
-				w2 = v22;
-			}
-			else
-			{
-				v11 = glm::clamp(v11, v21, v22);
-				v12 = glm::clamp(v12, v21, v22);
-				w1 = 0.5f * (v11 + v12);
-				w2 = w1;
-			}
-
-			glm::vec2 along_axis = axis.dot(c1.p2) * (glm::vec2)axis;
-			p1 = along_axis + w1 * (glm::vec2)tangent;
-			p2 = along_axis + w2 * (glm::vec2)tangent;
-		}
+        static void clamp(UnitVector2D axis, const ContactManifold c1, const ContactManifold c2, glm::vec2& p1, glm::vec2& p2);
+        glm::vec2 pt() const;
 	};
 
 	struct OverlapResult
 	{
 		bool overlap = false;
 
-		OverlapResult(bool overlap = bool()) : overlap(overlap) {}
+        OverlapResult(bool overlap = false);
 
-		operator bool () const { return overlap; }
+		operator bool () const;
+        bool operator!() const;
 
-		bool operator!() const { return !overlap; }
-
-		OverlapResult& invert() { return *this; }
+		OverlapResult& invert();
 	};
 
 	struct CollisionResult
@@ -71,8 +35,8 @@ namespace oly::col2d
 		UnitVector2D unit_impulse;
 
 		// minimum translation vector
-		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
-		CollisionResult& invert() { unit_impulse = -unit_impulse; return *this; }
+        glm::vec2 mtv() const;
+        CollisionResult& invert();
 	};
 
 	struct ContactResult
@@ -86,7 +50,7 @@ namespace oly::col2d
 		bool overlap = false;
 		Contact active_contact, passive_contact;
 
-		ContactResult& invert() { std::swap(active_contact, passive_contact); return *this; }
+        ContactResult& invert();
 	};
 
 	template<typename C1, typename C2>
@@ -129,7 +93,9 @@ namespace oly::col2d
 			NoHit,
 			EmbeddedOrigin,
 			TrueHit
-		} hit;
+		};
+
+        Hit hit;
 		glm::vec2 contact;
 		UnitVector2D normal;
 	};

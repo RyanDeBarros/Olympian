@@ -14,8 +14,15 @@ namespace oly::col2d
 		float forward_depth = 0.0f;
 		float backward_depth = 0.0f;
 
-		glm::vec2 forward_mtv() const { return forward_depth * (glm::vec2)unit_impulse; }
-		glm::vec2 backward_mtv() const { return backward_depth * (glm::vec2)-unit_impulse; }
+		glm::vec2 forward_mtv() const
+        {
+            return forward_depth * (glm::vec2)unit_impulse;
+        }
+
+		glm::vec2 backward_mtv() const
+        {
+            return backward_depth * (glm::vec2)-unit_impulse;
+        }
 	};
 
 	static MTVPosNeg generate_mtv(const Element& active_element, const Element& static_element)

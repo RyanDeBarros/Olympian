@@ -1,17 +1,17 @@
 #pragma once
 
-#include "physics/collision/methods/CollisionInfo.h"
-#include "physics/collision/methods/SAT.h"
-#include "physics/collision/methods/GJK.h"
-#include "physics/collision/methods/CircleMethods.h"
-
-#include "physics/collision/elements/KDOP.h"
-#include "physics/collision/elements/Circle.h"
-#include "physics/collision/elements/AABB.h"
-#include "physics/collision/elements/OBB.h"
-#include "physics/collision/elements/ConvexHull.h"
-
 #include "physics/collision/Tolerance.h"
+
+#include "physics/collision/elements/AABB.h"
+#include "physics/collision/elements/Circle.h"
+#include "physics/collision/elements/ConvexHull.h"
+#include "physics/collision/elements/KDOP.h"
+#include "physics/collision/elements/OBB.h"
+
+#include "physics/collision/methods/CircleMethods.h"
+#include "physics/collision/methods/CollisionInfo.h"
+#include "physics/collision/methods/GJK.h"
+#include "physics/collision/methods/SAT.h"
 
 namespace oly::col2d
 {
@@ -68,7 +68,7 @@ namespace oly::col2d
 	template<size_t K1, size_t K2>
 	inline OverlapResult overlaps(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -86,7 +86,7 @@ namespace oly::col2d
 	template<size_t K1, size_t K2>
 	inline CollisionResult collides(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -104,7 +104,7 @@ namespace oly::col2d
 	template<size_t K1, size_t K2>
 	inline ContactResult contacts(const KDOP<K1>& c1, const KDOP<K2>& c2)
 	{
-		if (2 * (K1 + K2) >= gjk::VERTICES_THRESHOLD)
+		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -129,7 +129,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline OverlapResult overlaps(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -147,7 +147,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline OverlapResult overlaps(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -165,7 +165,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline CollisionResult collides(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -183,7 +183,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline CollisionResult collides(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -201,7 +201,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline ContactResult contacts(const KDOP<K>& c1, const Circle& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -219,7 +219,7 @@ namespace oly::col2d
 	template<size_t K>
 	inline ContactResult contacts(const Circle& c1, const KDOP<K>& c2)
 	{
-		if (2 * K + 1 >= gjk::VERTICES_THRESHOLD)
+		if (2 * K + 1 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -243,7 +243,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline OverlapResult overlaps(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\
@@ -260,7 +260,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline OverlapResult overlaps(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\
@@ -277,7 +277,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline CollisionResult collides(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\
@@ -294,7 +294,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline CollisionResult collides(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\
@@ -311,7 +311,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline ContactResult contacts(const KDOP<K>& c1, const Shape& c2)\
 	{\
-		if (2 * K + shape_vertices2 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices2 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\
@@ -328,7 +328,7 @@ namespace oly::col2d
 	template<size_t K>\
 	inline ContactResult contacts(const Shape& c1, const KDOP<K>& c2)\
 	{\
-		if (2 * K + shape_vertices1 >= gjk::VERTICES_THRESHOLD)\
+		if (2 * K + shape_vertices1 >= gjk::kVerticesThreshold)\
 		{\
 			try\
 			{\

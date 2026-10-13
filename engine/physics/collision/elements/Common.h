@@ -208,21 +208,21 @@ namespace oly::col2d::internal
 			if (approx(proj, max_proj))
 			{
 				deepest.p2 = point;
-				deepest.Single = false;
+				deepest.single = false;
 				++num_deepest_points;
 			}
 			else if (proj > max_proj)
 			{
 				max_proj = proj;
 				deepest.p1 = point;
-				deepest.Single = true;
+				deepest.single = true;
 				num_deepest_points = 1;
 				forward = true;
 				break;
 			}
 			else
 			{
-				if (!deepest.Single)
+				if (!deepest.single)
 					std::swap(deepest.p1, deepest.p2);
 				forward = false;
 				break;
@@ -244,14 +244,14 @@ namespace oly::col2d::internal
 				if (approx(proj, max_proj))
 				{
 					deepest.p2 = point;
-					deepest.Single = false;
+					deepest.single = false;
 					++num_deepest_points;
 				}
 				else if (proj > max_proj)
 				{
 					max_proj = proj;
 					deepest.p1 = point;
-					deepest.Single = true;
+					deepest.single = true;
 					num_deepest_points = 1;
 				}
 				else
@@ -270,14 +270,14 @@ namespace oly::col2d::internal
 				if (approx(proj, max_proj))
 				{
 					deepest.p2 = point;
-					deepest.Single = false;
+					deepest.single = false;
 					++num_deepest_points;
 				}
 				else if (proj > max_proj)
 				{
 					max_proj = proj;
 					deepest.p1 = point;
-					deepest.Single = true;
+					deepest.single = true;
 					num_deepest_points = 1;
 				}
 				else

@@ -609,7 +609,7 @@ namespace oly::col2d
 
 	OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -626,7 +626,7 @@ namespace oly::col2d
 
 	CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -643,7 +643,7 @@ namespace oly::col2d
 
 	ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2)
 	{
-		if (c1.points().size() + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -671,6 +671,11 @@ namespace oly::col2d
 		else
 			return internal::circle_overlaps_polygon(c1, c2.points());
 	}
+
+    OverlapResult overlaps(const AABB& c1, const Circle& c2)
+    {
+        return overlaps(c2, c1).invert();
+    }
 	
 	CollisionResult collides(const Circle& c1, const AABB& c2)
 	{
@@ -721,6 +726,11 @@ namespace oly::col2d
 			return internal::circle_collides_polygon(c1, c2.points());
 	}
 	
+    CollisionResult collides(const AABB& c1, const Circle& c2)
+    {
+        return collides(c2, c1).invert();
+    }
+
 	ContactResult contacts(const Circle& c1, const AABB& c2)
 	{
 		if (internal::CircleGlobalAccess::has_no_global(c1))
@@ -780,6 +790,11 @@ namespace oly::col2d
 			return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
+    ContactResult contacts(const AABB& c1, const Circle& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
+
 	OverlapResult overlaps(const Circle& c1, const OBB& c2)
 	{
 		if (internal::CircleGlobalAccess::has_no_global(c1))
@@ -796,6 +811,11 @@ namespace oly::col2d
 		else
 			return internal::circle_overlaps_polygon(c1, c2.points());
 	}
+
+    OverlapResult overlaps(const OBB& c1, const Circle& c2)
+    {
+        return overlaps(c2, c1);
+    }
 
 	CollisionResult collides(const Circle& c1, const OBB& c2)
 	{
@@ -855,6 +875,11 @@ namespace oly::col2d
 		else
 			return internal::circle_collides_polygon(c1, c2.points());
 	}
+
+    CollisionResult collides(const OBB& c1, const Circle& c2)
+    {
+        return collides(c2, c1).invert();
+    }
 
 	ContactResult contacts(const Circle& c1, const OBB& c2)
 	{
@@ -925,24 +950,44 @@ namespace oly::col2d
 			return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
+    ContactResult contacts(const OBB& c1, const Circle& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
+
 	OverlapResult overlaps(const AABB& c1, const OBB& c2)
 	{
 		return sat::overlaps(c1, c2);
 	}
+
+    OverlapResult overlaps(const OBB& c1, const AABB& c2)
+    {
+        return overlaps(c2, c1).invert();
+    }
 
 	CollisionResult collides(const AABB& c1, const OBB& c2)
 	{
 		return sat::collides(c1, c2);
 	}
 
+    CollisionResult collides(const OBB& c1, const AABB& c2)
+    {
+        return collides(c2, c1).invert();
+    }
+
 	ContactResult contacts(const AABB& c1, const OBB& c2)
 	{
 		return sat::contacts(c1, c2);
 	}
 
+    ContactResult contacts(const OBB& c1, const AABB& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
+
 	OverlapResult overlaps(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -957,9 +1002,14 @@ namespace oly::col2d
 		return internal::circle_overlaps_polygon(c1, c2.points());
 	}
 
+    OverlapResult overlaps(const ConvexHull& c1, const Circle& c2)
+    {
+        return overlaps(c2, c1).invert();
+    }
+
 	CollisionResult collides(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -974,9 +1024,14 @@ namespace oly::col2d
 		return internal::circle_collides_polygon(c1, c2.points());
 	}
 
+    CollisionResult collides(const ConvexHull& c1, const Circle& c2)
+    {
+        return collides(c2, c1).invert();
+    }
+
 	ContactResult contacts(const Circle& c1, const ConvexHull& c2)
 	{
-		if (1 + c2.points().size() >= gjk::VERTICES_THRESHOLD)
+		if (1 + c2.points().size() >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -991,9 +1046,14 @@ namespace oly::col2d
 		return internal::circle_contacts_polygon(c1, c2, c2.points());
 	}
 
+    ContactResult contacts(const ConvexHull& c1, const Circle& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
+
 	OverlapResult overlaps(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1007,10 +1067,15 @@ namespace oly::col2d
 		}
 		return sat::overlaps(c1, c2);
 	}
+
+    OverlapResult overlaps(const AABB& c1, const ConvexHull& c2)
+    {
+        return overlaps(c2, c1).invert();
+    }
 
 	CollisionResult collides(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1025,9 +1090,14 @@ namespace oly::col2d
 		return sat::collides(c1, c2);
 	}
 
+    CollisionResult collides(const AABB& c1, const ConvexHull& c2)
+    {
+        return collides(c2, c1).invert();
+    }
+
 	ContactResult contacts(const ConvexHull& c1, const AABB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1042,9 +1112,14 @@ namespace oly::col2d
 		return sat::contacts(c1, c2);
 	}
 
+    ContactResult contacts(const AABB& c1, const ConvexHull& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
+
 	OverlapResult overlaps(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1058,10 +1133,15 @@ namespace oly::col2d
 		}
 		return sat::overlaps(c1, c2);
 	}
-	
+
+    OverlapResult overlaps(const OBB& c1, const ConvexHull& c2)
+    {
+        return overlaps(c2, c1).invert();
+    }
+
 	CollisionResult collides(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1076,9 +1156,14 @@ namespace oly::col2d
 		return sat::collides(c1, c2);
 	}
 
+    CollisionResult collides(const OBB& c1, const ConvexHull& c2)
+    {
+        return collides(c2, c1).invert();
+    }
+
 	ContactResult contacts(const ConvexHull& c1, const OBB& c2)
 	{
-		if (c1.points().size() + 4 >= gjk::VERTICES_THRESHOLD)
+		if (c1.points().size() + 4 >= gjk::kVerticesThreshold)
 		{
 			try
 			{
@@ -1092,6 +1177,11 @@ namespace oly::col2d
 		}
 		return sat::contacts(c1, c2);
 	}
+
+    ContactResult contacts(const OBB& c1, const ConvexHull& c2)
+    {
+        return contacts(c2, c1).invert();
+    }
 
 	OverlapResult point_hits(const Element& c, glm::vec2 test)
 	{

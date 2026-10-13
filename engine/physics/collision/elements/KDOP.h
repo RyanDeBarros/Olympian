@@ -226,9 +226,9 @@ namespace oly::col2d
 			ContactManifold local_manifold = local_deepest_manifold(get_local_axis(axis));
 			ContactManifold global_manifold;
 			global_manifold.p1 = global_ * local_manifold.p1 + global_offset_;
-			if (!local_manifold.Single)
+			if (!local_manifold.single)
 			{
-				global_manifold.Single = false;
+				global_manifold.single = false;
 				global_manifold.p2 = global_ * local_manifold.p2 + global_offset_;
 			}
 			return global_manifold;
@@ -308,7 +308,7 @@ namespace oly::col2d
 			if (near_multiple(i, 1.0f))
 			{
 				ContactManifold manifold;
-				manifold.Single = false;
+				manifold.single = false;
 				int j = unsigned_mod(roundi(i), 2 * K);
 				manifold.p1 = corner_intersection(j, unsigned_mod(j + 1, 2 * K));
 				manifold.p2 = corner_intersection(unsigned_mod(j - 1, 2 * K), j);
