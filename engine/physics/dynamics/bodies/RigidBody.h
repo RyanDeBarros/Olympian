@@ -1,7 +1,9 @@
 #pragma once
 
-#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 #include "physics/collision/objects/Polygon.h"
+
+#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
+
 #include "physics/dynamics/components/DynamicsComponent.h"
 
 #include <imp/auto_tracker.hpp>
@@ -13,11 +15,13 @@ namespace oly::physics
 		struct RigidBodyOnTick;
 	}
 
-	class RigidBody : public col2d::CollisionController, public imp::auto_trackable<RigidBody>
+	class RigidBody
+        : public col2d::CollisionController
+        , public imp::auto_trackable<RigidBody>
 	{
 	protected:
-		std::vector<col2d::Collider> colliders;
-		Transformer2DRef transformer = REF_INIT;
+		std::vector<col2d::Collider> colliders_;
+		Transformer2DRef transformer_ = REF_INIT;
 
 	public:
         bool collision_enabled = true;
@@ -27,11 +31,12 @@ namespace oly::physics
 		RigidBody(const RigidBody&);
 		RigidBody(RigidBody&&) noexcept;
 		virtual ~RigidBody() = default;
+
 		RigidBody& operator=(const RigidBody&);
 		RigidBody& operator=(RigidBody&&) noexcept;
 
-        Transformer2DConstExposure get_transformer() const;
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer();
+        Transformer2DExposure<> get_transformer() const;
+		Transformer2DExposure<ex::Full> set_transformer();
         void assign_transformer(const Transformer2DRef& ref);
         const Transform2D& get_local() const;
         Transform2D& set_local();
@@ -56,7 +61,7 @@ namespace oly::physics
 		void clear_colliders();
 		const col2d::Collider& collider(size_t i = 0) const;
 		col2d::Collider& collider(size_t i = 0);
-		size_t num_colliders() const { return colliders.size(); }
+		size_t num_colliders() const { return colliders_.size(); }
 		size_t collider_index(const col2d::Collider& col) const;
 
 		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const;

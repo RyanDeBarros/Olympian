@@ -163,12 +163,8 @@ namespace oly::rendering
 		Paragraph& operator=(const Paragraph&);
 		Paragraph& operator=(Paragraph&&) noexcept;
 
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{
-			.local = exposure::local::Full,
-			.chain = exposure::chain::AttachOnly,
-			.modifier = exposure::modifier::Full
-		}> set_transformer() { return transformer; }
+		Transformer2DExposure<> get_transformer() const { return transformer; }
+		Transformer2DExposure<ex::AttachOnly> set_transformer() { return transformer; }
 
 	private:
 		void init(std::vector<TextElement>&& elements);

@@ -45,16 +45,16 @@ namespace oly::physics
 
 	void LinearBody::physics_pre_tick()
 	{
-		dynamics_.pre_tick(transformer->global());
+		dynamics_.pre_tick(transformer_->global());
 	}
 
 	void LinearBody::physics_post_tick()
 	{
 		dynamics_.post_tick();
-		transformer->set_global(Transform2D{
+		transformer_->set_global(Transform2D{
             .position = dynamics_.get_state().position,
             .rotation = dynamics_.get_state().rotation,
-            .scale = transformer->get_local().scale
+            .scale = transformer_->get_local().scale
         }.matrix());
 	}
 

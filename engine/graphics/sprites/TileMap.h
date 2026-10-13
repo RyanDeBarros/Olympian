@@ -60,9 +60,8 @@ namespace oly::rendering
 		const Transform2D& get_local() const { return transformer.get_local(); }
 		Transform2D& set_local() { return transformer.set_local(); }
 
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::AttachOnly, .modifier = exposure::modifier::Full }>
-			set_transformer() { return transformer; }
+		Transformer2DExposure<> get_transformer() const { return transformer; }
+		Transformer2DExposure<ex::AttachOnly> set_transformer() { return transformer; }
 
 		void draw() const;
 

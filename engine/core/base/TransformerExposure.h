@@ -4,83 +4,117 @@
 
 namespace oly
 {
-	struct Transformer2DConstExposure
-	{
-	private:
-		const Transformer2D& transformer;
+    namespace ex
+    {
+        namespace e
+        {
+            constexpr bool nonzero(auto param) { return static_cast<bool>(param) != 0; }
 
-	public:
-		Transformer2DConstExposure(const Transformer2D& transformer) : transformer(transformer) {}
+            namespace local
+            {
+                enum Params
+                {
+                    None = 0,
+                    SetLocal = 1,
+                    Full = SetLocal
+                };
 
-		glm::mat3 global() const { return transformer.global(); }
-		const Transform2D& get_local() const { return transformer.get_local(); }
+                constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
+                constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+            }
 
-		UnitVector2D forward() const { return transformer.forward(); }
+            namespace chain
+            {
+                enum Params
+                {
+                    None = 0,
+                    AttachParent = 1,
+                    AttachChild = 2,
+                    ClearChildren = 4,
+                    AttachOnly = AttachParent | AttachChild,
+                    Full = AttachParent | AttachChild | ClearChildren
+                };
 
-		template<std::derived_from<TransformModifier2D> T>
-		const T& get_modifier() const { return transformer.get_modifier<T>(); }
-	};
+                constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
+                constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+            }
 
-	namespace exposure
-	{
-		constexpr bool NONZERO(auto param) { return (bool)param != 0; }
+            namespace modifier
+            {
+                enum Params
+                {
+                    None = 0,
+                    RefModifier = 1,
+                    SetModifier = 2,
+                    Full = RefModifier | SetModifier
+                };
 
-		namespace local
-		{
-			enum Params
-			{
-				None = 0,
-				SetLocal = 1,
-				Full = SetLocal
-			};
+                constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
+                constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
+            }
+        }
 
-			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
-		}
+        struct ParamsSet
+        {
+            e::local::Params local = e::local::None;
+            e::chain::Params chain = e::chain::None;
+            e::modifier::Params modifier = e::modifier::None;
 
-		namespace chain
-		{
-			enum Params
-			{
-				None = 0,
-				AttachParent = 1,
-				AttachChild = 2,
-				ClearChildren = 4,
-				AttachOnly = AttachParent | AttachChild,
-				Full = AttachParent | AttachChild | ClearChildren
-			};
+            constexpr bool set_local() const
+            {
+                return e::nonzero(local & e::local::SetLocal);
+            }
 
-			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
-		}
+            constexpr bool attach_parent() const
+            {
+                return e::nonzero(chain & e::chain::AttachParent);
+            }
 
-		namespace modifier
-		{
-			enum Params
-			{
-				None = 0,
-				RefModifier = 1,
-				SetModifier = 2,
-				Full = RefModifier | SetModifier
-			};
+            constexpr bool attach_child() const
+            {
+                return e::nonzero(chain & e::chain::AttachChild);
+            }
 
-			constexpr Params operator&(Params a, Params b) { return (Params)((int)a & (int)b); }
-			constexpr Params operator|(Params a, Params b) { return (Params)((int)a | (int)b); }
-		}
-	}
+            constexpr bool clear_children() const
+            {
+                return e::nonzero(chain & e::chain::ClearChildren);
+            }
 
-	struct TExposureParams
-	{
-		exposure::local::Params local = exposure::local::Params::None;
-		exposure::chain::Params chain = exposure::chain::Params::None;
-		exposure::modifier::Params modifier = exposure::modifier::Params::None;
-	};
+            constexpr bool set_modifier() const
+            {
+                return e::nonzero(modifier & e::modifier::SetModifier);
+            }
 
-	template<TExposureParams Params>
+            constexpr bool ref_modifier() const
+            {
+                return e::nonzero(modifier & e::modifier::RefModifier);
+            }
+        };
+
+        inline constexpr auto ReadOnly = ParamsSet{
+            .local = e::local::None,
+            .chain = e::chain::None,
+            .modifier = e::modifier::None
+        };
+
+        inline constexpr auto Full = ParamsSet{
+            .local = e::local::Full,
+            .chain = e::chain::Full,
+            .modifier = e::modifier::Full
+        };
+        
+        inline constexpr auto AttachOnly = ParamsSet{
+            .local = e::local::Full,
+            .chain = e::chain::AttachOnly,
+            .modifier = e::modifier::Full
+        };
+    }
+
+	template<ex::ParamsSet Params = ex::ReadOnly>
 	struct Transformer2DExposure
 	{
 	private:
-		template<TExposureParams>
+		template<ex::ParamsSet>
 		friend struct Transformer2DExposure;
 
 		Transformer2D& transformer;
@@ -88,66 +122,110 @@ namespace oly
 	public:
 		Transformer2DExposure(Transformer2D& transformer) : transformer(transformer) {}
 
-		glm::mat3 global() const { return transformer.global(); }
-		const Transform2D& get_local() const { return transformer.get_local(); }
+		glm::mat3 global() const
+        {
+            return transformer.global();
+        }
 
-		UnitVector2D forward() const { return transformer.forward(); }
+		const Transform2D& get_local() const
+        {
+            return transformer.get_local();
+        }
+
+		UnitVector2D forward() const
+        {
+            return transformer.forward();
+        }
+
+        template<std::derived_from<TransformModifier2D> T>
+        const T& get_modifier() const
+        {
+            return transformer.get_modifier<T>();
+        }
 
 		Transform2D& set_local()
-			requires (exposure::NONZERO(Params.local & exposure::local::SetLocal))
+            requires (Params.set_local())
 		{
 			return transformer.set_local();
 		}
 
 		void attach_parent(Transformer2D* parent)
-			requires (exposure::NONZERO(Params.chain & exposure::chain::AttachParent))
+			requires (Params.attach_parent())
 		{
 			transformer.attach_parent(parent);
 		}
 		
-		template<TExposureParams OtherParams>
-		void attach_parent(Transformer2DExposure<OtherParams>& parent)
-			requires (exposure::NONZERO(Params.chain & exposure::chain::AttachParent) && exposure::NONZERO(OtherParams.chain & exposure::chain::AttachChild))
+		template<ex::ParamsSet OParams>
+		void attach_parent(Transformer2DExposure<OParams>& parent)
+			requires (Params.attach_parent() && OParams.attach_child())
 		{
 			transformer.attach_parent(&parent.transformer);
 		}
 
-		void attach_child(Transformer2D& child) requires
-			(exposure::NONZERO(Params.chain & exposure::chain::AttachChild))
+		void attach_child(Transformer2D& child)
+            requires (Params.attach_child())
 		{
 			transformer.attach_child(child);
 		}
 
-		template<TExposureParams OtherParams>
-		void attach_child(Transformer2DExposure<OtherParams>& child)
-			requires (exposure::NONZERO(Params.chain & exposure::chain::AttachChild) && exposure::NONZERO(OtherParams.chain & exposure::chain::AttachParent))
+		template<ex::ParamsSet OParams>
+		void attach_child(Transformer2DExposure<OParams>& child)
+			requires (Params.attach_child() && OParams.attach_parent())
 		{
 			transformer.get_handle().attach_child(&child.transformer);
 		}
 
 		void clear_children()
-			requires (exposure::NONZERO(Params.chain & exposure::chain::ClearChildren))
+			requires (Params.clear_children())
 		{
 			transformer.get_handle().clear_children();
 		}
 
-		template<std::derived_from<TransformModifier2D> T>
-		const T& get_modifier() const
-		{
-			return transformer.get_modifier<T>();
-		}
-
 		imp::poly<TransformModifier2D>& set_modifier()
-			requires (exposure::NONZERO(Params.modifier & exposure::modifier::SetModifier))
+			requires (Params.set_modifier())
 		{
 			return transformer.set_modifier();
 		}
 
 		template<std::derived_from<TransformModifier2D> T>
 		T& ref_modifier()
-			requires (exposure::NONZERO(Params.modifier & exposure::modifier::RefModifier))
+			requires (Params.ref_modifier())
 		{
 			return transformer.ref_modifier<T>();
 		}
 	};
+
+    template<>
+    struct Transformer2DExposure<ex::ReadOnly>
+    {
+    private:
+        template<ex::ParamsSet>
+        friend struct Transformer2DExposure;
+
+        const Transformer2D& transformer;
+
+    public:
+        Transformer2DExposure(const Transformer2D& transformer) : transformer(transformer) {}
+
+        glm::mat3 global() const
+        {
+            return transformer.global();
+        }
+
+        const Transform2D& get_local() const
+        {
+            return transformer.get_local();
+        }
+
+        UnitVector2D forward() const
+        {
+            return transformer.forward();
+        }
+
+        template<std::derived_from<TransformModifier2D> T>
+        const T& get_modifier() const
+        {
+            return transformer.get_modifier<T>();
+        }
+    };
 }

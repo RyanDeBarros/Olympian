@@ -211,7 +211,7 @@ int main()
 	oly::physics::KinematicBodyRef player = oly::REF_INIT;
 	pc.rigid_body = player;
 	player->properties().set_moi_multiplier(2000.0f);
-	player->properties().net_linear_acceleration += oly::physics::GRAVITY;
+	player->properties().net_linear_acceleration += oly::physics::kGravity;
 	player->properties().set_mass(15.0f);
 
 	oly::col2d::TPrimitive player_collider(oly::col2d::AABB{ .x1 = -50.0f, .x2 = 50.0f, .y1 = -50.0f, .y2 = 50.0f });

@@ -37,10 +37,10 @@ namespace oly::physics
         const DynamicsComponent& get_dynamics() const override;
 
 	public:
-        const DynamicsComponent& dynamics();
+        const DynamicsComponent& dynamics() const;
         DynamicsComponent& dynamics();
 
-		const MaterialRef& material();
+		const MaterialRef& material() const;
         MaterialRef& material();
 
 	private:

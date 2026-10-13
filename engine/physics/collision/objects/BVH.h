@@ -555,8 +555,8 @@ namespace oly::col2d
 		Transform2D& set_local() { return transformer.set_local(); }
 		bool is_dirty() const { return local_dirty || transformer.dirty(); }
 
-		Transformer2DConstExposure get_transformer() const { return transformer; }
-		Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> set_transformer() { return transformer; }
+		Transformer2DExposure<> get_transformer() const { return transformer; }
+		Transformer2DExposure<ex::Full> set_transformer() { return transformer; }
 
 		const std::vector<Element>& get_elements() const { return local_elements; }
 		std::vector<Element>& set_elements() { local_dirty = true; return local_elements; }

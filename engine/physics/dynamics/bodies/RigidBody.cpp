@@ -41,99 +41,99 @@ namespace oly::physics
 	}
 
     RigidBody::RigidBody(const Transformer2DRef& ref)
-        : transformer(ref)
+        : transformer_(ref)
     {
         internal::RigidBodyTickService::instance(); // only need to call once in non-copy/move ctor.
     }
 
-	RigidBody::RigidBody(const RigidBody& other)
-		: colliders(other.colliders), transformer(other.transformer)
+	RigidBody::RigidBody(const RigidBody& o)
+		: colliders_(o.colliders_), transformer_(o.transformer_)
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 		{
 			it->rigid_body = this;
-			it->set_transformer().attach_parent(transformer.base());
+			it->set_transformer().attach_parent(transformer_.base());
 		}
 	}
 	
-	RigidBody::RigidBody(RigidBody&& other) noexcept
-		: colliders(std::move(other.colliders)), transformer(std::move(other.transformer))
+	RigidBody::RigidBody(RigidBody&& o) noexcept
+		: colliders_(std::move(o.colliders_)), transformer_(std::move(o.transformer_))
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 		{
 			it->rigid_body = this;
-			it->set_transformer().attach_parent(transformer.base());
-			other.unbind(*it);
+			it->set_transformer().attach_parent(transformer_.base());
+			o.unbind(*it);
 		}
 	}
 	
-	RigidBody& RigidBody::operator=(const RigidBody& other)
+	RigidBody& RigidBody::operator=(const RigidBody& o)
 	{
-		if (this != &other)
+		if (this != &o)
 		{
 			clear_colliders();
-			colliders = other.colliders;
-			transformer = other.transformer;
-			for (auto it = colliders.begin(); it != colliders.end(); ++it)
+			colliders_ = o.colliders_;
+			transformer_ = o.transformer_;
+			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
 				it->rigid_body = this;
-				it->set_transformer().attach_parent(transformer.base());
+				it->set_transformer().attach_parent(transformer_.base());
 				bind(*it);
 			}
 		}
 		return *this;
 	}
 	
-	RigidBody& RigidBody::operator=(RigidBody&& other) noexcept
+	RigidBody& RigidBody::operator=(RigidBody&& o) noexcept
 	{
-		if (this != &other)
+		if (this != &o)
 		{
 			clear_colliders();
-			colliders = std::move(other.colliders);
-			transformer = std::move(other.transformer);
-			for (auto it = colliders.begin(); it != colliders.end(); ++it)
+			colliders_ = std::move(o.colliders_);
+			transformer_ = std::move(o.transformer_);
+			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
 				it->rigid_body = this;
-				it->set_transformer().attach_parent(transformer.base());
+				it->set_transformer().attach_parent(transformer_.base());
 				bind(*it);
-				other.unbind(*it);
+				o.unbind(*it);
 			}
 		}
 		return *this;
 	}
 
-    Transformer2DConstExposure RigidBody::get_transformer() const
+    Transformer2DExposure<> RigidBody::get_transformer() const
     {
-        return *transformer;
+        return *transformer_;
     }
 
-    Transformer2DExposure<TExposureParams{ .local = exposure::local::Full, .chain = exposure::chain::Full, .modifier = exposure::modifier::Full }> RigidBody::set_transformer()
+    Transformer2DExposure<ex::Full> RigidBody::set_transformer()
     {
-        return *transformer;
+        return *transformer_;
     }
 
     void RigidBody::assign_transformer(const Transformer2DRef& ref)
     {
-        transformer = ref;
+        transformer_ = ref;
     }
 
     const Transform2D& RigidBody::get_local() const
     {
-        return transformer->get_local();
+        return transformer_->get_local();
     }
 
     Transform2D& RigidBody::set_local()
     {
-        return transformer->set_local();
+        return transformer_->set_local();
     }
 	
 	col2d::Collider& RigidBody::add_collider(col2d::Collider&& collider)
 	{
 		if (collider.rigid_body)
 			collider.rigid_body->remove_collider(collider);
-		col2d::Collider& c = colliders.emplace_back(std::move(collider));
+		col2d::Collider& c = colliders_.emplace_back(std::move(collider));
 		c.rigid_body = this;
-		c.set_transformer().attach_parent(transformer.base());
+		c.set_transformer().attach_parent(transformer_.base());
 		c.handles.attach();
 		bind(c);
 		return c;
@@ -141,18 +141,18 @@ namespace oly::physics
 
 	void RigidBody::erase_collider(size_t i)
 	{
-		unbind(colliders[i]);
-		colliders.erase(colliders.begin() + i);
+		unbind(colliders_[i]);
+		colliders_.erase(colliders_.begin() + i);
 	}
 
 	void RigidBody::remove_collider(const col2d::Collider& collider)
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 		{
 			if (&*it == &collider)
 			{
 				unbind(*it);
-				colliders.erase(it);
+				colliders_.erase(it);
 				return;
 			}
 		}
@@ -160,49 +160,49 @@ namespace oly::physics
 
 	void RigidBody::clear_colliders()
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			unbind(*it);
-		colliders.clear();
+		colliders_.clear();
 	}
 
 	const col2d::Collider& RigidBody::collider(size_t i) const
 	{
-		return colliders[i];
+		return colliders_[i];
 	}
 
 	col2d::Collider& RigidBody::collider(size_t i)
 	{
-		return colliders[i];
+		return colliders_[i];
 	}
 
 	size_t RigidBody::collider_index(const col2d::Collider& col) const
 	{
-		auto it = std::find_if(colliders.begin(), colliders.end(), [&col](const col2d::Collider& c) { return &c == &col; });
-		if (it != colliders.end())
-			return it - colliders.begin();
+		auto it = std::find_if(colliders_.begin(), colliders_.end(), [&col](const col2d::Collider& c) { return &c == &col; });
+		if (it != colliders_.end())
+			return it - colliders_.begin();
 		else
 			throw Error(ErrorCode::DoesNotExist);
 	}
 
 	debug::DebugOverlay RigidBody::create_debug_overlay(debug::DebugOverlayLayer& layer, size_t i, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options) const
 	{
-		return colliders[i].create_debug_overlay(layer, color, paint_options);
+		return colliders_[i].create_debug_overlay(layer, color, paint_options);
 	}
 
 	void RigidBody::modify_debug_overlay(size_t i, debug::DebugOverlay& overlay) const
 	{
-		colliders[i].modify_debug_overlay(overlay);
+		colliders_[i].modify_debug_overlay(overlay);
 	}
 
 	void RigidBody::bind_all() const
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			bind(*it);
 	}
 
 	void RigidBody::unbind_all() const
 	{
-		for (auto it = colliders.begin(); it != colliders.end(); ++it)
+		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			unbind(*it);
 	}
 

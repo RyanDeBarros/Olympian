@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 
+// TODO v10 move to imp
+
 namespace oly
 {
 	template<typename... Args>
@@ -23,8 +25,8 @@ namespace oly
 		
 		ActionDelegator(const ActionDelegator<Args...>&) = delete;
 		
-		ActionDelegator(ActionDelegator<Args...>&& other) noexcept
-			: receivers(std::move(other))
+		ActionDelegator(ActionDelegator<Args...>&& o) noexcept
+			: receivers(std::move(o.receivers))
 		{
 			set_receivers();
 		}
@@ -34,12 +36,14 @@ namespace oly
 			unset_receivers();
 		}
 
-		ActionDelegator<Args...>& operator=(ActionDelegator<Args...>&& other) noexcept
+        ActionDelegator& operator=(const ActionDelegator<Args...>&) = delete;
+
+		ActionDelegator& operator=(ActionDelegator<Args...>&& o) noexcept
 		{
-			if (this != &other)
+			if (this != &o)
 			{
 				unset_receivers();
-				receivers = std::move(other.receivers);
+				receivers = std::move(o.receivers);
 				set_receivers();
 			}
 			return *this;
