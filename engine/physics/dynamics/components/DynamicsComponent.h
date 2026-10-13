@@ -1,8 +1,10 @@
 #pragma once
 
-#include "physics/dynamics/components/materials/Material.h"
-#include "physics/collision/Tolerance.h"
 #include "core/base/UnitVector.h"
+
+#include "physics/collision/Tolerance.h"
+
+#include "physics/dynamics/components/materials/Material.h"
 
 namespace oly::physics
 {
@@ -14,8 +16,13 @@ namespace oly::physics
 		float angular_velocity = 0.0f;
 	};
 
-	extern FrictionType friction_type(UnitVector2D tangent, glm::vec2 relative_contact_velocity, glm::vec2 relative_linear_velocity,
-		float angular_velocity_A, float angular_velocity_B, PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE);
+	extern FrictionType friction_type(
+        UnitVector2D tangent,
+        glm::vec2 relative_contact_velocity,
+        glm::vec2 relative_linear_velocity,
+		float angular_velocity_a,
+        float angular_velocity_b,
+        PositiveFloat speed_threshold = (float)col2d::LINEAR_TOLERANCE);
 
 	class DynamicsComponent;
 
@@ -30,38 +37,41 @@ namespace oly::physics
 	class DynamicsComponent
 	{
 	protected:
-		mutable std::vector<CollisionResponse> collisions;
-		mutable bool was_colliding = false;
+		mutable std::vector<CollisionResponse> collisions_;
+		mutable bool was_colliding_ = false;
 
-		mutable State pre_state;
-		mutable State post_state;
+		mutable State pre_state_;
+		mutable State post_state_;
 
 	public:
 		MaterialRef material = REF_DEFAULT;
 
 		virtual ~DynamicsComponent() = default;
 
+    public:
+        virtual void post_tick() const;
+
+    protected:
+        virtual std::optional<float> teleport_mass() const;
+        virtual float eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const;
+        virtual glm::vec2 contact_velocity(glm::vec2 local_contact) const;
+
+    public:
+        State get_state() const;
+
+        void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;
+        bool is_colliding() const;
+
+        void pre_tick(const glm::mat3& global) const;
+
 	protected:
-		virtual std::optional<float> teleport_mass() const { return std::nullopt; }
-		virtual float eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const { return 0.0f; }
 		float effective_mass(const CollisionResponse& collision) const;
 
-		virtual glm::vec2 contact_velocity(glm::vec2 local_contact) const { return pre_state.linear_velocity; }
 		glm::vec2 other_contact_velocity(const CollisionResponse& collision) const;
 		glm::vec2 relative_contact_velocity(const CollisionResponse& collision) const;
 		float restitution_with(const CollisionResponse& collision) const;
 		float friction_with(const CollisionResponse& collision) const;
 
-	public:
-		State get_state() const { return post_state; }
-
-		void add_collision(glm::vec2 mtv, glm::vec2 contact, const DynamicsComponent& other) const;
-		bool is_colliding() const { return was_colliding; }
-
-		void pre_tick(const glm::mat3& global) const;
-		virtual void post_tick() const;
-
-	protected:
-		float teleport_factor(const DynamicsComponent& other) const;
+        float teleport_factor(const DynamicsComponent& other) const;
 	};
 }

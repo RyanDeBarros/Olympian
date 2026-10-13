@@ -1,66 +1,116 @@
 #include "KinematicPhysicsComponent.h"
 
-#include "core/util/Time.h"
 #include "core/math/Geometry.h"
+
+#include "core/util/Time.h"
 
 namespace oly::physics
 {
-	void KinematicPhysicsProperties::set_mass(float m)
-	{
-		_mass = m;
-		_mass_inverse = 1.0f / _mass;
-		if (use_moi_multiplier)
-		{
-			_moi = m * _moi_multiplier;
-			_moi_inverse = 1.0f / _moi;
-		}
-	}
+    float KinematicPhysicsProperties::mass() const
+    {
+        return mass_;
+    }
 
-	void KinematicPhysicsProperties::set_moi(float m)
-	{
-		_moi = m;
-		_moi_inverse = 1.0f / _moi;
-		if (use_moi_multiplier)
-		{
-			_mass = _moi / _moi_multiplier;
-			_mass_inverse = 1.0f / _mass;
-		}
-	}
+    float KinematicPhysicsProperties::mass_inverse() const
+    {
+        return mass_inverse_;
+    }
 
-	void KinematicPhysicsProperties::set_moi_multiplier(float mult)
-	{
-		use_moi_multiplier = true;
-		_moi_multiplier = mult;
-		_moi = _moi_multiplier * _mass;
-		_moi_inverse = 1.0f / _moi;
-	}
+    void KinematicPhysicsProperties::set_mass(float m)
+    {
+        mass_ = m;
+        mass_inverse_ = 1.0f / mass_;
+        if (use_moi_multiplier)
+        {
+            moi_ = m * moi_multiplier_;
+            moi_inverse_ = 1.0f / moi_;
+        }
+    }
+
+    float KinematicPhysicsProperties::moi() const
+    {
+        return moi_;
+    }
+
+    float KinematicPhysicsProperties::moi_inverse() const
+    {
+        return moi_inverse_;
+    }
+
+    void KinematicPhysicsProperties::set_moi(float m)
+    {
+        moi_ = m;
+        moi_inverse_ = 1.0f / moi_;
+        if (use_moi_multiplier)
+        {
+            mass_ = moi_ / moi_multiplier_;
+            mass_inverse_ = 1.0f / mass_;
+        }
+    }
+
+    float KinematicPhysicsProperties::moi_multiplier() const
+    {
+        return use_moi_multiplier ? static_cast<float>(moi_multiplier_) : moi_ * mass_inverse_;
+    }
+
+    void KinematicPhysicsProperties::set_moi_multiplier(float mult)
+    {
+        use_moi_multiplier = true;
+        moi_multiplier_ = mult;
+        moi_ = moi_multiplier_ * mass_;
+        moi_inverse_ = 1.0f / moi_;
+    }
+
+    const std::vector<AppliedAcceleration>& KinematicPhysicsProperties::get_applied_accelerations() const
+    {
+        return applied_accelerations_;
+    }
+
+    std::vector<AppliedAcceleration>& KinematicPhysicsProperties::set_applied_accelerations()
+    {
+        dirty_linear_applied_accelerations_ = true;
+        dirty_angular_applied_accelerations_ = true;
+        return applied_accelerations_;
+    }
+    
+    const std::vector<AppliedForce>& KinematicPhysicsProperties::get_applied_forces() const
+    {
+        return applied_forces_;
+    }
+    
+    std::vector<AppliedForce>& KinematicPhysicsProperties::set_applied_forces()
+    {
+        dirty_linear_applied_forces_ = true;
+        dirty_angular_applied_forces_ = true;
+        return applied_forces_;
+    }
 
 	glm::vec2 KinematicPhysicsProperties::dv_psi() const
 	{
 		glm::vec2 dv = {};
 
-		if (dirty_linear_applied_accelerations)
+		if (dirty_linear_applied_accelerations_)
 		{
-			dirty_linear_applied_accelerations = false;
-			_net_linear_applied_acceleration = {};
-			for (AppliedAcceleration accel : applied_accelerations)
-				_net_linear_applied_acceleration += accel.acceleration;
+			dirty_linear_applied_accelerations_ = false;
+			net_linear_applied_acceleration_ = {};
+			for (AppliedAcceleration accel : applied_accelerations_)
+				net_linear_applied_acceleration_ += accel.acceleration;
 		}
-		dv += (net_linear_acceleration + _net_linear_applied_acceleration) * TIME.delta();
+		dv += (net_linear_acceleration + net_linear_applied_acceleration_) * TIME.delta();
 
-		if (dirty_linear_applied_forces)
+		if (dirty_linear_applied_forces_)
 		{
-			dirty_linear_applied_forces = false;
-			_net_linear_applied_force = {};
-			for (AppliedForce force : applied_forces)
-				_net_linear_applied_force += force.force;
+			dirty_linear_applied_forces_ = false;
+			net_linear_applied_force_ = {};
+			for (AppliedForce force : applied_forces_)
+				net_linear_applied_force_ += force.force;
 		}
-		dv += (net_force + _net_linear_applied_force) * TIME.delta() * _mass_inverse.get();
+		dv += (net_force + net_linear_applied_force_) * TIME.delta() * mass_inverse_.get();
 
 		glm::vec2 accumul_net_lin_impulse = net_linear_impulse;
 		for (AppliedImpulse impulse : applied_impulses)
 			accumul_net_lin_impulse += impulse.impulse;
-		dv += accumul_net_lin_impulse * _mass_inverse.get();
+		dv += accumul_net_lin_impulse * mass_inverse_.get();
 
 		return dv;
 	}
@@ -70,31 +120,31 @@ namespace oly::physics
 		float dw = 0.0f;
 
 		dw += net_angular_acceleration * TIME.delta();
-		dw += net_torque * TIME.delta() * _moi_inverse;
-		dw += net_angular_impulse * _moi_inverse;
+		dw += net_torque * TIME.delta() * moi_inverse_;
+		dw += net_angular_impulse * moi_inverse_;
 
-		if (dirty_angular_applied_accelerations)
+		if (dirty_angular_applied_accelerations_)
 		{
-			dirty_angular_applied_accelerations = false;
-			_net_angular_applied_acceleration = 0.0f;
-			for (AppliedAcceleration accel : applied_accelerations)
-				_net_angular_applied_acceleration += math::cross(accel.contact - center_of_mass, accel.acceleration);
+            dirty_angular_applied_accelerations_ = false;
+			net_angular_applied_acceleration_ = 0.0f;
+			for (AppliedAcceleration accel : applied_accelerations_)
+				net_angular_applied_acceleration_ += math::cross(accel.contact - center_of_mass, accel.acceleration);
 		}
-		dw += _net_angular_applied_acceleration * TIME.delta() * _mass * _moi_inverse;
+		dw += net_angular_applied_acceleration_ * TIME.delta() * mass_ * moi_inverse_;
 
-		if (dirty_angular_applied_forces)
+		if (dirty_angular_applied_forces_)
 		{
-			dirty_angular_applied_forces = false;
-			_net_angular_applied_force = 0.0f;
-			for (AppliedForce force : applied_forces)
-				_net_angular_applied_force += math::cross(force.contact - center_of_mass, force.force);
+			dirty_angular_applied_forces_ = false;
+			net_angular_applied_force_ = 0.0f;
+			for (AppliedForce force : applied_forces_)
+                net_angular_applied_force_ += math::cross(force.contact - center_of_mass, force.force);
 		}
-		dw += _net_angular_applied_force * TIME.delta() * _moi_inverse;
+		dw += net_angular_applied_force_ * TIME.delta() * moi_inverse_;
 
 		float net_applied_angular_impulse = 0.0f;
 		for (AppliedImpulse impulse : applied_impulses)
 			net_applied_angular_impulse += math::cross(impulse.contact - center_of_mass, impulse.impulse);
-		dw += net_applied_angular_impulse * _moi_inverse;
+		dw += net_applied_angular_impulse * moi_inverse_;
 
 		return dw;
 	}
@@ -103,11 +153,11 @@ namespace oly::physics
 
 	void KinematicPhysicsComponent::post_tick() const
 	{
-		if (!collisions.empty())
+		if (!collisions_.empty())
 		{
 			// 1. update velocity from non-collision stimuli
-			glm::vec2 new_linear_velocity = pre_state.linear_velocity + properties.dv_psi();
-			float new_angular_velocity = pre_state.angular_velocity + properties.dw_psi();
+			glm::vec2 new_linear_velocity = pre_state_.linear_velocity + properties.dv_psi();
+			float new_angular_velocity = pre_state_.angular_velocity + properties.dw_psi();
 
 			// 2. compute collision response
 			compute_collision_response(new_linear_velocity, new_angular_velocity);
@@ -122,25 +172,25 @@ namespace oly::physics
 		else
 		{
 			// 1. update velocity from stimuli
-			post_state.linear_velocity += properties.dv_psi();
-			post_state.angular_velocity += properties.dw_psi();
+			post_state_.linear_velocity += properties.dv_psi();
+			post_state_.angular_velocity += properties.dw_psi();
 
 			// 2. apply drag
 			if (submaterial->linear_drag > 0.0f)
-				post_state.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
+				post_state_.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
 			if (submaterial->angular_drag > 0.0f)
-				post_state.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
+				post_state_.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
 
 			// 3. update position
-			post_state.position += post_state.linear_velocity * TIME.delta();
+			post_state_.position += post_state_.linear_velocity * TIME.delta();
 
 			// 4. update rotation
-			post_state.rotation += post_state.angular_velocity * TIME.delta();
+			post_state_.rotation += post_state_.angular_velocity * TIME.delta();
 		}
 
 		// 5. normalize rotation
 
-		post_state.rotation = unsigned_fmod(post_state.rotation, glm::two_pi<float>());
+		post_state_.rotation = unsigned_fmod(post_state_.rotation, glm::two_pi<float>());
 
 		// 6. snap motion
 
@@ -153,21 +203,38 @@ namespace oly::physics
 		properties.applied_impulses.clear();
 		properties.net_linear_impulse = {};
 		properties.net_angular_impulse = 0.0f;
-		was_colliding = !collisions.empty();
-		collisions.clear();
+		was_colliding_ = !collisions_.empty();
+		collisions_.clear();
 	}
+
+    std::optional<float> KinematicPhysicsComponent::teleport_mass() const
+    {
+        return properties.mass();
+    }
+
+    float KinematicPhysicsComponent::eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const
+    {
+        float cross = math::cross(local_contact - properties.center_of_mass, normal);
+        return properties.mass_inverse() + properties.moi_inverse() * cross * cross;
+    }
+
+    glm::vec2 KinematicPhysicsComponent::contact_velocity(glm::vec2 local_contact) const
+    {
+        glm::vec2 contact = local_contact - properties.center_of_mass;
+        return pre_state_.linear_velocity + pre_state_.angular_velocity * glm::vec2{ -contact.y, contact.x };
+    }
 
 	void KinematicPhysicsComponent::update_colliding_linear_motion(glm::vec2 new_velocity) const
 	{
 		// determine teleportation and update angular collision impulse
 
-		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
+		const CollisionResponse& primary_collision = collisions_[primary_collision_mtv_idx];
 		glm::vec2 teleport = primary_collision.mtv * teleport_factor(*primary_collision.dynamics);
 		collision_angular_impulse += math::cross(primary_collision.contact - properties.center_of_mass, teleport * TIME.inverse_delta() * properties.mass() + collision_linear_impulse);
 
 		if (found_secondary_collision_mtv_idx)
 		{
-			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
+			const CollisionResponse& secondary_collision = collisions_[secondary_collision_mtv_idx];
 			glm::vec2 secondary_teleport = primary_collision.normal.perp_project(secondary_collision.mtv) * teleport_factor(*secondary_collision.dynamics);
 			collision_angular_impulse += math::cross(secondary_collision.contact - properties.center_of_mass, secondary_teleport * TIME.inverse_delta() * properties.mass() + collision_linear_impulse);
 			teleport += secondary_teleport;
@@ -186,24 +253,24 @@ namespace oly::physics
 
 		// update position
 
-		post_state.position += teleport + new_velocity * TIME.delta();
+		post_state_.position += teleport + new_velocity * TIME.delta();
 
 		// update velocity
 
-		post_state.linear_velocity = new_velocity + collision_linear_impulse * properties.mass_inverse();
+		post_state_.linear_velocity = new_velocity + collision_linear_impulse * properties.mass_inverse();
 		if (submaterial->linear_drag > 0.0f)
-			post_state.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
+			post_state_.linear_velocity *= glm::exp(-submaterial->linear_drag * TIME.delta());
 	}
 
 	void KinematicPhysicsComponent::update_colliding_angular_motion(float new_velocity) const
 	{
 		// determine teleportation
 
-		const CollisionResponse& primary_collision = collisions[primary_collision_mtv_idx];
+		const CollisionResponse& primary_collision = collisions_[primary_collision_mtv_idx];
 		float teleport = math::cross(primary_collision.contact - properties.center_of_mass, primary_collision.mtv) * teleport_factor(*primary_collision.dynamics);
 		if (found_secondary_collision_mtv_idx)
 		{
-			const CollisionResponse& secondary_collision = collisions[secondary_collision_mtv_idx];
+			const CollisionResponse& secondary_collision = collisions_[secondary_collision_mtv_idx];
 			glm::vec2 mtv = primary_collision.normal.perp_project(secondary_collision.mtv);
 			teleport += math::cross(secondary_collision.contact - properties.center_of_mass, mtv) * teleport_factor(*secondary_collision.dynamics);
 		}
@@ -232,22 +299,22 @@ namespace oly::physics
 
 		// update rotation
 
-		post_state.rotation += new_velocity * TIME.delta();
+		post_state_.rotation += new_velocity * TIME.delta();
 
 		// update velocity
 
-		post_state.angular_velocity = new_velocity;
+		post_state_.angular_velocity = new_velocity;
 		if (submaterial->angular_drag > 0.0f)
-			post_state.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
+			post_state_.angular_velocity *= glm::exp(-submaterial->angular_drag * TIME.delta());
 	}
 
 	void KinematicPhysicsComponent::compute_collision_mtv_idxs() const
 	{
 		primary_collision_mtv_idx = 0;
 		float max_mag_sqrd = 0.0f;
-		for (size_t i = 0; i < collisions.size(); ++i)
+		for (size_t i = 0; i < collisions_.size(); ++i)
 		{
-			float mag_sqrd = math::mag_sqrd(collisions[i].mtv);
+			float mag_sqrd = math::mag_sqrd(collisions_[i].mtv);
 			if (mag_sqrd > max_mag_sqrd)
 			{
 				max_mag_sqrd = mag_sqrd;
@@ -259,13 +326,13 @@ namespace oly::physics
 		found_secondary_collision_mtv_idx = false;
 		if (properties.complex_teleportation)
 		{
-			UnitVector2D primary_normal = collisions[primary_collision_mtv_idx].normal.get_quarter_turn();
+			UnitVector2D primary_normal = collisions_[primary_collision_mtv_idx].normal.get_quarter_turn();
 			float max_abs_proj = 0.0f;
-			for (size_t i = 0; i < collisions.size(); ++i)
+			for (size_t i = 0; i < collisions_.size(); ++i)
 			{
 				if (i != primary_collision_mtv_idx)
 				{
-					float abs_proj = glm::abs(primary_normal.dot(collisions[i].mtv));
+					float abs_proj = glm::abs(primary_normal.dot(collisions_[i].mtv));
 					if (abs_proj > max_abs_proj)
 					{
 						max_abs_proj = abs_proj;
@@ -281,7 +348,7 @@ namespace oly::physics
 	{
 		collision_linear_impulse = {};
 		collision_angular_impulse = 0.0f;
-		for (const CollisionResponse& collision : collisions)
+		for (const CollisionResponse& collision : collisions_)
 		{
 			float eff_mass = effective_mass(collision);
 			glm::vec2 j_r = restitution_impulse(collision, eff_mass);
@@ -290,18 +357,6 @@ namespace oly::physics
 			collision_linear_impulse += impulse;
 			collision_angular_impulse += math::cross(collision.contact - properties.center_of_mass, impulse);
 		}
-	}
-
-	float KinematicPhysicsComponent::eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const
-	{
-		float cross = math::cross(local_contact - properties.center_of_mass, normal);
-		return properties.mass_inverse() + properties.moi_inverse() * cross * cross;
-	}
-
-	glm::vec2 KinematicPhysicsComponent::contact_velocity(glm::vec2 local_contact) const
-	{
-		glm::vec2 contact = local_contact - properties.center_of_mass;
-		return pre_state.linear_velocity + pre_state.angular_velocity * glm::vec2{ -contact.y, contact.x };
 	}
 
 	glm::vec2 KinematicPhysicsComponent::restitution_impulse(const CollisionResponse& collision, float eff_mass) const
@@ -337,17 +392,17 @@ namespace oly::physics
 	void KinematicPhysicsComponent::snap_motion() const
 	{
 		// angular snapping
-		if (properties.angular_snapping.enable && (!collisions.empty() || !properties.angular_snapping.only_colliding))
+		if (properties.angular_snapping.enable && (!collisions_.empty() || !properties.angular_snapping.only_colliding))
 		{
 			const auto& angular_snapping = submaterial->angular_snapping;
 			if (!angular_snapping.snaps.empty())
 			{
-				if (glm::abs(post_state.angular_velocity) <= angular_snapping.speed_threshold)
+				if (glm::abs(post_state_.angular_velocity) <= angular_snapping.speed_threshold)
 				{
-					const float snap_to = algo::find_closest(angular_snapping.snaps, post_state.rotation,
+					const float snap_to = algo::find_closest(angular_snapping.snaps, post_state_.rotation,
 						[](decltype(angular_snapping.snaps)::key_type a, decltype(angular_snapping.snaps)::key_type b) { return unsigned_fmod(b - a, glm::two_pi<float>()); });
 
-					float snap_by = snap_to - post_state.rotation;
+					float snap_by = snap_to - post_state_.rotation;
 					// rotate by shortest angle
 					if (snap_by > glm::pi<float>())
 						snap_by -= glm::two_pi<float>();
@@ -357,7 +412,7 @@ namespace oly::physics
 					if (glm::abs(snap_by) <= angular_snapping.angle_threshold)
 					{
 						const float proportion = glm::abs(snap_by / angular_snapping.angle_threshold);
-						post_state.rotation += snap_by * (1.0f + (angular_snapping.strength_offset - 1.0f) * glm::pow(proportion, angular_snapping.strength));
+						post_state_.rotation += snap_by * (1.0f + (angular_snapping.strength_offset - 1.0f) * glm::pow(proportion, angular_snapping.strength));
 					}
 				}
 			}
@@ -377,11 +432,11 @@ namespace oly::physics
 			};
 
 		// linear snapping (X)
-		if (properties.linear_x_snapping.enable && (!collisions.empty() || !properties.linear_x_snapping.only_colliding))
-			linear_snapping(submaterial->linear_x_snapping, post_state, 0);
+		if (properties.linear_x_snapping.enable && (!collisions_.empty() || !properties.linear_x_snapping.only_colliding))
+			linear_snapping(submaterial->linear_x_snapping, post_state_, 0);
 
 		// linear snapping (Y)
-		if (properties.linear_y_snapping.enable && (!collisions.empty() || !properties.linear_y_snapping.only_colliding))
-			linear_snapping(submaterial->linear_y_snapping, post_state, 1);
+		if (properties.linear_y_snapping.enable && (!collisions_.empty() || !properties.linear_y_snapping.only_colliding))
+			linear_snapping(submaterial->linear_y_snapping, post_state_, 1);
 	}
 }

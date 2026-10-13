@@ -1,6 +1,7 @@
 #pragma once
 
 #include "physics/dynamics/components/DynamicsComponent.h"
+
 #include "physics/dynamics/components/materials/SubMaterialComponents.h"
 
 namespace oly::physics
@@ -27,34 +28,35 @@ namespace oly::physics
 
 	struct KinematicPhysicsProperties
 	{
-	private:
-		StrictlyPositiveFloat _mass = 1.0f;
-		StrictlyPositiveFloat _mass_inverse = 1.0f;
-
-		StrictlyPositiveFloat _moi = 1.0f;
-		StrictlyPositiveFloat _moi_inverse = 1.0f;
-
-		StrictlyPositiveFloat _moi_multiplier = 1.0f;
-
-	public:
-		float mass() const { return _mass; }
-		float mass_inverse() const { return _mass_inverse; }
-		void set_mass(float m);
-
-		float moi() const { return _moi; }
-		float moi_inverse() const { return _moi_inverse; }
-		void set_moi(float m);
-
-		bool use_moi_multiplier = true;
-		float moi_multiplier() const { return use_moi_multiplier ? (float)_moi_multiplier : _moi * _mass_inverse; }
-		void set_moi_multiplier(float mult);
+        friend class KinematicPhysicsComponent;
 
 	private:
-		std::vector<AppliedAcceleration> applied_accelerations;
-		std::vector<AppliedForce> applied_forces;
+        std::vector<AppliedAcceleration> applied_accelerations_;
+        std::vector<AppliedForce> applied_forces_;
+
+    public:
+        mutable std::vector<AppliedImpulse> applied_impulses;
+
+    private:
+		StrictlyPositiveFloat mass_ = 1.0f;
+		StrictlyPositiveFloat mass_inverse_ = 1.0f;
+
+		StrictlyPositiveFloat moi_ = 1.0f;
+		StrictlyPositiveFloat moi_inverse_ = 1.0f;
+
+		StrictlyPositiveFloat moi_multiplier_ = 1.0f;
+
+        mutable glm::vec2 net_linear_applied_acceleration_ = {};
+        mutable float net_angular_applied_acceleration_ = 0.0f;
+        mutable glm::vec2 net_linear_applied_force_ = {};
+        mutable float net_angular_applied_force_ = 0.0f;
+
+        mutable bool dirty_linear_applied_accelerations_ = false;
+        mutable bool dirty_angular_applied_accelerations_ = false;
+        mutable bool dirty_linear_applied_forces_ = false;
+        mutable bool dirty_angular_applied_forces_ = false;
 
 	public:
-		mutable std::vector<AppliedImpulse> applied_impulses;
 		glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
 		glm::vec2 net_force = {}; // does not include applied forces
 		mutable glm::vec2 net_linear_impulse = {}; // does not include applied impulses
@@ -84,25 +86,28 @@ namespace oly::physics
 			bool only_colliding = false;
 		} linear_y_snapping;
 
-	private:
-		friend class KinematicPhysicsComponent;
-		glm::vec2 dv_psi() const;
-		float dw_psi() const;
-
-		mutable glm::vec2 _net_linear_applied_acceleration = {};
-		mutable float _net_angular_applied_acceleration = 0.0f;
-		mutable glm::vec2 _net_linear_applied_force = {};
-		mutable float _net_angular_applied_force = 0.0f;
-		mutable bool dirty_linear_applied_accelerations = false;
-		mutable bool dirty_angular_applied_accelerations = false;
-		mutable bool dirty_linear_applied_forces = false;
-		mutable bool dirty_angular_applied_forces = false;
+        bool use_moi_multiplier = true;
 
 	public:
-		const std::vector<AppliedAcceleration>& get_applied_accelerations() const { return applied_accelerations; }
-		std::vector<AppliedAcceleration>& set_applied_accelerations() { dirty_linear_applied_accelerations = true; dirty_angular_applied_accelerations = true; return applied_accelerations; }
-		const std::vector<AppliedForce>& get_applied_forces() const { return applied_forces; }
-		std::vector<AppliedForce>& set_applied_forces() { dirty_linear_applied_forces = true; dirty_angular_applied_forces = true; return applied_forces; }
+        float mass() const;
+        float mass_inverse() const;
+        void set_mass(float m);
+
+        float moi() const;
+        float moi_inverse() const;
+        void set_moi(float m);
+
+        float moi_multiplier() const;
+        void set_moi_multiplier(float mult);
+
+		const std::vector<AppliedAcceleration>& get_applied_accelerations() const;
+        std::vector<AppliedAcceleration>& set_applied_accelerations();
+        const std::vector<AppliedForce>& get_applied_forces() const;
+		std::vector<AppliedForce>& set_applied_forces();
+
+    private:
+        glm::vec2 dv_psi() const;
+        float dw_psi() const;
 	};
 
 	struct KinematicSubMaterial
@@ -131,10 +136,11 @@ namespace oly::physics
 		KinematicSubMaterialRef submaterial = REF_DEFAULT;
 		KinematicPhysicsProperties properties;
 
+    public:
 		void post_tick() const override;
 
 	protected:
-		std::optional<float> teleport_mass() const override { return properties.mass(); }
+        std::optional<float> teleport_mass() const override;
 		float eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const override;
 		virtual glm::vec2 contact_velocity(glm::vec2 local_contact) const override;
 
