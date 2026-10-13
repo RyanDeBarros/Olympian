@@ -51,7 +51,7 @@ namespace oly::physics
 	{
 		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 		{
-			it->rigid_body = this;
+			it->rigid_body_ = this;
 			it->set_transformer().attach_parent(transformer_.base());
 		}
 	}
@@ -61,7 +61,7 @@ namespace oly::physics
 	{
 		for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 		{
-			it->rigid_body = this;
+			it->rigid_body_ = this;
 			it->set_transformer().attach_parent(transformer_.base());
 			o.unbind(*it);
 		}
@@ -78,7 +78,7 @@ namespace oly::physics
 
 			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
-				it->rigid_body = this;
+				it->rigid_body_ = this;
 				it->set_transformer().attach_parent(transformer_.base());
 				bind(*it);
 			}
@@ -98,7 +98,7 @@ namespace oly::physics
 
 			for (auto it = colliders_.begin(); it != colliders_.end(); ++it)
 			{
-				it->rigid_body = this;
+				it->rigid_body_ = this;
 				it->set_transformer().attach_parent(transformer_.base());
 				bind(*it);
 				o.unbind(*it);
@@ -135,11 +135,11 @@ namespace oly::physics
 	
 	col2d::Collider& RigidBody::add_collider(col2d::Collider&& collider)
 	{
-		if (collider.rigid_body)
-			collider.rigid_body->remove_collider(collider);
+		if (collider.rigid_body_)
+			collider.rigid_body_->remove_collider(collider);
 
 		col2d::Collider& c = colliders_.emplace_back(std::move(collider));
-		c.rigid_body = this;
+		c.rigid_body_ = this;
 		c.set_transformer().attach_parent(transformer_.base());
 		c.handles.attach();
 		bind(c);
@@ -221,7 +221,7 @@ namespace oly::physics
 
     const RigidBody* RigidBody::rigid_body(const col2d::Collider& collider)
     {
-        return collider.rigid_body;
+        return collider.rigid_body_;
     }
 
     const DynamicsComponent& RigidBody::dynamics_of(const RigidBody& other)

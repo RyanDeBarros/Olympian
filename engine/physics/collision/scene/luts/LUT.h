@@ -1,8 +1,9 @@
 #pragma once
 
+#include "physics/collision/debugging/DebugOverlay.h"
+
 #include "physics/collision/methods/CollisionInfo.h"
 #include "physics/collision/methods/SpecialCasting.h"
-#include "physics/collision/debugging/DebugOverlay.h"
 
 namespace oly::col2d::internal
 {

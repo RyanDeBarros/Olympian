@@ -1,25 +1,32 @@
 #include "TreeHandleMap.h"
 
 #include "core/context/Collision.h"
-#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
+
 #include "physics/collision/scene/colliders/Collider.h"
+
+#include "physics/collision/scene/dispatch/CollisionDispatcher.h"
 
 namespace oly::col2d::internal
 {
-	TreeHandleMap::TreeHandleMap(Collider& collider, const TreeHandleMap& other)
-		: collider(collider), handles(other.handles)
+    TreeHandleMap::TreeHandleMap(Collider& collider)
+        : collider_(collider)
+    {
+    }
+
+	TreeHandleMap::TreeHandleMap(Collider& collider, const TreeHandleMap& o)
+		: collider_(collider), map_(o.map_)
 	{
-		for (auto& [tree, node] : handles)
+		for (auto& [tree, node] : map_)
 			if (node)
-				node->set_colliders().insert(&collider);
+				node->set_colliders().insert(&collider_);
 	}
 
-	TreeHandleMap::TreeHandleMap(Collider& collider, TreeHandleMap&& other) noexcept
-		: collider(collider), handles(std::move(other.handles))
+	TreeHandleMap::TreeHandleMap(Collider& collider, TreeHandleMap&& o) noexcept
+		: collider_(collider), map_(std::move(o.map_))
 	{
-		for (auto& [tree, node] : handles)
+		for (auto& [tree, node] : map_)
 			if (node)
-				node->set_colliders().replace(&other.collider, &collider);
+				node->set_colliders().replace(&o.collider_, &collider_);
 	}
 
 	TreeHandleMap::~TreeHandleMap()
@@ -27,54 +34,54 @@ namespace oly::col2d::internal
 		clear();
 	}
 
-	TreeHandleMap& TreeHandleMap::operator=(const TreeHandleMap& other)
+	TreeHandleMap& TreeHandleMap::operator=(const TreeHandleMap& o)
 	{
-		if (this != &other)
+		if (this != &o)
 		{
-			for (auto it = handles.begin(); it != handles.end(); )
+			for (auto it = map_.begin(); it != map_.end(); )
 			{
-				if (other.handles.contains(it->key))
+				if (o.map_.contains(it->key))
 					++it;
 				else
-					it = handles.erase(it);
+					it = map_.erase(it);
 			}
 
-			for (auto it = other.handles.begin(); it != other.handles.end(); ++it)
+			for (auto it = o.map_.begin(); it != o.map_.end(); ++it)
 			{
-				if (!handles.contains(it->key))
+				if (!map_.contains(it->key))
 				{
 					if (it->value)
-						it->value->set_colliders().insert(&collider);
+						it->value->set_colliders().insert(&collider_);
 
-					handles.assign(it->key, it->value);
+					map_.assign(it->key, it->value);
 				}
 			}
 		}
 		return *this;
 	}
 
-	TreeHandleMap& TreeHandleMap::operator=(TreeHandleMap&& other) noexcept
+	TreeHandleMap& TreeHandleMap::operator=(TreeHandleMap&& o) noexcept
 	{
-		if (this != &other)
+		if (this != &o)
 		{
 			clear();
-			handles = std::move(other.handles);
-			for (auto& [tree, node] : handles)
+			map_ = std::move(o.map_);
+			for (auto& [tree, node] : map_)
 				if (node)
-					node->set_colliders().replace(&other.collider, &collider);
+					node->set_colliders().replace(&o.collider_, &collider_);
 		}
 		return *this;
 	}
 
 	void TreeHandleMap::flush() const
 	{
-		for (auto& [tree, node] : handles)
+		for (auto& [tree, node] : map_)
 		{
 			if (node)
-				node->update(collider, node);
+				node->update(collider_, node);
 			else
 			{
-				tree->root->set_colliders().insert(&collider);
+				tree->root->set_colliders().insert(&collider_);
 				node = tree->root.get();
 			}
 		}
@@ -82,10 +89,10 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::attach(const CollisionTree& tree)
 	{
-		if (!handles.contains(&tree))
+		if (!map_.contains(&tree))
 		{
-			tree.root->set_colliders().insert(&collider);
-			handles.assign(&tree, tree.root.get());
+			tree.root->set_colliders().insert(&collider_);
+			map_.assign(&tree, tree.root.get());
 		}
 	}
 
@@ -96,12 +103,12 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::detach(const CollisionTree& tree)
 	{
-		auto it = handles.find(&tree);
-		if (it != handles.end())
+		auto it = map_.find(&tree);
+		if (it != map_.end())
 		{
 			if (it->value)
-				it->value->set_colliders().erase(&collider);
-			handles.erase(it);
+				it->value->set_colliders().erase(&collider_);
+			map_.erase(it);
 		}
 	}
 
@@ -110,6 +117,11 @@ namespace oly::col2d::internal
 		detach(CollisionDispatcher::instance().get_tree(context_tree_index));
 	}
 
+    bool TreeHandleMap::is_attached(const CollisionTree& tree) const
+    {
+        return map_.contains(&tree);
+    }
+
 	bool TreeHandleMap::is_attached(size_t context_tree_index) const
 	{
 		return is_attached(CollisionDispatcher::instance().get_tree(context_tree_index));
@@ -117,9 +129,14 @@ namespace oly::col2d::internal
 
 	void TreeHandleMap::clear()
 	{
-		for (auto& [tree, node] : handles)
+		for (auto& [tree, node] : map_)
 			if (node)
-				node->set_colliders().erase(&collider);
-		handles.clear();
+				node->set_colliders().erase(&collider_);
+		map_.clear();
 	}
+
+    size_t TreeHandleMap::size() const
+    {
+        return map_.size();
+    }
 }

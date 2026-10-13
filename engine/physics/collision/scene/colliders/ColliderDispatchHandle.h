@@ -15,6 +15,7 @@ namespace oly::col2d::internal
 		ColliderDispatchHandle(const Collider&, const ColliderDispatchHandle&);
 		ColliderDispatchHandle(const Collider&, ColliderDispatchHandle&&) noexcept;
 		~ColliderDispatchHandle();
+
 		ColliderDispatchHandle& operator=(const ColliderDispatchHandle&);
 		ColliderDispatchHandle& operator=(ColliderDispatchHandle&&) noexcept;
 

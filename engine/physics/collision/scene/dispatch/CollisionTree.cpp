@@ -20,7 +20,7 @@ namespace oly::col2d
 			for (const Collider* collider : other.get_colliders())
 			{
 				set_colliders().insert(collider);
-				collider->handles.handles.assign(tree, this);
+				collider->handles.map_.assign(tree, this);
 			}
 
 			for (size_t i = 0; i < other.subnodes.size(); ++i)
@@ -35,8 +35,8 @@ namespace oly::col2d
 		{
 			for (const Collider* collider : get_colliders())
 			{
-				collider->handles.handles.erase(tree);
-				collider->handles.handles.assign(new_tree, this);
+				collider->handles.map_.erase(tree);
+				collider->handles.map_.assign(new_tree, this);
 			}
 
 			tree = new_tree;
@@ -49,7 +49,7 @@ namespace oly::col2d
 		CollisionNode::~CollisionNode()
 		{
 			for (const Collider* collider : get_colliders())
-				collider->handles.handles.erase(tree);
+				collider->handles.map_.erase(tree);
 		}
 
 		std::unique_ptr<CollisionNode> CollisionNode::instantiate(const CollisionTree* tree, math::Rect2D bounds)
@@ -70,7 +70,7 @@ namespace oly::col2d
 
 		void CollisionNode::update(const Collider& collider, CollisionNode*& node)
 		{
-			if (!collider.quad_wrap.strict_inside(bounds) && parent)
+			if (!collider.quad_wrap_.strict_inside(bounds) && parent)
 			{
 				set_colliders().erase(&collider);
 				node = nullptr;
@@ -80,7 +80,7 @@ namespace oly::col2d
 
 		void CollisionNode::insert_upwards(const Collider& collider, CollisionNode*& node)
 		{
-			if (collider.quad_wrap.strict_inside(bounds))
+			if (collider.quad_wrap_.strict_inside(bounds))
 			{
 				if (set_colliders().insert(&collider))
 					node = this;
@@ -97,7 +97,7 @@ namespace oly::col2d
 				while (i < get_colliders().size())
 				{
 					unsigned int x, y;
-					if (subnode_coordinates(get_colliders()[i]->quad_wrap, x, y))
+					if (subnode_coordinates(get_colliders()[i]->quad_wrap_, x, y))
 					{
 						std::unique_ptr<CollisionNode>& sub = subnodes[idx(x, y)];
 						if (!sub.get())
@@ -106,7 +106,7 @@ namespace oly::col2d
 							sub->parent = this;
 						}
 						sub->set_colliders().insert(get_colliders()[i]);
-                        if (auto ptr = get_colliders()[i]->handles.handles.try_get(tree))
+                        if (auto ptr = get_colliders()[i]->handles.map_.try_get(tree))
                         {
                             *ptr = sub.get();
                             set_colliders().remove(i);
@@ -300,7 +300,7 @@ namespace oly::col2d
 							if (const Collider* collider = indexer.node->set_colliders().pop())
 							{
 								parent->set_colliders().insert(collider);
-                                if (auto ptr = collider->handles.handles.try_get(this))
+                                if (auto ptr = collider->handles.map_.try_get(this))
                                     *ptr = parent;
                                 else
                                     throw Error(ErrorCode::NullPointer);
@@ -339,7 +339,7 @@ namespace oly::col2d
 
 	CollisionTree::BFSColliderIterator CollisionTree::query(const Collider& collider) const
 	{
-		return BFSColliderIterator(*this, collider.quad_wrap);
+		return BFSColliderIterator(*this, collider.quad_wrap_);
 	}
 
 	CollisionTree::BFSColliderIterator CollisionTree::query(const math::Rect2D bounds) const

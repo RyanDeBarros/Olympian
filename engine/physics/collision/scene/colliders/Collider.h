@@ -1,13 +1,18 @@
 #pragma once
 
 #include "core/base/TransformerExposure.h"
-#include "physics/collision/scene/colliders/TreeHandleMap.h"
+
 #include "physics/collision/scene/colliders/ColliderDispatchHandle.h"
 #include "physics/collision/scene/colliders/ColliderObject.h"
+#include "physics/collision/scene/colliders/TreeHandleMap.h"
+
 #include "physics/collision/scene/luts/LUT.h"
 #include "physics/collision/scene/luts/LUTVariant.h"
 
-namespace oly::physics { class RigidBody; };
+namespace oly::physics
+{
+    class RigidBody;
+};
 
 namespace oly::col2d
 {
@@ -15,77 +20,98 @@ namespace oly::col2d
 	{
 		friend class CollisionTree;
 		friend class internal::CollisionNode;
+		friend class physics::RigidBody;
 
 	private:
-		internal::ColliderObject obj;
-
-		mutable bool dirty = true;
-
-		friend class physics::RigidBody;
-		physics::RigidBody* rigid_body = nullptr;
-
-		internal::ColliderDispatchHandle dispatch_handle;
+		internal::ColliderObject obj_;
+		physics::RigidBody* rigid_body_ = nullptr;
+		internal::ColliderDispatchHandle dispatch_handle_;
 
 	protected:
-		mutable math::Rect2D quad_wrap;
+		mutable math::Rect2D quad_wrap_;
 
 	public:
 		internal::TreeHandleMap handles = internal::TreeHandleMap(*this);
+        std::optional<UnitVector2D> one_way_blocking;
 
-		Collider() : dispatch_handle(*this) {}
-		template<internal::CObj_check CObj>
-		explicit Collider(CObj&& obj) : obj(std::forward<CObj>(obj)), dispatch_handle(*this) {}
-		Collider(internal::ColliderObject&& obj) : obj(std::move(obj)), dispatch_handle(*this) {}
+    private:
+        mutable bool dirty_ = true;
+
+    public:
+        Collider();
+
+        template<internal::CObj_check CObj>
+		explicit Collider(CObj&& obj)
+            : obj_(std::forward<CObj>(obj))
+            , dispatch_handle_(*this)
+        {
+        }
+		
+        Collider(internal::ColliderObject&& obj);
 		Collider(const Collider&);
 		Collider(Collider&&) noexcept;
-		Collider& operator=(const Collider&);
+		
+        Collider& operator=(const Collider&);
 		Collider& operator=(Collider&&) noexcept;
 
+    public:
 		template<internal::CObj_check CObj>
-		const CObj& get() const { return obj.get<CObj>(); }
-		template<internal::CObj_check CObj>
-		CObj& set() { dirty = true; return obj.set<CObj>(); }
-		void emplace(internal::ColliderObject&& obj) { dirty = true; this->obj = std::move(obj); }
-		template<internal::CObj_check CObj>
-		void emplace(CObj&& obj) { dirty = true; this->obj = internal::ColliderObject(std::forward<CObj>(obj)); }
+		const CObj& get() const
+        {
+            return obj_.get<CObj>();
+        }
+		
+        template<internal::CObj_check CObj>
+		CObj& set()
+        {
+            dirty_ = true;
+            return obj_.set<CObj>();
+        }
+		
+        void emplace(internal::ColliderObject&& obj);
+        
+        template<internal::CObj_check CObj>
+        void emplace(CObj&& obj)
+        {
+            emplace(internal::ColliderObject(std::forward<CObj>(obj)));
+        }
 
-		void flag() { dirty = true; }
+        void flag();
 
-		const Transform2D& get_local() const { return internal::lut_transformer(obj).get_local(); }
-		Transform2D& set_local() { return internal::lut_transformer(obj).set_local(); }
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
-		Transformer2DExposure<> get_transformer() const { return internal::lut_transformer(obj); }
-		Transformer2DExposure<ex::Full> set_transformer() { return internal::lut_transformer(obj); }
+        Transformer2DExposure<> get_transformer() const;
+        Transformer2DExposure<ex::Full> set_transformer();
 
-		Layer layer() const { return internal::lut_layer(obj); }
-		Layer& layer() { return internal::lut_layer(obj); }
-		Mask mask() const { return internal::lut_mask(obj); }
-		Mask& mask() { return internal::lut_mask(obj); }
+        Layer layer() const;
+        Layer& layer();
+        Mask mask() const;
+        Mask& mask();
 
-		std::optional<UnitVector2D> one_way_blocking;
 		bool one_way_blocks(const Collider& active) const;
 
-	private:
-		bool is_dirty() const { return dirty || internal::lut_is_dirty(obj); }
-		void flush() const;
+        OverlapResult point_hits(glm::vec2 test) const;
+        OverlapResult ray_hits(Ray ray) const;
+        RaycastResult raycast(Ray ray) const;
+		OverlapResult overlaps(const Collider& other) const;
+		CollisionResult collides(const Collider& other) const;
+		ContactResult contacts(const Collider& other) const;
+		OverlapResult circle_cast_hits(const CircleCast& cast) const;
+		OverlapResult rect_cast_hits(const RectCast& cast) const;
 
-	public:
-		OverlapResult point_hits(glm::vec2 test) const { return internal::lut_point_hits(obj, test); }
-		OverlapResult ray_hits(Ray ray) const { return internal::lut_ray_hits(obj, ray); }
-		RaycastResult raycast(Ray ray) const { return internal::lut_raycast(obj, ray); }
-		OverlapResult overlaps(const Collider& other) const { return internal::lut_overlaps(obj, other.obj); }
-		CollisionResult collides(const Collider& other) const { return internal::lut_collides(obj, other.obj); }
-		ContactResult contacts(const Collider& other) const { return internal::lut_contacts(obj, other.obj); }
-		OverlapResult circle_cast_hits(const CircleCast& cast) const { return internal::lut_circle_cast_hits(obj, cast); }
-		OverlapResult rect_cast_hits(const RectCast& cast) const { return internal::lut_rect_cast_hits(obj, cast); }
+        debug::DebugOverlay create_debug_overlay(
+            debug::DebugOverlayLayer& layer,
+            glm::vec4 color,
+            debug::DebugOverlay::PaintOptions paint_options = {}) const;
 
-		debug::DebugOverlay create_debug_overlay(debug::DebugOverlayLayer& layer, glm::vec4 color, debug::DebugOverlay::PaintOptions paint_options = {}) const
-			{ return internal::lut_create_debug_overlay(layer, obj, color, paint_options); }
-		void modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index = 0) const
-			{ internal::lut_modify_debug_overlay(overlay, obj, shape_index); }
+        void modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index = 0) const;
 
 	private:
-		internal::ColliderObjectConstVariant get_object_variant() const { return internal::lut_variant(obj); }
-		internal::ColliderObjectVariant get_object_variant() { return internal::lut_variant(obj); }
+        bool is_dirty() const;
+        void flush() const;
+
+        internal::ColliderObjectConstVariant get_object_variant() const;
+        internal::ColliderObjectVariant get_object_variant();
 	};
 }

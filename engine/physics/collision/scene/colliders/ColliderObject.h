@@ -26,35 +26,36 @@ namespace oly::col2d::internal
 
 	class ColliderObject
 	{
-        imp::box _obj;
+        imp::box obj_;
 
 	public:
 		template<CObj_check CObj>
-		ColliderObject(CObj&& obj) : _obj(imp::forward_to_box(std::forward<CObj>(obj))) {}
+		ColliderObject(CObj&& obj) : obj_(imp::forward_to_box(std::forward<CObj>(obj))) {}
 
 		ColliderObject()
-            : _obj(imp::make_box<TPrimitive>())
-        {}
+            : obj_(imp::make_box<TPrimitive>())
+        {
+        }
 		
 		const void* raw_obj() const
         {
-            return _obj.unsafe_raw();
+            return obj_.unsafe_raw();
         }
 
         void* raw_obj()
         {
-            return _obj.unsafe_raw();
+            return obj_.unsafe_raw();
         }
 		
         size_t type_index() const
         {
-            return CObj_index(_obj.type());
+            return CObj_index(obj_.type());
         }
 
 		template<CObj_check CObj>
 		const CObj& get() const
 		{
-            if (auto obj = _obj.as<CObj>())
+            if (auto obj = obj_.as<CObj>())
                 return *obj;
 			else
 				throw Error(ErrorCode::INVALID_TYPE);
@@ -63,7 +64,7 @@ namespace oly::col2d::internal
 		template<CObj_check CObj>
 		CObj& set()
 		{
-            if (auto obj = _obj.as<CObj>())
+            if (auto obj = obj_.as<CObj>())
                 return *obj;
 			else
 				throw Error(ErrorCode::INVALID_TYPE);
