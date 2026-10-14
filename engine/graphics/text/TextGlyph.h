@@ -21,7 +21,7 @@ namespace oly::rendering
 		TextGlyph(TextGlyph&&) noexcept;
 
 		auto get_batch() const { return ref.get_batch(); }
-		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { ref.set_batch(kUnbatched); }
 		void set_batch(SpriteBatch& batch);
 
 		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }

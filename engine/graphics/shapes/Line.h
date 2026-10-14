@@ -13,11 +13,11 @@ namespace oly::rendering
 		mutable bool dirty = false;
 
 	public:
-		LineExtension(Unbatched = UNBATCHED);
+		LineExtension(Unbatched = kUnbatched);
 		LineExtension(PolygonBatch& batch);
 
 		auto get_batch() const { return poly.get_batch(); }
-		void set_batch(Unbatched) { poly.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { poly.set_batch(kUnbatched); }
 		void set_batch(PolygonBatch& batch) { poly.set_batch(batch); }
 
 		void set_camera_invariant(bool camera_invariant) const { poly.set_camera_invariant(camera_invariant); }

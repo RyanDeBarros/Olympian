@@ -121,7 +121,7 @@ namespace oly::rendering
 	void internal::GlyphGroup::set_batch(Unbatched)
 	{
 		for (auto& glyph : glyphs)
-			glyph.set_batch(UNBATCHED);
+			glyph.set_batch(kUnbatched);
 	}
 
 	void internal::GlyphGroup::set_batch(rendering::SpriteBatch& batch)
@@ -544,7 +544,7 @@ namespace oly::rendering
 	}
 
 	Paragraph::Paragraph(Unbatched, std::vector<TextElement>&& elements, const ParagraphFormat& format)
-		: format(format), bkg(UNBATCHED)
+		: format(format), bkg(kUnbatched)
 	{
 		init(std::move(elements));
 	}
@@ -612,9 +612,9 @@ namespace oly::rendering
 
 	void Paragraph::set_batch(Unbatched)
 	{
-		bkg.set_batch(UNBATCHED);
+		bkg.set_batch(kUnbatched);
 		for (auto& glyph_group : glyph_groups)
-			glyph_group.set_batch(UNBATCHED);
+			glyph_group.set_batch(kUnbatched);
 	}
 
 	void Paragraph::set_batch(SpriteBatch& batch)

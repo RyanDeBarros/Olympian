@@ -1,16 +1,15 @@
 #pragma once
 
-#include "core/base/Transforms.h"
 #include "core/base/SmartReference.h"
+#include "core/base/Transforms.h"
+
 #include "core/math/Shapes.h"
 
-#include "core/platform/WindowEvents.h"
 #include "core/platform/EventHandler.h"
+#include "core/platform/WindowEvents.h"
 
 namespace oly::rendering
 {
-	class Camera2D;
-
 	namespace internal
 	{
 		extern void initialize_default_camera(bool boxed, bool stretch);
@@ -18,45 +17,47 @@ namespace oly::rendering
 
 	class Camera2D : public EventHandler<input::WindowResizeEventData>
 	{
-		bool boxed = true;
-		bool stretch = true;
+        friend void internal::initialize_default_camera(bool boxed, bool stretch);
 
-		float target_aspect_ratio = 1.0f;
-		math::Area2D viewport;
+    private:
+		bool boxed_ = true;
+		bool stretch_ = true;
 
-		glm::mat3 projection = 1.0f;
+		float target_aspect_ratio_ = 1.0f;
+		math::Area2D viewport_;
+
+		glm::mat3 projection_ = 1.0f;
 	
 	public:
 		Transformer2D transformer;
 
 		Camera2D(bool boxed = true, bool stretch = true);
 
+	public:
 		bool block(const input::WindowResizeEventData& data) override;
 		bool consume(const input::WindowResizeEventData& data) override;
 
-	private:
-		friend void internal::initialize_default_camera(bool boxed, bool stretch);
-		void reinitialize(bool boxed, bool stretch);
-		void set_projection();
-
-	public:
 		glm::mat3 projection_matrix() const;
 		glm::mat3 invariant_projection_matrix() const;
 
 		void project_to_rect(math::Rect2D rect);
 
-		math::Area2D get_viewport() const { return viewport; }
+        math::Area2D get_viewport() const;
 		void apply_viewport() const;
 
-		bool is_boxed() const { return boxed; }
-		bool is_stretch() const { return stretch; }
+		bool is_boxed() const;
+		bool is_stretch() const;
 
 		glm::vec2 screen_to_world_coordinates(glm::vec2 screen_pos) const;
 		glm::vec2 world_to_screen_coordinates(glm::vec2 world_pos) const;
 		glm::vec2 view_to_world_coordinates(glm::vec2 view_pos) const;
 		glm::vec2 world_to_view_coordinates(glm::vec2 world_pos) const;
 		glm::vec2 get_cursor_world_position() const;
+
+    private:
+        void reinitialize(bool boxed, bool stretch);
+        void set_projection();
 	};
 
-	typedef SmartReference<Camera2D> Camera2DRef;
+	using Camera2DRef = SmartReference<Camera2D>;
 }

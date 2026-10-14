@@ -91,7 +91,7 @@ namespace oly::rendering
 			mutable GLuint id = PolygonBatch::NULL_ID;
 			
 		public:
-			PolygonReference(Unbatched = UNBATCHED);
+			PolygonReference(Unbatched = kUnbatched);
 			PolygonReference(rendering::PolygonBatch& batch);
 			PolygonReference(const PolygonReference&);
 			PolygonReference(PolygonReference&&) noexcept;
@@ -133,7 +133,7 @@ namespace oly::rendering
 			mutable CameraInvariantFlag camera_invariant = CameraInvariantFlag(0b10);
 
 		public:
-			PolygonSubmitter(Unbatched = UNBATCHED);
+			PolygonSubmitter(Unbatched = kUnbatched);
 			PolygonSubmitter(rendering::PolygonBatch& batch);
 			PolygonSubmitter(const PolygonSubmitter&);
 			PolygonSubmitter(PolygonSubmitter&&) noexcept = default;
@@ -142,7 +142,7 @@ namespace oly::rendering
 			virtual ~PolygonSubmitter() = default;
 
 			auto get_batch() const { return ref.get_batch(); }
-			void set_batch(Unbatched) { ref.set_batch(UNBATCHED); flag_all(); }
+			void set_batch(Unbatched) { ref.set_batch(kUnbatched); flag_all(); }
 			void set_batch(rendering::PolygonBatch& batch) { ref.set_batch(batch); flag_all(); }
 
 			void set_camera_invariant(bool camera_invariant) const;

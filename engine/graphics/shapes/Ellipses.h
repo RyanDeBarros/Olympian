@@ -91,7 +91,7 @@ namespace oly::rendering
 			GLuint id = EllipseBatch::NULL_ID;
 
 		public:
-			EllipseReference(Unbatched = UNBATCHED);
+			EllipseReference(Unbatched = kUnbatched);
 			EllipseReference(rendering::EllipseBatch& batch);
 			EllipseReference(const EllipseReference&);
 			EllipseReference(EllipseReference&&) noexcept;
@@ -123,7 +123,7 @@ namespace oly::rendering
 		glm::mat3 transform = 1.0f;
 		
 	public:
-		StaticEllipse(Unbatched = UNBATCHED) : ref(UNBATCHED) {}
+		StaticEllipse(Unbatched = kUnbatched) : ref(kUnbatched) {}
 		StaticEllipse(EllipseBatch& batch) : ref(batch) {}
 		StaticEllipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
 		StaticEllipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));
@@ -156,7 +156,7 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 	public:
-		Ellipse(Unbatched = UNBATCHED) : ref(UNBATCHED) {}
+		Ellipse(Unbatched = kUnbatched) : ref(kUnbatched) {}
 		Ellipse(EllipseBatch& batch) : ref(batch) {}
 		Ellipse(EllipseBatch& batch, float r, glm::vec4 color = glm::vec4(1.0f));
 		Ellipse(EllipseBatch& batch, float rx, float ry, glm::vec4 color = glm::vec4(1.0f));

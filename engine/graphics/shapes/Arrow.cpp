@@ -7,7 +7,7 @@
 namespace oly::rendering
 {
 	ArrowExtension::ArrowExtension(Unbatched)
-		: body(UNBATCHED), head(UNBATCHED)
+		: body(kUnbatched), head(kUnbatched)
 	{
 		body.transformer.attach_parent(&_transformer);
 		head.transformer.attach_parent(&_transformer);
@@ -103,7 +103,7 @@ namespace oly::rendering
 	}
 
 	StaticArrowExtension::StaticArrowExtension(Unbatched)
-		: body(UNBATCHED), head(UNBATCHED)
+		: body(kUnbatched), head(kUnbatched)
 	{
 	}
 

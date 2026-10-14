@@ -342,7 +342,7 @@ namespace oly::rendering
 	}
 
 	internal::PolygonSubmitter::PolygonSubmitter(Unbatched)
-		: ref(UNBATCHED)
+		: ref(kUnbatched)
 	{
 	}
 

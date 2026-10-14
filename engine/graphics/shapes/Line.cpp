@@ -5,7 +5,7 @@
 namespace oly::rendering
 {
 	LineExtension::LineExtension(Unbatched)
-		: poly(UNBATCHED)
+		: poly(kUnbatched)
 	{
 	}
 

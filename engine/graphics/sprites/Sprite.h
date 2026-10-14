@@ -13,7 +13,7 @@ namespace oly::rendering
 
 	public:
 		StaticSprite() = default;
-		StaticSprite(Unbatched) : ref(UNBATCHED) {}
+		StaticSprite(Unbatched) : ref(kUnbatched) {}
 		StaticSprite(internal::SpriteBatch& batch) : ref(batch) {}
 		StaticSprite(SpriteBatch& batch) : ref(batch) {}
 		StaticSprite(const StaticSprite&) = default;
@@ -22,7 +22,7 @@ namespace oly::rendering
 		StaticSprite& operator=(StaticSprite&&) noexcept = default;
 
 		auto get_batch() const { return ref.get_batch(); }
-		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { ref.set_batch(kUnbatched); }
 		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
 
 		void draw() const;
@@ -60,7 +60,7 @@ namespace oly::rendering
 		Transformer2D transformer;
 
 		Sprite() = default;
-		Sprite(Unbatched) : ref(UNBATCHED) {}
+		Sprite(Unbatched) : ref(kUnbatched) {}
 		Sprite(internal::SpriteBatch& batch) : ref(batch) {}
 		Sprite(SpriteBatch& batch) : ref(batch) {}
 		Sprite(const Sprite&) = default;
@@ -69,7 +69,7 @@ namespace oly::rendering
 		Sprite& operator=(Sprite&&) noexcept = default;
 
 		auto get_batch() const { return ref.get_batch(); }
-		void set_batch(Unbatched) { ref.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { ref.set_batch(kUnbatched); }
 		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
 
 		void draw() const;

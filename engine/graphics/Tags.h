@@ -6,5 +6,5 @@ namespace oly::rendering
 	{
 	};
 
-	constexpr Unbatched UNBATCHED;
+	constexpr Unbatched kUnbatched;
 }

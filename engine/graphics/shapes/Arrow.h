@@ -17,11 +17,11 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		ArrowExtension(Unbatched = UNBATCHED);
+		ArrowExtension(Unbatched = kUnbatched);
 		ArrowExtension(PolygonBatch& batch);
 
 		auto get_batch() const { return body.get_batch(); }
-		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { body.set_batch(kUnbatched); head.set_batch(kUnbatched); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
 
 		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }
@@ -76,11 +76,11 @@ namespace oly::rendering
 		mutable bool can_draw_body = false, can_draw_head = false;
 
 	public:
-		StaticArrowExtension(Unbatched = UNBATCHED);
+		StaticArrowExtension(Unbatched = kUnbatched);
 		StaticArrowExtension(PolygonBatch& batch);
 
 		auto get_batch() const { return body.get_batch(); }
-		void set_batch(Unbatched) { body.set_batch(UNBATCHED); head.set_batch(UNBATCHED); }
+		void set_batch(Unbatched) { body.set_batch(kUnbatched); head.set_batch(kUnbatched); }
 		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
 
 		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }

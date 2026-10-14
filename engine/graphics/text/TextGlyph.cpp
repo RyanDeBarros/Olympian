@@ -5,7 +5,7 @@
 namespace oly::rendering
 {
 	TextGlyph::TextGlyph(Unbatched)
-		: ref(UNBATCHED)
+		: ref(kUnbatched)
 	{
 	}
 

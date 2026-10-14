@@ -123,7 +123,7 @@ namespace oly::debug
 
 	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, PaintOptions paint_options)
 		: layer_(&layer_)
-        , sprite_(rendering::UNBATCHED)
+        , sprite_(rendering::kUnbatched)
         , paint_options(paint_options)
 	{
 		layer_.assign(this);
@@ -132,7 +132,7 @@ namespace oly::debug
 	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticEllipse&& shape, PaintOptions paint_options)
 		: layer_(&layer_)
         , debug_group_(DebugShape(std::move(shape), layer_))
-        , sprite_(rendering::UNBATCHED)
+        , sprite_(rendering::kUnbatched)
         , paint_options(paint_options)
 	{
 		layer_.assign(this);
@@ -141,7 +141,7 @@ namespace oly::debug
 	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticPolygon&& shape, PaintOptions paint_options)
 		: layer_(&layer_)
         , debug_group_(DebugShape(std::move(shape), layer_))
-        , sprite_(rendering::UNBATCHED)
+        , sprite_(rendering::kUnbatched)
         , paint_options(paint_options)
 	{
 		layer_.assign(this);
@@ -150,7 +150,7 @@ namespace oly::debug
 	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, rendering::StaticArrowExtension&& shape, PaintOptions paint_options)
 		: layer_(&layer_)
         , debug_group_(DebugShape(std::move(shape), layer_))
-        , sprite_(rendering::UNBATCHED)
+        , sprite_(rendering::kUnbatched)
         , paint_options(paint_options)
 	{
 		layer_.assign(this);
@@ -159,7 +159,7 @@ namespace oly::debug
 	DebugOverlay::DebugOverlay(DebugOverlayLayer& layer_, DebugShapeGroup&& group, PaintOptions paint_options)
 		: layer_(&layer_)
         , debug_group_(std::move(group))
-        , sprite_(rendering::UNBATCHED)
+        , sprite_(rendering::kUnbatched)
         , paint_options(paint_options)
 	{
 		debug_group_.align_layer_batch(layer_);
@@ -562,6 +562,6 @@ namespace oly::debug
     void DebugOverlayLayer::unassign(DebugOverlay* view)
     {
         if (collision_views_.erase(view))
-            view->sprite_.set_batch(rendering::UNBATCHED);
+            view->sprite_.set_batch(rendering::kUnbatched);
     }
 }

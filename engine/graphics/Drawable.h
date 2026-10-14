@@ -14,33 +14,26 @@ namespace oly::rendering
 	{
 		virtual ~IDrawable() = default;
 
+    public:
 		virtual void on_draw() const {}
 
-		void draw() const
-		{
-			draw_tree();
-		}
+        void draw() const;
 
 	protected:
-		virtual void draw_tree() const
-		{
-			on_draw();
-			for (const IDrawable& d : *this)
-				d.draw_tree();
-		}
+        virtual void draw_tree() const;
 	};
 
 	class ZLayeredDrawable : public IDrawable
 	{
 		// For z-layer to come into effect, the z-layered drawable must be a descendant of a CanvasLayerStack.
-		float z_layer = 0.0f;
+		float z_layer_ = 0.0f;
 
 	public:
-		float get_z_layer() const { return z_layer; }
-		void set_z_layer(float z) { z_layer = z; flag_parent_canvas(get_parent()); }
+        float get_z_layer() const;
+        void set_z_layer(float z);
 
 	protected:
-		virtual void on_attach(IDrawable* old_parent, IDrawable* new_parent) override { flag_parent_canvas(old_parent); flag_parent_canvas(new_parent); }
+        virtual void on_attach(IDrawable* old_parent, IDrawable* new_parent) override;
 
 	private:
 		void flag_parent_canvas(IDrawable* parent);
@@ -54,8 +47,13 @@ namespace oly::rendering
 		class CanvasLayerStackBase
 		{
 			typedef std::map<float, std::vector<const ZLayeredDrawable*>> LayerMap;
-			mutable LayerMap layers;
-			mutable bool dirty = true;
+
+        private:
+			mutable LayerMap layers_;
+			mutable bool dirty_ = true;
+
+        public:
+            void mark_dirty();
 
 		protected:
 			void draw_tree(const IDrawable& stack) const;
@@ -64,8 +62,6 @@ namespace oly::rendering
 			void draw_subtree(const IDrawable& drawable) const;
 			void append_layers(const IDrawable& drawable) const;
 
-		public:
-			void mark_dirty() { dirty = true; }
 		};
 	}
 
@@ -73,7 +69,10 @@ namespace oly::rendering
 	class CanvasLayerStack : public DrawableBase<ZLayer>, public internal::CanvasLayerStackBase
 	{
 	protected:
-		void draw_tree() const override { internal::CanvasLayerStackBase::draw_tree(*this); }
+		void draw_tree() const override
+        {
+            internal::CanvasLayerStackBase::draw_tree(*this);
+        }
 	};
 
 	template<typename T, bool ZLayer = false>
@@ -81,7 +80,10 @@ namespace oly::rendering
 	{
 		SmartReference<T> ref;
 
-		void on_draw() const override { ref->draw(); }
+		void on_draw() const override
+        {
+            ref->draw();
+        }
 
 		const T& operator*() const
 		{

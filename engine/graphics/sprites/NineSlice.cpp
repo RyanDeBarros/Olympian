@@ -19,7 +19,7 @@ namespace oly::rendering
 	}
 
 	NineSlice::NineSlice(Unbatched)
-		: sprites(9, Sprite(UNBATCHED))
+		: sprites(9, Sprite(kUnbatched))
 	{
 		init();
 	}
@@ -47,7 +47,7 @@ namespace oly::rendering
 	{
 		for (unsigned char x = 0; x < 3; ++x)
 			for (unsigned char y = 0; y < 3; ++y)
-				sprite(x, y).set_batch(UNBATCHED);
+				sprite(x, y).set_batch(kUnbatched);
 	}
 
 	void NineSlice::set_batch(SpriteBatch& batch)

@@ -17,33 +17,33 @@ namespace oly::rendering
 
 	bool Camera2D::block(const input::WindowResizeEventData& data)
 	{
-		if (boxed)
+		if (boxed_)
 		{
 			float aspect_ratio = float(data.w) / data.h;
-			if (aspect_ratio > target_aspect_ratio)
+			if (aspect_ratio > target_aspect_ratio_)
 			{
-				viewport.h = (float)data.h;
-				viewport.y = 0.0f;
-				viewport.w = data.h * target_aspect_ratio;
-				viewport.x = (data.w - viewport.w) * 0.5f;
+				viewport_.h = (float)data.h;
+				viewport_.y = 0.0f;
+				viewport_.w = data.h * target_aspect_ratio_;
+				viewport_.x = (data.w - viewport_.w) * 0.5f;
 			}
 			else
 			{
-				viewport.w = (float)data.w;
-				viewport.x = 0.0f;
-				viewport.h = data.w / target_aspect_ratio;
-				viewport.y = (data.h - viewport.h) * 0.5f;
+				viewport_.w = (float)data.w;
+				viewport_.x = 0.0f;
+				viewport_.h = data.w / target_aspect_ratio_;
+				viewport_.y = (data.h - viewport_.h) * 0.5f;
 			}
 		}
 		else
 		{
-			viewport.x = 0.0f;
-			viewport.y = 0.0f;
-			viewport.w = (float)data.w;
-			viewport.h = (float)data.h;
+			viewport_.x = 0.0f;
+			viewport_.y = 0.0f;
+			viewport_.w = (float)data.w;
+			viewport_.h = (float)data.h;
 		}
 
-		if (!stretch)
+		if (!stretch_)
 			set_projection();
 
 		return false;
@@ -51,63 +51,62 @@ namespace oly::rendering
 
 	bool Camera2D::consume(const input::WindowResizeEventData&)
 	{
-		if (boxed)
+		if (boxed_)
 		{
 			glClear(GL_COLOR_BUFFER_BIT);
 			glClear(GL_DEPTH_BUFFER_BIT);
 		}
+
 		apply_viewport();
 		return false;
 	}
 
-	void Camera2D::reinitialize(bool boxed, bool stretch)
-	{
-		this->boxed = boxed;
-		this->stretch = stretch;
-
-		glm::ivec2 size = context::get_platform().window().get_size();
-		viewport.w = (float)size.x;
-		viewport.h = (float)size.y;
-		target_aspect_ratio = viewport.w / viewport.h;
-		set_projection();
-	}
-
-	void Camera2D::set_projection()
-	{
-		projection = glm::ortho(-0.5f * viewport.w, 0.5f * viewport.w, -0.5f * viewport.h, 0.5f * viewport.h);
-	}
-
 	glm::mat3 Camera2D::projection_matrix() const
 	{
-		return projection * glm::inverse(transformer.global());
+		return projection_ * glm::inverse(transformer.global());
 	}
 
 	glm::mat3 Camera2D::invariant_projection_matrix() const
 	{
-		return projection;
+		return projection_;
 	}
 
 	void Camera2D::project_to_rect(math::Rect2D rect)
 	{
-		viewport.x = rect.x1;
-		viewport.y = rect.y1;
-		viewport.w = rect.width();
-		viewport.h = rect.height();
+		viewport_.x = rect.x1;
+		viewport_.y = rect.y1;
+		viewport_.w = rect.width();
+		viewport_.h = rect.height();
 
 		set_projection();
 		transformer.set_local().position = rect.center();
 	}
 
+    math::Area2D Camera2D::get_viewport() const
+    {
+        return viewport_;
+    }
+
 	void Camera2D::apply_viewport() const
 	{
-		glViewport((int)viewport.x, (int)viewport.y, (int)viewport.w, (int)viewport.h);
+		glViewport((int)viewport_.x, (int)viewport_.y, (int)viewport_.w, (int)viewport_.h);
 	}
-	
+
+    bool Camera2D::is_boxed() const
+    {
+        return boxed_;
+    }
+
+    bool Camera2D::is_stretch() const
+    {
+        return stretch_;
+    }
+
 	glm::vec2 Camera2D::screen_to_world_coordinates(glm::vec2 screen_pos) const
 	{
 		glm::vec2 ndc = {
-			((screen_pos.x - viewport.x) / viewport.w) * 2.0f - 1.0f,
-			((screen_pos.y - viewport.y) / viewport.h) * 2.0f - 1.0f
+			((screen_pos.x - viewport_.x) / viewport_.w) * 2.0f - 1.0f,
+			((screen_pos.y - viewport_.y) / viewport_.h) * 2.0f - 1.0f
 		};
 		return glm::vec2(glm::inverse(projection_matrix()) * glm::vec3{ ndc.x, -ndc.y, 1.0f });
 	}
@@ -116,8 +115,8 @@ namespace oly::rendering
 	{
 		glm::vec2 ndc = projection_matrix() * glm::vec3(world_pos, 1.0f);
 		return {
-			(ndc.x + 1.0f) * 0.5f * viewport.w + viewport.x,
-			(-ndc.y + 1.0f) * 0.5f * viewport.h + viewport.y,
+			(ndc.x + 1.0f) * 0.5f * viewport_.w + viewport_.x,
+			(-ndc.y + 1.0f) * 0.5f * viewport_.h + viewport_.y,
 		};
 	}
 	
@@ -135,4 +134,21 @@ namespace oly::rendering
 	{
 		return screen_to_world_coordinates(context::get_platform().window().get_cursor_screen_position());
 	}
+
+    void Camera2D::reinitialize(bool boxed, bool stretch)
+    {
+        this->boxed_ = boxed;
+        this->stretch_ = stretch;
+
+        glm::ivec2 size = context::get_platform().window().get_size();
+        viewport_.w = (float)size.x;
+        viewport_.h = (float)size.y;
+        target_aspect_ratio_ = viewport_.w / viewport_.h;
+        set_projection();
+    }
+
+    void Camera2D::set_projection()
+    {
+        projection_ = glm::ortho(-0.5f * viewport_.w, 0.5f * viewport_.w, -0.5f * viewport_.h, 0.5f * viewport_.h);
+    }
 }

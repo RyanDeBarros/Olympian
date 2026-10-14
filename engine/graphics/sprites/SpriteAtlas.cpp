@@ -12,7 +12,7 @@ namespace oly::rendering
 	}
 
 	SpriteAtlas::SpriteAtlas(Unbatched)
-		: sprite(UNBATCHED)
+		: sprite(kUnbatched)
 	{
 	}
 

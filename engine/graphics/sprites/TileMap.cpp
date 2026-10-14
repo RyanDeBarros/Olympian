@@ -40,7 +40,7 @@ namespace oly::rendering
 	{
 		reset();
 		for (auto& [_, sprite] : sprite_map)
-			sprite.set_batch(UNBATCHED);
+			sprite.set_batch(kUnbatched);
 	}
 
 	void TileMapLayer::set_batch(SpriteBatch& batch)
