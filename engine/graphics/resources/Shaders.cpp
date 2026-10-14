@@ -12,7 +12,7 @@ namespace oly::graphics::internal_shaders
         return dir;
     }
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+	// -------------------------------------------------------------------------------------------------------------------
 
 	struct SpriteBatchConstructor
 	{
@@ -24,14 +24,21 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			ShaderBufferSource vertex = {
-				.buffer = io::read_template_file(shaders_dir() / "sprite_batch.vert", { { "/*$MODULATIONS*/", std::to_string(modulations) }, { "/*$ANIMS*/", std::to_string(anims) } }),
+				.buffer = io::read_template_file(
+                    shaders_dir() / "sprite_batch.vert",
+                    {
+                        { "/*$MODULATIONS*/", std::to_string(modulations) },
+                        { "/*$ANIMS*/",       std::to_string(anims) }
+                    }),
 				.type = ShaderType::Vertex
 			};
+
 			ShaderBufferSource fragment = {
 				.buffer = io::read_file(shaders_dir() / "sprite_batch.frag"),
 				.type = ShaderType::Fragment
 			};
-			return Shader({ std::move(vertex), std::move(fragment) });
+			
+            return Shader({ std::move(vertex), std::move(fragment) });
 		}
 
 		size_t hash() const
@@ -40,27 +47,42 @@ namespace oly::graphics::internal_shaders
 		}
 	};
 
-	static SmartReferenceLookup<Shader, SpriteBatchConstructor> _sprite_batch;
+	static SmartReferenceLookup<Shader, SpriteBatchConstructor> sprite_batch_;
 
 	SmartReference<Shader> sprite_batch(GLushort modulations, GLushort anims)
 	{
-		return _sprite_batch.get({ .modulations = modulations, .anims = anims });
+		return sprite_batch_.get({ .modulations = modulations, .anims = anims });
 	}
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------------------
 
-	static std::unique_ptr<Shader> _polygon_batch = nullptr;
-	GLuint polygon_batch;
+	static std::unique_ptr<Shader> polygon_batch_ptr_ = nullptr;
+	static GLuint polygon_batch_;
 
-	static std::unique_ptr<Shader> _ellipse_batch = nullptr;
-	GLuint ellipse_batch;
+    GLuint polygon_batch()
+    {
+        return polygon_batch_;
+    }
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+	static std::unique_ptr<Shader> ellipse_batch_ptr_ = nullptr;
+	static GLuint ellipse_batch_;
+    
+    GLuint ellipse_batch()
+    {
+        return ellipse_batch_;
+    }
+    
+    // -------------------------------------------------------------------------------------------------------------------
 
-	static std::unique_ptr<Shader> _particle_renderer = nullptr;
-	GLuint particle_renderer;
+	static std::unique_ptr<Shader> particle_renderer_ptr_ = nullptr;
+	static GLuint particle_renderer_;
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+    GLuint particle_renderer()
+    {
+        return particle_renderer_;
+    }
+
+    // -------------------------------------------------------------------------------------------------------------------
 
 	struct ParticleComputeSpawnConstructor
 	{
@@ -71,7 +93,9 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			return Shader({ {
-				.buffer = io::read_template_file(shaders_dir() / "particles/spawn.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
+				.buffer = io::read_template_file(
+                    shaders_dir() / "particles/spawn.comp",
+                    { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
 				.type = ShaderType::Compute
 			} });
 		}
@@ -82,14 +106,14 @@ namespace oly::graphics::internal_shaders
 		}
 	};
 
-	static SmartReferenceLookup<Shader, ParticleComputeSpawnConstructor> _particle_compute_spawn;
+	static SmartReferenceLookup<Shader, ParticleComputeSpawnConstructor> particle_compute_spawn_;
 
 	SmartReference<Shader> particle_compute_spawn(GLushort x_threads)
 	{
-		return _particle_compute_spawn.get({ .x_threads = x_threads });
+		return particle_compute_spawn_.get({ .x_threads = x_threads });
 	}
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------------------
 
 	struct ParticleComputeUpdateConstructor
 	{
@@ -100,7 +124,9 @@ namespace oly::graphics::internal_shaders
 		Shader operator()() const
 		{
 			return Shader({ {
-				.buffer = io::read_template_file(shaders_dir() / "particles/update.comp", { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
+				.buffer = io::read_template_file(
+                    shaders_dir() / "particles/update.comp",
+                    { { "/*$X_THREADS*/", std::to_string(x_threads) } }),
 				.type = ShaderType::Compute
 			} });
 		}
@@ -111,49 +137,50 @@ namespace oly::graphics::internal_shaders
 		}
 	};
 
-	static SmartReferenceLookup<Shader, ParticleComputeUpdateConstructor> _particle_compute_update;
+	static SmartReferenceLookup<Shader, ParticleComputeUpdateConstructor> particle_compute_update_;
 
 	SmartReference<Shader> particle_compute_update(GLushort x_threads)
 	{
-		return _particle_compute_update.get({ .x_threads = x_threads });
+		return particle_compute_update_.get({ .x_threads = x_threads });
 	}
 
-	// --------------------------------------------------------------------------------------------------------------------------------
+    // -------------------------------------------------------------------------------------------------------------------
 
 	void load()
 	{
-		_polygon_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir() / "polygon_batch.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir() / "polygon_batch.frag", .type = ShaderType::Fragment }
+		polygon_batch_ptr_ = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+			{ .path = shaders_dir() / "polygon_batch_.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "polygon_batch_.frag", .type = ShaderType::Fragment }
 		});
-		polygon_batch = *_polygon_batch;
+		polygon_batch_ = *polygon_batch_ptr_;
 
-		_ellipse_batch = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir() / "ellipse_batch.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir() / "ellipse_batch.frag", .type = ShaderType::Fragment }
+		ellipse_batch_ptr_ = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+			{ .path = shaders_dir() / "ellipse_batch_.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "ellipse_batch_.frag", .type = ShaderType::Fragment }
 		});
-		ellipse_batch = *_ellipse_batch;
+		ellipse_batch_ = *ellipse_batch_ptr_;
 
-		_particle_renderer = std::make_unique<Shader>(std::vector<ShaderPathSource>{
+		particle_renderer_ptr_ = std::make_unique<Shader>(std::vector<ShaderPathSource>{
 			{ .path = shaders_dir() / "particles/particle.vert", .type = ShaderType::Vertex },
             { .path = shaders_dir() / "particles/particle.frag", .type = ShaderType::Fragment }
 		});
-		particle_renderer = *_particle_renderer;
+		particle_renderer_ = *particle_renderer_ptr_;
 	}
 
 	void unload()
 	{
-		_sprite_batch.clear();
+		sprite_batch_.clear();
 
-		_polygon_batch.reset();
-		polygon_batch = 0;
+		polygon_batch_ptr_.reset();
+		polygon_batch_ = 0;
 
-		_ellipse_batch.reset();
-		ellipse_batch = 0;
+		ellipse_batch_ptr_.reset();
+		ellipse_batch_ = 0;
 
-		_particle_renderer.reset();
-		particle_renderer = 0;
-		_particle_compute_spawn.clear();
-		_particle_compute_update.clear();
+		particle_renderer_ptr_.reset();
+		particle_renderer_ = 0;
+
+		particle_compute_spawn_.clear();
+		particle_compute_update_.clear();
 	}
 }

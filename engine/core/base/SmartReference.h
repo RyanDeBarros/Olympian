@@ -358,18 +358,21 @@ namespace oly
 			increment();
 		}
 
-		SmartReference(const Object& obj)
+        // TODO use make_smart() helper instead of using constructor directly
+		explicit SmartReference(const Object& obj)
 		{
 			init(obj);
 		}
-		
-		SmartReference(Object&& obj)
+
+        // TODO use make_smart() helper instead of using constructor directly
+        explicit SmartReference(Object&& obj)
 		{
 			init(std::move(obj));
 		}
 
+        // TODO use make_smart() helper instead of using constructor directly
 		template<typename... Args, typename = EnableObjectArgs<Args...>>
-		SmartReference(Args&&... args)
+        explicit SmartReference(Args&&... args)
 		{
 			init(Object(std::forward<Args>(args)...));
 		}
@@ -756,7 +759,7 @@ namespace oly
 	public:
 		static SmartReference<Object> load(TOMLNode node)
 		{
-			return Object::load(node);
+			return SmartReference<Object>(Object::load(node));
 		}
 	};
 

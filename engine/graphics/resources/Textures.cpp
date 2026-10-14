@@ -4,25 +4,32 @@
 
 namespace oly::graphics::textures
 {
-	BindlessTextureRef white1x1;
+	BindlessTextureRef white1x1_;
+
+    BindlessTextureRef white1x1()
+    {
+        return white1x1_;
+    }
 
 	void internal::load()
 	{
-		{
-			ImageDimensions dim{ .w = 1, .h = 1, .cpp = 4 };
-			unsigned char* buf = dim.pxnew();
-			memcpy(buf, std::array<unsigned char, 4>{ 255, 255, 255, 255 }.data(), 4 * sizeof(unsigned char));
-			white1x1 = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
-			white1x1->set_and_use_handle();
-		}
+		ImageDimensions dim{ .w = 1, .h = 1, .cpp = 4 };
+		unsigned char* buf = dim.pxnew();
+		memcpy(buf, std::array<unsigned char, 4>{ 255, 255, 255, 255 }.data(), 4 * sizeof(unsigned char));
+		white1x1_ = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
+		white1x1_->set_and_use_handle();
 	}
 
 	void internal::unload()
 	{
-		white1x1.invalidate();
+		white1x1_.invalidate();
 	}
 
-	BindlessTextureRef mod2x2(glm::vec<4, unsigned char> c1, glm::vec<4, unsigned char> c2, glm::vec<4, unsigned char> c3, glm::vec<4, unsigned char> c4)
+	BindlessTextureRef mod2x2(
+        glm::vec<4, unsigned char> c1,
+        glm::vec<4, unsigned char> c2,
+        glm::vec<4, unsigned char> c3,
+        glm::vec<4, unsigned char> c4)
 	{
 		ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
 		unsigned char* buf = dim.pxnew();

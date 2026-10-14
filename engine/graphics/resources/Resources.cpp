@@ -1,7 +1,7 @@
 #include "Resources.h"
 
-#include "graphics/resources/Shaders.h"
 #include "graphics/resources/Samplers.h"
+#include "graphics/resources/Shaders.h"
 #include "graphics/resources/Textures.h"
 
 namespace oly::graphics::internal

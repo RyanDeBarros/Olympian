@@ -603,7 +603,7 @@ namespace oly::rendering
 	{
 		bkg.transformer.attach_parent(&transformer);
 		bkg.transformer.set_modifier() = imp::make_poly<PivotTransformModifier2D>();
-		bkg.set_texture(graphics::textures::white1x1, { 1.0f, 1.0f });
+		bkg.set_texture(graphics::textures::white1x1(), {1.0f, 1.0f});
 		bkg.set_modulation({ 0.0f, 0.0f, 0.0f, 1.0f });
 
 		for (TextElement& element : elements)

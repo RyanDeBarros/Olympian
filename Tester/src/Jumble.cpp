@@ -18,7 +18,7 @@ Jumble::Jumble()
 	atlased_knight.ref.init_toml(table["atlased_knight"]);
 
 	static auto VK1 = OLY_NEXT_VAULT_KEY;
-	grass_tilemap.ref = oly::context::vault_prototype(VK1, [node = table["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); });
+	grass_tilemap.ref = oly::SmartReference(oly::context::vault_prototype(VK1, [node = table["grass_tilemap"]]() { return oly::rendering::TileMap::load(node); }));
 
 	nonant_panel.ref.init_toml(table["nonant_panel"]);
 

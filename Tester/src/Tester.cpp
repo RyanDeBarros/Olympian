@@ -28,7 +28,7 @@ struct BKG
 
 	BKG()
 	{
-		bkg_rect = oly::rendering::Polygon::load(((oly::TOMLNode)oly::io::load_toml("@/assets/BKG.toml"))["polygon"]);
+		bkg_rect = oly::SmartReference(oly::rendering::Polygon::load(((oly::TOMLNode)oly::io::load_toml("@/assets/BKG.toml"))["polygon"]));
 	}
 
 	void draw() const
@@ -312,9 +312,9 @@ int main()
 	auto flag_texture = oly::context::load_texture("@/textures/flag.png");
 	oly::CallbackTimer flag_sampler_timer({ 0.5f, 0.5f }, [flag_texture](size_t state) mutable {
 		if (state == 0)
-			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest);
+			flag_texture->set_and_use_handle(oly::graphics::samplers::nearest());
 		else if (state == 1)
-			flag_texture->set_and_use_handle(oly::graphics::samplers::linear);
+			flag_texture->set_and_use_handle(oly::graphics::samplers::linear());
 		oly::context::sync_texture_handle(flag_texture);
 	}, false);
 

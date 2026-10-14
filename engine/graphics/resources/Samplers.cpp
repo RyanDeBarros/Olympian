@@ -6,65 +6,106 @@
 
 namespace oly::graphics::samplers
 {
-	static std::unique_ptr<Sampler> _linear = nullptr;
-	GLuint linear = 0;
-	static std::unique_ptr<Sampler> _nearest = nullptr;
-	GLuint nearest = 0;
-	static std::unique_ptr<Sampler> _linear_mipmap_linear = nullptr;
-	GLuint linear_mipmap_linear = 0;
-	static std::unique_ptr<Sampler> _linear_mipmap_nearest = nullptr;
-	GLuint linear_mipmap_nearest = 0;
-	static std::unique_ptr<Sampler> _nearest_mipmap_linear = nullptr;
-	GLuint nearest_mipmap_linear = 0;
-	static std::unique_ptr<Sampler> _nearest_mipmap_nearest = nullptr;
-	GLuint nearest_mipmap_nearest = 0;
+	static std::unique_ptr<Sampler> linear_ptr_ = nullptr;
+	static GLuint linear_ = 0;
+
+    static std::unique_ptr<Sampler> nearest_ptr_ = nullptr;
+    static GLuint nearest_ = 0;
+	
+	static std::unique_ptr<Sampler> linear_mipmap_linear_ptr_ = nullptr;
+    static GLuint linear_mipmap_linear_ = 0;
+	
+    static std::unique_ptr<Sampler> linear_mipmap_nearest_ptr_ = nullptr;
+    static GLuint linear_mipmap_nearest_ = 0;
+	
+    static std::unique_ptr<Sampler> nearest_mipmap_linear_ptr_ = nullptr;
+    static GLuint nearest_mipmap_linear_ = 0;
+	
+    static std::unique_ptr<Sampler> nearest_mipmap_nearest_ptr_ = nullptr;
+    static GLuint nearest_mipmap_nearest_ = 0;
+
+    GLuint linear()
+    {
+        return linear_;
+    }
+
+    GLuint nearest()
+    {
+        return nearest_;
+    }
+
+    GLuint linear_mipmap_linear()
+    {
+        return linear_mipmap_linear_;
+    }
+
+    GLuint linear_mipmap_nearest()
+    {
+        return linear_mipmap_nearest_;
+    }
+
+    GLuint nearest_mipmap_linear()
+    {
+        return nearest_mipmap_linear_;
+    }
+
+    GLuint nearest_mipmap_nearest()
+    {
+        return nearest_mipmap_nearest_;
+    }
+
 
 	void internal::load()
 	{
-		_linear = std::make_unique<Sampler>();
-		_linear->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		_linear->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		linear = *_linear;
+		linear_ptr_ = std::make_unique<Sampler>();
+		linear_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		linear_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		linear_ = *linear_ptr_;
 
-		_nearest = std::make_unique<Sampler>();
-		_nearest->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		_nearest->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		nearest = *_nearest;
+		nearest_ptr_ = std::make_unique<Sampler>();
+		nearest_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		nearest_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		nearest_ = *nearest_ptr_;
 
-		_linear_mipmap_linear = std::make_unique<Sampler>();
-		_linear_mipmap_linear->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-		_linear_mipmap_linear->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		linear_mipmap_linear = *_linear_mipmap_linear;
+		linear_mipmap_linear_ptr_ = std::make_unique<Sampler>();
+		linear_mipmap_linear_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		linear_mipmap_linear_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		linear_mipmap_linear_ = *linear_mipmap_linear_ptr_;
 
-		_linear_mipmap_nearest = std::make_unique<Sampler>();
-		_linear_mipmap_nearest->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-		_linear_mipmap_nearest->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		linear_mipmap_nearest = *_linear_mipmap_nearest;
+		linear_mipmap_nearest_ptr_ = std::make_unique<Sampler>();
+		linear_mipmap_nearest_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+		linear_mipmap_nearest_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		linear_mipmap_nearest_ = *linear_mipmap_nearest_ptr_;
 
-		_nearest_mipmap_linear = std::make_unique<Sampler>();
-		_nearest_mipmap_linear->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-		_nearest_mipmap_linear->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		nearest_mipmap_linear = *_nearest_mipmap_linear;
+		nearest_mipmap_linear_ptr_ = std::make_unique<Sampler>();
+		nearest_mipmap_linear_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+		nearest_mipmap_linear_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		nearest_mipmap_linear_ = *nearest_mipmap_linear_ptr_;
 
-		_nearest_mipmap_nearest = std::make_unique<Sampler>();
-		_nearest_mipmap_nearest->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-		_nearest_mipmap_nearest->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		nearest_mipmap_nearest = *_nearest_mipmap_nearest;
+		nearest_mipmap_nearest_ptr_ = std::make_unique<Sampler>();
+		nearest_mipmap_nearest_ptr_->set_parameter_i(GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+		nearest_mipmap_nearest_ptr_->set_parameter_i(GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		nearest_mipmap_nearest_ = *nearest_mipmap_nearest_ptr_;
 	}
 
 	void internal::unload()
 	{
-		_linear.reset();
-		linear = 0;
-		_nearest.reset();
-		nearest = 0;
-		_linear_mipmap_linear.reset();
-		linear_mipmap_linear = 0;
-		_linear_mipmap_nearest.reset();
-		linear_mipmap_nearest = 0;
-		_nearest_mipmap_linear.reset();
-		nearest_mipmap_linear = 0;
-		_nearest_mipmap_nearest.reset();
-		nearest_mipmap_nearest = 0;
+		linear_ptr_.reset();
+		linear_ = 0;
+
+        nearest_ptr_.reset();
+		nearest_ = 0;
+		
+		linear_mipmap_linear_ptr_.reset();
+        linear_mipmap_linear_ = 0;
+		
+        linear_mipmap_nearest_ptr_.reset();
+		linear_mipmap_nearest_ = 0;
+		
+		nearest_mipmap_linear_ptr_.reset();
+        nearest_mipmap_linear_ = 0;
+		
+        nearest_mipmap_nearest_ptr_.reset();
+		nearest_mipmap_nearest_ = 0;
 	}
 }

@@ -17,8 +17,8 @@ namespace oly::rendering
 	internal::EllipseBatch::EllipseBatch()
 		: ebo(vao)
 	{
-		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uProjection");
-		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::ellipse_batch, "uInvariantProjection");
+		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::ellipse_batch(), "uProjection");
+		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::ellipse_batch(), "uInvariantProjection");
 	}
 
 	void internal::EllipseBatch::render() const
@@ -29,7 +29,7 @@ namespace oly::rendering
 		ssbo_block.pre_draw_all();
 
 		glBindVertexArray(vao);
-		glUseProgram(graphics::internal_shaders::ellipse_batch);
+		glUseProgram(graphics::internal_shaders::ellipse_batch());
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
 		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 

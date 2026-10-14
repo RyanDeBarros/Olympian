@@ -18,8 +18,8 @@ namespace oly::rendering
 	internal::PolygonBatch::PolygonBatch()
 		: ebo(vao), vbo_block(vao), vertex_free_space({ 0, nmax<GLuint>() })
 	{
-		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uProjection");
-		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch, "uInvariantProjection");
+		shader_locations.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch(), "uProjection");
+		shader_locations.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch(), "uInvariantProjection");
 
 		vbo_block.attributes[POSITION] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 0, .size = 2 };
 		vbo_block.attributes[COLOR] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 1, .size = 4 };
@@ -35,7 +35,7 @@ namespace oly::rendering
 		vbo_block.pre_draw_all();
 		transform_ssbo.pre_draw();
 		glBindVertexArray(vao);
-		glUseProgram(graphics::internal_shaders::polygon_batch);
+		glUseProgram(graphics::internal_shaders::polygon_batch());
 		glUniformMatrix3fv(shader_locations.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
 		glUniformMatrix3fv(shader_locations.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
 

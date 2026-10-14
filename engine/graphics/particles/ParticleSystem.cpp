@@ -79,7 +79,7 @@ namespace oly::rendering
 		shaders = {
 			.compute_spawn_ref = graphics::internal_shaders::particle_compute_spawn(compute_threads),
 			.compute_update_ref = graphics::internal_shaders::particle_compute_update(compute_threads),
-			.renderer = graphics::internal_shaders::particle_renderer
+			.renderer = graphics::internal_shaders::particle_renderer()
 		};
 
 		shaders.compute_spawn = *shaders.compute_spawn_ref;
