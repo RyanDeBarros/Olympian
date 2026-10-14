@@ -1,8 +1,9 @@
 #pragma once
 
+#include "physics/collision/Tolerance.h"
+
 #include "physics/collision/scene/luts/LUT.h"
 #include "physics/collision/scene/luts/LUTVariant.h"
-#include "physics/collision/Tolerance.h"
 
 #include <imp/contiguous_set.hpp>
 #include <imp/fixed_vector.hpp>
@@ -25,23 +26,28 @@ namespace oly::col2d
 			friend class Collider;
 			friend class internal::TreeHandleMap;
 
-			const CollisionTree* tree;
-			math::Rect2D bounds;
-			CollisionNode* parent = nullptr;
-			imp::fixed_vector<std::unique_ptr<CollisionNode>> subnodes;
-			imp::contiguous_set<const Collider*> _colliders;
+			const CollisionTree* tree_;
+			math::Rect2D bounds_;
+			CollisionNode* parent_ = nullptr;
+			imp::fixed_vector<std::unique_ptr<CollisionNode>> subnodes_;
+			imp::contiguous_set<const Collider*> colliders_;
 
 			CollisionNode(const CollisionTree* tree, math::Rect2D bounds);
-			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& other);
-			void assign_tree(const CollisionTree* new_tree);
+			CollisionNode(const CollisionTree* tree, CollisionNode* parent, const CollisionNode& o);
 
 		public:
 			~CollisionNode();
 
+        public:
+            imp::contiguous_set<const Collider*>& set_colliders();
+            const imp::contiguous_set<const Collider*>& get_colliders() const;
+
 		private:
 			static std::unique_ptr<CollisionNode> instantiate(const CollisionTree* tree, math::Rect2D bounds);
 
-			void update(const Collider& collider, CollisionNode*& node);
+            void assign_tree(const CollisionTree* new_tree);
+            
+            void update(const Collider& collider, CollisionNode*& node);
 			void insert_upwards(const Collider& collider, CollisionNode*& node);
 
 			void subdivide();
@@ -52,10 +58,6 @@ namespace oly::col2d
 			math::Rect2D subdivision(int x, int y) const;
 
 			void set_bounds(math::Rect2D b);
-
-		public:
-            imp::contiguous_set<const Collider*>& set_colliders();
-            const imp::contiguous_set<const Collider*>& get_colliders() const;
 		};
 	}
 
@@ -68,18 +70,96 @@ namespace oly::col2d
 		friend class Collider;
 		friend class CollisionDispatcher;
 
-		size_t cell_capacity;
-		glm::uvec2 degree;
-		glm::vec2 inv_degree;
+        class BFSColliderIterator
+        {
+            friend class CollisionTree;
 
-		std::unique_ptr<internal::CollisionNode> root;
+            mutable const CollisionTree* tree_ = nullptr;
+            math::Rect2D bounds_;
+            std::queue<const internal::CollisionNode*> nodes_;
+            size_t i_ = 0;
+            const Collider* current_ = nullptr;
+
+        public:
+            BFSColliderIterator(const math::Rect2D bounds);
+            BFSColliderIterator(const CollisionTree& tree, const math::Rect2D bounds);
+            BFSColliderIterator(const BFSColliderIterator&);
+            BFSColliderIterator(BFSColliderIterator&&);
+            ~BFSColliderIterator();
+
+            BFSColliderIterator& operator=(const BFSColliderIterator&);
+            BFSColliderIterator& operator=(BFSColliderIterator&&);
+
+        public:
+            bool done() const;
+            const Collider* next();
+
+        private:
+            void set(const BFSColliderIterator&);
+            void increment_current();
+            void assert_valid() const;
+            void invalidate() const;
+        };
+
+        class PairIterator
+        {
+            friend class CollisionTree;
+
+            struct ColliderPtrPair
+            {
+                const Collider* first = nullptr;
+                const Collider* second = nullptr;
+
+                operator bool() const;
+            };
+
+        private:
+            mutable const CollisionTree* tree_ = nullptr;
+            BFSColliderIterator first_;
+            BFSColliderIterator second_;
+            ColliderPtrPair current_;
+
+        public:
+            PairIterator(const CollisionTree& tree, const math::Rect2D bounds);
+            PairIterator(const PairIterator&);
+            PairIterator(PairIterator&&);
+            ~PairIterator();
+
+            PairIterator& operator=(const PairIterator&);
+            PairIterator& operator=(PairIterator&&);
+
+        public:
+            bool done() const;
+            ColliderPtrPair next();
+
+        private:
+            void increment_current();
+            void assert_valid() const;
+            void invalidate() const;
+        };
+
+    private:
+		size_t cell_capacity_;
+		glm::uvec2 degree_;
+		glm::vec2 inv_degree_;
+		std::unique_ptr<internal::CollisionNode> root_;
+        mutable std::unordered_set<const BFSColliderIterator*> bfs_collider_iterators_;
+        mutable std::unordered_set<const PairIterator*> pair_iterators_;
 
 	public:
 		CollisionTree(math::Rect2D bounds, glm::uvec2 degree = { 2, 2 }, size_t cell_capacity = 4);
 		CollisionTree(const CollisionTree&);
 		CollisionTree(CollisionTree&&) noexcept;
+
 		CollisionTree& operator=(const CollisionTree&);
 		CollisionTree& operator=(CollisionTree&&) noexcept;
+
+    public:
+        BFSColliderIterator query(const Collider& collider) const;
+        BFSColliderIterator query(const math::Rect2D bounds) const;
+        PairIterator iterator() const;
+
+        void set_bounds(math::Rect2D bounds);
 
 	private:
 		// call flush() after all collision objects have moved, but before handling events
@@ -90,83 +170,5 @@ namespace oly::col2d
 		void flush_remove_upward() const;
 
 		void invalidate_iterators() const;
-
-		class BFSColliderIterator
-		{
-			friend class CollisionTree;
-			mutable const CollisionTree* tree = nullptr;
-
-			math::Rect2D bounds;
-			std::queue<const internal::CollisionNode*> nodes;
-			size_t i = 0;
-			const Collider* current = nullptr;
-			
-		public:
-			BFSColliderIterator(const math::Rect2D bounds) : bounds(bounds) {}
-			BFSColliderIterator(const CollisionTree& tree, const math::Rect2D bounds);
-			BFSColliderIterator(const BFSColliderIterator&);
-			BFSColliderIterator(BFSColliderIterator&&);
-			~BFSColliderIterator();
-			BFSColliderIterator& operator=(const BFSColliderIterator&);
-			BFSColliderIterator& operator=(BFSColliderIterator&&);
-
-		private:
-			void set(const BFSColliderIterator&);
-
-			void increment_current();
-
-		public:
-			bool done() const { return !tree || !current; }
-			const Collider* next();
-
-		private:
-			void assert_valid() const;
-			void invalidate() const;
-		};
-
-		mutable std::unordered_set<const BFSColliderIterator*> bfs_collider_iterators;
-
-		class PairIterator
-		{
-			friend class CollisionTree;
-			mutable const CollisionTree* tree = nullptr;
-
-			BFSColliderIterator first, second;
-			struct ColliderPtrPair
-			{
-				const Collider* first = nullptr;
-				const Collider* second = nullptr;
-
-				operator bool () const { return first && second; }
-			} current;
-
-		public:
-			PairIterator(const CollisionTree& tree, const math::Rect2D bounds);
-			PairIterator(const PairIterator&);
-			PairIterator(PairIterator&&);
-			~PairIterator();
-			PairIterator& operator=(const PairIterator&);
-			PairIterator& operator=(PairIterator&&);
-
-		private:
-			void increment_current();
-
-		public:
-			bool done() const { return !tree || !current; }
-			ColliderPtrPair next();
-
-		private:
-			void assert_valid() const;
-			void invalidate() const;
-		};
-
-		mutable std::unordered_set<const PairIterator*> pair_iterators;
-
-	public:
-		BFSColliderIterator query(const Collider& collider) const;
-		BFSColliderIterator query(const math::Rect2D bounds) const;
-		PairIterator iterator() const;
-		
-		void set_bounds(math::Rect2D bounds);
 	};
 }

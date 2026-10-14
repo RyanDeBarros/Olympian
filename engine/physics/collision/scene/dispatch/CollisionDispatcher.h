@@ -4,6 +4,7 @@
 #include "physics/collision/scene/dispatch/CollisionTree.h"
 
 #include <imp/symmetric_umap.hpp>
+#include <imp/bitmask.hpp>
 
 namespace oly::col2d
 {
@@ -15,9 +16,7 @@ namespace oly::col2d
 		Completed = 0b1000
 	};
 
-	constexpr Phase operator&(Phase a, Phase b) { return (Phase)((unsigned char)a & (unsigned char)b); }
-	constexpr Phase operator|(Phase a, Phase b) { return (Phase)((unsigned char)a | (unsigned char)b); }
-	constexpr Phase operator~(Phase a) { return (Phase)(~(unsigned char)a); }
+    IMP_IMPLEMENT_BITMASK(Phase);
 
 	extern Logger::Impl operator<<(Logger::Impl, Phase);
 
@@ -27,19 +26,17 @@ namespace oly::col2d
 		const Collider& active_collider;
 		const Collider& passive_collider;
 
-		OverlapEventData(OverlapResult result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
+		OverlapEventData(
+            OverlapResult result,
+            const Collider& active_collider,
+            const Collider& passive_collider,
+            Phase prior);
 
-		OverlapEventData(Phase phase, const Collider& active_collider, const Collider& passive_collider)
-			: phase(phase), active_collider(active_collider), passive_collider(passive_collider) {}
-
-		OverlapEventData(const OverlapEventData& other)
-			: phase(other.phase), active_collider(other.active_collider), passive_collider(other.passive_collider) {}
+        OverlapEventData(Phase phase, const Collider& active_collider, const Collider& passive_collider);
+        OverlapEventData(const OverlapEventData&);
 	};
 
-	inline OverlapEventData invert_event_data(const OverlapEventData& data)
-	{
-		return OverlapEventData(data.phase, data.passive_collider, data.active_collider);
-	}
+    extern OverlapEventData invert_event_data(const OverlapEventData& data);
 
 	struct CollisionEventData
 	{
@@ -49,75 +46,61 @@ namespace oly::col2d
 		const Collider& active_collider;
 		const Collider& passive_collider;
 
-		CollisionEventData(const CollisionResult& result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
+		CollisionEventData(
+            const CollisionResult& result,
+            const Collider& active_collider,
+            const Collider& passive_collider,
+            Phase prior);
 
-		CollisionEventData(Phase phase, float penetration_depth, UnitVector2D unit_impulse, const Collider& active_collider, const Collider& passive_collider)
-			: phase(phase)
-            , penetration_depth(penetration_depth)
-            , unit_impulse(unit_impulse)
-            , active_collider(active_collider)
-            , passive_collider(passive_collider)
-        {}
+        CollisionEventData(
+            Phase phase,
+            float penetration_depth,
+            UnitVector2D unit_impulse,
+            const Collider& active_collider,
+            const Collider& passive_collider);
 
-		CollisionEventData(const CollisionEventData& other)
-			: phase(other.phase)
-            , penetration_depth(other.penetration_depth)
-            , unit_impulse(other.unit_impulse)
-            , active_collider(other.active_collider)
-            , passive_collider(other.passive_collider)
-        {}
+        CollisionEventData(const CollisionEventData&);
 
-		glm::vec2 mtv() const { return (glm::vec2)unit_impulse * penetration_depth; }
-
-		OverlapEventData overlap_event() const
-		{
-			return OverlapEventData(phase, active_collider, passive_collider);
-		}
+        glm::vec2 mtv() const;
+        OverlapEventData overlap_event() const;
 	};
 
-	inline CollisionEventData invert_event_data(const CollisionEventData& data)
-	{
-		return CollisionEventData(data.phase, data.penetration_depth, -data.unit_impulse, data.passive_collider, data.active_collider);
-	}
+    extern CollisionEventData invert_event_data(const CollisionEventData& data);
 
-	struct ContactEventData
-	{
-		Phase phase;
-		ContactResult::Contact active_contact, passive_contact;
-		const Collider& active_collider;
-		const Collider& passive_collider;
+    struct ContactEventData
+    {
+        Phase phase;
+        ContactResult::Contact active_contact, passive_contact;
+        const Collider& active_collider;
+        const Collider& passive_collider;
 
-		ContactEventData(const ContactResult& result, const Collider& active_collider, const Collider& passive_collider, Phase prior);
+        ContactEventData(
+            const ContactResult& result,
+            const Collider& active_collider,
+            const Collider& passive_collider,
+            Phase prior);
 
-		ContactEventData(Phase phase, ContactResult::Contact active_contact, ContactResult::Contact passive_contact, const Collider& active_collider, const Collider& passive_collider)
-			: phase(phase), active_contact(active_contact), passive_contact(passive_contact), active_collider(active_collider), passive_collider(passive_collider) {}
+        ContactEventData(
+            Phase phase,
+            ContactResult::Contact active_contact,
+            ContactResult::Contact passive_contact,
+            const Collider& active_collider,
+            const Collider& passive_collider);
 
-		ContactEventData(const ContactEventData& other)
-			: phase(other.phase), active_contact(other.active_contact), passive_contact(other.passive_contact),
-			active_collider(other.active_collider), passive_collider(other.passive_collider) {}
+        ContactEventData(const ContactEventData&);
 
-		OverlapEventData overlap_event() const
-		{
-			return OverlapEventData(phase, active_collider, passive_collider);
-		}
+        OverlapEventData overlap_event() const;
+        CollisionEventData collision_event() const;
+    };
 
-		CollisionEventData collision_event() const
-		{
-			return CollisionEventData(phase, glm::length(active_contact.impulse), UnitVector2D(active_contact.impulse), active_collider, passive_collider);
-		}
-	};
-
-	inline ContactEventData invert_event_data(const ContactEventData& data)
-	{
-		return ContactEventData(data.phase, data.passive_contact, data.active_contact, data.passive_collider, data.active_collider);
-	}
+    extern ContactEventData invert_event_data(const ContactEventData& data);
 
 	namespace internal
 	{
 		class CollisionPhaseTracker
 		{
-			imp::symmetric_umap<const Collider*, Phase> map;
-			imp::symmetric_umap<const Collider*, Phase>::map_ty lazy_updates;
+			imp::symmetric_umap<const Collider*, Phase> map_;
+			imp::symmetric_umap<const Collider*, Phase>::map_ty lazy_updates_;
 
 		public:
 			Phase prior_phase(const Collider& c1, const Collider& c2);
@@ -132,9 +115,9 @@ namespace oly::col2d
 
 		class CollisionCache
 		{
-            imp::symmetric_umap<const Collider*, OverlapEventData> overlaps;
-            imp::symmetric_umap<const Collider*, CollisionEventData> collisions;
-            imp::symmetric_umap<const Collider*, ContactEventData> contacts;
+            imp::symmetric_umap<const Collider*, OverlapEventData> overlaps_;
+            imp::symmetric_umap<const Collider*, CollisionEventData> collisions_;
+            imp::symmetric_umap<const Collider*, ContactEventData> contacts_;
 
 		public:
 			void update(const Collider& c1, const Collider& c2, const OverlapEventData& data);
@@ -150,21 +133,21 @@ namespace oly::col2d
 			template<>
 			std::optional<OverlapEventData> get<OverlapEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = overlaps.get(&c1, &c2))
+				if (auto data = overlaps_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
 					else
 						return invert_event_data(*data);
 				}
-				else if (auto data = collisions.get(&c1, &c2))
+				else if (auto data = collisions_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->overlap_event();
 					else
 						return invert_event_data(data->overlap_event());
 				}
-				else if (auto data = contacts.get(&c1, &c2))
+				else if (auto data = contacts_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->overlap_event();
@@ -178,14 +161,14 @@ namespace oly::col2d
 			template<>
 			std::optional<CollisionEventData> get<CollisionEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = collisions.get(&c1, &c2))
+				if (auto data = collisions_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
 					else
 						return invert_event_data(*data);
 				}
-				else if (auto data = contacts.get(&c1, &c2))
+				else if (auto data = contacts_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return data->collision_event();
@@ -199,7 +182,7 @@ namespace oly::col2d
 			template<>
 			std::optional<ContactEventData> get<ContactEventData>(const Collider& c1, const Collider& c2) const
 			{
-				if (auto data = contacts.get(&c1, &c2))
+				if (auto data = contacts_.get(&c1, &c2))
 				{
 					if (&data->active_collider == &c1)
 						return *data;
@@ -216,12 +199,13 @@ namespace oly::col2d
 			void replace_all(const Collider& at, const Collider& with);
 			void erase_all(const Collider& c);
 		};
-
 	}
 
 	class CollisionDispatcher final : public imp::soft_singleton<CollisionDispatcher>, public ITickService
 	{
 		friend class imp::soft_singleton<CollisionDispatcher>;
+        friend struct CollisionController;
+        friend struct internal::ColliderDispatchHandle;
 
 #define DECLARE_HANDLER_REFS(Type) struct Type##HandlerBase\
 		{\
@@ -273,35 +257,32 @@ namespace oly::col2d
 
 #undef DECLARE_HANDLER_REFS
 
-		friend struct CollisionController;
-		friend struct internal::ColliderDispatchHandle;
-
 #define HANDLER_MAP(Type) std::unordered_map<const Collider*, std::unordered_set<std::unique_ptr<Type##HandlerBase>, Type##Hash, Type##Equal>>
 
-		HANDLER_MAP(Overlap) overlap_handler_map;
-		HANDLER_MAP(Collision) collision_handler_map;
-		HANDLER_MAP(Contact) contact_handler_map;
+		HANDLER_MAP(Overlap) overlap_handler_map_;
+		HANDLER_MAP(Collision) collision_handler_map_;
+		HANDLER_MAP(Contact) contact_handler_map_;
 
 #undef HANDLER_MAP
 
 #define CONTROLLER_LUT(Type) std::unordered_map<const CollisionController*, std::unordered_set<std::pair<const Collider*, std::unique_ptr<Type##HandlerBase>>, Type##Hash, Type##Equal>>
 
-		CONTROLLER_LUT(Overlap) overlap_controller_lut;
-		CONTROLLER_LUT(Collision) collision_controller_lut;
-		CONTROLLER_LUT(Contact) contact_controller_lut;
+		CONTROLLER_LUT(Overlap) overlap_controller_lut_;
+		CONTROLLER_LUT(Collision) collision_controller_lut_;
+		CONTROLLER_LUT(Contact) contact_controller_lut_;
 
 #undef CONTROLLER_LUT
 
-		std::vector<CollisionTree> trees;
-		mutable internal::CollisionPhaseTracker phase_tracker;
-		mutable internal::CollisionCache collision_cache;
+		std::vector<CollisionTree> trees_;
+		mutable internal::CollisionPhaseTracker phase_tracker_;
+		mutable internal::CollisionCache collision_cache_;
 
-		CollisionDispatcher() : ITickService(TickPhase::Collision, TerminatePhase::Logic) {}
+        CollisionDispatcher();
 
 	public:
 		size_t add_tree(const math::Rect2D bounds, const glm::uvec2 degree = { 2, 2 }, const size_t cell_capacity = 4);
-		const CollisionTree& get_tree(size_t i = 0) const { return trees[i]; }
-		void remove_tree(size_t i) { trees.erase(trees.begin() + i); }
+        const CollisionTree& get_tree(size_t i = 0) const;
+        void remove_tree(size_t i);
 		void clear();
 
 		void unregister_overlap_handlers(const Collider& collider);

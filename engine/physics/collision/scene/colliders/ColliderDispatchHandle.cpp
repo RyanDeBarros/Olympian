@@ -49,7 +49,11 @@ namespace oly::col2d::internal
 	}
 
 	template<typename Map, typename LUT>
-	static void copy_dispatch_handle(const Collider& collider, const Collider& other_collider, Map& handler_map, LUT& controller_lut)
+	static void copy_dispatch_handle(
+        const Collider& collider,
+        const Collider& other_collider,
+        Map& handler_map,
+        LUT& controller_lut)
 	{
 		auto it = handler_map.find(&other_collider);
 		if (it != handler_map.end())
@@ -67,15 +71,35 @@ namespace oly::col2d::internal
 	void ColliderDispatchHandle::copy_handlers(const ColliderDispatchHandle& other)
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		copy_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
-		copy_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
-		copy_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-		dispatcher.phase_tracker.copy_all(other.collider, collider);
-		dispatcher.collision_cache.copy_all(other.collider, collider);
+
+        copy_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.overlap_handler_map_,
+            dispatcher.overlap_controller_lut_);
+		
+        copy_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.collision_handler_map_,
+            dispatcher.collision_controller_lut_);
+		
+        copy_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.contact_handler_map_,
+            dispatcher.contact_controller_lut_);
+		
+        dispatcher.phase_tracker_.copy_all(other.collider, collider);
+		dispatcher.collision_cache_.copy_all(other.collider, collider);
 	}
 
 	template<typename Map, typename LUT>
-	static void move_dispatch_handle(const Collider& collider, const Collider& other_collider, Map& handler_map, LUT& controller_lut)
+	static void move_dispatch_handle(
+        const Collider& collider,
+        const Collider& other_collider,
+        Map& handler_map,
+        LUT& controller_lut)
 	{
 		auto it = handler_map.find(&other_collider);
 		if (it != handler_map.end())
@@ -94,11 +118,27 @@ namespace oly::col2d::internal
 	void ColliderDispatchHandle::move_handlers(ColliderDispatchHandle&& other)
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		move_dispatch_handle(collider, other.collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
-		move_dispatch_handle(collider, other.collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
-		move_dispatch_handle(collider, other.collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-		dispatcher.phase_tracker.replace_all(collider, other.collider);
-		dispatcher.collision_cache.replace_all(collider, other.collider);
+
+        move_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.overlap_handler_map_,
+            dispatcher.overlap_controller_lut_);
+		
+        move_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.collision_handler_map_,
+            dispatcher.collision_controller_lut_);
+		
+        move_dispatch_handle(
+            collider,
+            other.collider,
+            dispatcher.contact_handler_map_,
+            dispatcher.contact_controller_lut_);
+		
+        dispatcher.phase_tracker_.replace_all(collider, other.collider);
+		dispatcher.collision_cache_.replace_all(collider, other.collider);
 	}
 
 	template<typename Map, typename LUT>
@@ -119,11 +159,11 @@ namespace oly::col2d::internal
 	void ColliderDispatchHandle::remove_handlers()
 	{
 		auto& dispatcher = CollisionDispatcher::instance();
-		remove_dispatch_handle(collider, dispatcher.overlap_handler_map, dispatcher.overlap_controller_lut);
-		remove_dispatch_handle(collider, dispatcher.collision_handler_map, dispatcher.collision_controller_lut);
-		remove_dispatch_handle(collider, dispatcher.contact_handler_map, dispatcher.contact_controller_lut);
-		dispatcher.phase_tracker.erase_all(collider);
-		dispatcher.collision_cache.erase_all(collider);
+		remove_dispatch_handle(collider, dispatcher.overlap_handler_map_, dispatcher.overlap_controller_lut_);
+		remove_dispatch_handle(collider, dispatcher.collision_handler_map_, dispatcher.collision_controller_lut_);
+		remove_dispatch_handle(collider, dispatcher.contact_handler_map_, dispatcher.contact_controller_lut_);
+		dispatcher.phase_tracker_.erase_all(collider);
+		dispatcher.collision_cache_.erase_all(collider);
 	}
 }
 

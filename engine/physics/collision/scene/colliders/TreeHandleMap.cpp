@@ -81,8 +81,8 @@ namespace oly::col2d::internal
 				node->update(collider_, node);
 			else
 			{
-				tree->root->set_colliders().insert(&collider_);
-				node = tree->root.get();
+				tree->root_->set_colliders().insert(&collider_);
+				node = tree->root_.get();
 			}
 		}
 	}
@@ -91,8 +91,8 @@ namespace oly::col2d::internal
 	{
 		if (!map_.contains(&tree))
 		{
-			tree.root->set_colliders().insert(&collider_);
-			map_.assign(&tree, tree.root.get());
+			tree.root_->set_colliders().insert(&collider_);
+			map_.assign(&tree, tree.root_.get());
 		}
 	}
 
