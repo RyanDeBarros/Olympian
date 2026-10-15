@@ -7,6 +7,14 @@
 
 namespace oly::particles::ops
 {
+    SineWave1D::SineWave1D(float a, float b, float k, float c)
+        : a(a)
+        , b(b)
+        , k(k)
+        , c(c)
+    {
+    }
+
 	void SineWave1D::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
 	{
 		attribute = a * glm::sin(b * emitter.time_elapsed() - k) + c;
@@ -22,7 +30,13 @@ namespace oly::particles::ops
 		return imp::make_poly<SineWave1D>(a, b, k, c);
 	}
 
-	void Polarization2D::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
+    Polarization2D::Polarization2D(float amplitude, float time_offset)
+        : amplitude(amplitude)
+        , time_offset(time_offset)
+    {
+    }
+	
+    void Polarization2D::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
 	{
 		attribute = amplitude * (glm::vec2)UnitVector2D(emitter.time_elapsed() + time_offset);
 	}

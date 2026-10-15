@@ -43,8 +43,8 @@ namespace oly::particles
 	struct ISampler1D : public imp::polymorphic
 	{
 		virtual ~ISampler1D() = default;
-		virtual void apply(internal::Sampler1D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+        virtual void apply(internal::Sampler1D&) const {}
+        virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<ISampler1D>& sampler, TOMLNode node);
@@ -60,8 +60,8 @@ namespace oly::particles
 	struct IDomain1D : public imp::polymorphic
 	{
 		virtual ~IDomain1D() = default;
-		virtual void apply(internal::Domain1D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+        virtual void apply(internal::Domain1D&) const {}
+        virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<IDomain1D>& domain, TOMLNode node);
@@ -105,8 +105,8 @@ namespace oly::particles
 	struct ISampler2D : public imp::polymorphic
 	{
 		virtual ~ISampler2D() = default;
-		virtual void apply(internal::Sampler2D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+        virtual void apply(internal::Sampler2D&) const {}
+        virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<ISampler2D>& sampler, TOMLNode node);
@@ -122,8 +122,8 @@ namespace oly::particles
 	struct IDomain2D : public imp::polymorphic
 	{
 		virtual ~IDomain2D() = default;
-		virtual void apply(internal::Domain2D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+        virtual void apply(internal::Domain2D&) const {}
+        virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<IDomain2D>& domain, TOMLNode node);
@@ -167,8 +167,8 @@ namespace oly::particles
 	struct ISampler3D : public imp::polymorphic
 	{
 		virtual ~ISampler3D() = default;
-		virtual void apply(internal::Sampler3D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void apply(internal::Sampler3D&) const {}
+		virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<ISampler3D>& sampler, TOMLNode node);
@@ -184,8 +184,8 @@ namespace oly::particles
 	struct IDomain3D : public imp::polymorphic
 	{
 		virtual ~IDomain3D() = default;
-		virtual void apply(internal::Domain3D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void apply(internal::Domain3D&) const {}
+		virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<IDomain3D>& domain, TOMLNode node);
@@ -229,8 +229,8 @@ namespace oly::particles
 	struct ISampler4D : public imp::polymorphic
 	{
 		virtual ~ISampler4D() = default;
-		virtual void apply(internal::Sampler4D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void apply(internal::Sampler4D&) const {}
+		virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<ISampler4D>& sampler, TOMLNode node);
@@ -246,8 +246,8 @@ namespace oly::particles
 	struct IDomain4D : public imp::polymorphic
 	{
 		virtual ~IDomain4D() = default;
-		virtual void apply(internal::Domain4D&) const = 0;
-		virtual void on_tick(const ParticleEmitter&) = 0;
+		virtual void apply(internal::Domain4D&) const {}
+		virtual void on_tick(const ParticleEmitter&) {}
 		virtual void overload(TOMLNode node) {}
 
 		static void overload(imp::poly<IDomain4D>& domain, TOMLNode node);

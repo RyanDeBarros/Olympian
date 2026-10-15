@@ -6,6 +6,11 @@
 
 namespace oly::particles
 {
+    ConstantParticleSpawner::ConstantParticleSpawner(float rate)
+        : rate(rate)
+    {
+    }
+
 	float ConstantParticleSpawner::spawn_debt(float time, float delta_time, float period) const
 	{
 		return rate * delta_time;
@@ -15,6 +20,13 @@ namespace oly::particles
 	{
 		assets::Parser(node).optional(detail::Key::Rate)(rate);
 	}
+
+    BurstParticleSpawner::BurstParticleSpawner(float rate, float duration, float time_offset)
+        : rate(rate)
+        , duration(duration)
+        , time_offset(time_offset)
+    {
+    }
 
 	float BurstParticleSpawner::spawn_debt(float time, float delta_time, float period) const
 	{

@@ -11,11 +11,21 @@ namespace oly::particles
 		sampler.type = internal::Sampler1D::Uniform;
 	}
 
+    TiltedSampler1D::TiltedSampler1D(float tilt)
+        : tilt(tilt)
+    {
+    }
+
 	void TiltedSampler1D::apply(internal::Sampler1D& sampler) const
 	{
 		sampler.type = internal::Sampler1D::Tilted;
 		sampler.params[0] = tilt.value;
 	}
+
+    void TiltedSampler1D::on_tick(const ParticleEmitter& emitter)
+    {
+        tilt.on_tick(emitter);
+    }
 
 	void TiltedSampler1D::overload(TOMLNode node)
 	{
