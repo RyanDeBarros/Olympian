@@ -122,7 +122,7 @@ namespace oly::physics
 		LinearSnapping linear_x_snapping, linear_y_snapping;
 	};
 
-	typedef SmartReference<KinematicSubMaterial> KinematicSubMaterialRef;
+	using KinematicSubMaterialRef = SmartReference<KinematicSubMaterial>;
 
 	class KinematicPhysicsComponent
         : public DynamicsComponent

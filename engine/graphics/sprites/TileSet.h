@@ -12,57 +12,52 @@
 
 namespace oly::rendering
 {
-	class TileSet
-	{
-		struct Tile
-		{
-			size_t tex_index;
-			detail::TileTransformation transformation;
-		};
+    class TileSet
+    {
+    public:
+        struct TileDesc
+        {
+            detail::ResourcePath file;
+            math::UVRect uvs;
+            unsigned int file_index = 0;
 
-	public:
-		struct TileDesc
-		{
-			detail::ResourcePath file;
-			math::UVRect uvs;
-			unsigned int file_index = 0;
+            bool operator==(const TileDesc&) const = default;
+        };
 
-			bool operator==(const TileDesc&) const = default;
-		};
+        struct Assignment
+        {
+            TileDesc desc;
+            detail::TileConfig config = 0;
+            detail::TileTransformation transformation;
+        };
 
-		struct Assignment
-		{
-			TileDesc desc;
-			detail::TileConfig config = 0;
-			detail::TileTransformation transformation;
-		};
+    private:
+        struct Tile
+        {
+            size_t tex_index;
+            detail::TileTransformation transformation;
+        };
 
-	private:
-		std::vector<TileDesc> tiles;
-		std::unordered_map<detail::TileConfig, Tile> assignments;
+    private:
+        std::vector<TileDesc> tiles_;
+        std::unordered_map<detail::TileConfig, Tile> assignments_;
 
-	public:
-		TileSet(const std::vector<Assignment>& assignments = {});
+    public:
+        TileSet(const std::vector<Assignment>& assignments = {});
 
-	private:
-		void load_assignments(const std::vector<Assignment>& assignments);
+    public:
+        static TileSet load(TOMLNode node);
+        void overload(TOMLNode node);
 
-	public:
-		Assignment get_tile_assignment(const detail::TileConfigGrid tile) const;
+        Assignment get_tile_assignment(const detail::TileConfigGrid tile) const;
 
-	private:
-		std::optional<Tile> get_assignment(detail::TileConfig config, detail::TileTransformation& transformation, std::unordered_set<detail::TileConfig>& fallbacks_seen) const;
+    private:
+        void load_assignments(const std::vector<Assignment>& assignments);
+        std::optional<Tile> get_assignment(
+            detail::TileConfig config,
+            detail::TileTransformation& transformation,
+            std::unordered_set<detail::TileConfig>& fallbacks_seen) const;
+    };
 
-	public:
-		void overload(TOMLNode node);
-
-		static TileSet load(TOMLNode node)
-		{
-			TileSet tileset;
-			tileset.overload(node);
-			return tileset;
-		}
-	};
-
-	typedef SmartReference<TileSet> TileSetRef;
+    using TileSetRef = SmartReference<TileSet>;
 }

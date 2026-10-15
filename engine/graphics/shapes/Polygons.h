@@ -212,7 +212,8 @@ namespace oly::rendering
         void draw() const;
     };
 
-    class Polygonal : public internal::PolygonSubmitter
+    class Polygonal
+        : public internal::PolygonSubmitter
     {
     public:
         Transformer2D transformer;

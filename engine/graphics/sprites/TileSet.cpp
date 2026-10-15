@@ -1,7 +1,7 @@
 #include "TileSet.h"
 
-#include "core/util/Parser.h"
 #include "core/util/Logger.h"
+#include "core/util/Parser.h"
 
 #include "definitions/Keys.h"
 
@@ -9,131 +9,150 @@
 
 namespace oly::rendering
 {
-	TileSet::TileSet(const std::vector<Assignment>& assignments)
-	{
-		load_assignments(assignments);
-	}
+    TileSet::TileSet(const std::vector<Assignment>& assignments)
+    {
+        load_assignments(assignments);
+    }
 
-	void TileSet::load_assignments(const std::vector<Assignment>& assignments)
-	{
-		for (const Assignment& a : assignments)
-		{
-			auto texture_it = std::find(tiles.begin(), tiles.end(), a.desc);
-			Tile tile{ .tex_index = size_t(texture_it - tiles.begin()) };
-			if (texture_it == tiles.end())
-				tiles.push_back(a.desc);
-			tile.transformation.apply(a.transformation);
-			this->assignments[a.config] = tile;
-		}
-	}
+    TileSet TileSet::load(TOMLNode node)
+    {
+        TileSet tileset;
+        tileset.overload(node);
+        return tileset;
+    }
 
-	TileSet::Assignment TileSet::get_tile_assignment(const detail::TileConfigGrid tile) const
-	{
-		std::unordered_set<detail::TileConfig> fallbacks_seen{};
-		detail::TileTransformation transformation;
-		if (auto t = get_assignment(detail::tile_config_from_grid(tile), transformation, fallbacks_seen))
-		{
-			transformation.apply(t->transformation);
-			return Assignment{ .desc = tiles[t->tex_index], .config = detail::tile_config_from_grid(tile), .transformation = transformation};
-		}
-		else
-		{
-			std::stringstream ss;
-			ss << "[" << tile[0][0] << ", " << tile[0][1] << ", " << tile[0][2] << "]";
-			ss << "[" << tile[1][0] << ", ---, " << tile[1][2] << "]";
-			ss << "[" << tile[2][0] << ", " << tile[2][1] << ", " << tile[2][2] << "]";
+    void TileSet::overload(TOMLNode node)
+    {
+        tiles_.clear();
+        assignments_.clear();
 
-			_OLY_ENGINE_LOG_ERROR("Tileset") << "Tileset cannot resolve tile configuration [" << ss.str() << "]" << LOG.endl;
-			throw Error(ErrorCode::IncompleteTileset);
-		}
-	}
+        assets::Parser parser(node);
+        auto source_file = parser.optional<std::string>(detail::Key::InjectedSourceFile)();
+        auto toml_assignments = parser.optional<TOMLNode>(detail::Key::AssignmentArray)();
+        if (toml_assignments && toml_assignments->as_table())
+        {
+            std::vector<rendering::TileSet::Assignment> assignments;
 
-	std::optional<TileSet::Tile> TileSet::get_assignment(detail::TileConfig config, detail::TileTransformation& transformation, std::unordered_set<detail::TileConfig>& fallbacks_seen) const
-	{
-		auto it = assignments.find(config);
-		if (it != assignments.end())
-			return it->second;
+            size_t _a_idx = 0;
+            for (auto&& [key, node] : *toml_assignments->as_table())
+            {
+                try
+                {
+                    const size_t a_idx = _a_idx++;
+                    auto config = imp::stoi(key.str());
+                    if (!config)
+                        continue;
 
-		std::vector<std::pair<detail::TileConfig, detail::TileTransformation>> fallback_queue;
-		int fallback_idx = 0;
-		detail::TileConfig test_config = config;
-		detail::TileTransformation test_transformation = transformation;
-		while (detail::tile_config_fallback(test_config, test_transformation, fallback_idx))
-		{
-			auto it = assignments.find(test_config);
-			if (it != assignments.end())
-				return it->second;
+                    assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
 
-			if (!fallbacks_seen.contains(test_config))
-			{
-				fallbacks_seen.insert(test_config);
-				fallback_queue.push_back(std::make_pair(test_config, test_transformation));
-				test_config = config;
-				test_transformation = transformation;
-			}
+                    const auto texture = parser.required<std::string>(detail::Key::TextureFile)();
 
-			++fallback_idx;
-		}
+                    rendering::TileSet::Assignment assignment;
+                    assignment.config = static_cast<detail::TileConfig>(*config);
 
-		for (auto&& [c, t] : fallback_queue)
-		{
-			if (auto tile = get_assignment(c, t, fallbacks_seen))
-				return *tile;
-		}
-		return std::nullopt;
-	}
+                    assignment.desc.file = source_file
+                        ? detail::ResourcePath(texture, *source_file)
+                        : detail::ResourcePath(texture);
 
-	void TileSet::overload(TOMLNode node)
-	{
-		tiles.clear();
-		this->assignments.clear();
+                    parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);
+                    if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
+                    {
+                        assignment.desc.uvs.x1 = (*uvs)[0];
+                        assignment.desc.uvs.x2 = (*uvs)[1];
+                        assignment.desc.uvs.y1 = (*uvs)[2];
+                        assignment.desc.uvs.y2 = (*uvs)[3];
+                    }
 
-		assets::Parser parser(node);
-		auto source_file = parser.optional<std::string>(detail::Key::InjectedSourceFile)();
-		auto toml_assignments = parser.optional<TOMLNode>(detail::Key::AssignmentArray)();
-		if (toml_assignments && toml_assignments->as_table())
-		{
-			std::vector<rendering::TileSet::Assignment> assignments;
+                    parser.optional(detail::Key::Reflection)(assignment.transformation.reflection);
+                    parser.optional(detail::Key::Rotation)(assignment.transformation.rotation);
+                    assignments.push_back(assignment);
+                }
+                catch (const Error& e)
+                {
+                    if (e.code != ErrorCode::LoadAsset)
+                        throw;
+                }
+            }
 
-			size_t _a_idx = 0;
-			for (auto&& [key, node] : *toml_assignments->as_table())
-			{
-				try
-				{
-					const size_t a_idx = _a_idx++;
-					auto config = imp::stoi(key.str());
-					if (!config)
-						continue;
+            load_assignments(assignments);
+        }
+    }
 
-					assets::Parser parser((TOMLNode)node, { "in tileset assignment #", a_idx });
+    TileSet::Assignment TileSet::get_tile_assignment(const detail::TileConfigGrid tile) const
+    {
+        std::unordered_set<detail::TileConfig> fallbacks_seen{};
+        detail::TileTransformation transformation;
+        if (auto t = get_assignment(detail::tile_config_from_grid(tile), transformation, fallbacks_seen))
+        {
+            transformation.apply(t->transformation);
+            return Assignment{
+                .desc = tiles_[t->tex_index],
+                .config = detail::tile_config_from_grid(tile),
+                .transformation = transformation };
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << "[" << tile[0][0] << ", " << tile[0][1] << ", " << tile[0][2] << "]";
+            ss << "[" << tile[1][0] << ", ---, " << tile[1][2] << "]";
+            ss << "[" << tile[2][0] << ", " << tile[2][1] << ", " << tile[2][2] << "]";
 
-					const auto texture = parser.required<std::string>(detail::Key::TextureFile)();
+            _OLY_ENGINE_LOG_ERROR("Tileset") << "Tileset cannot resolve tile configuration ["
+                << ss.str() << "]" << LOG.endl;
+            throw Error(ErrorCode::IncompleteTileset);
+        }
+    }
 
-					rendering::TileSet::Assignment assignment;
-					assignment.config = static_cast<detail::TileConfig>(*config);
+    void TileSet::load_assignments(const std::vector<Assignment>& assignments)
+    {
+        for (const Assignment& a : assignments)
+        {
+            auto texture_it = std::find(tiles_.begin(), tiles_.end(), a.desc);
+            Tile tile{ .tex_index = size_t(texture_it - tiles_.begin()) };
+            if (texture_it == tiles_.end())
+                tiles_.push_back(a.desc);
 
-					assignment.desc.file = source_file ? detail::ResourcePath(texture, *source_file) : detail::ResourcePath(texture);
-					parser.optional(detail::Key::TextureIndex)(assignment.desc.file_index);
-					if (auto uvs = parser.optional<glm::vec4>(detail::Key::UVvec4)())
-					{
-						assignment.desc.uvs.x1 = (*uvs)[0];
-						assignment.desc.uvs.x2 = (*uvs)[1];
-						assignment.desc.uvs.y1 = (*uvs)[2];
-						assignment.desc.uvs.y2 = (*uvs)[3];
-					}
+            tile.transformation.apply(a.transformation);
+            assignments_[a.config] = tile;
+        }
+    }
 
-					parser.optional(detail::Key::Reflection)(assignment.transformation.reflection);
-					parser.optional(detail::Key::Rotation)(assignment.transformation.rotation);
-					assignments.push_back(assignment);
-				}
-				catch (const Error& e)
-				{
-					if (e.code != ErrorCode::LoadAsset)
-						throw;
-				}
-			}
+    std::optional<TileSet::Tile> TileSet::get_assignment(
+        detail::TileConfig config,
+        detail::TileTransformation& transformation,
+        std::unordered_set<detail::TileConfig>& fallbacks_seen) const
+    {
+        auto it = assignments_.find(config);
+        if (it != assignments_.end())
+            return it->second;
 
-			load_assignments(assignments);
-		}
-	}
+        std::vector<std::pair<detail::TileConfig, detail::TileTransformation>> fallback_queue;
+        int fallback_idx = 0;
+        detail::TileConfig test_config = config;
+        detail::TileTransformation test_transformation = transformation;
+        while (detail::tile_config_fallback(test_config, test_transformation, fallback_idx))
+        {
+            auto it = assignments_.find(test_config);
+            if (it != assignments_.end())
+                return it->second;
+
+            if (!fallbacks_seen.contains(test_config))
+            {
+                fallbacks_seen.insert(test_config);
+                fallback_queue.push_back(std::make_pair(test_config, test_transformation));
+                test_config = config;
+                test_transformation = transformation;
+            }
+
+            ++fallback_idx;
+        }
+
+        for (auto&& [c, t] : fallback_queue)
+        {
+            if (auto tile = get_assignment(c, t, fallbacks_seen))
+                return *tile;
+        }
+
+        return std::nullopt;
+    }
 }

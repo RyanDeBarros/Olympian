@@ -67,7 +67,7 @@ namespace oly::physics
         LinearSnapping y_snapping;
 	};
 
-	typedef SmartReference<LinearSubMaterial> LinearSubMaterialRef;
+	using LinearSubMaterialRef = SmartReference<LinearSubMaterial>;
 
 	class LinearPhysicsComponent
         : public DynamicsComponent

@@ -1,39 +1,41 @@
 #pragma once
 
+#include "core/base/TransformerExposure.h"
+
 #include "graphics/sprites/Sprite.h"
 #include "graphics/sprites/TileSet.h"
-#include "core/base/TransformerExposure.h"
 
 namespace oly::rendering
 {
-	struct TileMapLayer : public imp::ticket<internal::SpriteBatch>
+	struct TileMapLayer
+        : public imp::ticket<internal::SpriteBatch>
 	{
 	private:
 		using Super = imp::ticket<internal::SpriteBatch>;
 
+        std::unordered_map<glm::ivec2, Sprite> sprite_map_;
+
 	public:
 		TileSetRef tileset;
-		
-	private:
-		std::unordered_map<glm::ivec2, Sprite> sprite_map;
-		
-	public:
 		Transformer2D transformer;
 
+	public:
 		TileMapLayer();
 		TileMapLayer(Unbatched);
 		TileMapLayer(SpriteBatch& batch);
 		TileMapLayer(const TileMapLayer&) = default;
 		TileMapLayer(TileMapLayer&&) noexcept = default;
+
 		TileMapLayer& operator=(const TileMapLayer&) = default;
 		TileMapLayer& operator=(TileMapLayer&&) noexcept = default;
 
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
+    public:
+        void draw() const;
+
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
 		void set_camera_invariant(bool is_camera_invariant) const;
-
-		void draw() const;
 
 		auto get_batch() const { return lock(); }
 		void set_batch(Unbatched);
@@ -49,31 +51,31 @@ namespace oly::rendering
 
 	class TileMap
 	{
-		std::vector<TileMapLayer> layers;
+		std::vector<TileMapLayer> layers_;
 			
-		Transformer2D transformer;
-		bool camera_invariant = false;
+		Transformer2D transformer_;
+		bool camera_invariant_ = false;
 
 	public:
-		const TileMapLayer& layer(size_t i) const { return layers[i]; }
-		TileMapLayer& layer(size_t i) { return layers[i]; }
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
+        static TileMap load(TOMLNode node);
+        static TileMap load(TOMLNode node, const DebugTrace& trace);
 
-		Transformer2DExposure<> get_transformer() const { return transformer; }
-		Transformer2DExposure<ex::AttachOnly> set_transformer() { return transformer; }
+        const TileMapLayer& layer(size_t i) const;
+        TileMapLayer& layer(size_t i);
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
+
+        Transformer2DExposure<> get_transformer() const;
+        Transformer2DExposure<ex::AttachOnly> set_transformer();
 
 		void draw() const;
 
-		void set_camera_invariant(bool is_camera_invariant);
+		void set_camera_invariant(bool camera_invariant);
 		bool is_camera_invariant() const;
 
 		void register_layer(TileMapLayer&& layer);
 		void register_layer(size_t z, TileMapLayer&& layer);
-
-		static TileMap load(TOMLNode node);
-		static TileMap load(TOMLNode node, const DebugTrace& trace);
 	};
 
-	typedef SmartReference<TileMap> TileMapRef;
+	using TileMapRef = SmartReference<TileMap>;
 }

@@ -1,152 +1,181 @@
 #include "SpriteAtlas.h"
 
-#include "core/util/Time.h"
 #include "core/util/Parser.h"
+#include "core/util/Time.h"
 
 #include "definitions/Keys.h"
 
 namespace oly::rendering
 {
-	SpriteAtlas::SpriteAtlas()
-	{
-	}
+    SpriteAtlas::SpriteAtlas()
+    {
+    }
 
-	SpriteAtlas::SpriteAtlas(Unbatched)
-		: sprite(kUnbatched)
-	{
-	}
+    SpriteAtlas::SpriteAtlas(Unbatched)
+        : sprite(kUnbatched)
+    {
+    }
 
-	SpriteAtlas::SpriteAtlas(SpriteBatch& batch)
-		: sprite(batch)
-	{
-	}
+    SpriteAtlas::SpriteAtlas(SpriteBatch& batch)
+        : sprite(batch)
+    {
+    }
 
-	SpriteAtlas::SpriteAtlas(Sprite&& sprite)
-		: sprite(std::move(sprite))
-	{
-	}
+    SpriteAtlas::SpriteAtlas(Sprite&& sprite)
+        : sprite(std::move(sprite))
+    {
+    }
 
-	SpriteAtlas::SpriteAtlas(const SpriteAtlas& other)
-		: sprite(other.sprite), atlas(other.atlas), anim_format(other.anim_format), current_frame(other.current_frame)
-	{
-	}
+    SpriteAtlas::SpriteAtlas(const SpriteAtlas& other)
+        : sprite(other.sprite)
+        , atlas(other.atlas)
+        , anim_format(other.anim_format)
+        , current_frame_(other.current_frame_)
+    {
+    }
 
-	SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
-		: sprite(std::move(other.sprite)), atlas(std::move(other.atlas)), anim_format(std::move(other.anim_format)), current_frame(other.current_frame)
-	{
-	}
+    SpriteAtlas::SpriteAtlas(SpriteAtlas&& other) noexcept
+        : sprite(std::move(other.sprite))
+        , atlas(std::move(other.atlas))
+        , anim_format(std::move(other.anim_format))
+        , current_frame_(other.current_frame_)
+    {
+    }
 
-	SpriteAtlas::~SpriteAtlas()
-	{
-	}
+    SpriteAtlas::~SpriteAtlas()
+    {
+    }
 
-	void SpriteAtlas::draw() const
-	{
-		sprite.draw();
-	}
+    void SpriteAtlas::draw() const
+    {
+        sprite.draw();
+    }
 
-	void SpriteAtlas::on_tick()
-	{
-		if (anim_format.delay_seconds != 0.0f)
-			select(anim_format.starting_frame + (int)floor((TIME.now<>() - anim_format.starting_time) / anim_format.delay_seconds));
-	}
+    void SpriteAtlas::on_tick()
+    {
+        if (anim_format.delay_seconds != 0.0f)
+        {
+            const float delta = TIME.now<>() - anim_format.starting_time;
+            select(anim_format.starting_frame + (int)floor(delta / anim_format.delay_seconds));
+        }
+    }
 
-	void SpriteAtlas::select_static_frame(GLuint frame)
-	{
-		anim_format.delay_seconds = 0.0f;
-		select(frame);
-	}
+    void SpriteAtlas::select_static_frame(GLuint frame)
+    {
+        anim_format.delay_seconds = 0.0f;
+        select(frame);
+    }
 
-	void SpriteAtlas::uvs_changed() const
-	{
-		current_frame = -1;
-	}
+    void SpriteAtlas::uvs_changed() const
+    {
+        current_frame_ = -1;
+    }
 
-	void SpriteAtlas::setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major, bool row_up)
-	{
-		atlas.clear();
-		if (row_major)
-		{
-			if (row_up)
-			{
-				for (GLuint row = 0; row < rows; ++row)
-					for (GLuint col = 0; col < cols; ++col)
-						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
-			}
-			else
-			{
-				for (int row = rows - 1; row >= 0; --row)
-					for (GLuint col = 0; col < cols; ++col)
-						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
-			}
-		}
-		else
-		{
-			if (row_up)
-			{
-				for (GLuint col = 0; col < cols; ++col)
-					for (GLuint row = 0; row < rows; ++row)
-						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
-			}
-			else
-			{
-				for (GLuint col = 0; col < cols; ++col)
-					for (int row = rows - 1; row >= 0; --row)
-						atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
-			}
-		}
-		uvs_changed();
-		anim_format.num_frames = rows * cols;
-		anim_format.delay_seconds = delay_seconds;
-		anim_format.starting_frame = 0;
-		anim_format.starting_time = 0.0f;
+    void SpriteAtlas::setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major, bool row_up)
+    {
+        atlas.clear();
+        if (row_major)
+        {
+            if (row_up)
+            {
+                for (GLuint row = 0; row < rows; ++row)
+                {
+                    for (GLuint col = 0; col < cols; ++col)
+                        atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
+                }
+            }
+            else
+            {
+                for (int row = rows - 1; row >= 0; --row)
+                {
+                    for (GLuint col = 0; col < cols; ++col)
+                        atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
+                }
+            }
+        }
+        else
+        {
+            if (row_up)
+            {
+                for (GLuint col = 0; col < cols; ++col)
+                {
+                    for (GLuint row = 0; row < rows; ++row)
+                        atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
+                }
+            }
+            else
+            {
+                for (GLuint col = 0; col < cols; ++col)
+                {
+                    for (int row = rows - 1; row >= 0; --row)
+                        atlas.push_back(math::UVRect::from_grid(row, col, rows, cols));
+                }
+            }
+        }
 
-		glm::vec2 dimensions;
-		auto texture = sprite.get_texture(dimensions);
-		sprite.set_texture(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
-	}
+        uvs_changed();
+        anim_format.num_frames = rows * cols;
+        anim_format.delay_seconds = delay_seconds;
+        anim_format.starting_frame = 0;
+        anim_format.starting_time = 0.0f;
 
-	void SpriteAtlas::select(GLuint frame) const
-	{
-		frame %= anim_format.num_frames;
-		if (current_frame != frame)
-		{
-			current_frame = frame;
-			sprite.set_tex_coords(atlas[frame]);
-		}
-	}
+        glm::vec2 dimensions;
+        auto texture = sprite.get_texture(dimensions);
+        sprite.set_texture(texture, dimensions * glm::vec2{ 1.0f / cols, 1.0f / rows });
+    }
 
-	static SpriteAtlas load_sprite_atlas(TOMLNode node, const DebugTrace* trace)
-	{
-		if (!node)
-			return {};
+    void SpriteAtlas::select(GLuint frame) const
+    {
+        frame %= anim_format.num_frames;
+        if (current_frame_ != frame)
+        {
+            current_frame_ = frame;
+            sprite.set_tex_coords(atlas[frame]);
+        }
+    }
 
-		assets::Parser parser(node);
+    static SpriteAtlas load_sprite_atlas(TOMLNode node, const DebugTrace* trace)
+    {
+        if (!node)
+            return {};
 
-		SpriteAtlas sprite_atlas(trace ? Sprite::load(parser.field(detail::Key::Sprite), *trace) : Sprite::load(parser.field(detail::Key::Sprite)));
+        assets::Parser parser(node);
 
-		GLuint rows, cols;
-		float delay_seconds;
-		if (parser.optional(detail::Key::Rows)(rows) && parser.optional(detail::Key::Columns)(cols) && parser.optional(detail::Key::DelaySeconds)(delay_seconds))
-			sprite_atlas.setup_uniform(rows, cols, delay_seconds, parser.defaulted(detail::Key::RowMajor)(true), parser.defaulted(detail::Key::RowUp)(true));
-		else if (auto static_frame = parser.optional<unsigned int>(detail::Key::StaticFrame)())
-			sprite_atlas.select_static_frame(*static_frame);
+        SpriteAtlas sprite_atlas(trace
+                ? Sprite::load(parser.field(detail::Key::Sprite), *trace)
+                : Sprite::load(parser.field(detail::Key::Sprite)));
 
-		sprite_atlas.anim_format.starting_frame = parser.defaulted(detail::Key::StartingFrame)(0);
-		sprite_atlas.anim_format.starting_time = parser.defaulted(detail::Key::StartingTime)(0.f);
-		sprite_atlas.auto_tick = parser.defaulted(detail::Key::AutoTick)(true);
+        GLuint rows, cols;
+        float delay_seconds;
+        if (parser.optional(detail::Key::Rows)(rows) &&
+            parser.optional(detail::Key::Columns)(cols) &&
+            parser.optional(detail::Key::DelaySeconds)(delay_seconds))
+        {
+            sprite_atlas.setup_uniform(
+                rows,
+                cols,
+                delay_seconds,
+                parser.defaulted(detail::Key::RowMajor)(true),
+                parser.defaulted(detail::Key::RowUp)(true));
+        }
+        else if (auto static_frame = parser.optional<unsigned int>(detail::Key::StaticFrame)())
+            sprite_atlas.select_static_frame(*static_frame);
 
-		return sprite_atlas;
-	}
+        sprite_atlas.anim_format.starting_frame = parser.defaulted(detail::Key::StartingFrame)(0);
+        sprite_atlas.anim_format.starting_time = parser.defaulted(detail::Key::StartingTime)(0.f);
+        sprite_atlas.auto_tick = parser.defaulted(detail::Key::AutoTick)(true);
 
-	SpriteAtlas SpriteAtlas::load(TOMLNode node)
-	{
-		return load_sprite_atlas(node, nullptr);
-	}
+        return sprite_atlas;
+    }
 
-	SpriteAtlas SpriteAtlas::load(TOMLNode node, const DebugTrace& trace)
-	{
-		auto scope = trace.scope("ASSETS", "oly::rendering::SpriteAtlas::load()");
-		return load_sprite_atlas(node, &trace);
-	}
+    SpriteAtlas SpriteAtlas::load(TOMLNode node)
+    {
+        return load_sprite_atlas(node, nullptr);
+    }
+
+    SpriteAtlas SpriteAtlas::load(TOMLNode node, const DebugTrace& trace)
+    {
+        auto scope = trace.scope("ASSETS", "oly::rendering::SpriteAtlas::load()");
+        return load_sprite_atlas(node, &trace);
+    }
 }

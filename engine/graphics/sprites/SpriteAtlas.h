@@ -6,39 +6,40 @@
 
 namespace oly::rendering
 {
-	struct SpriteAtlas : public ITickService
-	{
-		Sprite sprite;
-		std::vector<math::UVRect> atlas;
-		graphics::AnimFrameFormat anim_format;
-		bool auto_tick = true;
-		
-	private:
-		mutable GLuint current_frame = -1;
+    struct SpriteAtlas
+        : public ITickService
+    {
+        Sprite sprite;
+        std::vector<math::UVRect> atlas;
+        graphics::AnimFrameFormat anim_format;
+        bool auto_tick = true;
 
-	public:
-		SpriteAtlas();
-		SpriteAtlas(Unbatched);
-		SpriteAtlas(SpriteBatch& batch);
-		SpriteAtlas(Sprite&& sprite);
-		SpriteAtlas(const SpriteAtlas&);
-		SpriteAtlas(SpriteAtlas&&) noexcept;
-		~SpriteAtlas();
+    private:
+        mutable GLuint current_frame_ = -1;
 
-		void draw() const;
-		void on_tick() override;
+    public:
+        SpriteAtlas();
+        SpriteAtlas(Unbatched);
+        SpriteAtlas(SpriteBatch& batch);
+        SpriteAtlas(Sprite&& sprite);
+        SpriteAtlas(const SpriteAtlas&);
+        SpriteAtlas(SpriteAtlas&&) noexcept;
+        ~SpriteAtlas();
 
-		void select_static_frame(GLuint frame);
-		void uvs_changed() const;
-		void setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major = true, bool row_up = true);
+        void draw() const;
+        void on_tick() override;
 
-	private:
-		void select(GLuint frame) const;
+        void select_static_frame(GLuint frame);
+        void uvs_changed() const;
+        void setup_uniform(GLuint rows, GLuint cols, float delay_seconds, bool row_major = true, bool row_up = true);
 
-	public:
-		static SpriteAtlas load(TOMLNode node);
-		static SpriteAtlas load(TOMLNode node, const DebugTrace& trace);
-	};
+    private:
+        void select(GLuint frame) const;
 
-	typedef SmartReference<SpriteAtlas> SpriteAtlasRef;
+    public:
+        static SpriteAtlas load(TOMLNode node);
+        static SpriteAtlas load(TOMLNode node, const DebugTrace& trace);
+    };
+
+    using SpriteAtlasRef = SmartReference<SpriteAtlas>;
 }

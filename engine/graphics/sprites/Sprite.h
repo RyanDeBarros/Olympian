@@ -1,107 +1,114 @@
 #pragma once
 
-#include "graphics/sprites/SpriteBatch.h"
 #include "core/base/Transforms.h"
+
 #include "core/util/DebugTrace.h"
+
+#include "graphics/sprites/SpriteBatch.h"
 
 namespace oly::rendering
 {
-	// ASSET
-	class StaticSprite
-	{
-		internal::SpriteReference ref;
+    // ASSET
+    class StaticSprite
+    {
+        internal::SpriteReference ref_;
 
-	public:
-		StaticSprite() = default;
-		StaticSprite(Unbatched) : ref(kUnbatched) {}
-		StaticSprite(internal::SpriteBatch& batch) : ref(batch) {}
-		StaticSprite(SpriteBatch& batch) : ref(batch) {}
-		StaticSprite(const StaticSprite&) = default;
-		StaticSprite(StaticSprite&&) noexcept = default;
-		StaticSprite& operator=(const StaticSprite&) = default;
-		StaticSprite& operator=(StaticSprite&&) noexcept = default;
+    public:
+        StaticSprite() = default;
+        StaticSprite(Unbatched);
+        StaticSprite(internal::SpriteBatch& batch);
+        StaticSprite(SpriteBatch& batch);
+        StaticSprite(const StaticSprite&) = default;
+        StaticSprite(StaticSprite&&) noexcept = default;
 
-		auto get_batch() const { return ref.get_batch(); }
-		void set_batch(Unbatched) { ref.set_batch(kUnbatched); }
-		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
+        StaticSprite& operator=(const StaticSprite&) = default;
+        StaticSprite& operator=(StaticSprite&&) noexcept = default;
 
-		void draw() const;
+    public:
+        void draw() const;
 
-		void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
-		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
-		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
-		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }
-		void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
-		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
-		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
-		void set_mod_tex_coords(math::UVRect uvs) const { ref.set_mod_tex_coords(uvs); }
-		void set_transform(const glm::mat3& transform) { ref.set_transform(transform); }
+        internal::SpriteReference::accessor get_batch() const;
+        void set_batch(Unbatched);
+        void set_batch(SpriteBatch& batch);
 
-		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
-		math::UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		glm::vec4 get_modulation() const { return ref.get_modulation(); }
-		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
-		bool is_camera_invariant() const { return ref.is_camera_invariant(); }
-		graphics::BindlessTextureRef get_mod_texture() const { return ref.get_mod_texture(); }
-		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const { return ref.get_mod_texture(dimensions); }
-		math::UVRect get_mod_tex_coords() const { return ref.get_mod_tex_coords(); }
-		glm::mat3 get_transform() const { return ref.get_transform(); }
-	};
+        void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
+        void set_texture(const graphics::BindlessTextureRef& texture) const;
+        void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_tex_coords(math::UVRect uvs) const;
+        void set_modulation(glm::vec4 modulation) const;
+        void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+        void set_camera_invariant(bool is_camera_invariant) const;
+        void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
+        void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
+        void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_mod_tex_coords(math::UVRect uvs) const;
+        void set_transform(const glm::mat3& transform);
 
-	class Sprite
-	{
-		internal::SpriteReference ref;
+        graphics::BindlessTextureRef get_texture() const;
+        graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
+        math::UVRect get_tex_coords() const;
+        glm::vec4 get_modulation() const;
+        graphics::AnimFrameFormat get_frame_format() const;
+        bool is_camera_invariant() const;
+        graphics::BindlessTextureRef get_mod_texture() const;
+        graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
+        math::UVRect get_mod_tex_coords() const;
+        glm::mat3 get_transform() const;
+    };
 
-	public:
-		Transformer2D transformer;
+    class Sprite
+    {
+        internal::SpriteReference ref_;
 
-		Sprite() = default;
-		Sprite(Unbatched) : ref(kUnbatched) {}
-		Sprite(internal::SpriteBatch& batch) : ref(batch) {}
-		Sprite(SpriteBatch& batch) : ref(batch) {}
-		Sprite(const Sprite&) = default;
-		Sprite(Sprite&&) noexcept = default;
-		Sprite& operator=(const Sprite&) = default;
-		Sprite& operator=(Sprite&&) noexcept = default;
+    public:
+        Transformer2D transformer;
 
-		auto get_batch() const { return ref.get_batch(); }
-		void set_batch(Unbatched) { ref.set_batch(kUnbatched); }
-		void set_batch(SpriteBatch& batch) { ref.set_batch(batch); }
+    public:
+        Sprite() = default;
+        Sprite(Unbatched);
+        Sprite(internal::SpriteBatch& batch);
+        Sprite(SpriteBatch& batch);
+        Sprite(const Sprite&) = default;
+        Sprite(Sprite&&) noexcept = default;
 
-		void draw() const;
+        Sprite& operator=(const Sprite&) = default;
+        Sprite& operator=(Sprite&&) noexcept = default;
 
-		void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_texture(texture_file, texture_index); }
-		void set_texture(const graphics::BindlessTextureRef& texture) const { ref.set_texture(texture); }
-		void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_texture(texture, dimensions); }
-		void set_tex_coords(math::UVRect uvs) const { ref.set_tex_coords(uvs); }
-		void set_modulation(glm::vec4 modulation) const { ref.set_modulation(modulation); }
-		void set_frame_format(const graphics::AnimFrameFormat& anim) const { ref.set_frame_format(anim); }
-		void set_camera_invariant(bool is_camera_invariant) const { ref.set_camera_invariant(is_camera_invariant); }
-		void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const { ref.set_mod_texture(texture_file, texture_index); }
-		void set_mod_texture(const graphics::BindlessTextureRef& texture) const { ref.set_mod_texture(texture); }
-		void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const { ref.set_mod_texture(texture, dimensions); }
-		void set_mod_tex_coords(math::UVRect uvs) const { ref.set_mod_tex_coords(uvs); }
+    public:
+        static Sprite load(TOMLNode node);
+        static Sprite load(TOMLNode node, const DebugTrace& trace);
 
-		graphics::BindlessTextureRef get_texture() const { return ref.get_texture(); }
-		graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const { return ref.get_texture(dimensions); }
-		math::UVRect get_tex_coords() const { return ref.get_tex_coords(); }
-		glm::vec4 get_modulation() const { return ref.get_modulation(); }
-		graphics::AnimFrameFormat get_frame_format() const { return ref.get_frame_format(); }
-		bool is_camera_invariant() const { return ref.is_camera_invariant(); }
-		graphics::BindlessTextureRef get_mod_texture() const { return ref.get_mod_texture(); }
-		graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const { return ref.get_mod_texture(dimensions); }
-		math::UVRect get_mod_tex_coords() const { return ref.get_mod_tex_coords(); }
+        void draw() const;
 
-		const Transform2D& get_local() const { return transformer.get_local(); }
-		Transform2D& set_local() { return transformer.set_local(); }
+        internal::SpriteReference::accessor get_batch() const;
+        void set_batch(Unbatched);
+        void set_batch(SpriteBatch& batch);
 
-		static Sprite load(TOMLNode node);
-		static Sprite load(TOMLNode node, const DebugTrace& trace);
-	};
+        void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
+        void set_texture(const graphics::BindlessTextureRef& texture) const;
+        void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_tex_coords(math::UVRect uvs) const;
+        void set_modulation(glm::vec4 modulation) const;
+        void set_frame_format(const graphics::AnimFrameFormat& anim) const;
+        void set_camera_invariant(bool is_camera_invariant) const;
+        void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
+        void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
+        void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_mod_tex_coords(math::UVRect uvs) const;
 
-	typedef SmartReference<Sprite> SpriteRef;
+        graphics::BindlessTextureRef get_texture() const;
+        graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
+        math::UVRect get_tex_coords() const;
+        glm::vec4 get_modulation() const;
+        graphics::AnimFrameFormat get_frame_format() const;
+        bool is_camera_invariant() const;
+        graphics::BindlessTextureRef get_mod_texture() const;
+        graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
+        math::UVRect get_mod_tex_coords() const;
+
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
+    };
+
+    using SpriteRef = SmartReference<Sprite>;
 }
