@@ -6,42 +6,45 @@ namespace oly::rendering
 {
 	class LineExtension
 	{
-		mutable Polygon poly;
-		glm::vec2 start = {}, end = {};
-		glm::vec4 start_color = {}, end_color = {};
-		float width = 1.0f;
-		mutable bool dirty = false;
+		mutable Polygon poly_;
+        glm::vec2 start_ = {};
+        glm::vec2 end_ = {};
+        glm::vec4 start_color_ = {};
+        glm::vec4 end_color_ = {};
+		float width_ = 1.0f;
+		mutable bool dirty_ = false;
 
 	public:
 		LineExtension(Unbatched = kUnbatched);
 		LineExtension(PolygonBatch& batch);
 
-		auto get_batch() const { return poly.get_batch(); }
-		void set_batch(Unbatched) { poly.set_batch(kUnbatched); }
-		void set_batch(PolygonBatch& batch) { poly.set_batch(batch); }
+    public:
+        internal::PolygonReference::accessor get_batch() const;
+        void set_batch(Unbatched);
+        void set_batch(PolygonBatch& batch);
 
-		void set_camera_invariant(bool camera_invariant) const { poly.set_camera_invariant(camera_invariant); }
-		bool is_camera_invariant() const { return poly.is_camera_invariant(); }
+        void set_camera_invariant(bool camera_invariant) const;
+        bool is_camera_invariant() const;
 
 		void draw() const;
 
-		glm::vec2 get_start() const { return start; }
-		glm::vec2& set_start() { dirty = true; return start; }
-		glm::vec2 get_end() const { return end; }
-		glm::vec2& set_end() { dirty = true; return end; }
-		float get_width() const { return width; }
-		void set_width(float w) { if (w > 0.0f && w != width) { dirty = true; width = w; } }
+        glm::vec2 get_start() const;
+        glm::vec2& set_start();
+        glm::vec2 get_end() const;
+        glm::vec2& set_end();
+        float get_width() const;
+        void set_width(float w);
 		
-		glm::vec4 get_start_color() const { return start_color; }
-		glm::vec4& set_start_color() { dirty = true; return start_color; }
-		glm::vec4 get_end_color() const { return end_color; }
-		glm::vec4& set_end_color() { dirty = true; return end_color; }
-		void set_color(glm::vec4 color) { set_start_color() = set_end_color() = color; }
+        glm::vec4 get_start_color() const;
+        glm::vec4& set_start_color();
+        glm::vec4 get_end_color() const;
+        glm::vec4& set_end_color();
+        void set_color(glm::vec4 color);
 
-		const Transformer2D& transformer() const { return poly.transformer; }
-		Transformer2D& transformer() { return poly.transformer; }
-		const Transform2D& get_local() const { return poly.get_local(); }
-		Transform2D& set_local() { return poly.set_local(); }
+        const Transformer2D& transformer() const;
+        Transformer2D& transformer();
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
 	private:
 		void set_default_polygon() const;

@@ -124,7 +124,8 @@ namespace oly::physics
 
 	typedef SmartReference<KinematicSubMaterial> KinematicSubMaterialRef;
 
-	class KinematicPhysicsComponent : public DynamicsComponent
+	class KinematicPhysicsComponent
+        : public DynamicsComponent
 	{
 		mutable size_t primary_collision_mtv_idx = 0;
 		mutable size_t secondary_collision_mtv_idx = 0;

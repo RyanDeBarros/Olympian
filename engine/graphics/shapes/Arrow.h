@@ -7,115 +7,109 @@ namespace oly::rendering
 	// ASSET
 	class ArrowExtension
 	{
-		mutable Polygon body, head;
-		Transformer2D _transformer;
-		glm::vec2 start = {}, end = {};
-		float head_width = 3.0f, head_height = 3.0f;
-		glm::vec4 start_color = glm::vec4(1.0f), end_color = glm::vec4(1.0f);
-		float width = 1.0f;
-		mutable bool dirty = false;
-		mutable bool can_draw_body = false, can_draw_head = false;
+        mutable Polygon body_;
+        mutable Polygon head_;
+		Transformer2D transformer_;
+        glm::vec2 start_ = {};
+        glm::vec2 end_ = {};
+        float head_width_ = 3.0f;
+        float head_height_ = 3.0f;
+        glm::vec4 start_color_ = glm::vec4(1.0f);
+        glm::vec4 end_color_ = glm::vec4(1.0f);
+		float width_ = 1.0f;
+		mutable bool dirty_ = false;
+        mutable bool can_draw_body_ = false;
+        mutable bool can_draw_head_ = false;
 
 	public:
 		ArrowExtension(Unbatched = kUnbatched);
 		ArrowExtension(PolygonBatch& batch);
 
-		auto get_batch() const { return body.get_batch(); }
-		void set_batch(Unbatched) { body.set_batch(kUnbatched); head.set_batch(kUnbatched); }
-		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
+    public:
+        internal::PolygonReference::accessor get_batch() const;
+        void set_batch(Unbatched);
+        void set_batch(PolygonBatch& batch);
 
-		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }
-		bool is_camera_invariant() const { return body.is_camera_invariant(); }
+        void set_camera_invariant(bool camera_invariant) const;
+        bool is_camera_invariant() const;
 
 		void draw() const;
 
-		glm::vec2 get_start() const { return start; }
-		glm::vec2& set_start() { dirty = true; return start; }
-		glm::vec2 get_end() const { return end; }
-		glm::vec2& set_end() { dirty = true; return end; }
-		float get_width() const { return width; }
-		void set_width(float w) { if (w > 0.0f && w != width) { dirty = true; width = w; } }
-		float get_head_width() const { return head_width; }
-		void set_head_width(float w) { if (w > 0.0f && w != head_width) { dirty = true; head_width = w; } }
-		float get_head_height() const { return head_height; }
-		void set_head_height(float h) { if (h > 0.0f && h != head_height) { dirty = true; head_height = h; } }
+        glm::vec2 get_start() const;
+        glm::vec2& set_start();
+        glm::vec2 get_end() const;
+        glm::vec2& set_end();
+        float get_width() const;
+        void set_width(float w);
+        float get_head_width() const;
+        void set_head_width(float w);
+        float get_head_height() const;
+        void set_head_height(float h);
 
-		glm::vec4 get_start_color() const { return start_color; }
-		glm::vec4& set_start_color() { dirty = true; return start_color; }
-		glm::vec4 get_end_color() const { return end_color; }
-		glm::vec4& set_end_color() { dirty = true; return end_color; }
-		void set_color(glm::vec4 color) { set_start_color() = set_end_color() = color; }
+        glm::vec4 get_start_color() const;
+        glm::vec4& set_start_color();
+        glm::vec4 get_end_color() const;
+        glm::vec4& set_end_color();
+        void set_color(glm::vec4 color);
 
-		const Transformer2D& transformer() const { return _transformer; }
-		Transformer2D& transformer() { return _transformer; }
-		const Transform2D& get_local() const { return _transformer.get_local(); }
-		Transform2D& set_local() { return _transformer.set_local(); }
+        const Transformer2D& transformer() const;
+        Transformer2D& transformer();
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
-		void scale_head(float by) { set_head_width(head_width * by); set_head_height(head_height * by); }
-		void adjust_standard_head_for_width(float w)
-		{
-			if (w > 0.0f)
-			{
-				dirty = true;
-				width = w;
-				head_width = 3.0f * w;
-				head_height = 3.0f * w;
-			}
-		}
+        void scale_head(float by);
+        void adjust_standard_head_for_width(float w);
 	};
 
 	// ASSET
 	class StaticArrowExtension
 	{
-		mutable StaticPolygon body, head;
-		glm::vec2 start = {}, end = {};
-		float head_width = 3.0f, head_height = 3.0f;
-		glm::vec4 start_color = glm::vec4(1.0f), end_color = glm::vec4(1.0f);
-		float width = 1.0f;
-		mutable bool dirty = false;
-		mutable bool can_draw_body = false, can_draw_head = false;
+        mutable StaticPolygon body_;
+        mutable StaticPolygon head_;
+        glm::vec2 start_ = {};
+        glm::vec2 end_ = {};
+        float head_width_ = 3.0f;
+        float head_height_ = 3.0f;
+        glm::vec4 start_color_ = glm::vec4(1.0f);
+        glm::vec4 end_color_ = glm::vec4(1.0f);
+		float width_ = 1.0f;
+		mutable bool dirty_ = false;
+        mutable bool can_draw_body_ = false;
+        mutable bool can_draw_head_ = false;
 
 	public:
 		StaticArrowExtension(Unbatched = kUnbatched);
 		StaticArrowExtension(PolygonBatch& batch);
 
-		auto get_batch() const { return body.get_batch(); }
-		void set_batch(Unbatched) { body.set_batch(kUnbatched); head.set_batch(kUnbatched); }
-		void set_batch(PolygonBatch& batch) { body.set_batch(batch); head.set_batch(batch); }
+    public:
+        internal::PolygonReference::accessor get_batch() const;
+        void set_batch(Unbatched);
+        void set_batch(PolygonBatch& batch);
 
-		void set_camera_invariant(bool camera_invariant) const { body.set_camera_invariant(camera_invariant); head.set_camera_invariant(camera_invariant); }
-		bool is_camera_invariant() const { return body.is_camera_invariant(); }
+        void set_camera_invariant(bool camera_invariant) const;
+        bool is_camera_invariant() const;
 
 		void draw() const;
 
-		glm::vec2 get_start() const { return start; }
-		glm::vec2& set_start() { dirty = true; return start; }
-		glm::vec2 get_end() const { return end; }
-		glm::vec2& set_end() { dirty = true; return end; }
-		float get_width() const { return width; }
-		void set_width(float w) { if (w > 0.0f && w != width) { dirty = true; width = w; } }
-		float get_head_width() const { return head_width; }
-		void set_head_width(float w) { if (w > 0.0f && w != head_width) { dirty = true; head_width = w; } }
-		float get_head_height() const { return head_height; }
-		void set_head_height(float h) { if (h > 0.0f && h != head_height) { dirty = true; head_height = h; } }
+		glm::vec2 get_start() const;
+        glm::vec2& set_start();
+		glm::vec2 get_end() const;
+        glm::vec2& set_end();
+		float get_width() const;
+        void set_width(float w);
+		float get_head_width() const;
+        void set_head_width(float w);
+		float get_head_height() const;
+        void set_head_height(float h);
 
-		glm::vec4 get_start_color() const { return start_color; }
-		glm::vec4& set_start_color() { dirty = true; return start_color; }
-		glm::vec4 get_end_color() const { return end_color; }
-		glm::vec4& set_end_color() { dirty = true; return end_color; }
-		void set_color(glm::vec4 color) { set_start_color() = set_end_color() = color; }
+        glm::vec4 get_start_color() const;
+        glm::vec4& set_start_color();
+        glm::vec4 get_end_color() const;
+        glm::vec4& set_end_color();
+        void set_color(glm::vec4 color);
 
-		void scale_head(float by) { set_head_width(head_width * by); set_head_height(head_height * by); }
-		void adjust_standard_head_for_width(float w)
-		{
-			if (w > 0.0f)
-			{
-				dirty = true;
-				width = w;
-				head_width = 3.0f * w;
-				head_height = 3.0f * w;
-			}
-		}
+        void scale_head(float by);
+        void adjust_standard_head_for_width(float w);
 
 		std::vector<glm::vec2> get_all_points() const;
 

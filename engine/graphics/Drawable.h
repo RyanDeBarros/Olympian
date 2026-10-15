@@ -10,7 +10,8 @@ namespace oly::rendering
 {
 	// DOC for all these classes
 
-	struct IDrawable : public imp::tree_node<IDrawable>
+	struct IDrawable
+        : public imp::tree_node<IDrawable>
 	{
 		virtual ~IDrawable() = default;
 
@@ -23,7 +24,8 @@ namespace oly::rendering
         virtual void draw_tree() const;
 	};
 
-	class ZLayeredDrawable : public IDrawable
+	class ZLayeredDrawable
+        : public IDrawable
 	{
 		// For z-layer to come into effect, the z-layered drawable must be a descendant of a CanvasLayerStack.
 		float z_layer_ = 0.0f;
@@ -66,7 +68,9 @@ namespace oly::rendering
 	}
 
 	template<bool ZLayer = true>
-	class CanvasLayerStack : public DrawableBase<ZLayer>, public internal::CanvasLayerStackBase
+	class CanvasLayerStack
+        : public DrawableBase<ZLayer>
+        , public internal::CanvasLayerStackBase
 	{
 	protected:
 		void draw_tree() const override
@@ -76,7 +80,8 @@ namespace oly::rendering
 	};
 
 	template<typename T, bool ZLayer = false>
-	struct Drawable : public DrawableBase<ZLayer>
+	struct Drawable
+        : public DrawableBase<ZLayer>
 	{
 		SmartReference<T> ref;
 

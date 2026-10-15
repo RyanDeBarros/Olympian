@@ -201,7 +201,9 @@ namespace oly::col2d
 		};
 	}
 
-	class CollisionDispatcher final : public imp::soft_singleton<CollisionDispatcher>, public ITickService
+	class CollisionDispatcher final
+        : public imp::soft_singleton<CollisionDispatcher>
+        , public ITickService
 	{
 		friend class imp::soft_singleton<CollisionDispatcher>;
         friend struct CollisionController;

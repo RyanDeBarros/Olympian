@@ -15,7 +15,8 @@ namespace oly::rendering
 		extern void initialize_default_camera(bool boxed, bool stretch);
 	}
 
-	class Camera2D : public EventHandler<input::WindowResizeEventData>
+	class Camera2D
+        : public EventHandler<input::WindowResizeEventData>
 	{
         friend void internal::initialize_default_camera(bool boxed, bool stretch);
 

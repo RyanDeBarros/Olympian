@@ -1,86 +1,131 @@
 #include "GeometryPainter.h"
 
 #include "core/context/Platform.h"
+
 #include "core/context/rendering/Rendering.h"
 #include "core/context/rendering/Sprites.h"
 
 namespace oly::rendering
 {
-	GeometryPainter::GeometryPainter(const GeometryPainter& other)
-	{
-	}
+    GeometryPainter::GeometryPainter(const GeometryPainter& other)
+    {
+    }
 
-	GeometryPainter::GeometryPainter(GeometryPainter&& other) noexcept
-		: framebuffer(std::move(other.framebuffer))
-	{
-	}
-	
-	GeometryPainter& GeometryPainter::operator=(const GeometryPainter& other)
-	{
-		return *this;
-	}
-	
-	GeometryPainter& GeometryPainter::operator=(GeometryPainter&& other) noexcept
-	{
-		if (this != &other)
-			framebuffer = std::move(other.framebuffer);
-		return *this;
-	}
+    GeometryPainter::GeometryPainter(GeometryPainter&& other) noexcept
+        : framebuffer_(std::move(other.framebuffer_))
+    {
+    }
 
-	GeometryPainter::PaintContext::PaintContext(GeometryPainter& painter, const Camera2DRef& camera, math::IRect2D bounds, float rotation, glm::vec2 scale, int texture_cpp)
-		: painter(painter), scope(*camera, {}, false, bounds.size()), dimensions(bounds.size()), texture(GL_TEXTURE_2D)
-	{
-		painter.context_locked = true;
+    GeometryPainter& GeometryPainter::operator=(const GeometryPainter& other)
+    {
+        return *this;
+    }
 
-		Camera2DRef new_camera = REF_INIT;
-		new_camera->project_to_rect((math::Rect2D)bounds);
-		new_camera->transformer.set_local().rotation = rotation;
-		new_camera->transformer.set_local().scale = scale;
-		painter.polygon_batch->camera = new_camera;
-		painter.ellipse_batch->camera = new_camera;
-		
-		graphics::tex::storage_2d(*texture, { .w = dimensions.x, .h = dimensions.y, .cpp = texture_cpp });
-		texture->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		texture->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		texture->set_and_use_handle();
+    GeometryPainter& GeometryPainter::operator=(GeometryPainter&& other) noexcept
+    {
+        if (this != &other)
+            framebuffer_ = std::move(other.framebuffer_);
+        return *this;
+    }
 
-		painter.framebuffer.bind(graphics::Framebuffer::Target::Draw);
-		painter.framebuffer.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture);
-		OLY_ASSERT(painter.framebuffer.status() == graphics::Framebuffer::Status::Complete);
-		glClear(GL_COLOR_BUFFER_BIT);
-	}
+    const PolygonBatch& GeometryPainter::get_polygon_batch() const
+    {
+        return polygon_batch_;
+    }
 
-	GeometryPainter::PaintContext::~PaintContext()
-	{
-		painter.framebuffer.detach_texture(graphics::Framebuffer::ColorAttachment::color(0));
-		painter.framebuffer.unbind(graphics::Framebuffer::Target::Draw);
-		painter.context_locked = false;
-	}
+    PolygonBatch& GeometryPainter::get_polygon_batch()
+    {
+        return polygon_batch_;
+    }
 
-	void GeometryPainter::PaintContext::render()
-	{
-		painter.ellipse_batch->render();
-		painter.polygon_batch->render();
-	}
+    const EllipseBatch& GeometryPainter::get_ellipse_batch() const
+    {
+        return ellipse_batch_;
+    }
 
-	void GeometryPainter::PaintContext::set_texture(StaticSprite& sprite) const
-	{
-		sprite.set_texture(texture, dimensions);
-	}
+    EllipseBatch& GeometryPainter::get_ellipse_batch()
+    {
+        return ellipse_batch_;
+    }
 
-	void GeometryPainter::PaintContext::set_texture(Sprite& sprite) const
-	{
-		sprite.set_texture(texture, dimensions);
-	}
+    GeometryPainter::PaintContext::PaintContext(
+        GeometryPainter& painter,
+        const Camera2DRef& camera,
+        math::IRect2D bounds,
+        float rotation,
+        glm::vec2 scale,
+        int texture_cpp)
+        : painter_(painter)
+        , scope_(*camera, {}, false, bounds.size())
+        , dimensions_(bounds.size())
+        , texture_(GL_TEXTURE_2D)
+    {
+        painter_.context_locked_ = true;
 
-	GeometryPainter::PaintContext GeometryPainter::paint_context(const Camera2DRef& camera, math::IRect2D bounds, float rotation, glm::vec2 scale, int texture_cpp)
-	{
-		if (context_locked)
-			throw Error(ErrorCode::LockedResource);
+        Camera2DRef new_camera = REF_INIT;
+        new_camera->project_to_rect((math::Rect2D)bounds);
+        new_camera->transformer.set_local().rotation = rotation;
+        new_camera->transformer.set_local().scale = scale;
+        painter_.polygon_batch_->camera = new_camera;
+        painter_.ellipse_batch_->camera = new_camera;
 
-		if (bounds.width() <= 0 || bounds.height() <= 0)
-			throw Error(ErrorCode::InvalidSize);
+        graphics::tex::storage_2d(*texture_, { .w = dimensions_.x, .h = dimensions_.y, .cpp = texture_cpp });
+        texture_->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        texture_->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        texture_->set_and_use_handle();
 
-		return PaintContext(*this, camera, bounds, rotation, scale, texture_cpp);
-	}
+        painter_.framebuffer_.bind(graphics::Framebuffer::Target::Draw);
+        painter_.framebuffer_.attach_2d_texture(graphics::Framebuffer::ColorAttachment::color(0), *texture_);
+        OLY_ASSERT(painter_.framebuffer_.status() == graphics::Framebuffer::Status::Complete);
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+
+    GeometryPainter::PaintContext::~PaintContext()
+    {
+        painter_.framebuffer_.detach_texture(graphics::Framebuffer::ColorAttachment::color(0));
+        painter_.framebuffer_.unbind(graphics::Framebuffer::Target::Draw);
+        painter_.context_locked_ = false;
+    }
+
+    void GeometryPainter::PaintContext::render()
+    {
+        painter_.ellipse_batch_->render();
+        painter_.polygon_batch_->render();
+    }
+
+    glm::vec2 GeometryPainter::PaintContext::get_texture_dimensions() const
+    {
+        return dimensions_;
+    }
+
+    graphics::BindlessTextureRef GeometryPainter::PaintContext::get_texture() const
+    {
+        return texture_;
+    }
+
+    void GeometryPainter::PaintContext::set_texture(StaticSprite& sprite) const
+    {
+        sprite.set_texture(texture_, dimensions_);
+    }
+
+    void GeometryPainter::PaintContext::set_texture(Sprite& sprite) const
+    {
+        sprite.set_texture(texture_, dimensions_);
+    }
+
+    GeometryPainter::PaintContext GeometryPainter::paint_context(
+        const Camera2DRef& camera,
+        math::IRect2D bounds,
+        float rotation,
+        glm::vec2 scale,
+        int texture_cpp)
+    {
+        if (context_locked_)
+            throw Error(ErrorCode::LockedResource);
+
+        if (bounds.width() <= 0 || bounds.height() <= 0)
+            throw Error(ErrorCode::InvalidSize);
+
+        return PaintContext(*this, camera, bounds, rotation, scale, texture_cpp);
+    }
 }

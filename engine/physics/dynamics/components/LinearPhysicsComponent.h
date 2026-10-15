@@ -69,7 +69,8 @@ namespace oly::physics
 
 	typedef SmartReference<LinearSubMaterial> LinearSubMaterialRef;
 
-	class LinearPhysicsComponent : public DynamicsComponent
+	class LinearPhysicsComponent
+        : public DynamicsComponent
 	{
 		mutable size_t primary_collision_mtv_idx_ = 0;
 		mutable size_t secondary_collision_mtv_idx_ = 0;
