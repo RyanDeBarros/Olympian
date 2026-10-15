@@ -1,9 +1,11 @@
 #pragma once
 
+#include "core/base/Parameters.h"
+
 #include "external/GLM.h"
 #include "external/TOML.h"
 
-#include "core/base/Parameters.h"
+#include <imp/bitmask.hpp>
 
 namespace oly::rendering
 {
@@ -20,13 +22,7 @@ namespace oly::rendering
 			MinSize = 1 << 6
 		};
 
-		inline DirtyParagraph operator~(DirtyParagraph a) { return DirtyParagraph(~(int)a); }
-
-		inline DirtyParagraph operator|(DirtyParagraph a, DirtyParagraph b) { return DirtyParagraph((int)a | (int)b); }
-		inline DirtyParagraph& operator|=(DirtyParagraph& a, DirtyParagraph b) { a = a | b; return a; }
-
-		inline DirtyParagraph operator&(DirtyParagraph a, DirtyParagraph b) { return DirtyParagraph((int)a & (int)b); }
-		inline DirtyParagraph& operator&=(DirtyParagraph& a, DirtyParagraph b) { a = a & b; return a; }
+        IMP_IMPLEMENT_BITMASK(DirtyParagraph);
 
 		enum DirtyGlyphGroup
 		{
@@ -35,54 +31,51 @@ namespace oly::rendering
 			JitterOffset = 1 << 2
 		};
 
-		inline DirtyGlyphGroup operator~(DirtyGlyphGroup a) { return DirtyGlyphGroup(~(int)a); }
-
-		inline DirtyGlyphGroup operator|(DirtyGlyphGroup a, DirtyGlyphGroup b) { return DirtyGlyphGroup((int)a | (int)b); }
-		inline DirtyGlyphGroup& operator|=(DirtyGlyphGroup& a, DirtyGlyphGroup b) { a = a | b; return a; }
-
-		inline DirtyGlyphGroup operator&(DirtyGlyphGroup a, DirtyGlyphGroup b) { return DirtyGlyphGroup((int)a & (int)b); }
-		inline DirtyGlyphGroup& operator&=(DirtyGlyphGroup& a, DirtyGlyphGroup b) { a = a & b; return a; }
+        IMP_IMPLEMENT_BITMASK(DirtyGlyphGroup);
 	}
+
+    enum class HorizontalAlignment
+    {
+        Left,
+        Center,
+        Right,
+        Justify,
+        FullJustify
+    };
+
+    enum class VerticalAlignment
+    {
+        Top,
+        Middle,
+        Bottom,
+        Justify,
+        FullJustify
+    };
 
 	struct TypesetData
 	{
-		float x = 0.0f, y = 0.0f;
+        float x = 0.f;
+        float y = 0.f;
 		glm::uint character = 0;
 		size_t line = 0;
 	};
 
 	struct ParagraphFormat
 	{
-		float line_spacing = 1.0f;
-		float tab_spaces = 4.0f;
-		float linebreak_spacing = 1.0f;
+		float line_spacing = 1.f;
+		float tab_spaces = 4.f;
+		float linebreak_spacing = 1.f;
 		glm::vec2 pivot = { 0.5f, 0.5f };
 		glm::vec2 min_size = {};
-		float text_wrap = 0.0f;
-		float max_height = 0.0f;
+		float text_wrap = 0.f;
+		float max_height = 0.f;
 		glm::vec2 padding = {};
-
-		enum class HorizontalAlignment
-		{
-			Left,
-			Center,
-			Right,
-			Justify,
-			FullJustify
-		} horizontal_alignment = HorizontalAlignment::Left;
-
-		enum class VerticalAlignment
-		{
-			Top,
-			Middle,
-			Bottom,
-			Justify,
-			FullJustify
-		} vertical_alignment = VerticalAlignment::Top;
-
-		bool can_fit_on_line(TypesetData t, float dx) const;
-		bool can_fit_vertically(TypesetData t, float dy) const;
+        HorizontalAlignment horizontal_alignment = HorizontalAlignment::Left;
+        VerticalAlignment vertical_alignment = VerticalAlignment::Top;
 
 		static ParagraphFormat load(TOMLNode node);
+
+        bool can_fit_on_line(TypesetData t, float dx) const;
+		bool can_fit_vertically(TypesetData t, float dy) const;
 	};
 }

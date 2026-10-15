@@ -1,99 +1,109 @@
 #pragma once
 
-#include "external/STB.h"
+#include "core/base/SmartReference.h"
 
 #include "core/math/Shapes.h"
 
-#include "core/base/SmartReference.h"
-
 #include "graphics/backend/basic/Textures.h"
+
 #include "graphics/text/Kerning.h"
+
+#include "external/STB.h"
 
 #include <imp/utf.hpp>
 
 namespace oly::rendering
 {
-	class FontFace
-	{
-		std::vector<unsigned char> data;
-		stbtt_fontinfo info = {};
-		Kerning kerning;
+    class FontFace
+    {
+        std::vector<unsigned char> data_;
+        stbtt_fontinfo info_ = {};
+        Kerning kerning_;
 
-	public:
-		FontFace(const detail::ResourcePath& font_file, Kerning&& kerning);
+    public:
+        FontFace(const detail::ResourcePath& font_file, Kerning&& kerning);
 
-		float scale_for_pixel_height(float font_size) const;
-		void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
-		void get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const;
-		void get_vertical_metrics(int& ascent, int& descent, int& linegap) const;
-		int find_glyph_index(imp::utf::codepoint codepoint) const;
-		void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
-		void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
-		int get_kerning(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
-	};
+    public:
+        float scale_for_pixel_height(float font_size) const;
+        void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
+        void get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const;
+        void get_vertical_metrics(int& ascent, int& descent, int& linegap) const;
+        int find_glyph_index(imp::utf::codepoint codepoint) const;
+        void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;
+        void make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const;
+        int get_kerning(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
+    };
 
-	typedef SmartReference<FontFace> FontFaceRef;
+    using FontFaceRef = SmartReference<FontFace>;
 
-	class FontAtlas;
-	class FontGlyph
-	{
-		int index = 0;
-		math::IRect2D _box;
-		int _advance_width = 0, _left_bearing = 0;
-		graphics::BindlessTextureRef _texture;
-		size_t buffer_pos = -1;
+    class FontAtlas;
 
-	public:
-		FontGlyph(const FontAtlas& font, int index, float scale, size_t buffer_pos);
+    class FontGlyph
+    {
+        friend class FontAtlas;
 
-		math::IRect2D box() const { return _box; }
-		int advance_width() const { return _advance_width; }
-		int left_bearing() const { return _left_bearing; }
-		graphics::BindlessTextureRef texture() const { return _texture; }
+    private:
+        int index_ = 0;
+        math::IRect2D box_;
+        int advance_width_ = 0;
+        int left_bearing_ = 0;
+        graphics::BindlessTextureRef texture_;
+        size_t buffer_pos_ = -1;
 
-	private:
-		friend class FontAtlas;
-		void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
-		void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
-	};
+    public:
+        FontGlyph(const FontAtlas& font, int index, float scale, size_t buffer_pos);
 
-	struct FontOptions
-	{
-		float font_size = 36.0f;
-		GLenum min_filter = GL_LINEAR, mag_filter = GL_LINEAR;
-		bool auto_generate_mipmaps = false;
-	};
+    public:
+        math::IRect2D box() const;
+        int advance_width() const;
+        int left_bearing() const;
+        graphics::BindlessTextureRef texture() const;
 
-	class FontAtlas
-	{
-		FontFaceRef font;
-		friend struct FontGlyph;
-		mutable std::unordered_map<imp::utf::codepoint, FontGlyph> glyphs;
-		FontOptions options;
-		float scale = 1.0f;
-		float _line_height = 0.0f;
-		int ascent = 0;
-		float space_advance_width = 0.0f;
-		graphics::ImageDimensions common_dim;
-		graphics::BindlessTextureRef common_texture;
+    private:
+        void render_on_bitmap_shared(const FontAtlas& font, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const;
+        void render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const;
+    };
 
-	public:
-		FontAtlas(const FontFaceRef& font, FontOptions options, const imp::utf::string& common_buffer);
+    struct FontOptions
+    {
+        float font_size = 36.0f;
+        GLenum min_filter = GL_LINEAR;
+        GLenum mag_filter = GL_LINEAR;
+        bool auto_generate_mipmaps = false;
+    };
 
-		const FontFaceRef& font_face() const { return font; }
+    class FontAtlas
+    {
+        friend struct FontGlyph;
 
-		bool cache(imp::utf::codepoint codepoint) const;
-		void cache_all(const FontAtlas& other) const;
-		const FontGlyph& get_glyph(imp::utf::codepoint codepoint) const;
-		int get_glyph_index(imp::utf::codepoint codepoint) const;
-		bool supports(imp::utf::codepoint codepoint) const;
-		float kerning_of(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
-		float line_height() const;
-		float get_ascent() const;
-		math::UVRect uvs(const FontGlyph& glyph) const;
-		float get_scale() const { return scale; }
-		float get_scaled_space_advance_width() const { return space_advance_width; }
-	};
+    private:
+        FontFaceRef font_;
+        mutable std::unordered_map<imp::utf::codepoint, FontGlyph> glyphs_;
+        FontOptions options_;
+        float scale_ = 1.0f;
+        float line_height_ = 0.0f;
+        int ascent_ = 0;
+        float space_advance_width_ = 0.0f;
+        graphics::ImageDimensions common_dim_;
+        graphics::BindlessTextureRef common_texture_;
 
-	typedef SmartReference<FontAtlas> FontAtlasRef;
+    public:
+        FontAtlas(const FontFaceRef& font, FontOptions options, const imp::utf::string& common_buffer);
+
+        const FontFaceRef& font_face() const;
+
+        bool cache(imp::utf::codepoint codepoint) const;
+        void cache_all(const FontAtlas& other) const;
+        const FontGlyph& get_glyph(imp::utf::codepoint codepoint) const;
+        int get_glyph_index(imp::utf::codepoint codepoint) const;
+        bool supports(imp::utf::codepoint codepoint) const;
+        float kerning_of(imp::utf::codepoint c1, imp::utf::codepoint c2) const;
+        float line_height() const;
+        float get_ascent() const;
+        math::UVRect uvs(const FontGlyph& glyph) const;
+        float get_scale() const;
+        float get_scaled_space_advance_width() const;
+    };
+
+    typedef SmartReference<FontAtlas> FontAtlasRef;
 }

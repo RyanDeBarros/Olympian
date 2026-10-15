@@ -6,4 +6,5 @@ target_sources(OlympianEngine PRIVATE
 	RasterFont.cpp
 	TextElement.cpp
 	TextGlyph.cpp
+    Typesetting.cpp
 )

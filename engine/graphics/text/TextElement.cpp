@@ -1,340 +1,395 @@
 #include "TextElement.h"
 
-#include "graphics/text/TextGlyph.h"
-
-#include "core/algorithms/TaggedTextParser.h"
-#include "core/algorithms/STLUtils.h"
-#include "core/algorithms/Regex.h"
-
 #include "core/context/rendering/Fonts.h"
+
 #include "core/util/Loader.h"
 #include "core/util/Parser.h"
 
+#include "core/algorithms/Regex.h"
+#include "core/algorithms/STLUtils.h"
+#include "core/algorithms/TaggedTextParser.h"
+
+#include "graphics/text/TextGlyph.h"
+
 namespace oly::rendering
 {
-	template<typename F>
-	auto visit_font(const Font::Variant& font, F&& func)
-	{
-		return font.visit(
-			[&func](const FontSelection& font) { return font.get().visit(std::forward<F>(func)); },
-			func,
-			func
-		);
-	}
+    Font::Font(const FontAtlasRef& font)
+        : f(font)
+    {
+    }
 
-	template<typename F>
-	auto visit_fonts(const Font::Variant& f1, const Font::Variant& f2, F&& func)
-	{
-		return visit_font(f1, [&f2, &func](const auto& f1) { return visit_font(f2, [&f1, &func](const auto& f2) { return func(f1, f2); }); });
-	}
+    Font::Font(const RasterFontRef& font)
+        : f(font)
+    {
+    }
 
-	void Font::apply_style(FontStyle style)
-	{
-		if (auto font = f.safe_get<FontSelection>())
-			font->style |= style;
-	}
+    Font::Font(const FontSelection& font)
+        : f(font)
+    {
+    }
 
-	void Font::unapply_style(FontStyle style)
-	{
-		if (auto font = f.safe_get<FontSelection>())
-			font->style &= ~style;
-	}
+    Font& Font::operator=(const FontAtlasRef& font)
+    {
+        f = font;
+        return *this;
+    }
 
-	void Font::reset_style()
-	{
-		if (auto font = f.safe_get<FontSelection>())
-			font->style = FontStyle::REGULAR;
-	}
+    Font& Font::operator=(const RasterFontRef& font)
+    {
+        f = font;
+        return *this;
+    }
 
-	float Font::line_height() const
-	{
-		return visit_font(f, [](const auto& font) { return font->line_height(); });
-	}
+    Font& Font::operator=(const FontSelection& font)
+    {
+        f = font;
+        return *this;
+    }
 
-	static bool same_font(const auto& f1, const auto& f2)
-	{
-		if constexpr (std::is_same_v<std::decay_t<decltype(f1)>, std::decay_t<decltype(f2)>>)
-			return f1 == f2;
-		else
-			return false;
-	}
+    template<typename F>
+    auto visit_font(const Font::Variant& font, F&& func)
+    {
+        return font.visit(
+            [&func](const FontSelection& font) { return font.get().visit(std::forward<F>(func)); },
+            func,
+            func
+        );
+    }
 
-	bool Font::operator==(const FontAtlasRef& font) const
-	{
-		return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
-	}
+    template<typename F>
+    auto visit_fonts(const Font::Variant& f1, const Font::Variant& f2, F&& func)
+    {
+        return visit_font(f1, [&f2, &func](const auto& f1) {
+            return visit_font(f2, [&f1, &func](const auto& f2) {
+                return func(f1, f2);
+            });
+        });
+    }
 
-	bool Font::operator==(const RasterFontRef& font) const
-	{
-		return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
-	}
+    void Font::apply_style(FontStyle style)
+    {
+        if (auto font = f.safe_get<FontSelection>())
+            font->style |= style;
+    }
 
-	bool Font::operator==(const FontSelection& font) const
-	{
-		return visit_font(f, [&font](const auto& f) { return font.get().visit([&f](const auto& font) { return same_font(f, font); }); });
-	}
+    void Font::unapply_style(FontStyle style)
+    {
+        if (auto font = f.safe_get<FontSelection>())
+            font->style &= ~style;
+    }
 
-	bool Font::operator==(const Font& other) const
-	{
-		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) { return same_font(f1, f2); });
-	}
+    void Font::reset_style()
+    {
+        if (auto font = f.safe_get<FontSelection>())
+            font->style = FontStyle::kRegular;
+    }
 
-	bool Font::adj_compat(const Font& other) const
-	{
-		return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) {
-			if constexpr (imp::decays_one_of<decltype(f1), FontAtlasRef>)
-			{
-				if constexpr (imp::decays_one_of<decltype(f2), FontAtlasRef>)
-					return f1->font_face() == f2->font_face();
-				else
-					return false;
-			}
-			else if constexpr (imp::decays_one_of<decltype(f1), RasterFontRef>)
-			{
-				if constexpr (imp::decays_one_of<decltype(f2), RasterFontRef>)
-					return f1 == f2;
-				else
-					return false;
-			}
-			else
-				return false;
-			});
-	}
+    float Font::line_height() const
+    {
+        return visit_font(f, [](const auto& font) { return font->line_height(); });
+    }
 
-	bool Font::support(imp::utf::codepoint c) const
-	{
-		return visit_font(f, [c](const auto& f) {
-			if constexpr (imp::decays_one_of<decltype(f), FontAtlasRef>)
-				return f->cache(c);
-			else
-				return f->supports(c);
-			});
-	}
+    static bool same_font(const auto& f1, const auto& f2)
+    {
+        if constexpr (std::is_same_v<std::decay_t<decltype(f1)>, std::decay_t<decltype(f2)>>)
+            return f1 == f2;
+        else
+            return false;
+    }
 
-	void Font::set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos, glm::vec2 scale) const
-	{
-		visit_font(f, [&glyph, c, pos, scale](const auto& f) { glyph.set_glyph(*f, f->get_glyph(c), pos, scale); });
-	}
+    bool Font::operator==(const FontAtlasRef& font) const
+    {
+        return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
+    }
 
-	float Font::advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const
-	{
-		float adv = 0.0f;
-		if (c != imp::utf::codepoint(' '))
-			adv = visit_font(f, [c](const auto& font) {
-				if constexpr (imp::decays_one_of<decltype(font), FontAtlasRef>)
-					return font->get_glyph(c).advance_width() * font->get_scale();
-				else
-					return font->get_glyph(c).advance_width() * font->get_scale().x;
-				});
-		else
-			adv = visit_font(f, [](const auto& f) { return f->get_scaled_space_advance_width(); });
+    bool Font::operator==(const RasterFontRef& font) const
+    {
+        return visit_font(f, [&font](const auto& f) { return same_font(f, font); });
+    }
 
-		if (next_codepoint)
-			adv += visit_font(f, [c, next_codepoint](const auto& f) { return f->kerning_of(c, next_codepoint); });
+    bool Font::operator==(const FontSelection& font) const
+    {
+        return visit_font(f, [&font](const auto& f) {
+            return font.get().visit([&f](const auto& font) { return same_font(f, font); });
+        });
+    }
 
-		return adv;
-	}
+    bool Font::operator==(const Font& other) const
+    {
+        return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) { return same_font(f1, f2); });
+    }
 
-	float TextElement::line_height() const
-	{
-		return font.line_height() * scale.y;
-	}
+    bool Font::adj_compat(const Font& other) const
+    {
+        return visit_fonts(f, other.f, [](const auto& f1, const auto& f2) {
+            if constexpr (imp::decays_one_of<decltype(f1), FontAtlasRef>)
+            {
+                if constexpr (imp::decays_one_of<decltype(f2), FontAtlasRef>)
+                    return f1->font_face() == f2->font_face();
+                else
+                    return false;
+            }
+            else if constexpr (imp::decays_one_of<decltype(f1), RasterFontRef>)
+            {
+                if constexpr (imp::decays_one_of<decltype(f2), RasterFontRef>)
+                    return f1 == f2;
+                else
+                    return false;
+            }
+            else
+                return false;
+        });
+    }
 
-	std::vector<TextElement> TextElement::expand(const TextElement& element)
-	{
-		std::vector<TextElement> expanded;
-		expand(element, expanded);
-		return expanded;
-	}
+    bool Font::support(imp::utf::codepoint c) const
+    {
+        return visit_font(f, [c](const auto& f) {
+            if constexpr (imp::decays_one_of<decltype(f), FontAtlasRef>)
+                return f->cache(c);
+            else
+                return f->supports(c);
+        });
+    }
 
-	struct AttributeOverrides
-	{
-		bool font = false;
-		bool text_color = false;
-		bool adj_offset = false;
-		bool scale = false;
-		bool line_y_pivot = false;
-		bool jitter_offset = false;
+    void Font::set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos, glm::vec2 scale) const
+    {
+        visit_font(f, [&glyph, c, pos, scale](const auto& f) { glyph.set_glyph(*f, f->get_glyph(c), pos, scale); });
+    }
 
-		bool all() const
-		{
-			return font && text_color && adj_offset && scale && line_y_pivot && jitter_offset;
-		}
-	};
+    float Font::advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const
+    {
+        float adv = 0.0f;
+        if (c != imp::utf::codepoint(' '))
+            adv = visit_font(f, [c](const auto& font) {
+            if constexpr (imp::decays_one_of<decltype(font), FontAtlasRef>)
+                return font->get_glyph(c).advance_width() * font->get_scale();
+            else
+                return font->get_glyph(c).advance_width() * font->get_scale().x;
+        });
+        else
+            adv = visit_font(f, [](const auto& f) { return f->get_scaled_space_advance_width(); });
 
-	static StringParam get_tag_field(const StringParam& tag, size_t eq_pos)
-	{
-		return tag.substr(0, eq_pos).trim().to_lower();
-	}
+        if (next_codepoint)
+            adv += visit_font(f, [c, next_codepoint](const auto& f) { return f->kerning_of(c, next_codepoint); });
 
-	static StringParam get_tag_value(const StringParam& tag, size_t eq_pos)
-	{
-		return tag.substr(eq_pos + 1).trim();
-	}
+        return adv;
+    }
 
-	static void apply_style_tag(const std::string_view tag, TextElement& e, AttributeOverrides& overrides)
-	{
-		if (tag == "b" || tag == "bold")
-			e.font.apply_style(FontStyle::BOLD);
-		else if (tag == "!b" || tag == "!bold")
-			e.font.unapply_style(FontStyle::BOLD);
-		else if (tag == "i" || tag == "italic")
-			e.font.apply_style(FontStyle::ITALIC);
-		else if (tag == "!i" || tag == "!italic")
-			e.font.unapply_style(FontStyle::ITALIC);
-		else if (tag == "regular")
-			e.font.reset_style();
-		else
-		{
-			_OLY_ENGINE_LOG_WARNING("RENDERING") << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
-			return;
-		}
-		overrides.font = true;
-	}
+    std::vector<TextElement> TextElement::expand(const TextElement& element)
+    {
+        std::vector<TextElement> expanded;
+        expand(element, expanded);
+        return expanded;
+    }
 
-	static void apply_tag(const StringParam& tag, TextElement& e, AttributeOverrides& overrides, std::vector<std::string>& style_tags)
-	{
-		size_t eq_pos = tag.find('=');
-		if (eq_pos == std::string::npos)
-		{
-			if (!overrides.font)
-				style_tags.push_back(tag.transfer());
-			return;
-		}
+    struct AttributeOverrides
+    {
+        bool font = false;
+        bool text_color = false;
+        bool adj_offset = false;
+        bool scale = false;
+        bool line_y_pivot = false;
+        bool jitter_offset = false;
 
-		StringParam field = get_tag_field(tag, eq_pos);
+        bool all() const
+        {
+            return font && text_color && adj_offset && scale && line_y_pivot && jitter_offset;
+        }
+    };
 
-		if (field == "font")
-		{
-			if (!overrides.font)
-			{
-				StringParam value = get_tag_value(tag, eq_pos);
-				const size_t co_pos = value.rfind(':');
-				if (co_pos == StringParam::NPOS)
-				{
-					_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font tag - missing ':'." << LOG.nl;
-					return;
-				}
+    static StringParam get_tag_field(const StringParam& tag, size_t eq_pos)
+    {
+        return tag.substr(0, eq_pos).trim().to_lower();
+    }
 
-				unsigned texture_index = 0;
-				StringParam index = value.substr(co_pos + 1);
-				try
-				{
-					texture_index = index.to_uint();
-				}
-				catch (...)
-				{
-					index.to_lower();
-					if (index == "regular")
-						texture_index = rendering::FontStyle::REGULAR;
-					else if (index == "italic")
-						texture_index = rendering::FontStyle::ITALIC;
-					else if (index == "bold")
-						texture_index = rendering::FontStyle::BOLD;
-					else if (index == "bolditalic")
-						texture_index = rendering::FontStyle::BOLD_ITALIC;
-					else
-					{
-						_OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag - texture index cannot be parsed: (" << index << ")" << LOG.nl;
-						return;
-					}
-				}
-				value.erase_after(co_pos);
+    static StringParam get_tag_value(const StringParam& tag, size_t eq_pos)
+    {
+        return tag.substr(eq_pos + 1).trim();
+    }
 
-				if (value.ends_with('\"'))
-					value.pop_back();
-				if (value.starts_with('\"'))
-					value.pop_front();
+    static void apply_style_tag(const std::string_view tag, TextElement& e, AttributeOverrides& overrides)
+    {
+        if (tag == "b" || tag == "bold")
+            e.font.apply_style(FontStyle::kBold);
+        else if (tag == "!b" || tag == "!bold")
+            e.font.unapply_style(FontStyle::kBold);
+        else if (tag == "i" || tag == "italic")
+            e.font.apply_style(FontStyle::kItalic);
+        else if (tag == "!i" || tag == "!italic")
+            e.font.unapply_style(FontStyle::kItalic);
+        else if (tag == "regular")
+            e.font.reset_style();
+        else
+        {
+            _OLY_ENGINE_LOG_WARNING("RENDERING") << "Unrecognized tag \"" << tag << "\"" << LOG.nl;
+            return;
+        }
+        overrides.font = true;
+    }
 
-				e.font = context::load_font(value.transfer(), texture_index);
-				overrides.font = true;
-			}
-		}
-		else if (field == "color")
-		{
-			if (!overrides.text_color)
-			{
-				StringParam value = get_tag_value(tag, eq_pos);
-				if (algo::re::try_parse(value, e.text_color))
-					overrides.text_color = true;
-				else if (algo::re::try_parse<Color>(value, e.text_color))
-					overrides.text_color = true;
-			}
-		}
-		else if (field == "adj_offset")
-		{
-			if (!overrides.adj_offset)
-			{
-				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.adj_offset))
-					overrides.adj_offset = true;
-			}
-		}
-		else if (field == "scale")
-		{
-			if (!overrides.scale)
-			{
-				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.scale))
-					overrides.scale = true;
-			}
-		}
-		else if (field == "line_y_pivot")
-		{
-			if (!overrides.line_y_pivot)
-			{
-				float line_y_pivot;
-				if (algo::re::try_parse(get_tag_value(tag, eq_pos), line_y_pivot))
-				{
-					overrides.line_y_pivot = true;
-					e.line_y_pivot = line_y_pivot;
-				}
-			}
-		}
-		else if (field == "jitter_offset")
-		{
-			if (!overrides.jitter_offset)
-			{
-				if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.jitter_offset))
-					overrides.jitter_offset = true;
-			}
-		}
-	}
+    static void apply_tag(
+        const StringParam& tag,
+        TextElement& e,
+        AttributeOverrides& overrides,
+        std::vector<std::string>& style_tags)
+    {
+        size_t eq_pos = tag.find('=');
+        if (eq_pos == std::string::npos)
+        {
+            if (!overrides.font)
+                style_tags.push_back(tag.transfer());
+            return;
+        }
 
-	void TextElement::expand(const TextElement& element, std::vector<TextElement>& to)
-	{
-		algo::UTFTaggedTextParser parse(element.text);
-		to.reserve(to.size() + parse.groups.size());
-		for (algo::UTFTaggedTextParser::Group& group : parse.groups)
-		{
-			TextElement e{ .text = std::move(group.str) };
+        StringParam field = get_tag_field(tag, eq_pos);
 
-			AttributeOverrides overrides;
+        if (field == "font")
+        {
+            if (!overrides.font)
+            {
+                StringParam value = get_tag_value(tag, eq_pos);
+                const size_t co_pos = value.rfind(':');
+                if (co_pos == StringParam::NPOS)
+                {
+                    _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font tag - missing ':'." << LOG.nl;
+                    return;
+                }
 
-			std::vector<std::string> style_tags;
-			while (!group.tags.empty())
-			{
-				imp::utf::string tag = group.tags.top();
-				group.tags.pop();
-				apply_tag(tag.str(), e, overrides, style_tags);
-				if (overrides.all())
-					break;
-			}
-			for (auto tag = style_tags.rbegin(); tag != style_tags.rend(); ++tag)
-				apply_style_tag(*tag, e, overrides);
+                unsigned texture_index = 0;
+                StringParam index = value.substr(co_pos + 1);
+                try
+                {
+                    texture_index = index.to_uint();
+                }
+                catch (...)
+                {
+                    index.to_lower();
+                    if (index == "regular")
+                        texture_index = rendering::FontStyle::kRegular;
+                    else if (index == "italic")
+                        texture_index = rendering::FontStyle::kItalic;
+                    else if (index == "bold")
+                        texture_index = rendering::FontStyle::kBold;
+                    else if (index == "bolditalic")
+                        texture_index = rendering::FontStyle::kBoldItalic;
+                    else
+                    {
+                        _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot parse font file tag "
+                            << "- texture index cannot be parsed: (" << index << ")" << LOG.nl;
+                        return;
+                    }
+                }
+                value.erase_after(co_pos);
 
-			if (!overrides.font)
-				e.font = element.font;
-			if (!overrides.text_color)
-				e.text_color = element.text_color;
-			if (!overrides.adj_offset)
-				e.adj_offset = element.adj_offset;
-			if (!overrides.scale)
-				e.scale = element.scale;
-			if (!overrides.line_y_pivot)
-				e.line_y_pivot = element.line_y_pivot;
-			if (!overrides.jitter_offset)
-				e.jitter_offset = element.jitter_offset;
+                if (value.ends_with('\"'))
+                    value.pop_back();
+                if (value.starts_with('\"'))
+                    value.pop_front();
 
-			to.push_back(std::move(e));
-		}
-	}
+                e.font = context::load_font(value.transfer(), texture_index);
+                overrides.font = true;
+            }
+        }
+        else if (field == "color")
+        {
+            if (!overrides.text_color)
+            {
+                StringParam value = get_tag_value(tag, eq_pos);
+                if (algo::re::try_parse(value, e.text_color))
+                    overrides.text_color = true;
+                else if (algo::re::try_parse<Color>(value, e.text_color))
+                    overrides.text_color = true;
+            }
+        }
+        else if (field == "adj_offset")
+        {
+            if (!overrides.adj_offset)
+            {
+                if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.adj_offset))
+                    overrides.adj_offset = true;
+            }
+        }
+        else if (field == "scale")
+        {
+            if (!overrides.scale)
+            {
+                if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.scale))
+                    overrides.scale = true;
+            }
+        }
+        else if (field == "line_y_pivot")
+        {
+            if (!overrides.line_y_pivot)
+            {
+                float line_y_pivot;
+                if (algo::re::try_parse(get_tag_value(tag, eq_pos), line_y_pivot))
+                {
+                    overrides.line_y_pivot = true;
+                    e.line_y_pivot = line_y_pivot;
+                }
+            }
+        }
+        else if (field == "jitter_offset")
+        {
+            if (!overrides.jitter_offset)
+            {
+                if (algo::re::try_parse(get_tag_value(tag, eq_pos), e.jitter_offset))
+                    overrides.jitter_offset = true;
+            }
+        }
+    }
+
+    void TextElement::expand(const TextElement& element, std::vector<TextElement>& to)
+    {
+        algo::UTFTaggedTextParser parse(element.text);
+        to.reserve(to.size() + parse.groups.size());
+        for (algo::UTFTaggedTextParser::Group& group : parse.groups)
+        {
+            TextElement e{ .text = std::move(group.str) };
+
+            AttributeOverrides overrides;
+
+            std::vector<std::string> style_tags;
+            while (!group.tags.empty())
+            {
+                imp::utf::string tag = group.tags.top();
+                group.tags.pop();
+                apply_tag(tag.str(), e, overrides, style_tags);
+                if (overrides.all())
+                    break;
+            }
+            for (auto tag = style_tags.rbegin(); tag != style_tags.rend(); ++tag)
+                apply_style_tag(*tag, e, overrides);
+
+            if (!overrides.font)
+                e.font = element.font;
+            if (!overrides.text_color)
+                e.text_color = element.text_color;
+            if (!overrides.adj_offset)
+                e.adj_offset = element.adj_offset;
+            if (!overrides.scale)
+                e.scale = element.scale;
+            if (!overrides.line_y_pivot)
+                e.line_y_pivot = element.line_y_pivot;
+            if (!overrides.jitter_offset)
+                e.jitter_offset = element.jitter_offset;
+
+            to.push_back(std::move(e));
+        }
+    }
+
+    float TextElement::line_height() const
+    {
+        return font.line_height() * scale.y;
+    }
+
+    void TextElement::set_glyph(TextGlyph& glyph, imp::utf::codepoint c, glm::vec2 pos) const
+    {
+        font.set_glyph(glyph, c, pos, scale);
+    }
+    
+    float TextElement::advance_width(imp::utf::codepoint c, imp::utf::codepoint next_codepoint) const
+    {
+        return font.advance_width(c, next_codepoint) * scale.x;
+    }
 }

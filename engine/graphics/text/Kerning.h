@@ -10,7 +10,7 @@ namespace oly::rendering
 	struct Kerning
 	{
         // maps pairs of glyphs to kerning spacing
-		typedef std::unordered_map<std::pair<imp::utf::codepoint, imp::utf::codepoint>, int, imp::stl_hash<>> Map;
+        using Map = std::unordered_map<std::pair<imp::utf::codepoint, imp::utf::codepoint>, int, imp::stl_hash<>>;
 		
         Map map;
 	};

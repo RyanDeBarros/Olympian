@@ -1,6 +1,7 @@
 #pragma once
 
 #include "graphics/text/ParagraphFormat.h"
+
 #include "external/GL.h"
 
 namespace oly::rendering::internal
@@ -21,14 +22,14 @@ namespace oly::rendering::internal
 			float final_advance_width = 0.0f;
 			GLuint characters = 0;
 
-			float spaced_height(const ParagraphFormat& format) const { return max_height * (width == 0.0f ? format.linebreak_spacing : format.line_spacing); }
+            float spaced_height(const ParagraphFormat& format) const;
 		};
 
 		std::vector<Line> lines;
 		GLuint linebreaks = 0;
 
-		const Line& current_line() const { return lines.back(); }
-		Line& current_line() { return lines.back(); }
+        const Line& current_line() const;
+        Line& current_line();
 	};
 
 	struct AlignmentCache
@@ -47,12 +48,6 @@ namespace oly::rendering::internal
 		glm::vec2 padding_offset = {};
 		float valign_offset = 0.0f;
 
-		glm::vec2 position(const TypesetData& typeset) const
-		{
-			return pivot_offset + padding_offset + glm::vec2{
-				typeset.x + lines[typeset.line].start + lines[typeset.line].character_shift * typeset.character,
-				typeset.y + valign_offset
-			};
-		}
+        glm::vec2 position(const TypesetData& typeset) const;
 	};
 }
