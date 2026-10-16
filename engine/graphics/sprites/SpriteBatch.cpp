@@ -56,8 +56,8 @@ namespace oly::rendering::internal
     SpriteBatch::SpriteBatch(UBOCapacity capacity)
         : ebo_(vao_)
         , shader_ref_(graphics::internal_shaders::sprite_batch(capacity.modulations(), capacity.anims()))
-        , tex_data_ssbo_(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(TexData))
-        , tex_coords_ssbo_(graphics::SHADER_STORAGE_MAX_BUFFER_SIZE, sizeof(math::UVRect))
+        , tex_data_ssbo_(graphics::kShaderStorageMaxBufferSize, sizeof(TexData))
+        , tex_coords_ssbo_(graphics::kShaderStorageMaxBufferSize, sizeof(math::UVRect))
         , ubo_(capacity)
     {
         shader_ = *shader_ref_;

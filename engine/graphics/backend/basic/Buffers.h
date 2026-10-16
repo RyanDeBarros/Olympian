@@ -1,10 +1,10 @@
 #pragma once
 
-#include <array>
-
 #include "core/base/Errors.h"
 
 #include "external/GL.h"
+
+#include <array>
 
 namespace oly::graphics
 {

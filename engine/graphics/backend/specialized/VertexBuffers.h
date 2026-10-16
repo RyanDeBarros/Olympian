@@ -5,106 +5,150 @@
 
 namespace oly::graphics
 {
-	template<typename... Structs>
-	class PersistentVertexBufferBlock
-	{
-		LazyPersistentGPUBufferBlock<Structs...> buf;
-		GLuint vao;
+    template<typename... Structs>
+    class PersistentVertexBufferBlock
+    {
+    public:
+        template<size_t I>
+        using StructAlias = typename LazyPersistentGPUBufferBlock<Structs...>::template StructAlias<I>;
 
-	public:
-		template<size_t n>
-		using StructAlias = typename LazyPersistentGPUBufferBlock<Structs...>::template StructAlias<n>;
-		static constexpr size_t N = LazyPersistentGPUBufferBlock<Structs...>::N;
+        static constexpr size_t N = LazyPersistentGPUBufferBlock<Structs...>::N;
 
-		std::array<VertexAttributeVariant, N> attributes;
+    private:
+        LazyPersistentGPUBufferBlock<Structs...> buf_;
+        GLuint vao_;
 
-		PersistentVertexBufferBlock(GLuint vao, GLuint size = 0) : vao(vao), buf(size) {}
+    public:
+        std::array<VertexAttributeVariant, N> attributes;
 
-		PersistentVertexBufferBlock(GLuint vao, const std::array<GLuint, N>& sizes) : vao(vao), buf(sizes) {}
+        PersistentVertexBufferBlock(GLuint vao_, GLuint size = 0)
+            : vao_(vao_)
+            , buf_(size)
+        {
+        }
 
-		void setup()
-		{
-			glBindVertexArray(vao);
-			setup_impl(std::make_index_sequence<N>{});
-			glBindVertexArray(0);
-		}
+        PersistentVertexBufferBlock(GLuint vao_, const std::array<GLuint, N>& sizes)
+            : vao_(vao_)
+            , buf_(sizes) {
+        }
 
-		void set_vao(const VertexArray& vao)
-		{
-			this->vao = vao;
-			setup();
-		}
+    public:
+        void setup()
+        {
+            glBindVertexArray(vao_);
+            setup_impl(std::make_index_sequence<N>{});
+            glBindVertexArray(0);
+        }
 
-	private:
-		template<size_t... Indices>
-		void setup_impl(std::index_sequence<Indices...>)
-		{
-			(setup<Indices>(), ...);
-		}
+        void set_vao(const VertexArray& vao_)
+        {
+            this->vao_ = vao_;
+            setup();
+        }
 
-		template<size_t n>
-		void setup()
-		{
-			static_assert(n < N);
-			glBindBuffer(GL_ARRAY_BUFFER, buffer<n>());
-			attributes[n].visit([](auto&& attribute) { attribute.setup(); });
-		}
+        template<size_t I>
+        GLuint buffer() const
+        {
+            return buf_.buf.get_buffer<I>();
+        }
 
-		template<size_t n>
-		void setup_Single()
-		{
-			static_assert(n < N);
-			glBindVertexArray(vao);
-			setup<n>();
-			glBindVertexArray(0);
-		}
+        template<size_t I>
+        GLuint size() const
+        {
+            return buf_.buf.get_size<I>();
+        }
 
-	public:
-		template<size_t n>
-		GLuint buffer() const { return buf.buf.get_buffer<n>(); }
+        template<size_t I>
+        void pre_draw() const
+        {
+            buf_.pre_draw<I>();
+        }
 
-		template<size_t n>
-		GLuint size() const { return buf.buf.get_size<n>(); }
-		
-		template<size_t n>
-		void pre_draw() const { buf.pre_draw<n>(); }
-		
-		void pre_draw_all() const { buf.pre_draw_all(); }
-		
-		template<size_t n>
-		void post_draw() const { buf.post_draw<n>(); }
-		
-		void post_draw_all() const { buf.post_draw_all(); }
-		
-		template<size_t n>
-		void grow() { buf.grow<n>(); setup_Single<n>(); }
-		
-		void grow_all() const { buf.grow_all(); setup(); }
-		
-		template<size_t n>
-		const StructAlias<n>& get(GLuint i) const { return buf.get<n>(i); }
-		
-		template<size_t n>
-		StructAlias<n>& set(GLuint i)
-		{
-			bool grown = false;
-			StructAlias<n>& el = buf.set<n>(i, &grown);
-			if (grown)
-				setup_Single<n>();
-			return el;
-		}
+        void pre_draw_all() const
+        {
+            buf_.pre_draw_all();
+        }
 
-		template<size_t n>
-		const StructAlias<n>* get(GLuint offset, GLuint length) const { return buf.get<n>(offset, length); }
-		
-		template<size_t n>
-		StructAlias<n>* set(GLuint offset, GLuint length)
-		{
-			bool grown = false;
-			StructAlias<n>* arr = buf.set<n>(offset, length, &grown);
-			if (grown)
-				setup_Single<n>();
-			return arr;
-		}
-	};
+        template<size_t I>
+        void post_draw() const
+        {
+            buf_.post_draw<I>();
+        }
+
+        void post_draw_all() const
+        {
+            buf_.post_draw_all();
+        }
+
+        template<size_t I>
+        void grow()
+        {
+            buf_.grow<I>();
+            setup_single<I>();
+        }
+
+        void grow_all() const
+        {
+            buf_.grow_all();
+            setup();
+        }
+
+        template<size_t I>
+        const StructAlias<I>& get(GLuint i) const
+        {
+            return buf_.get<I>(i);
+        }
+
+        template<size_t I>
+        StructAlias<I>& set(GLuint i)
+        {
+            bool grown = false;
+            StructAlias<I>& el = buf_.set<I>(i, &grown);
+            if (grown)
+                setup_single<I>();
+
+            return el;
+        }
+
+        template<size_t I>
+        const StructAlias<I>* get(GLuint offset, GLuint length) const
+        {
+            return buf_.get<I>(offset, length);
+        }
+
+        template<size_t I>
+        StructAlias<I>* set(GLuint offset, GLuint length)
+        {
+            bool grown = false;
+            StructAlias<I>* arr = buf_.set<I>(offset, length, &grown);
+            if (grown)
+                setup_single<I>();
+
+            return arr;
+        }
+
+    private:
+        template<size_t... Indices>
+        void setup_impl(std::index_sequence<Indices...>)
+        {
+            (setup<Indices>(), ...);
+        }
+
+        template<size_t I>
+        void setup()
+        {
+            static_assert(I < N);
+            glBindBuffer(GL_ARRAY_BUFFER, buffer<I>());
+            attributes[I].visit([](auto&& attribute) { attribute.setup(); });
+        }
+
+        template<size_t I>
+        void setup_single()
+        {
+            static_assert(I < N);
+            glBindVertexArray(vao_);
+            setup<I>();
+            glBindVertexArray(0);
+        }
+    };
 }
