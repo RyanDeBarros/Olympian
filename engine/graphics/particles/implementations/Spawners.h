@@ -9,6 +9,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((ConstantParticleSpawner));
 
+    public:
 		float rate;
 
         ConstantParticleSpawner(float rate = 10.0f);
@@ -22,6 +23,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((BurstParticleSpawner));
 
+    public:
 		float rate;
 		float duration;
 		float time_offset;

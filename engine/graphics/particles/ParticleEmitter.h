@@ -7,44 +7,45 @@
 
 namespace oly::particles
 {
-	namespace internal
-	{
-		struct EmitterParams;
-	}
+    namespace internal
+    {
+        struct EmitterParams;
+    }
 
-	struct ParticleEmitter
-	{
-		GLuint max_particles;
-		GLuint attached;
+    struct ParticleEmitter
+    {
+    private:
+        mutable float spawn_debt_ = 0.0f;
+        mutable float time_elapsed_ = 0.0f;
 
-		AttributeGenerator1D lifetime;
-		AttributeGenerator2D position;
-		AttributeGenerator1D rotation;
-		AttributeGenerator2D size;
-		AttributeGenerator2D velocity;
-		AttributeGenerator4D color;
+    public:
+        GLuint max_particles;
+        GLuint attached;
 
-		imp::poly<IParticleSpawner> spawner;
-		float spawn_period = 1.0f;
-		enum class Loop
-		{
-			Unbounded,
-			Loop,
-			OneShot
-		} loop = Loop::Loop;
+        AttributeGenerator1D lifetime;
+        AttributeGenerator2D position;
+        AttributeGenerator1D rotation;
+        AttributeGenerator2D size;
+        AttributeGenerator2D velocity;
+        AttributeGenerator4D color;
 
-	private:
-		mutable float _spawn_debt = 0.0f;
-		mutable float _time_elapsed = 0.0f;
+        imp::poly<IParticleSpawner> spawner;
+        float spawn_period = 1.0f;
 
-	public:
-		ParticleEmitter();
+        enum class Loop
+        {
+            Unbounded,
+            Loop,
+            OneShot
+        } loop = Loop::Loop;
 
-		void apply(internal::EmitterParams&) const;
+    public:
+        ParticleEmitter();
 
-		void on_tick(float delta_time);
-		GLuint spawn_debt() const;
+        void apply(internal::EmitterParams&) const;
 
-		float time_elapsed() const { return _time_elapsed; }
-	};
+        void on_tick(float delta_time);
+        GLuint consume_spawn_debt() const;
+        float time_elapsed() const;
+    };
 }

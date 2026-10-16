@@ -1,113 +1,162 @@
 #include "Attribute.h"
 
+#include "core/util/Logger.h"
+
 #include "graphics/particles/implementations/AttributeOperations.h"
 #include "graphics/particles/implementations/AttributeOperationEnum.h"
-#include "core/util/Logger.h"
 
 #include "definitions/Keys.h"
 
 namespace oly::particles
 {
-	namespace internal
-	{
-		assets::Parser::Optional<void, void, assets::NullValidator, false> parse_attribute_value(const assets::Parser& parser)
-		{
-			return parser.optional(detail::Key::Value);
-		}
-	}
+    namespace internal
+    {
+        assets::Parser::Optional<void, void, assets::NullValidator, false> parse_attribute_value(
+            const assets::Parser& parser)
+        {
+            return parser.optional(detail::Key::Value);
+        }
+    }
 
-	imp::poly<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
-	{
-		if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(detail::Key::Operation)())
-		{
-			switch (*op)
-			{
-			case AttributeOperationEnum::Sequence:
-				return ops::Sequence<0>::load_fixed(node);
-			case AttributeOperationEnum::Selector:
-				return ops::Selector::load(node);
-			case AttributeOperationEnum::SineWave1D:
-				return ops::SineWave1D::load(node);
-			case AttributeOperationEnum::Polarization2D:
-				return ops::Polarization2D::load(node);
-			}
-		}
+    imp::poly<IAttributeOperation> IAttributeOperation::load(TOMLNode node)
+    {
+        if (auto op = assets::Parser(node).optional<particles::AttributeOperationEnum>(detail::Key::Operation)())
+        {
+            switch (*op)
+            {
+            case AttributeOperationEnum::Sequence:
+                return ops::Sequence<0>::load_fixed(node);
 
-		return nullptr;
-	}
+            case AttributeOperationEnum::Selector:
+                return ops::Selector::load(node);
 
-	namespace ops
-	{
-		imp::poly<Sequence<0>> Sequence<0>::load(TOMLNode node)
-		{
-			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
+            case AttributeOperationEnum::SineWave1D:
+                return ops::SineWave1D::load(node);
 
-			std::vector<imp::poly<IAttributeOperation>> ops;
+            case AttributeOperationEnum::Polarization2D:
+                return ops::Polarization2D::load(node);
+            }
+        }
 
-			for (size_t i = 0; i < arr->size(); ++i)
-			{
-				if (auto subnode = arr->get(i))
-					ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
-				else
-					_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence sub-operation at index (" << i << ")" << LOG.nl;
-			}
+        return nullptr;
+    }
 
-			return imp::make_poly<Sequence<0>>(std::move(ops));
-		}
+    namespace ops
+    {
+        Sequence<0>::Sequence(std::vector<imp::poly<IAttributeOperation>>&& operations)
+            : ops(std::move(operations))
+        {
+        }
 
-		template<size_t N>
-		static imp::poly<IAttributeOperation> load_sequence(std::vector<imp::poly<IAttributeOperation>>&& ops)
-		{
+        void Sequence<0>::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
+        {
+            for (const auto& op : ops)
+                op->op(emitter, attribute);
+        }
+
+        imp::poly<Sequence<0>> Sequence<0>::load(TOMLNode node)
+        {
+            auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
+
+            std::vector<imp::poly<IAttributeOperation>> ops;
+
+            for (size_t i = 0; i < arr->size(); ++i)
+            {
+                if (auto subnode = arr->get(i))
+                    ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+                else
+                {
+                    _OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence"
+                        << " sub-operation at index (" << i << ")" << LOG.nl;
+                }
+            }
+
+            return imp::make_poly<Sequence<0>>(std::move(ops));
+        }
+
+        template<size_t N>
+        static imp::poly<IAttributeOperation> load_sequence(std::vector<imp::poly<IAttributeOperation>>&& ops)
+        {
             std::array<imp::poly<IAttributeOperation>, N> arr;
-			for (size_t i = 0; i < N; ++i)
-				arr[i] = std::move(ops[i]);
+            for (size_t i = 0; i < N; ++i)
+                arr[i] = std::move(ops[i]);
 
-			return imp::make_poly<Sequence<N>>(std::move(arr));
-		}
+            return imp::make_poly<Sequence<N>>(std::move(arr));
+        }
 
-		imp::poly<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
-		{
-			auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
+        imp::poly<IAttributeOperation> Sequence<0>::load_fixed(TOMLNode node)
+        {
+            auto arr = assets::Parser(node).required<TOMLArray>(detail::Key::OperationArray)();
 
-			std::vector<imp::poly<IAttributeOperation>> ops;
+            std::vector<imp::poly<IAttributeOperation>> ops;
 
-			for (size_t i = 0; i < arr->size(); ++i)
-				if (auto subnode = arr->get(i))
-					ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
+            for (size_t i = 0; i < arr->size(); ++i)
+                if (auto subnode = arr->get(i))
+                    ops.push_back(IAttributeOperation::load(TOMLNode(*subnode)));
 
-			if (ops.size() == 1)
-				return load_sequence<1>(std::move(ops));
-			else if (ops.size() == 2)
-				return load_sequence<2>(std::move(ops));
-			else if (ops.size() == 3)
-				return load_sequence<3>(std::move(ops));
-			else if (ops.size() == 4)
-				return load_sequence<4>(std::move(ops));
-			else if (ops.size() == 5)
-				return load_sequence<5>(std::move(ops));
-			else if (ops.size() == 6)
-				return load_sequence<6>(std::move(ops));
-			else if (ops.size() == 7)
-				return load_sequence<7>(std::move(ops));
-			else if (ops.size() == 8)
-				return load_sequence<8>(std::move(ops));
-			else
-				return imp::make_poly<Sequence<0>>(std::move(ops));
-		}
+            if (ops.size() == 1)
+                return load_sequence<1>(std::move(ops));
+            else if (ops.size() == 2)
+                return load_sequence<2>(std::move(ops));
+            else if (ops.size() == 3)
+                return load_sequence<3>(std::move(ops));
+            else if (ops.size() == 4)
+                return load_sequence<4>(std::move(ops));
+            else if (ops.size() == 5)
+                return load_sequence<5>(std::move(ops));
+            else if (ops.size() == 6)
+                return load_sequence<6>(std::move(ops));
+            else if (ops.size() == 7)
+                return load_sequence<7>(std::move(ops));
+            else if (ops.size() == 8)
+                return load_sequence<8>(std::move(ops));
+            else
+                return imp::make_poly<Sequence<0>>(std::move(ops));
+        }
 
-		imp::poly<Selector> Selector::load(TOMLNode node)
-		{
-			try
-			{
-				assets::Parser parser(node);
-				return imp::make_poly<Selector>(IAttributeOperation::load(parser.field(detail::Key::InnerOperation)),
-					parser.defaulted<particles::SubSelector>(detail::Key::Selector)());
-			}
-			catch (const Error& e)
-			{
-				_OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Selector: " << (int)e.code << LOG.nl;
-				return nullptr;
-			}
-		}
-	}
+        Selector::Selector(const imp::poly<IAttributeOperation>& inner_op, SubSelector selector)
+            : inner_op(inner_op)
+            , selector(selector)
+        {
+        }
+
+        Selector::Selector(imp::poly<IAttributeOperation>&& inner_op, SubSelector selector)
+            : inner_op(std::move(inner_op))
+            , selector(selector)
+        {
+        }
+
+        void Selector::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
+        {
+            if (inner_op)
+                inner_op->op(emitter, attribute.select(selector));
+        }
+
+        imp::poly<Selector> Selector::load(TOMLNode node)
+        {
+            try
+            {
+                assets::Parser parser(node);
+                return imp::make_poly<Selector>(IAttributeOperation::load(
+                    parser.field(detail::Key::InnerOperation)),
+                    parser.defaulted<particles::SubSelector>(detail::Key::Selector)());
+            }
+            catch (const Error& e)
+            {
+                _OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Selector: "
+                    << (int)e.code << LOG.nl;
+                return nullptr;
+            }
+        }
+
+        GenericFunction::GenericFunction(Function fn)
+            : fn(std::move(fn))
+        {
+        }
+
+        void GenericFunction::op(const ParticleEmitter& emitter, AttributeSpan attribute) const
+        {
+            fn(emitter, attribute);
+        }
+    }
 }

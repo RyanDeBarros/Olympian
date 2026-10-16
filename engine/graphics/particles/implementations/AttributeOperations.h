@@ -9,6 +9,7 @@ namespace oly::particles::ops
 	{
         IMP_POLYMORPHIC_IMPL((SineWave1D));
 
+    public:
 		// attribute = a * sin(b * t - k) + c
 		float a = 1.f;
 		float b = 1.f;
@@ -28,6 +29,7 @@ namespace oly::particles::ops
 	{
         IMP_POLYMORPHIC_IMPL((Polarization2D));
 
+    public:
 		float amplitude = 1.f;
 		float time_offset = 0.f;
 

@@ -1,137 +1,140 @@
 #pragma once
 
-#include "graphics/particles/ParticleEmitter.h"
-#include "graphics/backend/specialized/LightweightBuffers.h"
-#include "graphics/backend/basic/VertexArrays.h"
-#include "graphics/backend/basic/Shader.h"
 #include "core/base/Transforms.h"
+
 #include "graphics/Camera.h"
+
+#include "graphics/backend/basic/Shader.h"
+#include "graphics/backend/basic/VertexArrays.h"
+
+#include "graphics/backend/specialized/LightweightBuffers.h"
+
+#include "graphics/particles/ParticleEmitter.h"
+
+#include <imp/swapper.hpp>
 
 #include <unordered_set>
 
 namespace oly::rendering
 {
-	class ParticleSystem;
+    class ParticleSystem;
 
-	class ParticleSystem : public ITickService
-	{
-		graphics::VertexArray vao;
+    class ParticleSystem
+        : public ITickService
+    {
+        struct DrawArraysIndirectCommand
+        {
+            GLuint count;
+            GLuint prim_count;
+            GLuint first;
+            GLuint base_vertex;
+        };
 
-		struct DrawArraysIndirectCommand
-		{
-			GLuint count;
-			GLuint primCount;
-			GLuint first;
-			GLuint baseVertex;
-		};
+        struct BufferList
+        {
+            imp::mut_swapper<graphics::LightweightSSBO<graphics::Mutability::Immutable>> particles;
+            graphics::LightweightSSBO<graphics::Mutability::Immutable> emitter;
+            graphics::LightweightSSBO<graphics::Mutability::Immutable> draw_command;
+            graphics::LightweightSSBO<graphics::Mutability::Immutable> ps_data;
 
-		struct BufferList
-		{
-			class ParticleDoubleBuffer
-			{
-				graphics::LightweightSSBO<graphics::Mutability::Immutable> a;
-				graphics::LightweightSSBO<graphics::Mutability::Immutable> b;
-				mutable bool state = true;
+            BufferList(GLuint particle_capacity);
+        };
 
-			public:
-				ParticleDoubleBuffer(GLuint max_particles);
+    private:
+        static inline const GLuint kDefaultParticleCapacity = 2000;
+        static inline const GLushort kComputeThreads = 64;
 
-				void swap() const;
-				const graphics::LightweightSSBO<graphics::Mutability::Immutable>& in() const;
-				graphics::LightweightSSBO<graphics::Mutability::Immutable>& in();
-				const graphics::LightweightSSBO<graphics::Mutability::Immutable>& out() const;
-				graphics::LightweightSSBO<graphics::Mutability::Immutable>& out();
-			} particles;
+        graphics::VertexArray vao_;
 
-			graphics::LightweightSSBO<graphics::Mutability::Immutable> emitter;
-			graphics::LightweightSSBO<graphics::Mutability::Immutable> draw_command;
-			graphics::LightweightSSBO<graphics::Mutability::Immutable> ps_data;
+        BufferList buffers_;
 
-			BufferList(GLuint particle_capacity);
-		} buffers;
+        struct
+        {
+            SmartReference<graphics::Shader> compute_spawn_ref = REF_NULL;
+            GLuint compute_spawn = 0;
 
-		struct
-		{
-			SmartReference<graphics::Shader> compute_spawn_ref = REF_NULL;
-			GLuint compute_spawn = 0;
+            SmartReference<graphics::Shader> compute_update_ref = REF_NULL;
+            GLuint compute_update = 0;
 
-			SmartReference<graphics::Shader> compute_update_ref = REF_NULL;
-			GLuint compute_update = 0;
+            GLuint renderer = 0;
+        } shaders_;
 
-			GLuint renderer = 0;
-		} shaders;
+        struct
+        {
+            struct
+            {
+                GLint time;
+                GLint spawn_count;
+                GLint transform;
+            } compute_spawn;
 
-		struct
-		{
-			struct
-			{
-				GLint time;
-				GLint spawn_count;
-				GLint transform;
-			} compute_spawn;
+            struct
+            {
+                GLint delta_time;
+                GLint in_prim_count;
+            } compute_update;
 
-			struct
-			{
-				GLint delta_time;
-				GLint in_prim_count;
-			} compute_update;
+            struct
+            {
+                GLint projection;
+                GLint transform;
+                GLint reverse_draw_order;
+            } renderer;
+        } shader_locations_;
 
-			struct
-			{
-				GLint projection;
-				GLint transform;
-				GLint reverse_draw_order;
-			} renderer;
-		} shader_locations;
+        std::vector<particles::ParticleEmitter> emitters_;
+        GLuint particle_capacity_;
+        GLushort compute_threads_;
 
-		std::vector<particles::ParticleEmitter> emitters;
-		GLuint particle_capacity;
-		GLushort compute_threads;
+        float time_elapsed_ = 0.0f;
+        mutable float last_tick_time_ = 0.0f;
+        mutable float last_render_time_ = 0.0f;
 
-	public:
-		bool camera_invariant = false;
-		bool auto_tick = true;
+    public:
+        bool camera_invariant = false;
+        bool auto_tick = true;
 
-	private:
-		float time_elapsed = 0.0f;
-		mutable float last_tick_time = 0.0f;
-		mutable float last_render_time = 0.0f;
+        enum class AgeSort
+        {
+            YoungOnOld,
+            OldOnYoung
+        } age_sort = AgeSort::YoungOnOld;
 
-	public:
-		enum class AgeSort
-		{
-			YoungOnOld,
-			OldOnYoung
-		} age_sort = AgeSort::YoungOnOld;
+        rendering::Camera2DRef camera = REF_DEFAULT;
+        Transformer2D transformer;
 
-		rendering::Camera2DRef camera = REF_DEFAULT;
-		Transformer2D transformer;
+    public:
+        ParticleSystem(
+            particles::ParticleEmitter&& emitter = {},
+            GLuint particle_capacity = kDefaultParticleCapacity,
+            GLushort compute_threads = kComputeThreads);
+        ParticleSystem(
+            std::vector<particles::ParticleEmitter>&& emitters,
+            GLuint particle_capacity = kDefaultParticleCapacity,
+            GLushort compute_threads = kComputeThreads);
+        ParticleSystem(
+            size_t emitter_count,
+            GLuint particle_capacity = kDefaultParticleCapacity,
+            GLushort compute_threads = kComputeThreads);
 
-		ParticleSystem(particles::ParticleEmitter&& emitter = {}, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
-		ParticleSystem(std::vector<particles::ParticleEmitter>&& emitters, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
-		ParticleSystem(size_t emitter_count, GLuint particle_capacity = 2000, GLushort compute_threads = 64);
+    public:
+        void on_tick();
+        void render() const;
 
-	private:
-		void init();
+        float get_time_elapsed() const;
 
-	public:
-		void on_tick();
-		void render() const;
+        const particles::ParticleEmitter& emitter(size_t i = 0) const;
+        particles::ParticleEmitter& emitter(size_t i = 0);
+        void add_emitter(particles::ParticleEmitter&& emitter = {});
+        void remove_emitter(size_t i);
 
-	private:
-		void spawn_particles(const particles::ParticleEmitter& emitter) const;
-		void update_particles(GLuint in_primitive_count, float delta_time) const;
-		void draw_particles() const;
+        GLuint get_particle_capacity() const;
+        void set_particle_capacity(GLuint capacity);
 
-	public:
-		float get_time_elapsed() const { return time_elapsed; }
-
-		const particles::ParticleEmitter& emitter(size_t i = 0) const { return emitters[i]; }
-		particles::ParticleEmitter& emitter(size_t i = 0) { return emitters[i]; }
-		void add_emitter(particles::ParticleEmitter&& emitter = {});
-		void remove_emitter(size_t i);
-
-		GLuint get_particle_capacity() const { return particle_capacity; }
-		void set_particle_capacity(GLuint capacity);
-	};
+    private:
+        void init();
+        void spawn_particles(const particles::ParticleEmitter& emitter) const;
+        void update_particles(GLuint in_primitive_count, float delta_time) const;
+        void draw_particles() const;
+    };
 }

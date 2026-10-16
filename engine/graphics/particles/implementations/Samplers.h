@@ -10,6 +10,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((UniformSampler1D));
 
+    public:
 		void apply(internal::Sampler1D& sampler) const override;
 	};
 
@@ -18,6 +19,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((TiltedSampler1D));
 
+    public:
 		Attribute<float> tilt;
 
         TiltedSampler1D(float tilt = 0.f);
@@ -32,6 +34,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((UniformSampler2D));
 
+    public:
 		void apply(internal::Sampler2D& sampler) const override;
 	};
 
@@ -40,6 +43,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((UniformSampler3D));
 
+    public:
 		void apply(internal::Sampler3D& sampler) const override;
 	};
 
@@ -48,6 +52,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((UniformSampler4D));
 
+    public:
 		void apply(internal::Sampler4D& sampler) const override;
 	};
 }

@@ -13,9 +13,10 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((ConstantDomain1D));
 
+    public:
 		Attribute<float> c;
 
-		ConstantDomain1D(float c = 0.f) : c(c) {}
+        ConstantDomain1D(float c = 0.f);
 
 		void apply(internal::Domain1D& domain) const override;
         void on_tick(const ParticleEmitter& emitter) override;
@@ -27,6 +28,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((LineDomain1D));
 
+    public:
 		Attribute<float> a;
 		Attribute<float> b;
 
@@ -42,6 +44,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((BiLineDomain1D));
 
+    public:
 		Attribute<float> a;
 		Attribute<float> b;
 		Attribute<float> c;
@@ -58,6 +61,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((ConstantDomain2D));
 
+    public:
 		Attribute<glm::vec2> c;
 
         ConstantDomain2D(glm::vec2 c = {});
@@ -72,6 +76,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((ConstantDomain3D));
 
+    public:
 		Attribute<glm::vec3> c;
 
         ConstantDomain3D(glm::vec3 c = {});
@@ -86,6 +91,7 @@ namespace oly::particles
 	{
         IMP_POLYMORPHIC_IMPL((ConstantDomain4D));
 
+    public:
 		Attribute<glm::vec4> c;
 
         ConstantDomain4D(glm::vec4 c = {});
