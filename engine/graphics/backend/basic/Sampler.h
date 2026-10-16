@@ -8,7 +8,7 @@ namespace oly::graphics
 {
 	class Sampler
 	{
-		GLuint id = 0;
+		GLuint id_ = 0;
 
 	public:
 		Sampler();
@@ -17,7 +17,7 @@ namespace oly::graphics
 		~Sampler();
 		Sampler& operator=(Sampler&&) noexcept;
 
-		operator GLuint () const { return id; }
+        operator GLuint () const;
 
 		void set_parameter_i(GLenum param, GLint value) const;
 		void set_parameter_iv(GLenum param, const GLint* values) const;
@@ -25,5 +25,5 @@ namespace oly::graphics
 		void set_parameter_fv(GLenum param, const GLfloat* values) const;
 	};
 
-	typedef SmartReference<Sampler> SamplerRef;
+	using SamplerRef = SmartReference<Sampler>;
 }

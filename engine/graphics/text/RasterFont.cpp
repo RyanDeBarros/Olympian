@@ -12,7 +12,7 @@ namespace oly::rendering
         glm::vec2 origin_offset)
 		: texture_(texture)
 	{
-		const glm::vec2 dimensions = context::get_texture_dimensions(texture_);
+		const glm::vec2 dimensions = context::get_texture_size(texture_);
 
 		uvs_ = {
 			.x1 = location.x1 / dimensions.x,

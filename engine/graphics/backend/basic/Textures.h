@@ -12,330 +12,372 @@
 #include "assets/ResourcePath.h"
 
 #include "definitions/enums/SpritesheetParamType.h"
+#include "definitions/enums/SVGMipmapGenerationMode.h"
 
 #include <imp/dependent_false.hpp>
 
-#include <vector>
 #include <array>
-#include <string>
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace oly::graphics
 {
-	class Texture
-	{
-		GLuint id = 0;
+    class Texture
+    {
+        GLuint id_ = 0;
 
-	public:
-		Texture();
-		Texture(GLenum target);
-		Texture(const Texture&) = delete;
-		Texture(Texture&&) noexcept;
-		~Texture();
-		Texture& operator=(Texture&&) noexcept;
+    public:
+        Texture();
+        Texture(GLenum target);
+        Texture(const Texture&) = delete;
+        Texture(Texture&&) noexcept;
+        ~Texture();
 
-		operator GLuint () const { return id; }
+        Texture& operator=(Texture&&) noexcept;
 
-		void set_parameter(GLenum param, GLint value) const;
-	};
+        operator GLuint () const;
 
-	typedef SmartReference<Texture> TextureRef;
+        void set_parameter(GLenum param, GLint value) const;
+    };
 
-	class BindlessTexture
-	{
-		Texture t;
-		GLuint64 handle = 0;
+    using TextureRef = SmartReference<Texture>;
 
-	public:
-		BindlessTexture();
-		BindlessTexture(GLenum target);
-		BindlessTexture(Texture&& texture);
-		BindlessTexture(const BindlessTexture&) = delete;
-		BindlessTexture(BindlessTexture&&) noexcept;
-		~BindlessTexture();
-		BindlessTexture& operator=(BindlessTexture&&) noexcept;
+    class BindlessTexture
+    {
+        Texture tex_;
+        GLuint64 handle_ = 0;
 
-		operator GLuint () const { return t; }
-		void set_handle();
-		void set_handle(GLuint sampler);
-		void set_and_use_handle() { set_handle(); use_handle(); }
-		void set_and_use_handle(GLuint sampler) { set_handle(sampler); use_handle(); }
-		GLuint64 get_handle() const { return handle; }
-		void use_handle() const;
-		void disuse_handle() const;
+    public:
+        BindlessTexture();
+        BindlessTexture(GLenum target);
+        BindlessTexture(Texture&& texture);
+        BindlessTexture(const BindlessTexture&) = delete;
+        BindlessTexture(BindlessTexture&&) noexcept;
+        ~BindlessTexture();
 
-		const Texture& texture() const { return t; }
-	};
+        BindlessTexture& operator=(BindlessTexture&&) noexcept;
 
-	typedef SmartReference<BindlessTexture> BindlessTextureRef;
+        operator GLuint () const;
 
-	class ScopedPixelAlignment
-	{
-		int cpp;
+        void set_handle();
+        void set_handle(GLuint sampler);
 
-	public:
-		ScopedPixelAlignment(int cpp);
-		ScopedPixelAlignment(const ScopedPixelAlignment&) = delete;
-		ScopedPixelAlignment(ScopedPixelAlignment&&) = delete;
-		~ScopedPixelAlignment();
-	};
+        void set_and_use_handle();
+        void set_and_use_handle(GLuint sampler);
 
-	struct ImageDimensions
-	{
-		int w = 0, h = 0, cpp = 4;
+        GLuint64 get_handle() const;
+        void use_handle() const;
+        void disuse_handle() const;
 
-		glm::vec2 dimensions() const { return { w, h }; }
-		template<typename Pixel = unsigned char>
-		Pixel* pxnew() const { return new Pixel[w * h * cpp]; }
-	};
+        const Texture& texture() const;
+    };
 
-	struct Image3DDimensions
-	{
-		int w = 0, h = 0, d = 0, cpp = 4;
-	};
+    using BindlessTextureRef = SmartReference<BindlessTexture>;
 
-	namespace tex
-	{
-		extern GLenum internal_format(int cpp);
-		extern GLenum format(int cpp);
-		extern GLint mipmap_levels(int w, int h);
+    class ScopedPixelAlignment
+    {
+        int cpp_;
 
-		extern void storage_2d(GLuint texture, ImageDimensions dim, GLsizei levels = 1);
+    public:
+        ScopedPixelAlignment(int cpp);
+        ScopedPixelAlignment(const ScopedPixelAlignment&) = delete;
+        ScopedPixelAlignment(ScopedPixelAlignment&&) = delete;
+        ~ScopedPixelAlignment();
+    };
 
-		template<typename Pixel = unsigned char>
-		inline void subimage_2d(GLuint texture, const Pixel* pixels, math::IArea2D subarea, int cpp, GLint level = 0)
-		{
-			GLenum data_type;
-			if constexpr (std::is_same_v<Pixel, unsigned char>)
-				data_type = GL_UNSIGNED_BYTE;
-			else if constexpr (std::is_same_v<Pixel, float>)
-				data_type = GL_FLOAT;
-			else
-				static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_2d().");
-			ScopedPixelAlignment pixel_align(cpp);
-			glTextureSubImage2D(texture, level, subarea.x, subarea.y, subarea.w, subarea.h, format(cpp), data_type, pixels);
-		}
+    struct ImageDimensions
+    {
+        int w = 0;
+        int h = 0;
+        int cpp = 4;
 
-		template<typename Pixel = unsigned char>
-		inline void image_2d(GLuint texture, const Pixel* pixels, ImageDimensions dim, bool mipmaps)
-		{
-			storage_2d(texture, dim, mipmaps ? mipmap_levels(dim.w, dim.h) : 1);
-			subimage_2d(texture, pixels, { .w = dim.w, .h = dim.h }, dim.cpp);
-			if (mipmaps)
-				glGenerateTextureMipmap(texture);
-		}
+        glm::vec2 size() const;
 
-		extern void storage_3d(GLuint texture, Image3DDimensions dim, GLsizei levels = 1);
+        template<typename Pixel = unsigned char>
+        Pixel* pxnew() const { return new Pixel[w * h * cpp]; }
+    };
 
-		template<typename Pixel = unsigned char>
-		inline void subimage_3d(GLuint texture, const Pixel* pixels, math::IArea3D subarea, int cpp, GLint level = 0)
-		{
-			GLenum data_type;
-			if constexpr (std::is_same_v<Pixel, unsigned char>)
-				data_type = GL_UNSIGNED_BYTE;
-			else if constexpr (std::is_same_v<Pixel, float>)
-				data_type = GL_FLOAT;
-			else
-				static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type in oly::graphics::tex::subimage_3d().");
-			ScopedPixelAlignment pixel_align(cpp);
-			glTextureSubImage3D(texture, level, subarea.x, subarea.y, subarea.z, subarea.w, subarea.h, subarea.d, format(cpp), data_type, pixels);
-		}
-	}
+    struct Image3DDimensions
+    {
+        int w = 0;
+        int h = 0;
+        int d = 0;
+        int cpp = 4;
+    };
 
-	class Image
-	{
-		unsigned char* _buf = nullptr;
-		ImageDimensions _dim;
+    namespace tex
+    {
+        extern GLenum internal_format(int cpp);
+        extern GLenum format(int cpp);
+        extern GLint mipmap_levels(int w, int h);
 
-	public:
-		Image(const detail::ResourcePath& file);
-		Image(unsigned char* buf, ImageDimensions dim);
-		Image(const Image&) = delete;
-		Image(Image&&) noexcept;
-		~Image();
-		Image& operator=(Image&&) noexcept;
+        extern void storage_2d(GLuint texture, ImageDimensions dim, GLsizei levels = 1);
 
-		const unsigned char* buf() const { return _buf; }
-		unsigned char* buf() { return _buf; }
-		ImageDimensions dim() const { return _dim; }
+        template<typename Pixel>
+        struct PixelDataType
+        {
+            static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type");
+        };
 
-		void delete_buffer();
-	};
+        template<>
+        struct PixelDataType<unsigned char>
+        {
+            static constexpr GLenum v = GL_UNSIGNED_BYTE;
+        };
 
-	typedef SmartReference<Image> ImageRef;
+        template<>
+        struct PixelDataType<float>
+        {
+            static constexpr GLenum v = GL_FLOAT;
+        };
 
-	extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
+        template<typename Pixel>
+        constexpr GLenum kPixelDataType = PixelDataType<Pixel>::v;
 
-	inline Texture load_texture_2d(const detail::ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
-	{
-		Image image(file);
-		dim = image.dim();
-		return load_texture_2d(image, generate_mipmaps);
-	}
+        template<typename Pixel = unsigned char>
+        inline void subimage_2d(GLuint texture, const Pixel* pixels, math::IArea2D subarea, int cpp, GLint level = 0)
+        {
+            ScopedPixelAlignment pixel_align(cpp);
+            glTextureSubImage2D(
+                texture,
+                level,
+                subarea.x,
+                subarea.y,
+                subarea.w,
+                subarea.h,
+                format(cpp),
+                kPixelDataType<Pixel>,
+                pixels);
+        }
 
-	inline BindlessTexture load_bindless_texture_2d(const Image& image, bool generate_mipmaps = false)
-	{
-		return BindlessTexture(load_texture_2d(image, generate_mipmaps));
-	}
+        template<typename Pixel = unsigned char>
+        inline void image_2d(GLuint texture, const Pixel* pixels, ImageDimensions dim, bool mipmaps)
+        {
+            storage_2d(texture, dim, mipmaps ? mipmap_levels(dim.w, dim.h) : 1);
+            subimage_2d(texture, pixels, { .w = dim.w, .h = dim.h }, dim.cpp);
+            if (mipmaps)
+                glGenerateTextureMipmap(texture);
+        }
 
-	inline BindlessTexture load_bindless_texture_2d(const detail::ResourcePath& file, ImageDimensions& dim, bool generate_mipmaps = false)
-	{
-		return BindlessTexture(load_texture_2d(file, dim, generate_mipmaps));
-	}
+        extern void storage_3d(GLuint texture, Image3DDimensions dim, GLsizei levels = 1);
 
-	inline float anim_delay_epsilon = 1.0f;
+        template<typename Pixel = unsigned char>
+        inline void subimage_3d(GLuint texture, const Pixel* pixels, math::IArea3D subarea, int cpp, GLint level = 0)
+        {
+            ScopedPixelAlignment pixel_align(cpp);
+            glTextureSubImage3D(
+                texture,
+                level,
+                subarea.x,
+                subarea.y,
+                subarea.z,
+                subarea.w,
+                subarea.h,
+                subarea.d,
+                format(cpp),
+                kPixelDataType<Pixel>,
+                pixels);
+        }
+    }
 
-	struct AnimDimensions
-	{
-		int w = 0, h = 0, cpp = 4;
+    class Image
+    {
+        unsigned char* buf_ = nullptr;
+        ImageDimensions dim_;
 
-		void set_delays(int* delays, unsigned int num_frames);
+    public:
+        Image(const detail::ResourcePath& file);
+        Image(unsigned char* buf, ImageDimensions dim);
+        Image(const Image&) = delete;
+        Image(Image&&) noexcept;
+        ~Image();
 
-	private:
-		friend class Anim;
-		int _frames = -1;
-		std::vector<float> _delays;
+        Image& operator=(Image&&) noexcept;
 
-	public:
-		bool uniform() const { return _frames >= 0; }
-		GLuint frames() const { return uniform() ? (GLuint)_frames : (GLuint)_delays.size(); }
-		float delay(unsigned int frame = 0) const;
+        const unsigned char* buf() const;
+        unsigned char* buf();
+        ImageDimensions dim() const;
 
-		glm::vec2 dimensions() const { return { w, h }; }
-	};
+        void delete_buffer();
+    };
 
-	struct SpritesheetOptions
-	{
-		detail::SpritesheetParamType row_type = detail::SpritesheetParamType::Index;
-		detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
+    using ImageRef = SmartReference<Image>;
 
-		bool row_major = true, row_up = true;
-		float delay = 0.1f;
+    extern Texture load_texture_2d(const Image& image, bool generate_mipmaps = false);
+    extern Texture load_texture_2d(
+        const detail::ResourcePath& file,
+        ImageDimensions& dim,
+        bool generate_mipmaps = false);
 
-		GLuint row_value = 1;
-		GLuint col_value = 1;
-		GLuint row_offset_index = 0;
-		GLuint col_offset_index = 0;
-		GLuint row_offset_pixel = 0;
-		GLuint col_offset_pixel = 0;
-	};
+    extern BindlessTexture load_bindless_texture_2d(const Image& image, bool generate_mipmaps = false);
+    extern BindlessTexture load_bindless_texture_2d(
+        const detail::ResourcePath& file,
+        ImageDimensions& dim,
+        bool generate_mipmaps = false);
 
-	class NSVGAbstract;
-	class Anim
-	{
-		unsigned char* _buf = nullptr;
-		SmartReference<AnimDimensions> _dim = REF_INIT;
+    struct AnimDimensions
+    {
+        friend class Anim;
 
-	public:
-		Anim(const detail::ResourcePath& filepath, SpritesheetOptions options = {});
-		Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options = {});
+    public:
+        int w = 0;
+        int h = 0;
+        int cpp = 4;
 
-	private:
-		void parse_sprite_sheet(const Image& image, SpritesheetOptions options);
+    private:
+        int frames_ = -1;
+        std::vector<float> delays_;
 
-	public:
-		Anim(const Anim&) = delete;
-		Anim(Anim&&) noexcept;
-		~Anim();
-		Anim& operator=(Anim&&) noexcept;
+    public:
+        bool uniform() const;
+        GLuint frames() const;
+        float delay(unsigned int frame = 0) const;
 
-		const unsigned char* buf() const { return _buf; }
-		unsigned char* buf() { return _buf; }
-		SmartReference<AnimDimensions> dim() const { return _dim; }
-		glm::vec2 dimensions() const { return _dim->dimensions(); }
+        glm::vec2 size() const;
 
-		void delete_buffer();
-	};
+    private:
+        void set_delays(int* delays, unsigned int num_frames);
+    };
 
-	typedef SmartReference<Anim> AnimRef;
+    struct SpritesheetOptions
+    {
+        detail::SpritesheetParamType row_type = detail::SpritesheetParamType::Index;
+        detail::SpritesheetParamType col_type = detail::SpritesheetParamType::Index;
 
-	extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
+        bool row_major = true;
+        bool row_up = true;
+        float delay = 0.1f;
 
-	inline Texture load_texture_2d_array(const detail::ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
-	{
-		Anim anim(file, options);
-		auto texture = load_texture_2d_array(anim, generate_mipmaps);
-		dim = anim.dim();
-		return texture;
-	}
+        GLuint row_value = 1;
+        GLuint col_value = 1;
+        GLuint row_offset_index = 0;
+        GLuint col_offset_index = 0;
+        GLuint row_offset_pixel = 0;
+        GLuint col_offset_pixel = 0;
+    };
 
-	inline BindlessTexture load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false)
-	{
-		return BindlessTexture(load_texture_2d_array(anim, generate_mipmaps));
-	}
+    class NSVGAbstract;
 
-	inline BindlessTexture load_bindless_texture_2d_array(const detail::ResourcePath& file, SmartReference<AnimDimensions>& dim, SpritesheetOptions options = {}, bool generate_mipmaps = false)
-	{
-		return BindlessTexture(load_texture_2d_array(file, dim, options, generate_mipmaps));
-	}
+    class Anim
+    {
+        unsigned char* buf_ = nullptr;
+        SmartReference<AnimDimensions> dim_ = REF_INIT;
 
-	struct AnimFrameFormat
-	{
-		GLuint starting_frame = 0;
-		GLuint num_frames = 0;
-		float starting_time = 0.0f;
-		float delay_seconds = 0.0f;
+    public:
+        Anim(const detail::ResourcePath& filepath, SpritesheetOptions options = {});
+        Anim(const NSVGAbstract& svg_abstract, float scale, SpritesheetOptions options = {});
+        Anim(const Anim&) = delete;
+        Anim(Anim&&) noexcept;
+        ~Anim();
 
-		bool operator==(const AnimFrameFormat&) const = default;
-	};
+        Anim& operator=(Anim&&) noexcept;
 
-	extern AnimFrameFormat setup_anim_frame_format(const AnimDimensions& dim, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format(const detail::ResourcePath& texture_file, float speed = 1.0f, GLuint starting_frame = 0);
-	extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
-	extern AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame);
+    public:
+        const unsigned char* buf() const;
+        unsigned char* buf();
+        SmartReference<AnimDimensions> dim() const;
+        glm::vec2 size() const;
 
-	class NSVGAbstract
-	{
-		friend class NSVGContext;
-		mutable NSVGimage* i = nullptr;
+        void delete_buffer();
 
-	public:
-		NSVGAbstract(const detail::ResourcePath& file, const char* units = "px", float dpi = 96.0f);
-		NSVGAbstract(const NSVGAbstract&) = delete;
-		NSVGAbstract(NSVGAbstract&&) noexcept;
-		~NSVGAbstract();
-		NSVGAbstract& operator=(NSVGAbstract&&) noexcept;
+    private:
+        void parse_sprite_sheet(const Image& image, SpritesheetOptions options);
+    };
 
-		float width() const { return i ? i->width : 0.0f; }
-		float height() const { return i ? i->height : 0.0f; }
-	};
+    using AnimRef = SmartReference<Anim>;
 
-	class NSVGContext
-	{
-		mutable NSVGrasterizer* r = nullptr;
+    extern Texture load_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
+    extern Texture load_texture_2d_array(
+        const detail::ResourcePath& file,
+        SmartReference<AnimDimensions>& dim,
+        SpritesheetOptions options = {},
+        bool generate_mipmaps = false);
 
-	public:
-		NSVGContext();
-		NSVGContext(const NSVGContext&) = delete;
-		NSVGContext(NSVGContext&&) noexcept;
-		~NSVGContext();
-		NSVGContext& operator=(NSVGContext&&) noexcept;
+    extern BindlessTexture load_bindless_texture_2d_array(const Anim& anim, bool generate_mipmaps = false);
+    extern BindlessTexture load_bindless_texture_2d_array(
+        const detail::ResourcePath& file,
+        SmartReference<AnimDimensions>& dim,
+        SpritesheetOptions options = {},
+        bool generate_mipmaps = false);
 
-		Image rasterize(const NSVGAbstract& abstract, float scale) const;
-		ImageRef rasterize_res(const NSVGAbstract& abstract, float scale) const;
+    struct AnimFrameFormat
+    {
+        GLuint starting_frame = 0;
+        GLuint num_frames = 0;
+        float starting_time = 0.0f;
+        float delay_seconds = 0.0f;
 
-	private:
-		void rasterize_unsafe(const NSVGAbstract& abstract, float scale, unsigned char*& buf, ImageDimensions& dim) const;
-	};
+        bool operator==(const AnimFrameFormat&) const = default;
+    };
 
-	struct VectorImageRef
-	{
-		ImageRef image;
-		float scale = 1.0f;
-	};
-}
+    extern AnimFrameFormat setup_anim_frame_format(
+        const AnimDimensions& dim,
+        float speed = 1.0f,
+        GLuint starting_frame = 0);
 
-namespace oly::detail
-{
-	enum class SVGMipmapGenerationMode : int;
+    extern AnimFrameFormat setup_anim_frame_format(
+        const detail::ResourcePath& texture_file,
+        float speed = 1.0f,
+        GLuint starting_frame = 0);
+
+    extern AnimFrameFormat setup_anim_frame_format_single(const AnimDimensions& dim, GLuint frame);
+    extern AnimFrameFormat setup_anim_frame_format_single(const detail::ResourcePath& texture_file, GLuint frame);
+
+    class NSVGAbstract
+    {
+        friend class NSVGContext;
+        mutable NSVGimage* img_ = nullptr;
+
+    public:
+        NSVGAbstract(const detail::ResourcePath& file, const char* units = "px", float dpi = 96.0f);
+        NSVGAbstract(const NSVGAbstract&) = delete;
+        NSVGAbstract(NSVGAbstract&&) noexcept;
+        ~NSVGAbstract();
+        NSVGAbstract& operator=(NSVGAbstract&&) noexcept;
+
+        float width() const;
+        float height() const;
+    };
+
+    class NSVGContext
+    {
+        mutable NSVGrasterizer* rast_ = nullptr;
+
+    public:
+        NSVGContext();
+        NSVGContext(const NSVGContext&) = delete;
+        NSVGContext(NSVGContext&&) noexcept;
+        ~NSVGContext();
+        NSVGContext& operator=(NSVGContext&&) noexcept;
+
+        Image rasterize(const NSVGAbstract& abstract, float scale) const;
+        ImageRef rasterize_res(const NSVGAbstract& abstract, float scale) const;
+
+    private:
+        void rasterize_unsafe(
+            const NSVGAbstract& abstract,
+            float scale,
+            unsigned char*& buf,
+            ImageDimensions& dim) const;
+    };
+
+    struct VectorImageRef
+    {
+        ImageRef image;
+        float scale = 1.0f;
+    };
 }
 
 namespace oly::graphics
 {
-	extern Texture load_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr);
-	
-	inline BindlessTexture load_bindless_nsvg_texture_2d(const VectorImageRef& image, detail::SVGMipmapGenerationMode generate_mipmaps, const NSVGAbstract* abstract = nullptr)
-	{
-		return BindlessTexture(load_nsvg_texture_2d(image, generate_mipmaps, abstract));
-	}
+    extern Texture load_nsvg_texture_2d(
+        const VectorImageRef& image,
+        detail::SVGMipmapGenerationMode generate_mipmaps,
+        const NSVGAbstract* abstract = nullptr);
+
+    extern BindlessTexture load_bindless_nsvg_texture_2d(
+        const VectorImageRef& image,
+        detail::SVGMipmapGenerationMode generate_mipmaps,
+        const NSVGAbstract* abstract = nullptr);
 }

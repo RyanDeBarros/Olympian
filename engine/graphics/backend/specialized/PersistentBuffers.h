@@ -3,6 +3,8 @@
 #include "core/base/Errors.h"
 #include "core/base/Ranges.h"
 
+#include "core/util/Logger.h"
+
 #include "graphics/backend/basic/Buffers.h"
 #include "graphics/backend/basic/FenceSync.h"
 

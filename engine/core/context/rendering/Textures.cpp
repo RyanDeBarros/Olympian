@@ -395,24 +395,24 @@ namespace oly::context
 		return texture;
 	}
 
-	static glm::vec2 get_texture_dimensions(const internal::TextureKey& key)
+	static glm::vec2 get_texture_size(const internal::TextureKey& key)
 	{
 		{
 			auto it = internal::images.find(key);
 			if (it != internal::images.end())
-				return it->second->dim().dimensions();
+				return it->second->dim().size();
 		}
 
 		{
 			auto it = internal::anims.find(key);
 			if (it != internal::anims.end())
-				return it->second->dimensions();
+				return it->second->size();
 		}
 
 		{
 			auto it = internal::vector_images.find(key);
 			if (it != internal::vector_images.end())
-				return it->second.image->dim().dimensions();
+				return it->second.image->dim().size();
 		}
 
 		throw Error(ErrorCode::UnregisteredTexture);
@@ -462,9 +462,9 @@ namespace oly::context
 			throw Error(ErrorCode::UnregisteredTexture);
 	}
 
-	glm::vec2 get_texture_dimensions(const detail::ResourcePath& file, unsigned int texture_index)
+	glm::vec2 get_texture_size(const detail::ResourcePath& file, unsigned int texture_index)
 	{
-		return get_texture_dimensions({ .file = file, .index = texture_index });
+		return get_texture_size({ .file = file, .index = texture_index });
 	}
 
 	graphics::ImageDimensions get_image_dimensions(const detail::ResourcePath& file, unsigned int texture_index)
@@ -487,10 +487,10 @@ namespace oly::context
 		return get_anim_pixel_buffer({ .file = file, .index = texture_index });
 	}
 
-	glm::vec2 get_texture_dimensions(const graphics::BindlessTextureRef& texture)
+	glm::vec2 get_texture_size(const graphics::BindlessTextureRef& texture)
 	{
         if (auto key = internal::textures.right_get(texture))
-            return get_texture_dimensions(*key);
+            return get_texture_size(*key);
         else
 			throw Error(ErrorCode::UnregisteredTexture);
 	}

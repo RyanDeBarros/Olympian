@@ -59,7 +59,7 @@ namespace oly::rendering
 
             void render();
 
-            glm::vec2 get_texture_dimensions() const;
+            glm::vec2 get_texture_size() const;
             graphics::BindlessTextureRef get_texture() const;
 
             void set_texture(StaticSprite& sprite) const;

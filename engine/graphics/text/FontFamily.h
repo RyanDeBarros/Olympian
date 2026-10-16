@@ -110,7 +110,7 @@ namespace oly::rendering
         FontRef get(FontStyle key) const;
     };
 
-    typedef SmartReference<FontFamily> FontFamilyRef;
+    using FontFamilyRef = SmartReference<FontFamily>;
 
     struct FontSelection
     {

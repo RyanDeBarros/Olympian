@@ -93,7 +93,7 @@ namespace oly::rendering
         painter_.polygon_batch_->render();
     }
 
-    glm::vec2 GeometryPainter::PaintContext::get_texture_dimensions() const
+    glm::vec2 GeometryPainter::PaintContext::get_texture_size() const
     {
         return dimensions_;
     }

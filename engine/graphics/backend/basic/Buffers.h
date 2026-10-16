@@ -2,102 +2,107 @@
 
 #include <array>
 
+#include "core/base/Errors.h"
+
 #include "external/GL.h"
-#include "core/base/Assert.h"
 
 namespace oly::graphics
 {
-	class GLBuffer;
-	namespace internal
-	{
-		extern void swap_gl_buffer(GLBuffer& buffer, GLuint& id);
-	}
+    class GLBuffer;
 
-	class GLBuffer
-	{
-		friend void internal::swap_gl_buffer(GLBuffer&, GLuint&);
-		GLuint id;
+    namespace internal
+    {
+        extern void swap_gl_buffer(GLBuffer& buffer, GLuint& id);
+    }
 
-	public:
-		GLBuffer();
-		GLBuffer(const GLBuffer&) = delete;
-		GLBuffer(GLBuffer&&) noexcept;
-		~GLBuffer();
-		GLBuffer& operator=(GLBuffer&&) noexcept;
+    class GLBuffer
+    {
+        friend void internal::swap_gl_buffer(GLBuffer&, GLuint&);
 
-		operator GLuint () const { return id; }
-	};
+    private:
+        GLuint id_;
 
-	template<size_t N>
-	class GLBufferBlock
-	{
-		static_assert(N > 0);
+    public:
+        GLBuffer();
+        GLBuffer(const GLBuffer&) = delete;
+        GLBuffer(GLBuffer&&) noexcept;
+        ~GLBuffer();
+        GLBuffer& operator=(GLBuffer&&) noexcept;
 
-		std::array<GLuint, N> ids;
+        operator GLuint () const;
+    };
 
-	public:
-		GLBufferBlock()
-		{
-			glCreateBuffers(N, ids.data());
-		}
+    template<size_t N>
+    class GLBufferBlock
+    {
+        static_assert(N > 0);
 
-		GLBufferBlock(const GLBufferBlock&) = delete;
+        std::array<GLuint, N> ids_;
 
-		GLBufferBlock(GLBufferBlock&& other) noexcept
-			: ids(other.ids)
-		{
-			other.ids[0] = 0;
-		}
+    public:
+        GLBufferBlock()
+        {
+            glCreateBuffers(N, ids_.data());
+        }
 
-		~GLBufferBlock()
-		{
-			if (ids[0])
-				glDeleteBuffers(N, ids.data());
-		}
+        GLBufferBlock(const GLBufferBlock&) = delete;
 
-		GLBufferBlock& operator=(GLBufferBlock&& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (ids[0])
-					glDeleteBuffers(N, ids.data());
-				ids = other.ids;
-				other.ids[0] = 0;
-			}
-			return *this;
-		}
+        GLBufferBlock(GLBufferBlock&& o) noexcept
+            : ids_(o.ids_)
+        {
+            o.ids_[0] = 0;
+        }
 
-		constexpr GLuint operator[](GLsizei i) const
-		{
-			OLY_ASSERT(i >= 0 && i < N);
-			return ids[i];
-		}
+        ~GLBufferBlock()
+        {
+            if (ids_[0])
+                glDeleteBuffers(N, ids_.data());
+        }
 
-		template<size_t i>
-		void swap(GLBuffer& Single)
-		{
-			static_assert(i < N);
-			internal::swap_gl_buffer(Single, ids[i]);
-		}
-	};
+        GLBufferBlock& operator=(GLBufferBlock&& o) noexcept
+        {
+            if (this != &o)
+            {
+                if (ids_[0])
+                    glDeleteBuffers(N, ids_.data());
 
-	/*
-	* GLBufferBlock<0> is the dynamic version of GLBufferBlock<N> - it still holds a block of buffers, not 0!
-	*/
-	template<>
-	class GLBufferBlock<0>
-	{
-		GLuint* ids;
-		GLsizei count;
+                ids_ = o.ids_;
+                o.ids_[0] = 0;
+            }
 
-	public:
-		GLBufferBlock(GLsizei count);
-		GLBufferBlock(const GLBufferBlock&) = delete;
-		GLBufferBlock(GLBufferBlock<0>&&) noexcept;
-		~GLBufferBlock();
-		GLBufferBlock<0>& operator=(GLBufferBlock<0>&&) noexcept;
+            return *this;
+        }
 
-		GLuint operator[](GLsizei i) const;
-		GLsizei get_count() const { return count; }
-	};
+        constexpr GLuint operator[](size_t i) const
+        {
+            if (i >= N)
+                throw Error(ErrorCode::IndexOutOfRange);
+
+            return ids_[i];
+        }
+
+        template<size_t i>
+        void swap(GLBuffer& Single)
+        {
+            static_assert(i < N);
+            internal::swap_gl_buffer(Single, ids_[i]);
+        }
+    };
+
+    template<>
+    class GLBufferBlock<0>
+    {
+        GLuint* ids_;
+        GLsizei count_;
+
+    public:
+        GLBufferBlock(GLsizei count);
+        GLBufferBlock(const GLBufferBlock&) = delete;
+        GLBufferBlock(GLBufferBlock<0>&&) noexcept;
+        ~GLBufferBlock();
+        GLBufferBlock<0>& operator=(GLBufferBlock<0>&&) noexcept;
+
+        GLuint operator[](size_t i) const;
+        GLsizei get_count() const;
+    };
 }

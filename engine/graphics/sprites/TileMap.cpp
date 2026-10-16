@@ -142,7 +142,7 @@ namespace oly::rendering
 			break;
 		}
 		
-		sprite.set_local().scale = 1.0f / context::get_texture_dimensions(tile_assignment.desc.file);
+		sprite.set_local().scale = 1.0f / context::get_texture_size(tile_assignment.desc.file);
 	}
 
     TileMap TileMap::load(TOMLNode node)

@@ -1,37 +1,39 @@
 #include "FenceSync.h"
 
+#include "core/base/Errors.h"
+
 namespace oly::graphics
 {
 	FenceSync::FenceSync()
 	{
-		_sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+		sync_ = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 	}
 
 	FenceSync::FenceSync(FenceSync&& other) noexcept
-		: _sync(other._sync)
+		: sync_(other.sync_)
 	{
-		other._sync = nullptr;
+		other.sync_ = nullptr;
 	}
 
 	FenceSync::~FenceSync()
 	{
-		glDeleteSync(_sync);
+		glDeleteSync(sync_);
 	}
 
 	FenceSync& FenceSync::operator=(FenceSync&& other) noexcept
 	{
 		if (this != &other)
 		{
-			glDeleteSync(_sync);
-			_sync = other._sync;
-			other._sync = nullptr;
+			glDeleteSync(sync_);
+			sync_ = other.sync_;
+			other.sync_ = nullptr;
 		}
 		return *this;
 	}
 
 	bool FenceSync::wait(GLuint64 timeout_ns) const
 	{
-		GLenum result = glClientWaitSync(_sync, GL_SYNC_FLUSH_COMMANDS_BIT, timeout_ns);
+		GLenum result = glClientWaitSync(sync_, GL_SYNC_FLUSH_COMMANDS_BIT, timeout_ns);
 		if (result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED)
 			return true;
 		else if (result == GL_TIMEOUT_EXPIRED)
@@ -43,7 +45,7 @@ namespace oly::graphics
 	bool FenceSync::signaled() const
 	{
 		GLint result;
-		glGetSynciv(_sync, GL_SYNC_STATUS, sizeof(GLint), nullptr, &result);
+		glGetSynciv(sync_, GL_SYNC_STATUS, sizeof(GLint), nullptr, &result);
 		return result == GL_SIGNALED;
 	}
 }

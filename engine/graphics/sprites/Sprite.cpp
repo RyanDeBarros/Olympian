@@ -185,7 +185,7 @@ namespace oly::rendering
         if (texture)
         {
             graphics::BindlessTextureRef btex = context::load_texture(*texture, parser.defaulted(detail::Key::TextureIndex)(0u));
-            sprite.set_texture(btex, context::get_texture_dimensions(btex));
+            sprite.set_texture(btex, context::get_texture_size(btex));
         }
 
         if (auto modulation = parser.optional<glm::vec4>(detail::Key::Modulation)())
@@ -269,9 +269,9 @@ namespace oly::rendering
         ref_.set_texture(texture);
     }
 
-    void Sprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
+    void Sprite::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const
     {
-        ref_.set_texture(texture, dimensions);
+        ref_.set_texture(texture, size);
     }
 
     void Sprite::set_tex_coords(math::UVRect uvs) const
@@ -304,9 +304,9 @@ namespace oly::rendering
         ref_.set_mod_texture(texture);
     }
 
-    void Sprite::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
+    void Sprite::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const
     {
-        ref_.set_mod_texture(texture, dimensions);
+        ref_.set_mod_texture(texture, size);
     }
 
     void Sprite::set_mod_tex_coords(math::UVRect uvs) const
@@ -319,9 +319,9 @@ namespace oly::rendering
         return ref_.get_texture();
     }
 
-    graphics::BindlessTextureRef Sprite::get_texture(glm::vec2& dimensions) const
+    graphics::BindlessTextureRef Sprite::get_texture(glm::vec2& size) const
     {
-        return ref_.get_texture(dimensions);
+        return ref_.get_texture(size);
     }
 
     math::UVRect Sprite::get_tex_coords() const

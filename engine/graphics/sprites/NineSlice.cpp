@@ -162,7 +162,7 @@ namespace oly::rendering
         for (unsigned char x = 0; x < 3; ++x)
             for (unsigned char y = 0; y < 3; ++y)
                 sprite(x, y).set_texture(texture_file, texture_index);
-        regular_dimensions_ = context::get_texture_dimensions(texture_file, texture_index);
+        regular_dimensions_ = context::get_texture_size(texture_file, texture_index);
         nsize_ = regular_dimensions_;
         dirty_.grid = true;
         dirty_.mod_grid = true;
@@ -181,7 +181,7 @@ namespace oly::rendering
 
     void NineSlice::set_texture(const graphics::BindlessTextureRef& texture)
     {
-        glm::vec2 dimensions = context::get_texture_dimensions(texture);
+        glm::vec2 dimensions = context::get_texture_size(texture);
         for (unsigned char x = 0; x < 3; ++x)
             for (unsigned char y = 0; y < 3; ++y)
                 sprite(x, y).set_texture(texture, dimensions);
@@ -222,7 +222,7 @@ namespace oly::rendering
         for (unsigned char x = 0; x < 3; ++x)
             for (unsigned char y = 0; y < 3; ++y)
                 sprite(x, y).set_mod_texture(texture_file, texture_index);
-        regular_mod_dimensions_ = context::get_texture_dimensions(texture_file, texture_index);
+        regular_mod_dimensions_ = context::get_texture_size(texture_file, texture_index);
     }
 
     void NineSlice::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
@@ -235,7 +235,7 @@ namespace oly::rendering
 
     void NineSlice::set_mod_texture(const graphics::BindlessTextureRef& texture)
     {
-        glm::vec2 dimensions = context::get_texture_dimensions(texture);
+        glm::vec2 dimensions = context::get_texture_size(texture);
         for (unsigned char x = 0; x < 3; ++x)
             for (unsigned char y = 0; y < 3; ++y)
                 sprite(x, y).set_mod_texture(texture, dimensions);

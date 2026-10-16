@@ -1,13 +1,12 @@
 #pragma once
 
 #include "external/GL.h"
-#include "core/base/Errors.h"
 
 namespace oly::graphics
 {
 	class FenceSync
 	{
-		GLsync _sync;
+		GLsync sync_;
 
 	public:
 		FenceSync();

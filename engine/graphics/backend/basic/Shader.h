@@ -1,49 +1,56 @@
 #pragma once
 
-#include <string>
-#include <memory>
-
 #include "graphics/backend/basic/Buffers.h"
 
 #include "assets/ResourcePath.h"
 
+#include <string>
+#include <memory>
+
 namespace oly::graphics
 {
-	enum class ShaderType
-	{
-		Vertex = GL_VERTEX_SHADER,
-		Fragment = GL_FRAGMENT_SHADER,
-		Geometry = GL_GEOMETRY_SHADER,
-		Compute = GL_COMPUTE_SHADER
-	};
+    enum class ShaderType
+    {
+        Vertex = GL_VERTEX_SHADER,
+        Fragment = GL_FRAGMENT_SHADER,
+        Geometry = GL_GEOMETRY_SHADER,
+        Compute = GL_COMPUTE_SHADER
+    };
 
-	struct ShaderBufferSource
-	{
-		std::string buffer;
-		ShaderType type;
-	};
+    struct ShaderBufferSource
+    {
+        std::string buffer;
+        ShaderType type;
+    };
 
-	struct ShaderPathSource
-	{
-		detail::ResourcePath path;
-		ShaderType type;
-	};
+    struct ShaderPathSource
+    {
+        detail::ResourcePath path;
+        ShaderType type;
+    };
 
-	class Shader
-	{
-		GLuint id = 0;
+    class Shader
+    {
+        GLuint id_ = 0;
 
-	public:
-		Shader();
-		Shader(const std::vector<ShaderBufferSource>& buffer_sources);
-		Shader(const std::vector<ShaderPathSource>& path_sources);
-		Shader(const Shader&) = delete;
-		Shader(Shader&&) noexcept;
-		~Shader();
-		Shader& operator=(Shader&&) noexcept;
+    public:
+        Shader();
+        Shader(const std::vector<ShaderBufferSource>& buffer_sources);
+        Shader(const std::vector<ShaderPathSource>& path_sources);
+        Shader(const Shader&) = delete;
+        Shader(Shader&&) noexcept;
+        ~Shader();
 
-		operator GLuint () const { return id; }
-	};
+        Shader& operator=(Shader&&) noexcept;
 
-	extern void dispatch_compute(GLuint x_size, GLuint y_size, GLuint z_size, GLuint x_threads, GLuint y_threads, GLuint z_threads);
+        operator GLuint () const;
+    };
+
+    extern void dispatch_compute(
+        GLuint x_size,
+        GLuint y_size,
+        GLuint z_size,
+        GLuint x_threads,
+        GLuint y_threads,
+        GLuint z_threads);
 }

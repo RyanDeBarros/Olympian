@@ -86,24 +86,24 @@ namespace oly::rendering
 
         void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
         void set_texture(const graphics::BindlessTextureRef& texture) const;
-        void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const;
         void set_tex_coords(math::UVRect uvs) const;
         void set_modulation(glm::vec4 modulation) const;
         void set_frame_format(const graphics::AnimFrameFormat& anim) const;
         void set_camera_invariant(bool is_camera_invariant) const;
         void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
         void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
-        void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+        void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const;
         void set_mod_tex_coords(math::UVRect uvs) const;
 
         graphics::BindlessTextureRef get_texture() const;
-        graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
+        graphics::BindlessTextureRef get_texture(glm::vec2& size) const;
         math::UVRect get_tex_coords() const;
         glm::vec4 get_modulation() const;
         graphics::AnimFrameFormat get_frame_format() const;
         bool is_camera_invariant() const;
         graphics::BindlessTextureRef get_mod_texture() const;
-        graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
+        graphics::BindlessTextureRef get_mod_texture(glm::vec2& size) const;
         math::UVRect get_mod_tex_coords() const;
 
         const Transform2D& get_local() const;

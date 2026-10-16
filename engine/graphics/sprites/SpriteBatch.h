@@ -58,7 +58,7 @@ namespace oly::rendering
             struct TexData
             {
                 GLuint64 handle = 0;
-                glm::vec2 dimensions = {};
+                glm::vec2 size = {};
             };
 
             struct AnimHash
@@ -85,7 +85,7 @@ namespace oly::rendering
                 struct SizedTexture
                 {
                     graphics::BindlessTextureRef texture;
-                    glm::vec2 dimensions = {};
+                    glm::vec2 size = {};
 
                     bool operator==(const SizedTexture& t) const = default;
                 };
@@ -158,29 +158,29 @@ namespace oly::rendering
             GLuint gen_sprite_id();
             void erase_sprite_id(GLuint id);
 
-            void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+            void set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 size);
             void set_tex_coords(GLuint vb_pos, math::UVRect uvs);
             void set_modulation(GLuint vb_pos, glm::vec4 modulation);
             void set_frame_format(GLuint vb_pos, const graphics::AnimFrameFormat& anim);
             void set_text_glyph(GLuint vb_pos, bool is_text_glyph);
             void set_camera_invariant(GLuint vb_pos, bool is_camera_invariant);
-            void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions);
+            void set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 size);
             void set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs);
 
-            graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+            graphics::BindlessTextureRef get_texture(GLuint vb_pos, glm::vec2& size) const;
             math::UVRect get_tex_coords(GLuint vb_pos) const;
             glm::vec4 get_modulation(GLuint vb_pos) const;
             graphics::AnimFrameFormat get_frame_format(GLuint vb_pos) const;
             bool is_text_glyph(GLuint vb_pos) const;
             bool is_camera_invariant(GLuint vb_pos) const;
-            graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const;
+            graphics::BindlessTextureRef get_mod_texture(GLuint vb_pos, glm::vec2& size) const;
             math::UVRect get_mod_tex_coords(GLuint vb_pos) const;
 
             void update_texture_slot(
                 GLuint vb_pos,
                 GLushort& tex_slot,
                 const graphics::BindlessTextureRef& texture,
-                glm::vec2 dimensions);
+                glm::vec2 size);
         };
     }
 
@@ -215,7 +215,7 @@ namespace oly::rendering
 
             void set_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
             void set_texture(const graphics::BindlessTextureRef& texture) const;
-            void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+            void set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const;
             void set_tex_coords(math::UVRect uvs) const;
             void set_modulation(glm::vec4 modulation) const;
             void set_frame_format(const graphics::AnimFrameFormat& anim) const;
@@ -223,19 +223,19 @@ namespace oly::rendering
             void set_camera_invariant(bool is_camera_invariant) const;
             void set_mod_texture(const detail::ResourcePath& texture_file, unsigned int texture_index = 0) const;
             void set_mod_texture(const graphics::BindlessTextureRef& texture) const;
-            void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const;
+            void set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const;
             void set_mod_tex_coords(math::UVRect uvs) const;
             void set_transform(const glm::mat3& transform) const;
 
             graphics::BindlessTextureRef get_texture() const;
-            graphics::BindlessTextureRef get_texture(glm::vec2& dimensions) const;
+            graphics::BindlessTextureRef get_texture(glm::vec2& size) const;
             math::UVRect get_tex_coords() const;
             glm::vec4 get_modulation() const;
             graphics::AnimFrameFormat get_frame_format() const;
             bool is_text_glyph() const;
             bool is_camera_invariant() const;
             graphics::BindlessTextureRef get_mod_texture() const;
-            graphics::BindlessTextureRef get_mod_texture(glm::vec2& dimensions) const;
+            graphics::BindlessTextureRef get_mod_texture(glm::vec2& size) const;
             math::UVRect get_mod_tex_coords() const;
             glm::mat3 get_transform() const;
 

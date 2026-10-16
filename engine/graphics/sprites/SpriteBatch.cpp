@@ -50,7 +50,7 @@ namespace oly::rendering::internal
 
     size_t SpriteBatch::QuadInfoStore::SizedTextureHash::operator()(const SizedTexture& t) const
     {
-        return imp::hasher().with(t.texture).with(t.dimensions);
+        return imp::hasher().with(t.texture).with(t.size);
     }
 
     SpriteBatch::SpriteBatch(UBOCapacity capacity)
@@ -181,10 +181,10 @@ namespace oly::rendering::internal
         }
     }
 
-    void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+    void SpriteBatch::set_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 size)
     {
         SpriteBatch::assert_valid_id(vb_pos);
-        update_texture_slot(vb_pos, quad_ssbo_block_.buf.at<SSBOSlot::Info>(vb_pos).tex_slot, texture, dimensions);
+        update_texture_slot(vb_pos, quad_ssbo_block_.buf.at<SSBOSlot::Info>(vb_pos).tex_slot, texture, size);
     }
 
     void SpriteBatch::set_tex_coords(GLuint vb_pos, math::UVRect uvs)
@@ -238,10 +238,10 @@ namespace oly::rendering::internal
             set_quad_info(vb_pos).flags &= ~QuadInfo::kCamInvFlag;
     }
 
-    void SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 dimensions)
+    void SpriteBatch::set_mod_texture(GLuint vb_pos, const graphics::BindlessTextureRef& texture, glm::vec2 size)
     {
         SpriteBatch::assert_valid_id(vb_pos);
-        update_texture_slot(vb_pos, quad_ssbo_block_.buf.at<SSBOSlot::Info>(vb_pos).mod_tex_slot, texture, dimensions);
+        update_texture_slot(vb_pos, quad_ssbo_block_.buf.at<SSBOSlot::Info>(vb_pos).mod_tex_slot, texture, size);
     }
 
     void SpriteBatch::set_mod_tex_coords(GLuint vb_pos, math::UVRect uvs)
@@ -255,14 +255,14 @@ namespace oly::rendering::internal
         }
     }
 
-    graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& dimensions) const
+    graphics::BindlessTextureRef SpriteBatch::get_texture(GLuint vb_pos, glm::vec2& size) const
     {
         SpriteBatch::assert_valid_id(vb_pos);
         GLuint slot = get_quad_info(vb_pos).tex_slot;
         if (slot == 0)
             return nullptr;
         QuadInfoStore::SizedTexture tex = quad_info_store_.textures.get_object(slot);
-        dimensions = tex.dimensions;
+        size = tex.size;
         return tex.texture;
     }
 
@@ -299,14 +299,14 @@ namespace oly::rendering::internal
         return get_quad_info(vb_pos).flags & QuadInfo::kCamInvFlag;
     }
 
-    graphics::BindlessTextureRef SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& dimensions) const
+    graphics::BindlessTextureRef SpriteBatch::get_mod_texture(GLuint vb_pos, glm::vec2& size) const
     {
         SpriteBatch::assert_valid_id(vb_pos);
         GLuint slot = get_quad_info(vb_pos).mod_tex_slot;
         if (slot == 0)
             return nullptr;
         QuadInfoStore::SizedTexture tex = quad_info_store_.textures.get_object(slot);
-        dimensions = tex.dimensions;
+        size = tex.size;
         return tex.texture;
     }
 
@@ -321,15 +321,15 @@ namespace oly::rendering::internal
         GLuint vb_pos,
         GLushort& tex_slot,
         const graphics::BindlessTextureRef& texture,
-        glm::vec2 dimensions)
+        glm::vec2 size)
     {
         GLushort old_tex_slot = tex_slot;
         std::optional<QuadInfoStore::SizedTexture> old_texture;
         if (quad_info_store_.textures.set_object<TexData>(
                 tex_data_ssbo_,
                 tex_slot,
-                QuadInfoStore::SizedTexture{ texture, texture ? dimensions : glm::vec2(0.0f) },
-                TexData{ texture ? texture->get_handle() : 0, dimensions }, old_texture))
+                QuadInfoStore::SizedTexture{ texture, texture ? size : glm::vec2(0.0f) },
+                TexData{ texture ? texture->get_handle() : 0, size }, old_texture))
         {
             if (old_texture)
             {
@@ -448,7 +448,8 @@ namespace oly::rendering::internal
         }
         else
         {
-            _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
+            _OLY_ENGINE_LOG_WARNING("RENDERING")
+                << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
         }
     }
 
@@ -569,8 +570,8 @@ namespace oly::rendering::internal
         {
             SpriteBatch::assert_valid_id(id_);
             graphics::BindlessTextureRef texture = context::load_texture(texture_file, texture_index);
-            glm::vec2 dimensions = context::get_texture_dimensions(texture_file, texture_index);
-            batch->set_texture(id_, texture, dimensions);
+            glm::vec2 size = context::get_texture_size(texture_file, texture_index);
+            batch->set_texture(id_, texture, size);
         }
         else
             throw Error(ErrorCode::NullPointer);
@@ -580,15 +581,15 @@ namespace oly::rendering::internal
     {
         SpriteBatch::assert_valid_id(id_);
         if (auto batch = lock()) [[likely]]
-            batch->set_texture(id_, texture, texture ? context::get_texture_dimensions(texture) : glm::vec2{});
+            batch->set_texture(id_, texture, texture ? context::get_texture_size(texture) : glm::vec2{});
         else
             throw Error(ErrorCode::NullPointer);
     }
 
-    void SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
+    void SpriteReference::set_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const
     {
         if (auto batch = lock()) [[likely]]
-            batch->set_texture(id_, texture, dimensions);
+            batch->set_texture(id_, texture, size);
         else
             throw Error(ErrorCode::NullPointer);
     }
@@ -639,7 +640,7 @@ namespace oly::rendering::internal
         {
             SpriteBatch::assert_valid_id(id_);
             auto texture = context::load_texture(texture_file, texture_index);
-            batch->set_mod_texture(id_, texture, context::get_texture_dimensions(texture_file, texture_index));
+            batch->set_mod_texture(id_, texture, context::get_texture_size(texture_file, texture_index));
         }
         else
             throw Error(ErrorCode::NullPointer);
@@ -649,15 +650,15 @@ namespace oly::rendering::internal
     {
         SpriteBatch::assert_valid_id(id_);
         if (auto batch = lock()) [[likely]]
-            batch->set_mod_texture(id_, texture, context::get_texture_dimensions(texture));
+            batch->set_mod_texture(id_, texture, context::get_texture_size(texture));
         else
             throw Error(ErrorCode::NullPointer);
     }
 
-    void SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 dimensions) const
+    void SpriteReference::set_mod_texture(const graphics::BindlessTextureRef& texture, glm::vec2 size) const
     {
         if (auto batch = lock()) [[likely]]
-            batch->set_mod_texture(id_, texture, dimensions);
+            batch->set_mod_texture(id_, texture, size);
         else
             throw Error(ErrorCode::NullPointer);
     }
@@ -690,10 +691,10 @@ namespace oly::rendering::internal
             throw Error(ErrorCode::NullPointer);
     }
 
-    graphics::BindlessTextureRef SpriteReference::get_texture(glm::vec2& dimensions) const
+    graphics::BindlessTextureRef SpriteReference::get_texture(glm::vec2& size) const
     {
         if (auto batch = lock()) [[likely]]
-            return batch->get_texture(id_, dimensions);
+            return batch->get_texture(id_, size);
         else
             throw Error(ErrorCode::NullPointer);
     }
@@ -749,10 +750,10 @@ namespace oly::rendering::internal
             throw Error(ErrorCode::NullPointer);
     }
 
-    graphics::BindlessTextureRef SpriteReference::get_mod_texture(glm::vec2& dimensions) const
+    graphics::BindlessTextureRef SpriteReference::get_mod_texture(glm::vec2& size) const
     {
         if (auto batch = lock()) [[likely]]
-            return batch->get_mod_texture(id_, dimensions);
+            return batch->get_mod_texture(id_, size);
         else
             throw Error(ErrorCode::NullPointer);
     }

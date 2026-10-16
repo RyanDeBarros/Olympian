@@ -105,5 +105,5 @@ namespace oly::rendering
         float get_scaled_space_advance_width() const;
     };
 
-    typedef SmartReference<FontAtlas> FontAtlasRef;
+    using FontAtlasRef = SmartReference<FontAtlas>;
 }

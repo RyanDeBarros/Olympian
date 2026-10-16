@@ -6,7 +6,7 @@ namespace oly::graphics
 {
 	class VertexArray
 	{
-		GLuint id;
+		GLuint id_;
 
 	public:
 		VertexArray();
@@ -15,6 +15,6 @@ namespace oly::graphics
 		~VertexArray();
 		VertexArray& operator=(VertexArray&&) noexcept;
 
-		operator GLuint () const { return id; }
+        operator GLuint () const;
 	};
 }
