@@ -18,17 +18,17 @@ namespace oly::col2d
 			centroid += polygon[i];
 		centroid /= (float)count;
 
-		math::solver::Eigen2x2 covariance{ .M = 0.0f };
+		math::solver::Eigen2x2 covariance{ .m = 0.f };
 
 		for (size_t i = 0; i < count; ++i)
 		{
 			glm::vec2 p = polygon[i] - centroid;
-			covariance.M[0][0] += p.x * p.x;
-			covariance.M[0][1] += p.x * p.y;
-			covariance.M[1][0] += p.y * p.x;
-			covariance.M[1][1] += p.y * p.y;
+			covariance.m[0][0] += p.x * p.x;
+			covariance.m[0][1] += p.x * p.y;
+			covariance.m[1][0] += p.y * p.x;
+			covariance.m[1][1] += p.y * p.y;
 		}
-		covariance.M /= (float)count;
+		covariance.m /= (float)count;
 
 		glm::vec2 eigenvectors[2];
 		covariance.solve(nullptr, eigenvectors);

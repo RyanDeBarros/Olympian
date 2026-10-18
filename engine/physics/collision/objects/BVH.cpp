@@ -109,11 +109,11 @@ namespace oly::col2d
 			}
 			centroid /= (float)point_count;
 
-			math::solver::Eigen2x2 covariance{ .M = 0.0f };
+			math::solver::Eigen2x2 covariance{ .m = 0.f };
 
 			for (size_t i = 0; i < count; ++i)
-				covariance.M += compute_covariance(elements[i], centroid);
-			covariance.M /= (float)point_count;
+				covariance.m += compute_covariance(elements[i], centroid);
+			covariance.m /= (float)point_count;
 
 			glm::vec2 eigenvectors[2];
 			covariance.solve(nullptr, eigenvectors);

@@ -4,43 +4,60 @@
 
 namespace oly::math::solver
 {
-	struct Eigen2x2
-	{
-		glm::mat2 M;
+    struct Eigen2x2
+    {
+        glm::mat2 m;
 
-		void solve(float values[2] = nullptr, glm::vec2 vectors[2] = nullptr) const;
-	};
+        void solve(float values[2] = nullptr, glm::vec2 vectors[2] = nullptr) const;
+    };
 
-	struct LinearCosine
-	{
-		// Ax + cos(Bx + C) + D = 0
-		float A, B, C, D;
-		unsigned int _iterations = 3;
+    struct Quadratic
+    {
+        // a*x^2 + b*x + c = 0
 
-		float solve() const;
-	};
+        float a;
+        float b;
+        float c;
 
-	struct Quadratic
-	{
-		// Ax^2 + Bx + C = 0
-		float A, B, C;
+        int solve(float& t1, float& t2) const;
+    };
 
-		int solve(float& t1, float& t2) const;
-	};
+    struct Cubic
+    {
+        // a*x^3 + b*x^2 + c*x + d = 0
 
-	struct Cubic
-	{
-		// Ax^3 + Bx^2 + Cx + D = 0
-		float A, B, C, D;
+        float a;
+        float b;
+        float c;
+        float d;
 
-		int solve(float& t1, float& t2, float& t3) const;
-	};
+        int solve(float& t1, float& t2, float& t3) const;
+    };
 
-	struct Quartic
-	{
-		// Ax^4 + Bx^3 + Cx^2 + Dx + E = 0
-		float A, B, C, D, E;
+    struct Quartic
+    {
+        // a*x^4 + b*x^3 + c*x^2 + d*x + e = 0
 
-		int solve(float& t1, float& t2, float& t3, float& t4) const;
-	};
+        float a;
+        float b;
+        float c;
+        float d;
+        float e;
+
+        int solve(float& t1, float& t2, float& t3, float& t4) const;
+    };
+
+    struct LinearCosine
+    {
+        // a*x + cos(b*x + c) + d = 0
+
+        float a;
+        float b;
+        float c;
+        float d;
+
+        unsigned int iterations = 3;
+
+        float solve() const;
+    };
 }
