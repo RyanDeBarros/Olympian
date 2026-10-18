@@ -193,7 +193,7 @@ namespace oly::rendering
             else
             {
                 _OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint ("
-                    << codepoint << ")." << LOG.nl;
+                    << codepoint << ")." << kLog.nl;
             }
         }
     }
@@ -244,7 +244,7 @@ namespace oly::rendering
             else
             {
                 _OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint ("
-                    << codepoint << ")." << LOG.nl;
+                    << codepoint << ")." << kLog.nl;
             }
         }
 
@@ -279,7 +279,7 @@ namespace oly::rendering
         else
         {
             _OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint ("
-                << codepoint << ")." << LOG.nl;
+                << codepoint << ")." << kLog.nl;
         }
 
         if (paragraph_->format_.can_fit_on_line(typeset, element_.adj_offset + dx))
@@ -352,7 +352,7 @@ namespace oly::rendering
         else
         {
             _OLY_ENGINE_LOG_WARNING("RENDERING") << "Font does not support the glyph with codepoint ("
-                << codepoint << ")." << LOG.nl;
+                << codepoint << ")." << kLog.nl;
         }
 
         if (paragraph_->format_.can_fit_on_line(typeset, element_.adj_offset + dx))

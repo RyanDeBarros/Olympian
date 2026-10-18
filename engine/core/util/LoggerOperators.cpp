@@ -1,7 +1,5 @@
 #include "LoggerOperators.h"
 
-#include "assets/ResourcePath.h"
-
 namespace oly
 {
 	Logger::Impl operator<<(Logger::Impl impl, const imp::utf::string& str)

@@ -397,7 +397,7 @@ namespace oly::debug
         auto sprite_batch_ = sprite_.get_batch();
         if (!sprite_batch_)
         {
-            _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot write texture to using null sprite_ batch" << LOG.nl;
+            _OLY_ENGINE_LOG_WARNING("RENDERING") << "Cannot write texture to using null sprite_ batch" << kLog.nl;
             return;
         }
 

@@ -101,7 +101,7 @@ namespace oly::context
 	bool internal::platform_frame()
 	{
 		oly::internal::check_errors();
-		LOG.flush();
+		kLog.flush();
 		return internal::platform->frame();
 	}
 

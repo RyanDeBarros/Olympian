@@ -101,7 +101,7 @@ namespace oly::rendering::internal
             global_modulation[2],
             global_modulation[3]);
         
-        glUniform1f(shader_locations_.time, TIME.now<>());
+        glUniform1f(shader_locations_.time, kTime.now());
 
         tex_data_ssbo_.bind_base(0);
         quad_ssbo_block_.buf.bind_ssbo_base<SSBOSlot::Info>(1);
@@ -449,7 +449,7 @@ namespace oly::rendering::internal
         else
         {
             _OLY_ENGINE_LOG_WARNING("RENDERING")
-                << "Cannot create default sprite - context sprite batch is null" << LOG.nl;
+                << "Cannot create default sprite - context sprite batch is null" << kLog.nl;
         }
     }
 

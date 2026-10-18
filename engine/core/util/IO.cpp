@@ -1,79 +1,80 @@
 #include "IO.h"
 
-#include <filesystem>
-#include <fstream>
+#include "core/base/Errors.h"
+
+#include "core/util/LoggerOperators.h"
+
 #include <sstream>
 #include <iostream>
 
-#include "core/util/LoggerOperators.h"
-#include "core/base/Errors.h"
-
 namespace oly::io
 {
-	std::vector<std::string> read_file_lines(const detail::ResourcePath& filepath)
-	{
-		std::ifstream file = filepath.get_ifstream();
-		if (!file)
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FileIO);
-		}
+    std::vector<std::string> read_file_lines(const detail::ResourcePath& filepath)
+    {
+        std::ifstream file = filepath.get_ifstream();
+        if (!file)
+        {
+            _OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << kLog.nl;
+            throw Error(ErrorCode::FileIO);
+        }
 
-		std::vector<std::string> lines;
-		std::string line;
-		while (std::getline(file, line))
-			lines.push_back(std::move(line));
-		return lines;
-	}
+        std::vector<std::string> lines;
+        std::string line;
+        while (std::getline(file, line))
+            lines.push_back(std::move(line));
+        return lines;
+    }
 
-	std::string read_file(const detail::ResourcePath& filepath)
-	{
-		std::ifstream file = filepath.get_ifstream();
-		if (!file)
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FileIO);
-		}
+    std::string read_file(const detail::ResourcePath& filepath)
+    {
+        std::ifstream file = filepath.get_ifstream();
+        if (!file)
+        {
+            _OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << kLog.nl;
+            throw Error(ErrorCode::FileIO);
+        }
 
-		std::ostringstream oss;
-		oss << file.rdbuf();
-		return oss.str();
-	}
+        std::ostringstream oss;
+        oss << file.rdbuf();
+        return oss.str();
+    }
 
-	std::vector<unsigned char> read_file_uc(const detail::ResourcePath& filepath)
-	{
-		std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
-		if (!file)
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << LOG.nl;
-			throw Error(ErrorCode::FileIO);
-		}
+    std::vector<unsigned char> read_file_uc(const detail::ResourcePath& filepath)
+    {
+        std::ifstream file = filepath.get_ifstream(std::ios::binary | std::ios::ate);
+        if (!file)
+        {
+            _OLY_ENGINE_LOG_ERROR("IO") << "Could not open " << filepath << " for reading" << kLog.nl;
+            throw Error(ErrorCode::FileIO);
+        }
 
-		std::streamsize size = file.tellg();
-		file.seekg(0, std::ios::beg);
+        std::streamsize size = file.tellg();
+        file.seekg(0, std::ios::beg);
 
-		std::vector<unsigned char> content(size);
-		if (!file.read(reinterpret_cast<char*>(content.data()), size))
-		{
-			_OLY_ENGINE_LOG_ERROR("IO") << "Failed to read " << filepath << LOG.nl;
-			throw Error(ErrorCode::FileIO);
-		}
+        std::vector<unsigned char> content(size);
+        if (!file.read(reinterpret_cast<char*>(content.data()), size))
+        {
+            _OLY_ENGINE_LOG_ERROR("IO") << "Failed to read " << filepath << kLog.nl;
+            throw Error(ErrorCode::FileIO);
+        }
 
-		return content;
-	}
+        return content;
+    }
 
-	std::string read_template_file(const detail::ResourcePath& file, const std::unordered_map<std::string, std::string>& tmpl)
-	{
-		std::string content = read_file(file);
-		for (const auto& [placeholder, value] : tmpl)
-		{
-			size_t pos = 0;
-			while ((pos = content.find(placeholder, pos)) != std::string::npos)
-			{
-				content.replace(pos, placeholder.length(), value);
-				pos += value.length();
-			}
-		}
-		return content;
-	}
+    std::string read_template_file(
+        const detail::ResourcePath& file,
+        const std::unordered_map<std::string, std::string>& tmpl)
+    {
+        std::string content = read_file(file);
+        for (const auto& [placeholder, value] : tmpl)
+        {
+            size_t pos = 0;
+            while ((pos = content.find(placeholder, pos)) != std::string::npos)
+            {
+                content.replace(pos, placeholder.length(), value);
+                pos += value.length();
+            }
+        }
+        return content;
+    }
 }

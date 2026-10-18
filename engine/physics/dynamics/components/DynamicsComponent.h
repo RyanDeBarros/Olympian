@@ -8,45 +8,45 @@
 
 namespace oly::physics
 {
-	struct State
-	{
-		glm::vec2 position = {};
-		float rotation = 0.0f;
-		glm::vec2 linear_velocity = {};
-		float angular_velocity = 0.0f;
-	};
+    struct State
+    {
+        glm::vec2 position = {};
+        float rotation = 0.0f;
+        glm::vec2 linear_velocity = {};
+        float angular_velocity = 0.0f;
+    };
 
-	extern FrictionType friction_type(
+    extern FrictionType friction_type(
         UnitVector2D tangent,
         glm::vec2 relative_contact_velocity,
         glm::vec2 relative_linear_velocity,
-		float angular_velocity_a,
+        float angular_velocity_a,
         float angular_velocity_b,
         PositiveFloat speed_threshold = (float)col2d::kLinearTolerance);
 
-	class DynamicsComponent;
+    class DynamicsComponent;
 
-	struct CollisionResponse
-	{
-		glm::vec2 mtv;
-		glm::vec2 contact;
-		UnitVector2D normal;
-		const DynamicsComponent* dynamics;
-	};
+    struct CollisionResponse
+    {
+        glm::vec2 mtv;
+        glm::vec2 contact;
+        UnitVector2D normal;
+        const DynamicsComponent* dynamics;
+    };
 
-	class DynamicsComponent
-	{
-	protected:
-		mutable std::vector<CollisionResponse> collisions_;
-		mutable bool was_colliding_ = false;
+    class DynamicsComponent
+    {
+    protected:
+        mutable std::vector<CollisionResponse> collisions_;
+        mutable bool was_colliding_ = false;
 
-		mutable State pre_state_;
-		mutable State post_state_;
+        mutable State pre_state_;
+        mutable State post_state_;
 
-	public:
-		MaterialRef material = REF_DEFAULT;
+    public:
+        MaterialRef material = REF_DEFAULT;
 
-		virtual ~DynamicsComponent() = default;
+        virtual ~DynamicsComponent() = default;
 
     public:
         virtual void post_tick() const;
@@ -64,14 +64,14 @@ namespace oly::physics
 
         void pre_tick(const glm::mat3& global) const;
 
-	protected:
-		float effective_mass(const CollisionResponse& collision) const;
+    protected:
+        float effective_mass(const CollisionResponse& collision) const;
 
-		glm::vec2 other_contact_velocity(const CollisionResponse& collision) const;
-		glm::vec2 relative_contact_velocity(const CollisionResponse& collision) const;
-		float restitution_with(const CollisionResponse& collision) const;
-		float friction_with(const CollisionResponse& collision) const;
+        glm::vec2 other_contact_velocity(const CollisionResponse& collision) const;
+        glm::vec2 relative_contact_velocity(const CollisionResponse& collision) const;
+        float restitution_with(const CollisionResponse& collision) const;
+        float friction_with(const CollisionResponse& collision) const;
 
         float teleport_factor(const DynamicsComponent& other) const;
-	};
+    };
 }

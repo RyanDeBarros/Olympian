@@ -4,7 +4,8 @@
 
 #include "core/util/IO.h"
 #include "core/util/Logger.h"
-#include "core/util/Memory.h"
+
+#include <imp/fixed_array.hpp>
 
 namespace oly
 {
@@ -17,7 +18,7 @@ namespace oly
         {
             if (!stbtt_InitFont(&info_, data_.data(), 0))
             {
-                _OLY_ENGINE_LOG_ERROR("RENDERING") << "Cannot initialize font_" << LOG.endl;
+                _OLY_ENGINE_LOG_ERROR("RENDERING") << "Cannot initialize font_" << kLog.endl;
                 throw Error(ErrorCode::LoadFont);
             }
         }
@@ -55,7 +56,17 @@ namespace oly
         void FontFace::make_bitmap(unsigned char* buf, int w, int h, float scale_, int glyph_index) const
         {
             stbtt_MakeGlyphBitmap(&info_, buf, w, h, w, scale_, scale_, glyph_index);
-            flip_pixel_buffer(buf, w, h, 1);
+
+            imp::fixed_array<unsigned char> temp(w);
+            
+            for (int row = 0; row < h / 2; ++row)
+            {
+                unsigned char* lower = buf + row * w;
+                unsigned char* upper = buf + (h - 1 - row) * w;
+                memcpy(temp.data(), lower, w);
+                memcpy(lower, upper, w);
+                memcpy(upper, temp.data(), w);
+            }
         }
 
         int FontFace::get_kerning(imp::utf::codepoint c1, imp::utf::codepoint c2) const

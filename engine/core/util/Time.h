@@ -8,120 +8,118 @@
 
 namespace oly
 {
-	namespace time
-	{
-		enum Month
-		{
-			January,
-			February,
-			March,
-			April,
-			May,
-			June,
-			July,
-			August,
-			September,
-			October,
-			November,
-			December
-		};
+    namespace time
+    {
+        enum Month
+        {
+            January,
+            February,
+            March,
+            April,
+            May,
+            June,
+            July,
+            August,
+            September,
+            October,
+            November,
+            December
+        };
 
-		enum Day
-		{
-			Sunday,
-			Monday,
-			Tuesday,
-			Wednesday,
-			Thursday,
-			Friday,
-			Saturday
-		};
+        enum Day
+        {
+            Sunday,
+            Monday,
+            Tuesday,
+            Wednesday,
+            Thursday,
+            Friday,
+            Saturday
+        };
 
-		extern tm time_struct();
-		extern std::ostream& pass_timestamp(std::ostream& os);
-		extern std::string timestamp();
-		extern int years_since_1900();
-		extern Month current_month();
-		extern Day current_day();
-		extern int current_hour();
-		extern int epoch_hours();
-		extern unsigned int mod_epoch_hours();
-		extern int epoch_minutes();
-		extern unsigned int mod_epoch_minutes();
-		extern int epoch_seconds();
-		extern unsigned int mod_epoch_seconds();
-		extern int epoch_milliseconds();
-		extern unsigned int mod_epoch_milliseconds();
-	}
+        extern tm time_struct();
+        extern std::ostream& pass_timestamp(std::ostream& os);
+        extern std::string timestamp();
+        extern int years_since_1900();
+        extern Month current_month();
+        extern Day current_day();
+        extern int current_hour();
+        extern int epoch_hours();
+        extern unsigned int mod_epoch_hours();
+        extern int epoch_minutes();
+        extern unsigned int mod_epoch_minutes();
+        extern int epoch_seconds();
+        extern unsigned int mod_epoch_seconds();
+        extern int epoch_milliseconds();
+        extern unsigned int mod_epoch_milliseconds();
+    }
 
-	namespace internal
-	{
-		class TimeImpl
-		{
-			double _raw_now = 0.0;
-			double _processed_now = 0.0;
-			double _inv_processed_now = 0.0;
-			double _raw_delta = 0.0;
-			double _processed_delta = 0.0;
-			double _inv_processed_delta = 0.0;
+    namespace internal
+    {
+        class TimeImpl
+        {
+            double raw_now_ = 0.;
+            double processed_now_ = 0.;
+            double inv_processed_now_ = 0.;
+            double raw_delta_ = 0.;
+            double processed_delta_ = 0.;
+            double inv_processed_delta_ = 0.;
 
-		public:
-			double frame_length_clip = 0.2;
-			double time_scale = 1.0;
+        public:
+            double frame_length_clip = 0.2;
+            double time_scale = 1.;
 
-			template<imp::numeric T = float>
-			T now() const { return (T)_processed_now; }
-			
             template<imp::numeric T = float>
-			T inverse_now() const { return (T)_inv_processed_now; }
-			
+            T now() const { return static_cast<T>(processed_now_); }
+
             template<imp::numeric T = float>
-			T delta() const { return (T)_processed_delta; }
-			
+            T inverse_now() const { return static_cast<T>(inv_processed_now_); }
+
             template<imp::numeric T = float>
-			T inverse_delta() const { return (T)_inv_processed_delta; }
+            T delta() const { return static_cast<T>(processed_delta_); }
 
-		private:
-			void process();
-
-		public:
-			void init();
-			void sync();
-		};
-	}
-	
-	inline internal::TimeImpl TIME;
-
-	namespace internal
-	{
-		class RealTimeImpl
-		{
-			double _now = 0.0;
-			double _inv_now = 0.0;
-			double _delta = 0.0;
-			double _inv_delta = 0.0;
-
-		public:
-			template<imp::numeric T = float>
-			T now() const { return (T)_now; }
-			
             template<imp::numeric T = float>
-			T inverse_now() const { return (T)_inv_now; }
-			
+            T inverse_delta() const { return static_cast<T>(inv_processed_delta_); }
+
+            void init();
+            void sync();
+
+        private:
+            void process();
+        };
+    }
+
+    inline internal::TimeImpl kTime;
+
+    namespace internal
+    {
+        class RealTimeImpl
+        {
+            double now_ = 0.0;
+            double inv_now_ = 0.0;
+            double delta_ = 0.0;
+            double inv_delta_ = 0.0;
+
+        public:
             template<imp::numeric T = float>
-			T delta() const { return (T)_delta; }
-			
+            T now() const { return static_cast<T>(now_); }
+
             template<imp::numeric T = float>
-			T inverse_delta() const { return (T)_inv_delta; }
+            T inverse_now() const { return static_cast<T>(inv_now_); }
 
-		private:
-			void process();
+            template<imp::numeric T = float>
+            T delta() const { return static_cast<T>(delta_); }
 
-		public:
-			void init();
-			void sync();
-		};
-	}
+            template<imp::numeric T = float>
+            T inverse_delta() const { return static_cast<T>(inv_delta_); }
 
-	inline internal::RealTimeImpl REAL_TIME;
+            void init();
+            void sync();
+
+        private:
+            void process();
+        };
+    }
+
+    inline internal::RealTimeImpl kRealTime;
 }

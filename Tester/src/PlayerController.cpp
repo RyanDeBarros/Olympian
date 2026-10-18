@@ -19,7 +19,7 @@ bool PlayerController::jump(oly::input::Signal signal)
 {
 	if (signal.phase == oly::input::Phase::Started)
 	{
-		OLY_LOG(true) << "Jump!" << oly::LOG.endl;
+		OLY_LOG(true) << "Jump!" << oly::kLog.endl;
 		return true;
 	}
 	return false;
@@ -66,13 +66,13 @@ bool PlayerController::zoom_camera(oly::input::Signal signal)
 	switch (signal.phase)
 	{
 	case oly::input::Phase::Started:
-		OLY_LOG_INFO() << "Started:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "Started:   " << signal.get<glm::vec2>() << oly::kLog.endl;
 		return true;
 	case oly::input::Phase::Ongoing:
-		OLY_LOG_INFO() << "Ongoing:   " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "Ongoing:   " << signal.get<glm::vec2>() << oly::kLog.endl;
 		return true;
 	case oly::input::Phase::Completed:
-		OLY_LOG_INFO() << "Completed: " << signal.get<glm::vec2>() << oly::LOG.endl;
+		OLY_LOG_INFO() << "Completed: " << signal.get<glm::vec2>() << oly::kLog.endl;
 		return true;
 	}
 	return false;

@@ -67,7 +67,7 @@ namespace oly::particles
                 else
                 {
                     _OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::Sequence"
-                        << " sub-operation at index (" << i << ")" << LOG.nl;
+                        << " sub-operation at index (" << i << ")" << kLog.nl;
                 }
             }
 
@@ -144,7 +144,7 @@ namespace oly::particles
             catch (const Error& e)
             {
                 _OLY_ENGINE_LOG_WARNING("ASSETS") << "Failed to load oly::particles::operations::Selector: "
-                    << (int)e.code << LOG.nl;
+                    << (int)e.code << kLog.nl;
                 return nullptr;
             }
         }

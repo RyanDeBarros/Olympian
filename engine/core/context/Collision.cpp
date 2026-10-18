@@ -23,7 +23,7 @@ namespace oly::context
 					if (auto name = masks->get_as<std::string>(i))
 						set_collision_mask_index(i, **name);
 					else
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision mask name is not a string for index (" << i << ")" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision mask name is not a string for index (" << i << ")" << kLog.nl;
 				}
 			}
 
@@ -34,7 +34,7 @@ namespace oly::context
 					if (auto name = layers->get_as<std::string>(i))
 						set_collision_layer_index(i, **name);
 					else
-						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision layer name is not a string for index (" << i << ")" << LOG.nl;
+						_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Collision layer name is not a string for index (" << i << ")" << kLog.nl;
 				}
 			}
 		}

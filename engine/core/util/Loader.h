@@ -6,5 +6,5 @@
 
 namespace oly::io
 {
-	extern toml::table load_toml(const detail::ResourcePath& file);
+    extern toml::table load_toml(const detail::ResourcePath& file);
 }

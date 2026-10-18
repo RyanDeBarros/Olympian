@@ -204,14 +204,14 @@ namespace oly::rendering
                     if (texture)
                         sprite.set_frame_format(graphics::setup_anim_frame_format_single(*texture, ff_parser->defaulted(detail::Key::Frame)(0u)));
                     else
-                        _OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << LOG.nl;
+                        _OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (single) frame format." << kLog.nl;
                     break;
                 case FrameFormat::Auto:
                     if (texture)
                         sprite.set_frame_format(graphics::setup_anim_frame_format(*texture, ff_parser->defaulted(detail::Key::Speed)(1.f),
                             ff_parser->defaulted(detail::Key::StartingFrame)(0u)));
                     else
-                        _OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << LOG.nl;
+                        _OLY_ENGINE_LOG_WARNING("ASSETS") << "No texture was set for (auto) frame format." << kLog.nl;
                     break;
                 }
             }

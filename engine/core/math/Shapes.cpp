@@ -67,7 +67,7 @@ namespace oly::math
 		{
 			if (rect.x2 <= rect.x1 || rect.y2 <= rect.y1)
 			{
-				_OLY_ENGINE_LOG_ERROR("CONTEXT") << "cannot parse IRect2D (x1=" << rect.x1 << ";x2=" << rect.x2 << ";y1=" << rect.y1 << ";y2=" << rect.y2 << ") - invalid bounds" << LOG.endl;
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << "cannot parse IRect2D (x1=" << rect.x1 << ";x2=" << rect.x2 << ";y1=" << rect.y1 << ";y2=" << rect.y2 << ") - invalid bounds" << kLog.endl;
 				throw Error(ErrorCode::LoadAsset);
 			}
 		}

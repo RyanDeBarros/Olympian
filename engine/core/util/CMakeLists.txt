@@ -1,5 +1,6 @@
 target_sources(OlympianEngine PRIVATE
 	DebugTrace.cpp
+    DeferredStringParam.cpp
 	IO.cpp
 	Loader.cpp
 	Logger.cpp

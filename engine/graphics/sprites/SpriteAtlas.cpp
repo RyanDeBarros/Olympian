@@ -55,7 +55,7 @@ namespace oly::rendering
     {
         if (anim_format.delay_seconds != 0.0f)
         {
-            const float delta = TIME.now<>() - anim_format.starting_time;
+            const float delta = kTime.now() - anim_format.starting_time;
             select(anim_format.starting_frame + (int)floor(delta / anim_format.delay_seconds));
         }
     }

@@ -4,32 +4,34 @@
 
 namespace oly
 {
-	class DebugTrace;
+    class DebugTrace;
 
-	namespace internal
-	{
-		class DebugTraceScope
-		{
-			const DebugTrace& trace;
-			std::string name_space;
-			std::string action;
+    namespace internal
+    {
+        class DebugTraceScope
+        {
+            const DebugTrace& trace_;
+            std::string name_space_;
+            std::string action_;
 
-		public:
-			DebugTraceScope(const DebugTrace& trace, const StringParam& name_space, const StringParam& action);
-			DebugTraceScope(const DebugTraceScope&) = delete;
-			DebugTraceScope(DebugTraceScope&&) = delete;
-			~DebugTraceScope();
-		};
-	}
+        public:
+            DebugTraceScope(const DebugTrace& trace, const StringParam& name_space, const StringParam& action);
+            DebugTraceScope(const DebugTraceScope&) = delete;
+            DebugTraceScope(DebugTraceScope&&) = delete;
+            ~DebugTraceScope();
+        };
+    }
 
-	class DebugTrace
-	{
-		friend class internal::DebugTraceScope;
-		const std::string_view source;
+    class DebugTrace
+    {
+        friend class internal::DebugTraceScope;
 
-	public:
-		DebugTrace(const std::string_view source = "") : source(source) {}
+    private:
+        const std::string_view source_;
 
-		internal::DebugTraceScope scope(const StringParam& name_space, const StringParam& action) const { return internal::DebugTraceScope(*this, name_space, action); }
-	};
+    public:
+        DebugTrace(const std::string_view source = "");
+
+        internal::DebugTraceScope scope(const StringParam& name_space, const StringParam& action) const;
+    };
 }

@@ -1,203 +1,223 @@
 #pragma once
 
-#include <sstream>
-#include <fstream>
-#include <string_view>
-#include <source_location>
+#include "core/util/LogLevel.h"
+#include "core/util/StringParam.h"
 
 #include "external/GL.h"
 #include "external/GLM.h"
-#include "core/util/StringParam.h"
-#include "core/util/LogLevel.h"
 
 #include <imp/soft_singleton.hpp>
 #include <imp/traits.hpp>
 
+#include <fstream>
 #include <optional>
+#include <source_location>
+#include <sstream>
+#include <string_view>
 
 namespace oly
 {
-	namespace internal
-	{
-		struct LogAccess;
-	}
+    namespace internal
+    {
+        struct LogAccess;
+    }
 
-	struct LoggerOptions
-	{
-		bool use_console = true;
-		bool use_logfile = true;
-		std::optional<size_t> max_prior_log_files = 20;
-		std::optional<size_t> max_prior_log_bytes = std::nullopt;
-	};
+    struct LoggerOptions
+    {
+        bool use_console = true;
+        bool use_logfile = true;
+        std::optional<size_t> max_prior_log_files = 20;
+        std::optional<size_t> max_prior_log_bytes = std::nullopt;
+    };
 
-	class Logger final : public imp::soft_singleton<Logger>
-	{
-		friend class imp::soft_singleton<Logger>;
+    class Logger final
+        : public imp::soft_singleton<Logger>
+    {
+        friend class imp::soft_singleton<Logger>;
+        friend struct internal::LogAccess;
+        friend class Impl;
 
-		std::stringstream stream;
-		std::ofstream file;
+        struct OpenGL
+        {
+            GLenum code;
+        };
 
-		struct
-		{
-			bool console = true;
-			bool logfile = true;
-		} target;
+        struct GLFW
+        {
+            int code;
+        };
 
-		friend struct internal::LogAccess;
-		void start_log(const LoggerOptions& options);
-		void end_log();
+    public:
+        struct Enables
+        {
+            bool debug = false;
+            bool info = true;
+            bool warning = true;
+            bool error = true;
+            bool fatal = true;
 
-	public:
-		void flush();
+            bool at_level(LogLevel level) const;
+        };
 
-	private:
-		void pass_timestamp();
+        class Impl
+        {
+            friend class Logger;
 
-	public:
-		class Impl
-		{
-			bool enabled;
+        private:
+            bool enabled_;
 
-			friend class Logger;
-			Impl(bool enabled) : enabled(enabled) {}
+            Impl(bool enabled);
 
-		public:
-			template<typename T>
-			Impl stream(T&& obj) { if (enabled) Logger::instance().stream << std::forward<T>(obj); return *this; }
-		};
-		friend class Impl;
+        public:
+            template<typename T>
+            Impl stream(T&& obj)
+            {
+                if (enabled_)
+                    Logger::instance().stream_ << std::forward<T>(obj);
 
-	private:
-		struct _opengl { GLenum code; };
-		struct _glfw { int code; };
-		
-	public:
-		_opengl opengl(GLenum code) { return _opengl{ code }; }
-		_glfw glfw(int code) { return _glfw{ code }; }
+                return *this;
+            }
+        };
 
-	private:
-		void start(const char* level, bool timestamp, const char* prefix);
-		void start(const char* level, _opengl);
-		void start(const char* level, _glfw);
+        struct SourceInfo
+        {
+            std::string file_name(std::source_location location = std::source_location::current()) const;
+            std::string line(std::source_location location = std::source_location::current()) const;
+            std::string column(std::source_location location = std::source_location::current()) const;
+            std::string function_name(std::source_location location = std::source_location::current()) const;
 
-		Impl untagged(bool timestamp = false);
-		
-		Impl debug(bool timestamp = false, const char* prefix = nullptr);
-		Impl debug(_opengl);
-		Impl debug(_glfw);
-		
-		Impl info(bool timestamp = false, const char* prefix = nullptr);
-		Impl info(_opengl);
-		Impl info(_glfw);
-		
-		Impl warning(bool timestamp = false, const char* prefix = nullptr);
-		Impl warning(_opengl);
-		Impl warning(_glfw);
-		
-		Impl error(bool timestamp = false, const char* prefix = nullptr);
-		Impl error(_opengl);
-		Impl error(_glfw);
-		
-		Impl fatal(bool timestamp = false, const char* prefix = nullptr);
-		Impl fatal(_opengl);
-		Impl fatal(_glfw);
+            std::string full_source(std::source_location location = std::source_location::current()) const;
+        };
 
-		Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr);
-		Impl at_level(LogLevel level, _opengl);
-		Impl at_level(LogLevel level, _glfw);
+    private:
+        std::stringstream stream_;
+        std::ofstream file_;
 
-	public:
-		struct Enables
-		{
-			bool debug = false;
-			bool info = true;
-			bool warning = true;
-			bool error = true;
-			bool fatal = true;
+        struct
+        {
+            bool console = true;
+            bool logfile = true;
+        } target_;
 
-			bool at_level(LogLevel level) const;
-		} enable;
+    public:
+        Enables enable;
+        struct NL {} nl;
+        struct ENDL {} endl;
+        SourceInfo source_info;
 
-		struct _nl {} nl;
-		struct _endl {} endl;
+    public:
+        void flush();
 
-		struct SourceInfo
-		{
-			std::string file_name(std::source_location location = std::source_location::current()) const;
-			std::string line(std::source_location location = std::source_location::current()) const;
-			std::string column(std::source_location location = std::source_location::current()) const;
-			std::string function_name(std::source_location location = std::source_location::current()) const;
+        OpenGL opengl(GLenum code);
+        GLFW glfw(int code);
 
-			std::string full_source(std::source_location location = std::source_location::current()) const;
-		} source_info;
-	};
+    private:
+        void start_log(const LoggerOptions& options);
+        void end_log();
 
-	inline Logger& LOG = Logger::instance();
+        void pass_timestamp();
 
-	namespace internal
-	{
-		struct LogAccess
-		{
-			static void start_log(const LoggerOptions& options) { LOG.start_log(options); }
-			static void end_log() { LOG.end_log(); }
-			
-			static Logger::Impl untagged(bool timestamp = false) { return LOG.untagged(timestamp); }
-			
-			static Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr) { return LOG.debug(timestamp, prefix); }
-			static Logger::Impl debug(Logger::_opengl g) { return LOG.debug(g); }
-			static Logger::Impl debug(Logger::_glfw g) { return LOG.debug(g); }
-			
-			static Logger::Impl info(bool timestamp = false, const char* prefix = nullptr) { return LOG.info(timestamp, prefix); }
-			static Logger::Impl info(Logger::_opengl g) { return LOG.info(g); }
-			static Logger::Impl info(Logger::_glfw g) { return LOG.info(g); }
-			
-			static Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr) { return LOG.warning(timestamp, prefix); }
-			static Logger::Impl warning(Logger::_opengl g) { return LOG.warning(g); }
-			static Logger::Impl warning(Logger::_glfw g) { return LOG.warning(g); }
-			
-			static Logger::Impl error(bool timestamp = false, const char* prefix = nullptr) { return LOG.error(timestamp, prefix); }
-			static Logger::Impl error(Logger::_opengl g) { return LOG.error(g); }
-			static Logger::Impl error(Logger::_glfw g) { return LOG.error(g); }
-			
-			static Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr) { return LOG.fatal(timestamp, prefix); }
-			static Logger::Impl fatal(Logger::_opengl g) { return LOG.fatal(g); }
-			static Logger::Impl fatal(Logger::_glfw g) { return LOG.fatal(g); }
+        void start(const char* level, bool timestamp, const char* prefix);
+        void start(const char* level, OpenGL);
+        void start(const char* level, GLFW);
 
-			static Logger::Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr) { return LOG.at_level(level, timestamp, prefix); }
-			static Logger::Impl at_level(LogLevel level, Logger::_opengl g) { return LOG.at_level(level, g); }
-			static Logger::Impl at_level(LogLevel level, Logger::_glfw g) { return LOG.at_level(level, g); }
-		};
-	}
+        Impl untagged(bool timestamp = false);
 
-	extern Logger::Impl operator<<(Logger::Impl, Logger::_nl);
-	extern Logger::Impl operator<<(Logger::Impl, Logger::_endl);
+        Impl debug(bool timestamp = false, const char* prefix = nullptr);
+        Impl debug(OpenGL);
+        Impl debug(GLFW);
 
-	extern Logger::Impl operator<<(Logger::Impl, const void*);
-	extern Logger::Impl operator<<(Logger::Impl, const char*);
-	extern Logger::Impl operator<<(Logger::Impl, const std::string&);
-	extern Logger::Impl operator<<(Logger::Impl, const std::string_view);
-	extern Logger::Impl operator<<(Logger::Impl, const StringParam&);
-	extern Logger::Impl operator<<(Logger::Impl, bool);
-	
-	template<imp::numeric T>
-	inline Logger::Impl operator<<(Logger::Impl impl, T v) { return impl << std::to_string(v); }
-	extern Logger::Impl operator<<(Logger::Impl, glm::vec2);
-	extern Logger::Impl operator<<(Logger::Impl, glm::vec3);
-	extern Logger::Impl operator<<(Logger::Impl, glm::vec4);
-	extern Logger::Impl operator<<(Logger::Impl, glm::mat2);
-	extern Logger::Impl operator<<(Logger::Impl, glm::mat3);
+        Impl info(bool timestamp = false, const char* prefix = nullptr);
+        Impl info(OpenGL);
+        Impl info(GLFW);
+
+        Impl warning(bool timestamp = false, const char* prefix = nullptr);
+        Impl warning(OpenGL);
+        Impl warning(GLFW);
+
+        Impl error(bool timestamp = false, const char* prefix = nullptr);
+        Impl error(OpenGL);
+        Impl error(GLFW);
+
+        Impl fatal(bool timestamp = false, const char* prefix = nullptr);
+        Impl fatal(OpenGL);
+        Impl fatal(GLFW);
+
+        Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr);
+        Impl at_level(LogLevel level, OpenGL);
+        Impl at_level(LogLevel level, GLFW);
+    };
+
+    inline Logger& kLog = Logger::instance();
+
+    namespace internal
+    {
+        struct LogAccess
+        {
+            static void start_log(const LoggerOptions& options);
+            static void end_log();
+
+            static Logger::Impl untagged(bool timestamp = false);
+
+            static Logger::Impl debug(bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl debug(Logger::OpenGL g);
+            static Logger::Impl debug(Logger::GLFW g);
+
+            static Logger::Impl info(bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl info(Logger::OpenGL g);
+            static Logger::Impl info(Logger::GLFW g);
+
+            static Logger::Impl warning(bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl warning(Logger::OpenGL g);
+            static Logger::Impl warning(Logger::GLFW g);
+
+            static Logger::Impl error(bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl error(Logger::OpenGL g);
+            static Logger::Impl error(Logger::GLFW g);
+
+            static Logger::Impl fatal(bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl fatal(Logger::OpenGL g);
+            static Logger::Impl fatal(Logger::GLFW g);
+
+            static Logger::Impl at_level(LogLevel level, bool timestamp = false, const char* prefix = nullptr);
+            static Logger::Impl at_level(LogLevel level, Logger::OpenGL g);
+            static Logger::Impl at_level(LogLevel level, Logger::GLFW g);
+        };
+    }
+
+    extern Logger::Impl operator<<(Logger::Impl, Logger::NL);
+    extern Logger::Impl operator<<(Logger::Impl, Logger::ENDL);
+
+    extern Logger::Impl operator<<(Logger::Impl, const void*);
+    extern Logger::Impl operator<<(Logger::Impl, const char*);
+    extern Logger::Impl operator<<(Logger::Impl, const std::string&);
+    extern Logger::Impl operator<<(Logger::Impl, const std::string_view);
+    extern Logger::Impl operator<<(Logger::Impl, const StringParam&);
+    extern Logger::Impl operator<<(Logger::Impl, bool);
+
+    template<imp::numeric T>
+    inline Logger::Impl operator<<(Logger::Impl impl, T v)
+    {
+        return impl << std::to_string(v);
+    }
+
+    extern Logger::Impl operator<<(Logger::Impl, glm::vec2);
+    extern Logger::Impl operator<<(Logger::Impl, glm::vec3);
+    extern Logger::Impl operator<<(Logger::Impl, glm::vec4);
+    extern Logger::Impl operator<<(Logger::Impl, glm::mat2);
+    extern Logger::Impl operator<<(Logger::Impl, glm::mat3);
 }
 
 #define OLY_LOG(...) oly::internal::LogAccess::untagged(__VA_ARGS__)
-#define OLY_LOG_DEBUG(...) if (!(oly::LOG.enable.debug)) ; else oly::internal::LogAccess::debug(__VA_ARGS__)
-#define OLY_LOG_INFO(...) if (!(oly::LOG.enable.info)) ; else oly::internal::LogAccess::info(__VA_ARGS__)
-#define OLY_LOG_WARNING(...) if (!(oly::LOG.enable.warning)) ; else oly::internal::LogAccess::warning(__VA_ARGS__)
-#define OLY_LOG_ERROR(...) if (!(oly::LOG.enable.error)) ; else oly::internal::LogAccess::error(__VA_ARGS__)
-#define OLY_LOG_FATAL(...) if (!(oly::LOG.enable.fatal)) ; else oly::internal::LogAccess::fatal(__VA_ARGS__)
-#define OLY_LOG_AT_LEVEL(level, ...) if (!(oly::LOG.enable.at_level(level))) ; else oly::internal::LogAccess::at_level(level, __VA_ARGS__)
+#define OLY_LOG_DEBUG(...) if (!(oly::kLog.enable.debug)) ; else oly::internal::LogAccess::debug(__VA_ARGS__)
+#define OLY_LOG_INFO(...) if (!(oly::kLog.enable.info)) ; else oly::internal::LogAccess::info(__VA_ARGS__)
+#define OLY_LOG_WARNING(...) if (!(oly::kLog.enable.warning)) ; else oly::internal::LogAccess::warning(__VA_ARGS__)
+#define OLY_LOG_ERROR(...) if (!(oly::kLog.enable.error)) ; else oly::internal::LogAccess::error(__VA_ARGS__)
+#define OLY_LOG_FATAL(...) if (!(oly::kLog.enable.fatal)) ; else oly::internal::LogAccess::fatal(__VA_ARGS__)
+#define OLY_LOG_AT_LEVEL(level, ...) if (!(oly::kLog.enable.at_level(level))) ; else oly::internal::LogAccess::at_level(level, __VA_ARGS__)
 
-#define _OLY_ENGINE_LOG_DEBUG(category) OLY_LOG_DEBUG(true, category) << oly::LOG.source_info.full_source()
-#define _OLY_ENGINE_LOG_WARNING(category) OLY_LOG_WARNING(true, category) << oly::LOG.source_info.full_source()
-#define _OLY_ENGINE_LOG_ERROR(category) OLY_LOG_ERROR(true, category) << oly::LOG.source_info.full_source()
-#define _OLY_ENGINE_LOG_FATAL(category) OLY_LOG_FATAL(true, category) << oly::LOG.source_info.full_source()
-#define _OLY_ENGINE_LOG_AT_LEVEL(category) OLY_LOG_AT_LEVEL(level, true, category) << oly::LOG.source_info.full_source()
+#define _OLY_ENGINE_LOG_DEBUG(category) OLY_LOG_DEBUG(true, category) << oly::kLog.source_info.full_source()
+#define _OLY_ENGINE_LOG_WARNING(category) OLY_LOG_WARNING(true, category) << oly::kLog.source_info.full_source()
+#define _OLY_ENGINE_LOG_ERROR(category) OLY_LOG_ERROR(true, category) << oly::kLog.source_info.full_source()
+#define _OLY_ENGINE_LOG_FATAL(category) OLY_LOG_FATAL(true, category) << oly::kLog.source_info.full_source()
+#define _OLY_ENGINE_LOG_AT_LEVEL(category) OLY_LOG_AT_LEVEL(level, true, category) << oly::kLog.source_info.full_source()

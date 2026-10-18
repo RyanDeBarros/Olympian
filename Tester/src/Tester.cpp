@@ -12,11 +12,11 @@ struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
 		if (data.action == GLFW_PRESS)
 		{
 			if (data.key == GLFW_KEY_A)
-				OLY_LOG_INFO(true) << "A" << oly::LOG.endl;
+				OLY_LOG_INFO(true) << "A" << oly::kLog.endl;
 			else if (data.key == GLFW_KEY_B)
-				OLY_LOG_INFO(true) << "B" << oly::LOG.endl;
+				OLY_LOG_INFO(true) << "B" << oly::kLog.endl;
 			else
-				OLY_LOG_INFO(true) << "?" << oly::LOG.endl;
+				OLY_LOG_INFO(true) << "?" << oly::kLog.endl;
 		}
 		return false;
 	}
@@ -131,28 +131,28 @@ struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickServ
 
 	void on_tick() override
 	{
-		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::TIME.delta());
+		jumble.nonant_panel->set_width(jumble.nonant_panel->width() - 10.0f * oly::kTime.delta());
 
-		jumble.sprite1->set_local().rotation = oly::TIME.now<float>();
-		sprite_match.sprite2->transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::TIME.delta();
+		jumble.sprite1->set_local().rotation = oly::kTime.now<float>();
+		sprite_match.sprite2->transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += 0.5f * oly::kTime.delta();
 
-		flag_tesselation_modifier->pivot += glm::vec2(0.05f * oly::TIME.delta());
-		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::TIME.delta();
+		flag_tesselation_modifier->pivot += glm::vec2(0.05f * oly::kTime.delta());
+		flag_tesselation_parent.set_local().rotation -= 0.5f * oly::kTime.delta();
 		flag_tesselation_parent.flush();
 
-		if (fmod(oly::TIME.now(), 1.0f) < 0.5f)
+		if (fmod(oly::kTime.now(), 1.0f) < 0.5f)
 			jumble.grass_tilemap.set_z_layer(1);
 		else
 			jumble.grass_tilemap.set_z_layer(-1);
 
-		jumble.grass_tilemap->set_local().rotation += oly::TIME.delta() * 0.1f;
+		jumble.grass_tilemap->set_local().rotation += oly::kTime.delta() * 0.1f;
 
-		//oly::default_camera().transformer.set_local().position.x += oly::TIME.delta() * 20.0f;
-		//oly::default_camera().transformer.set_local().rotation += oly::TIME.delta() * 1.0f;
-		//oly::default_camera().transformer.set_local().scale.y += oly::TIME.delta() * 0.4f;
-		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::TIME.delta() * 0.2f;
+		//oly::default_camera().transformer.set_local().position.x += oly::kTime.delta() * 20.0f;
+		//oly::default_camera().transformer.set_local().rotation += oly::kTime.delta() * 1.0f;
+		//oly::default_camera().transformer.set_local().scale.y += oly::kTime.delta() * 0.4f;
+		//oly::default_camera().transformer.ref_modifier<oly::ShearTransformModifier2D>().shearing.x += oly::kTime.delta() * 0.2f;
 
-		particle_system.transformer.set_local().position.y -= 10.0f * oly::TIME.delta();
+		particle_system.transformer.set_local().position.y -= 10.0f * oly::kTime.delta();
 	}
 
 	void text_jitter_callback()

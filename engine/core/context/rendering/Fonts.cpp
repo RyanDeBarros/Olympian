@@ -94,7 +94,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -102,12 +102,12 @@ namespace oly::context
 		if (it != internal::font_faces.end())
 			return it->second;
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font face [" << file << "]..." << kLog.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -121,7 +121,7 @@ namespace oly::context
 		if (assets::Parser(node).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_faces.emplace(file, font_face);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font face [" << file << "] parsed" << kLog.nl;
 
 		return font_face;
 	}
@@ -130,7 +130,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -139,12 +139,12 @@ namespace oly::context
 		if (it != internal::font_atlases.end())
 			return it->second;
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font atlas [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font atlas [" << file << "]..." << kLog.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Font))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font type" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -176,7 +176,7 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_atlases.emplace(key, font_atlas);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font atlas [" << file << "] at index #" << index << " parsed" << kLog.nl;
 
 		return font_atlas;
 	}
@@ -185,7 +185,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.endl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -193,12 +193,12 @@ namespace oly::context
 		if (it != internal::raster_fonts.end())
 			return it->second;
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing raster font [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing raster font [" << file << "]..." << kLog.nl;
 
 		auto meta = detail::MetaSplitter::decode_meta(file.get_absolute());
 		if (!meta.has_type(detail::Key::Meta_RasterFont))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << LOG.endl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain raster font type" << kLog.endl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -242,7 +242,7 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::raster_fonts.emplace(file, raster_font);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Raster font [" << file << "] parsed" << kLog.nl;
 
 		return raster_font;
 	}
@@ -251,7 +251,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -259,11 +259,11 @@ namespace oly::context
 		if (it != internal::font_families.end())
 			return it->second;
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font family [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing font family [" << file << "]..." << kLog.nl;
 
 		if (!detail::MetaSplitter::decode_meta(file.get_absolute()).has_type(detail::Key::Meta_FontFamily))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain font family type" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -310,7 +310,7 @@ namespace oly::context
 		if (parser.defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::font_families.emplace(file, font_family);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Font family [" << file << "] parsed" << kLog.nl;
 
 		return font_family;
 	}
@@ -339,7 +339,7 @@ namespace oly::context
 	{
 		rendering::FontSelection font{ .family = load_font_family(font_family), .style = style };
 		if (!font.style_exists())
-			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Font style (" << (unsigned int)style << ") not supported by family " << font_family << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Font style (" << (unsigned int)style << ") not supported by family " << font_family << kLog.nl;
 		return font;
 	}
 
@@ -355,7 +355,7 @@ namespace oly::context
 			else
 			{
 				std::optional<detail::Key> type = meta.get_type();
-				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << LOG.nl;
+				_OLY_ENGINE_LOG_ERROR("CONTEXT") << file << " has unrecognized meta type: \"" << (type ? detail::encode_key(*type) : "") << "\"" << kLog.nl;
 				throw Error(ErrorCode::LoadAsset);
 			}
 		}

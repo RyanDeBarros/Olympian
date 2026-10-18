@@ -102,7 +102,7 @@ namespace oly
 			}
 			else
 			{
-				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << kLog.nl;
 			}
 		}
 	}
@@ -121,7 +121,7 @@ namespace oly
 			}
 			else
 			{
-				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << kLog.nl;
 			}
 		}
 	}
@@ -140,7 +140,7 @@ namespace oly
 			}
 			else
 			{
-				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << LOG.nl;
+				_OLY_ENGINE_LOG_ERROR("Input") << "Signal name \"" << signal << "\" is not bound to a signal id or routed to any other signal names" << kLog.nl;
 			}
 		}
 	}
@@ -301,7 +301,7 @@ namespace oly
 			if (auto signal = toml_signals->get_as<std::string>(i))
 				signals.push_back(signal->get());
 			else
-				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string" << LOG.nl;
+				_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Input signal #" << i << " cannot be parsed as a string" << kLog.nl;
 		}
 		routing_table[id] = std::move(signals);
 	}
@@ -310,13 +310,13 @@ namespace oly
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!detail::MetaSplitter::decode_meta(file).has_type(detail::Key::Meta_Signal))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain signal type" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 

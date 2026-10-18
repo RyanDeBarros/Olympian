@@ -31,7 +31,7 @@ namespace oly::context
 
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -39,11 +39,11 @@ namespace oly::context
 		if (it != internal::tilesets.end())
 			return it->second;
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing tileset [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing tileset [" << file << "]..." << kLog.nl;
 
 		if (!detail::MetaSplitter::decode_meta(file).has_type(detail::Key::Meta_Tileset))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain tileset type" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -54,7 +54,7 @@ namespace oly::context
 		if (assets::Parser(toml).defaulted(detail::Key::Storage)(detail::StorageMode::Keep) == detail::StorageMode::Keep)
 			internal::tilesets.emplace(file, tileset);
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Tileset [" << file << "] parsed" << kLog.nl;
 
 		return tileset;
 	}

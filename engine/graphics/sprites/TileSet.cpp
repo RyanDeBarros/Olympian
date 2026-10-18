@@ -98,7 +98,7 @@ namespace oly::rendering
             ss << "[" << tile[2][0] << ", " << tile[2][1] << ", " << tile[2][2] << "]";
 
             _OLY_ENGINE_LOG_ERROR("Tileset") << "Tileset cannot resolve tile configuration ["
-                << ss.str() << "]" << LOG.endl;
+                << ss.str() << "]" << kLog.endl;
             throw Error(ErrorCode::IncompleteTileset);
         }
     }

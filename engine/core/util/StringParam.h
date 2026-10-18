@@ -12,142 +12,116 @@
 
 namespace oly
 {
-	struct StringParam
-	{
-	private:
-		using VariantType = imp::variant<std::span<char>, std::span<const char>, std::string>;
-		mutable VariantType storage;
+    struct StringParam
+    {
+        friend std::ostream& operator<<(std::ostream& os, const StringParam& string);
 
-	public:
-		StringParam() : storage(std::span<char>()) {}
-		StringParam(char* string) : storage(std::span<char>(string, strlen(string))) {}
-		StringParam(const char* string) : storage(std::span<const char>(string, strlen(string))) {}
-		StringParam(const std::span<char> string) : storage(string) {}
-		StringParam(const std::span<const char> string) : storage(string) {}
-		StringParam(const std::string_view string) : storage(std::span<const char>(string)) {}
-		StringParam(const std::string& string) : storage(std::span<const char>(string)) {}
-		StringParam(std::string& string) : storage(std::span<char>(string)) {}
-		StringParam(std::string&& string) : storage(std::move(string)) {}
-		
-		StringParam(const StringParam& other) : storage(copy_from(other)) {}
-		StringParam(StringParam&& other) noexcept : storage(move_from(std::move(other))) {}
+    private:
+        using VariantType = imp::variant<std::span<char>, std::span<const char>, std::string>;
 
-		template<imp::numeric T>
-		StringParam(T n) : storage(std::to_string(n)) {}
+    public:
+        using Iterator = std::span<char>::iterator;
+        using ConstIterator = std::span<const char>::iterator;
 
-		StringParam& operator=(const StringParam& other)
-		{
-			if (this != &other)
-				storage = copy_from(other);
-			return *this;
-		}
+        using Match = std::match_results<Iterator>;
+        using ConstMatch = std::match_results<ConstIterator>;
 
-		StringParam& operator=(StringParam&& other) noexcept
-		{
-			if (this != &other)
-				storage = move_from(std::move(other));
-			return *this;
-		}
+    private:
+        mutable VariantType storage_;
 
-		bool is_mutable() const
-		{
-			return !storage.holds<std::span<const char>>();
-		}
+    public:
+        static const size_t kNPos = size_t(-1);
 
-	private:
-		static VariantType copy_from(const StringParam& other);
-		static VariantType move_from(StringParam&& other) noexcept;
+        StringParam();
+        StringParam(char* string);
+        StringParam(const char* string);
+        StringParam(const std::span<char> string);
+        StringParam(const std::span<const char> string);
+        StringParam(const std::string_view string);
+        StringParam(const std::string& string);
+        StringParam(std::string& string);
+        StringParam(std::string&& string);
 
-	public:
-		std::span<const char> view() const;
-		std::span<char> mutview() const;
-		std::string copy() const;
-		std::string transfer() const;
+        StringParam(const StringParam& o);
+        StringParam(StringParam&& o) noexcept;
 
-		StringParam immutable() const;
+        template<imp::numeric T>
+        StringParam(T n)
+            : storage_(std::to_string(n))
+        {
+        }
 
-		size_t size() const noexcept { return view().size(); }
-		bool empty() const noexcept { return view().empty(); }
+        StringParam& operator=(const StringParam& o);
+        StringParam& operator=(StringParam&& o) noexcept;
 
-		size_t hash() const;
-		bool operator==(const StringParam& other) const;
-		friend std::ostream& operator<<(std::ostream& os, const StringParam& string);
+    public:
+        bool is_mutable() const;
 
-		using Iterator = std::span<char>::iterator;
-		using ConstIterator = std::span<const char>::iterator;
+        std::span<const char> view() const;
+        std::span<char> mutview() const;
+        std::string copy() const;
+        std::string transfer() const;
 
-		Iterator begin() noexcept { return mutview().begin(); }
-		Iterator end() noexcept { return mutview().end(); }
-		ConstIterator begin() const noexcept { return view().begin(); }
-		ConstIterator end() const noexcept { return view().end(); }
-		ConstIterator cbegin() const noexcept { return view().begin(); }
-		ConstIterator cend() const noexcept { return view().end(); }
+        StringParam immutable() const;
 
-		using Match = std::match_results<Iterator>;
-		using ConstMatch = std::match_results<ConstIterator>;
+        size_t size() const noexcept;
+        bool empty() const noexcept;
 
-		static const size_t NPOS = size_t(-1);
+        size_t hash() const;
+        bool operator==(const StringParam& o) const;
 
-		size_t find(char c, size_t pos = 0, size_t count = NPOS) const;
-		size_t rfind(char c, size_t pos = 0, size_t count = NPOS) const;
+        Iterator begin() noexcept;
+        Iterator end() noexcept;
+        ConstIterator begin() const noexcept;
+        ConstIterator end() const noexcept;
+        ConstIterator cbegin() const noexcept;
+        ConstIterator cend() const noexcept;
 
-		void clip(size_t from, size_t count = NPOS) const;
-		StringParam substr(size_t from, size_t count = NPOS) const
-		{
-			StringParam s = *this;
-			s.clip(from, count);
-			return s;
-		}
+        size_t find(char c, size_t pos = 0, size_t count = kNPos) const;
+        size_t rfind(char c, size_t pos = 0, size_t count = kNPos) const;
 
-		void clear() const;
-		void erase_before(size_t first) const;
-		void erase_after(size_t last) const;
+        void clip(size_t from, size_t count = kNPos) const;
+        StringParam substr(size_t from, size_t count = kNPos) const;
 
-		void pop_front() const
-		{
-			if (empty())
-				throw Error(ErrorCode::InvalidSize);
+        void clear() const;
+        void erase_before(size_t first) const;
+        void erase_after(size_t last) const;
 
-			erase_before(1);
-		}
-		
-		void pop_back() const
-		{
-			if (empty())
-				throw Error(ErrorCode::InvalidSize);
+        void pop_front() const;
+        void pop_back() const;
 
-			erase_after(size() - 1);
-		}
+        char front() const;
+        char back() const;
 
-		char front() const { return view().front(); }
-		char back() const { return view().back(); }
+        bool starts_with(char c) const;
+        bool ends_with(char c) const;
 
-		bool starts_with(char c) const { return front() == c; }
-		bool ends_with(char c) const { return back() == c; }
+        std::vector<StringParam> split(char delimiter) const;
 
-		std::vector<StringParam> split(char delimiter) const;
+        static void ltrim(std::string& string);
+        StringParam ltrim() const;
+        
+        static void rtrim(std::string& string);
+        StringParam rtrim() const;
 
-		static void ltrim(std::string& string);
-		StringParam ltrim() const;
-		static void rtrim(std::string& string);
-		StringParam rtrim() const;
-		static void trim(std::string& string);
-		StringParam trim() const;
+        static void trim(std::string& string);
+        StringParam trim() const;
 
-		StringParam to_lower() const;
-		StringParam to_upper() const;
+        StringParam to_lower() const;
+        StringParam to_upper() const;
 
-		int to_int(const int base = 10) const;
-		unsigned int to_uint(const int base = 10) const;
-		float to_float() const;
-	};
+        int to_int(const int base = 10) const;
+        unsigned int to_uint(const int base = 10) const;
+        float to_float() const;
+
+    private:
+        static VariantType copy_from(const StringParam& o);
+        static VariantType move_from(StringParam&& o) noexcept;
+    };
 }
 
 template<>
 struct std::hash<oly::StringParam>
 {
-	size_t operator()(const oly::StringParam& param) const
-	{
-		return param.hash();
-	}
+    size_t operator()(const oly::StringParam& param) const;
 };

@@ -6,31 +6,31 @@
 
 namespace oly::physics
 {
-	struct AppliedAcceleration
-	{
-		glm::vec2 acceleration = {};
-		glm::vec2 contact = {};
-	};
+    struct AppliedAcceleration
+    {
+        glm::vec2 acceleration = {};
+        glm::vec2 contact = {};
+    };
 
-	struct AppliedForce
-	{
-		glm::vec2 force = {};
-		glm::vec2 contact = {};
-	};
+    struct AppliedForce
+    {
+        glm::vec2 force = {};
+        glm::vec2 contact = {};
+    };
 
-	struct AppliedImpulse
-	{
-		glm::vec2 impulse = {};
-		glm::vec2 contact = {};
-	};
+    struct AppliedImpulse
+    {
+        glm::vec2 impulse = {};
+        glm::vec2 contact = {};
+    };
 
-	class KinematicPhysicsComponent;
+    class KinematicPhysicsComponent;
 
-	struct KinematicPhysicsProperties
-	{
+    struct KinematicPhysicsProperties
+    {
         friend class KinematicPhysicsComponent;
 
-	private:
+    private:
         std::vector<AppliedAcceleration> applied_accelerations_;
         std::vector<AppliedForce> applied_forces_;
 
@@ -38,13 +38,13 @@ namespace oly::physics
         mutable std::vector<AppliedImpulse> applied_impulses;
 
     private:
-		StrictlyPositiveFloat mass_ = 1.0f;
-		StrictlyPositiveFloat mass_inverse_ = 1.0f;
+        StrictlyPositiveFloat mass_ = 1.0f;
+        StrictlyPositiveFloat mass_inverse_ = 1.0f;
 
-		StrictlyPositiveFloat moi_ = 1.0f;
-		StrictlyPositiveFloat moi_inverse_ = 1.0f;
+        StrictlyPositiveFloat moi_ = 1.0f;
+        StrictlyPositiveFloat moi_inverse_ = 1.0f;
 
-		StrictlyPositiveFloat moi_multiplier_ = 1.0f;
+        StrictlyPositiveFloat moi_multiplier_ = 1.0f;
 
         mutable glm::vec2 net_linear_applied_acceleration_ = {};
         mutable float net_angular_applied_acceleration_ = 0.0f;
@@ -56,39 +56,39 @@ namespace oly::physics
         mutable bool dirty_linear_applied_forces_ = false;
         mutable bool dirty_angular_applied_forces_ = false;
 
-	public:
-		glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
-		glm::vec2 net_force = {}; // does not include applied forces
-		mutable glm::vec2 net_linear_impulse = {}; // does not include applied impulses
-		float net_angular_acceleration = 0.0f;
-		float net_torque = 0.0f;
-		mutable float net_angular_impulse = 0.0f;
+    public:
+        glm::vec2 net_linear_acceleration = {}; // does not include applied accelerations
+        glm::vec2 net_force = {}; // does not include applied forces
+        mutable glm::vec2 net_linear_impulse = {}; // does not include applied impulses
+        float net_angular_acceleration = 0.0f;
+        float net_torque = 0.0f;
+        mutable float net_angular_impulse = 0.0f;
 
-		glm::vec2 center_of_mass = {};
+        glm::vec2 center_of_mass = {};
 
-		bool complex_teleportation = false;
+        bool complex_teleportation = false;
 
-		struct
-		{
-			bool enable = false;
-			bool only_colliding = false;
-		} angular_snapping;
+        struct
+        {
+            bool enable = false;
+            bool only_colliding = false;
+        } angular_snapping;
 
-		struct
-		{
-			bool enable = false;
-			bool only_colliding = false;
-		} linear_x_snapping;
+        struct
+        {
+            bool enable = false;
+            bool only_colliding = false;
+        } linear_x_snapping;
 
-		struct
-		{
-			bool enable = false;
-			bool only_colliding = false;
-		} linear_y_snapping;
+        struct
+        {
+            bool enable = false;
+            bool only_colliding = false;
+        } linear_y_snapping;
 
         bool use_moi_multiplier = true;
 
-	public:
+    public:
         float mass() const;
         float mass_inverse() const;
         void set_mass(float m);
@@ -100,60 +100,64 @@ namespace oly::physics
         float moi_multiplier() const;
         void set_moi_multiplier(float mult);
 
-		const std::vector<AppliedAcceleration>& get_applied_accelerations() const;
+        const std::vector<AppliedAcceleration>& get_applied_accelerations() const;
         std::vector<AppliedAcceleration>& set_applied_accelerations();
         const std::vector<AppliedForce>& get_applied_forces() const;
-		std::vector<AppliedForce>& set_applied_forces();
+        std::vector<AppliedForce>& set_applied_forces();
 
     private:
         glm::vec2 dv_psi() const;
         float dw_psi() const;
-	};
+    };
 
-	struct KinematicSubMaterial
-	{
-		PositiveFloat linear_drag = 0.0f;
-		PositiveFloat angular_drag = 1.0f;
+    struct KinematicSubMaterial
+    {
+        PositiveFloat linear_drag = 0.0f;
+        PositiveFloat angular_drag = 1.0f;
 
-		LinearCollisionDamping linear_collision_damping;
-		AngularCollisionDamping angular_collision_damping;
+        LinearCollisionDamping linear_collision_damping;
+        AngularCollisionDamping angular_collision_damping;
 
-		AngularSnapping angular_snapping;
-		LinearSnapping linear_x_snapping, linear_y_snapping;
-	};
+        AngularSnapping angular_snapping;
+        LinearSnapping linear_x_snapping, linear_y_snapping;
+    };
 
-	using KinematicSubMaterialRef = SmartReference<KinematicSubMaterial>;
+    using KinematicSubMaterialRef = SmartReference<KinematicSubMaterial>;
 
-	class KinematicPhysicsComponent
+    class KinematicPhysicsComponent
         : public DynamicsComponent
-	{
-		mutable size_t primary_collision_mtv_idx = 0;
-		mutable size_t secondary_collision_mtv_idx = 0;
-		mutable bool found_secondary_collision_mtv_idx = false;
-		mutable glm::vec2 collision_linear_impulse = {};
-		mutable float collision_angular_impulse = 0.0f;
-
-	public:
-		KinematicSubMaterialRef submaterial = REF_DEFAULT;
-		KinematicPhysicsProperties properties;
+    {
+        mutable size_t primary_collision_mtv_idx = 0;
+        mutable size_t secondary_collision_mtv_idx = 0;
+        mutable bool found_secondary_collision_mtv_idx = false;
+        mutable glm::vec2 collision_linear_impulse = {};
+        mutable float collision_angular_impulse = 0.0f;
 
     public:
-		void post_tick() const override;
+        KinematicSubMaterialRef submaterial = REF_DEFAULT;
+        KinematicPhysicsProperties properties;
 
-	protected:
+    public:
+        void post_tick() const override;
+
+    protected:
         std::optional<float> teleport_mass() const override;
-		float eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const override;
-		virtual glm::vec2 contact_velocity(glm::vec2 local_contact) const override;
+        float eff_mass_denom_factor(glm::vec2 local_contact, UnitVector2D normal) const override;
+        virtual glm::vec2 contact_velocity(glm::vec2 local_contact) const override;
 
-	private:
-		void update_colliding_linear_motion(glm::vec2 new_velocity) const;
-		void update_colliding_angular_motion(float new_velocity) const;
-		void compute_collision_mtv_idxs() const;
+    private:
+        void update_colliding_linear_motion(glm::vec2 new_velocity) const;
+        void update_colliding_angular_motion(float new_velocity) const;
+        void compute_collision_mtv_idxs() const;
 
-		void compute_collision_response(glm::vec2 new_linear_velocity, float new_angular_velocity) const;
-		glm::vec2 restitution_impulse(const CollisionResponse& collision, float eff_mass) const;
-		glm::vec2 friction_impulse(const CollisionResponse& collision, float eff_mass, glm::vec2 new_linear_velocity, float new_angular_velocity) const;
+        void compute_collision_response(glm::vec2 new_linear_velocity, float new_angular_velocity) const;
+        glm::vec2 restitution_impulse(const CollisionResponse& collision, float eff_mass) const;
+        glm::vec2 friction_impulse(
+            const CollisionResponse& collision,
+            float eff_mass,
+            glm::vec2 new_linear_velocity,
+            float new_angular_velocity) const;
 
-		void snap_motion() const;
-	};
+        void snap_motion() const;
+    };
 }

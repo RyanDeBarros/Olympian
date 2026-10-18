@@ -74,13 +74,13 @@ namespace oly::platform
 		w = glfwCreateWindow(width, height, title, monitor, share);
 		if (!w)
 		{
-			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glfwCreateWindow() failed." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glfwCreateWindow() failed." << kLog.nl;
 			throw Error(ErrorCode::WindowCreation);
 		}
 		make_context_current();
 		if (glewInit() != GLEW_OK)
 		{
-			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glewInit() failed." << LOG.nl;
+			_OLY_ENGINE_LOG_FATAL("PLATFORM") << "glewInit() failed." << kLog.nl;
 			throw Error(ErrorCode::GlewInit);
 		}
 		hint.context_hint();

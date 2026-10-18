@@ -5,346 +5,511 @@
 
 namespace oly
 {
-	StringParam::VariantType StringParam::copy_from(const StringParam& other)
-	{
-		return other.storage.visit(
-			[](std::span<char> string) -> VariantType { return string; },
-			[](std::span<const char> string) -> VariantType { return string; },
-			[](std::string& string) -> VariantType { return std::span<char>(string); }
-		);
-	}
+    StringParam::StringParam()
+        : storage_(std::span<char>())
+    {
+    }
 
-	StringParam::VariantType StringParam::move_from(StringParam&& other) noexcept
-	{
-		return other.storage.visit(
-			[](std::span<char> string) -> VariantType { return string; },
-			[](std::span<const char> string) -> VariantType { return string; },
-			[](std::string& string) -> VariantType { return std::move(string); }
-		);
-	}
+    StringParam::StringParam(char* string)
+        : storage_(std::span<char>(string, strlen(string)))
+    {
+    }
 
-	std::span<const char> StringParam::view() const
-	{
-		return storage.visit(
-			[](const std::span<char> string) -> std::span<const char> { return string; },
-			[](const std::span<const char> string) -> std::span<const char> { return string; },
-			[](const std::string& string) -> std::span<const char> { return std::span<const char>(string); }
-		);
-	}
+    StringParam::StringParam(const char* string)
+        : storage_(std::span<const char>(string, strlen(string)))
+    {
+    }
 
-	std::span<char> StringParam::mutview() const
-	{
-		return storage.visit(
-			[](const std::span<char> string) -> std::span<char> { return string; },
-			[](const std::span<const char> string) -> std::span<char> { throw Error(ErrorCode::BadMutability); },
-			[](std::string& string) -> std::span<char> { return std::span<char>(string); }
-		);
-	}
+    StringParam::StringParam(const std::span<char> string)
+        : storage_(string)
+    {
+    }
 
-	std::string StringParam::copy() const
-	{
-		return storage.visit(
-			[](const std::span<char> string) { return std::string(string.data(), string.size()); },
-			[](const std::span<const char> string) { return std::string(string.data(), string.size()); },
-			[](const std::string& string) { return string; }
-		);
-	}
+    StringParam::StringParam(const std::span<const char> string)
+        : storage_(string)
+    {
+    }
 
-	std::string StringParam::transfer() const
-	{
-		return storage.visit(
-			[](const std::span<char> string) { return std::string(string.data(), string.size()); },
-			[](const std::span<const char> string) { return std::string(string.data(), string.size()); },
-			[](std::string& string) { return std::move(string); }
-		);
-	}
+    StringParam::StringParam(const std::string_view string)
+        : storage_(std::span<const char>(string))
+    {
+    }
 
-	StringParam StringParam::immutable() const
-	{
-		return view();
-	}
+    StringParam::StringParam(const std::string& string)
+        : storage_(std::span<const char>(string))
+    {
+    }
 
-	size_t StringParam::hash() const
-	{
-		return storage.visit(
-			[](const std::span<char> string) {
-				size_t h = 0;
-				for (char c : string) {
-					h = h * 31 + std::hash<char>{}(c);
-				}
-				return h;
-			},
-			[](const std::span<const char> string) {
-				size_t h = 0;
-				for (char c : string) {
-					h = h * 31 + std::hash<char>{}(c);
-				}
-				return h;
-			},
-			[](const std::string& string) { return std::hash<std::string>{}(string); }
-		);
-	}
+    StringParam::StringParam(std::string& string)
+        : storage_(std::span<char>(string))
+    {
+    }
 
-	bool StringParam::operator==(const StringParam& other) const
-	{
-		std::span<const char> my_span = view();
-		std::span<const char> their_span = other.view();
-		if (my_span.size() != their_span.size())
-			return false;
+    StringParam::StringParam(std::string&& string)
+        : storage_(std::move(string))
+    {
+    }
 
-		for (size_t i = 0; i < my_span.size(); ++i)
-			if (my_span[i] != their_span[i])
-				return false;
-		return true;
-	}
+    StringParam::StringParam(const StringParam& o)
+        : storage_(copy_from(o))
+    {
+    }
 
-	std::ostream& operator<<(std::ostream& os, const StringParam& string)
-	{
-		if (std::string* str = string.storage.safe_get<std::string>())
-			os << *str;
-		else
-		{
-			std::span<const char> span = string.view();
-			for (char c : span)
-				os << c;
-		}
-		return os;
-	}
+    StringParam::StringParam(StringParam&& o) noexcept
+        : storage_(move_from(std::move(o)))
+    {
+    }
 
-	size_t StringParam::find(char c, size_t pos, size_t count) const
-	{
-		std::span<const char> span = view();
-		if (pos >= span.size() || count == 0)
-			return NPOS;
+    StringParam& StringParam::operator=(const StringParam& o)
+    {
+        if (this != &o)
+            storage_ = copy_from(o);
 
-		auto begin = span.begin() + pos;
-		auto end = span.begin() + std::min(span.size(), pos + count);
+        return *this;
+    }
 
-		auto it = std::find(begin, end, c);
-		if (it == end)
-			return NPOS;
+    StringParam& StringParam::operator=(StringParam&& o) noexcept
+    {
+        if (this != &o)
+            storage_ = move_from(std::move(o));
 
-		return std::distance(span.begin(), it);
-	}
+        return *this;
+    }
 
-	size_t StringParam::rfind(char c, size_t pos, size_t count) const
-	{
-		std::span<const char> span = view();
-		if (pos >= span.size() || count == 0)
-			return NPOS;
+    bool StringParam::is_mutable() const
+    {
+        return !storage_.holds<std::span<const char>>();
+    }
 
-		auto rbegin = std::make_reverse_iterator(span.begin() + std::min(span.size(), pos + count));
-		auto rend = std::make_reverse_iterator(span.begin() + pos);
+    std::span<const char> StringParam::view() const
+    {
+        return storage_.visit(
+            [](const std::span<char> string) -> std::span<const char> { return string; },
+            [](const std::span<const char> string) -> std::span<const char> { return string; },
+            [](const std::string& string) -> std::span<const char> { return std::span<const char>(string); });
+    }
 
-		auto it = std::find(rbegin, rend, c);
-		if (it == rend)
-			return NPOS;
+    std::span<char> StringParam::mutview() const
+    {
+        return storage_.visit(
+            [](const std::span<char> string) -> std::span<char> { return string; },
+            [](const std::span<const char> string) -> std::span<char> { throw Error(ErrorCode::BadMutability); },
+            [](std::string& string) -> std::span<char> { return std::span<char>(string); });
+    }
 
-		return std::distance(span.begin(), it.base()) - 1;
-	}
+    std::string StringParam::copy() const
+    {
+        return storage_.visit(
+            [](const std::span<char> string) { return std::string(string.data(), string.size()); },
+            [](const std::span<const char> string) { return std::string(string.data(), string.size()); },
+            [](const std::string& string) { return string; });
+    }
 
-	void StringParam::clip(size_t from, size_t count) const
-	{
-		size_t sz = size();
-		if (from < sz)
-		{
-			count = std::min(count, sz - from);
-			storage.visit(
-				[from, count](std::span<char>& span) { span = span.subspan(from, count); },
-				[from, count](std::span<const char>& span) { span = span.subspan(from, count); },
-				[from, count](std::string& string) { string.erase(string.begin() + from + count, string.end()); string.erase(string.begin(), string.begin() + from); }
-			);
-		}
-		else
-			clear();
-	}
+    std::string StringParam::transfer() const
+    {
+        return storage_.visit(
+            [](const std::span<char> string) { return std::string(string.data(), string.size()); },
+            [](const std::span<const char> string) { return std::string(string.data(), string.size()); },
+            [](std::string& string) { return std::move(string); });
+    }
 
-	void StringParam::clear() const
-	{
-		storage.visit(
-			[](std::span<char>& span) { span = {}; },
-			[](std::span<const char>& span) { span = {}; },
-			[](std::string& string) { string = {}; }
-		);
-	}
+    StringParam StringParam::immutable() const
+    {
+        return view();
+    }
 
-	void StringParam::erase_before(size_t first) const
-	{
-		if (first < size())
-		{
-			storage.visit(
-				[first](std::span<char>& span) { span = span.subspan(first); },
-				[first](std::span<const char>& span) { span = span.subspan(first); },
-				[first](std::string& string) { string.erase(string.begin(), string.begin() + first); }
-			);
-		}
-		else
-			clear();
-	}
+    size_t StringParam::size() const noexcept
+    {
+        return view().size();
+    }
 
-	void StringParam::erase_after(size_t last) const
-	{
-		if (last < size())
-		{
-			storage.visit(
-				[last](std::span<char>& span) { span = span.subspan(0, last); },
-				[last](std::span<const char>& span) { span = span.subspan(0, last); },
-				[last](std::string& string) { string.erase(string.begin() + last, string.end()); }
-			);
-		}
-	}
+    bool StringParam::empty() const noexcept
+    {
+        return view().empty();
+    }
 
-	std::vector<StringParam> StringParam::split(char delimiter) const
-	{
-		std::span<const char> span = view();
-		std::vector<StringParam> result;
-		size_t start = 0;
-		while (start < span.size())
-		{
-			size_t end = find(delimiter, start);
-			if (end == StringParam::NPOS)
-			{
-				result.emplace_back(span.subspan(start));
-				break;
-			}
-			result.emplace_back(span.subspan(start, end - start));
-			start = end + 1;
-		}
-		return result;
-	}
+    size_t StringParam::hash() const
+    {
+        return storage_.visit(
+            [](const std::span<char> string) {
+                size_t h = 0;
+                for (char c : string) {
+                    h = h * 31 + std::hash<char>{}(c);
+                }
+                return h;
+            },
+            [](const std::span<const char> string) {
+                size_t h = 0;
+                for (char c : string) {
+                    h = h * 31 + std::hash<char>{}(c);
+                }
+                return h;
+            },
+            [](const std::string& string) { return std::hash<std::string>{}(string); });
+    }
 
-	void StringParam::ltrim(std::string& string)
-	{
-		size_t start = 0;
-		while (start < string.size() && std::isspace(string[start]))
-			++start;
+    bool StringParam::operator==(const StringParam& o) const
+    {
+        std::span<const char> my_span = view();
+        std::span<const char> their_span = o.view();
+        if (my_span.size() != their_span.size())
+            return false;
 
-		string.erase(0, start);
-	}
+        for (size_t i = 0; i < my_span.size(); ++i)
+        {
+            if (my_span[i] != their_span[i])
+                return false;
+        }
 
-	StringParam StringParam::ltrim() const
-	{
-		std::span<const char> span = view();
-		if (span.empty())
-			return *this;
+        return true;
+    }
 
-		size_t start = 0;
-		while (start < span.size() && std::isspace(span[start]))
-			++start;
+    std::ostream& operator<<(std::ostream& os, const StringParam& string)
+    {
+        if (std::string* str = string.storage_.safe_get<std::string>())
+            os << *str;
+        else
+        {
+            std::span<const char> span = string.view();
+            for (char c : span)
+                os << c;
+        }
 
-		clip(start);
-		return *this;
-	}
+        return os;
+    }
 
-	void StringParam::rtrim(std::string& string)
-	{
-		size_t end = string.size();
-		while (end > 0 && std::isspace(string[end - 1]))
-			--end;
+    StringParam::Iterator StringParam::begin() noexcept
+    {
+        return mutview().begin();
+    }
 
-		string.erase(end);
-	}
+    StringParam::Iterator StringParam::end() noexcept
+    {
+        return mutview().end();
+    }
 
-	StringParam StringParam::rtrim() const
-	{
-		std::span<const char> span = view();
-		if (span.empty())
-			return *this;
+    StringParam::ConstIterator StringParam::begin() const noexcept
+    {
+        return view().begin();
+    }
 
-		size_t end = span.size();
-		while (end > 0 && std::isspace(span[end - 1]))
-			--end;
+    StringParam::ConstIterator StringParam::end() const noexcept
+    {
+        return view().end();
+    }
 
-		clip(0, end);
-		return *this;
-	}
+    StringParam::ConstIterator StringParam::cbegin() const noexcept
+    {
+        return view().begin();
+    }
 
-	void StringParam::trim(std::string& string)
-	{
-		size_t start = 0;
-		while (start < string.size() && std::isspace(string[start]))
-			++start;
+    StringParam::ConstIterator StringParam::cend() const noexcept
+    {
+        return view().end();
+    }
 
-		size_t end = string.size();
-		while (end > start && std::isspace(string[end - 1]))
-			--end;
+    size_t StringParam::find(char c, size_t pos, size_t count) const
+    {
+        std::span<const char> span = view();
+        if (pos >= span.size() || count == 0)
+            return kNPos;
 
-		string.erase(end);
-		string.erase(0, start);
-	}
+        auto begin = span.begin() + pos;
+        auto end = span.begin() + std::min(span.size(), pos + count);
 
-	StringParam StringParam::trim() const
-	{
-		std::span<const char> span = view();
-		if (span.empty())
-			return *this;
+        auto it = std::find(begin, end, c);
+        if (it == end)
+            return kNPos;
 
-		size_t start = 0;
-		while (start < span.size() && std::isspace(span[start]))
-			++start;
+        return std::distance(span.begin(), it);
+    }
 
-		size_t end = span.size();
-		while (end > start && std::isspace(span[end - 1]))
-			--end;
+    size_t StringParam::rfind(char c, size_t pos, size_t count) const
+    {
+        std::span<const char> span = view();
+        if (pos >= span.size() || count == 0)
+            return kNPos;
 
-		clip(start, end - start);
-		return *this;
-	}
+        auto rbegin = std::make_reverse_iterator(span.begin() + std::min(span.size(), pos + count));
+        auto rend = std::make_reverse_iterator(span.begin() + pos);
 
-	StringParam StringParam::to_lower() const
-	{
-		std::span<char> span = mutview();
-		if (span.empty())
-			return *this;
+        auto it = std::find(rbegin, rend, c);
+        if (it == rend)
+            return kNPos;
 
-		for (char& c : span)
-			c = (char)(std::tolower(c));
+        return std::distance(span.begin(), it.base()) - 1;
+    }
 
-		return *this;
-	}
+    void StringParam::clip(size_t from, size_t count) const
+    {
+        size_t sz = size();
+        if (from < sz)
+        {
+            count = std::min(count, sz - from);
+            storage_.visit(
+                [from, count](std::span<char>& span) { span = span.subspan(from, count); },
+                [from, count](std::span<const char>& span) { span = span.subspan(from, count); },
+                [from, count](std::string& string) {
+                    string.erase(string.begin() + from + count, string.end());
+                    string.erase(string.begin(), string.begin() + from);
+                });
+        }
+        else
+            clear();
+    }
 
-	StringParam StringParam::to_upper() const
-	{
-		std::span<char> span = mutview();
-		if (span.empty())
-			return *this;
+    StringParam StringParam::substr(size_t from, size_t count) const
+    {
+        StringParam s = *this;
+        s.clip(from, count);
+        return s;
+    }
 
-		for (char& c : span)
-			c = (char)(std::toupper(c));
+    void StringParam::clear() const
+    {
+        storage_.visit(
+            [](std::span<char>& span) { span = {}; },
+            [](std::span<const char>& span) { span = {}; },
+            [](std::string& string) { string = {}; });
+    }
 
-		return *this;
-	}
+    void StringParam::erase_before(size_t first) const
+    {
+        if (first < size())
+        {
+            storage_.visit(
+                [first](std::span<char>& span) { span = span.subspan(first); },
+                [first](std::span<const char>& span) { span = span.subspan(first); },
+                [first](std::string& string) { string.erase(string.begin(), string.begin() + first); });
+        }
+        else
+            clear();
+    }
 
-	int StringParam::to_int(const int base) const
-	{
-		std::span<const char> span = view();
-		int v;
-		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
-		if (ec == std::errc())
-			return v;
-		else
-			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
-	}
+    void StringParam::erase_after(size_t last) const
+    {
+        if (last < size())
+        {
+            storage_.visit(
+                [last](std::span<char>& span) { span = span.subspan(0, last); },
+                [last](std::span<const char>& span) { span = span.subspan(0, last); },
+                [last](std::string& string) { string.erase(string.begin() + last, string.end()); });
+        }
+    }
 
-	unsigned int StringParam::to_uint(const int base) const
-	{
-		std::span<const char> span = view();
-		unsigned int v;
-		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
-		if (ec == std::errc())
-			return v;
-		else
-			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
-	}
+    void StringParam::pop_front() const
+    {
+        if (empty())
+            throw Error(ErrorCode::InvalidSize);
 
-	float StringParam::to_float() const
-	{
-		std::span<const char> span = view();
-		float v;
-		auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v);
-		if (ec == std::errc())
-			return v;
-		else
-			throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
-	}
+        erase_before(1);
+    }
+
+    void StringParam::pop_back() const
+    {
+        if (empty())
+            throw Error(ErrorCode::InvalidSize);
+
+        erase_after(size() - 1);
+    }
+
+    char StringParam::front() const
+    {
+        return view().front();
+    }
+
+    char StringParam::back() const
+    {
+        return view().back();
+    }
+
+    bool StringParam::starts_with(char c) const
+    {
+        return front() == c;
+    }
+
+    bool StringParam::ends_with(char c) const
+    {
+        return back() == c;
+    }
+
+    std::vector<StringParam> StringParam::split(char delimiter) const
+    {
+        std::span<const char> span = view();
+        std::vector<StringParam> result;
+        size_t start = 0;
+        while (start < span.size())
+        {
+            size_t end = find(delimiter, start);
+            if (end == StringParam::kNPos)
+            {
+                result.emplace_back(span.subspan(start));
+                break;
+            }
+            
+            result.emplace_back(span.subspan(start, end - start));
+            start = end + 1;
+        }
+
+        return result;
+    }
+
+    void StringParam::ltrim(std::string& string)
+    {
+        size_t start = 0;
+        while (start < string.size() && std::isspace(string[start]))
+            ++start;
+
+        string.erase(0, start);
+    }
+
+    StringParam StringParam::ltrim() const
+    {
+        std::span<const char> span = view();
+        if (span.empty())
+            return *this;
+
+        size_t start = 0;
+        while (start < span.size() && std::isspace(span[start]))
+            ++start;
+
+        clip(start);
+        return *this;
+    }
+
+    void StringParam::rtrim(std::string& string)
+    {
+        size_t end = string.size();
+        while (end > 0 && std::isspace(string[end - 1]))
+            --end;
+
+        string.erase(end);
+    }
+
+    StringParam StringParam::rtrim() const
+    {
+        std::span<const char> span = view();
+        if (span.empty())
+            return *this;
+
+        size_t end = span.size();
+        while (end > 0 && std::isspace(span[end - 1]))
+            --end;
+
+        clip(0, end);
+        return *this;
+    }
+
+    void StringParam::trim(std::string& string)
+    {
+        size_t start = 0;
+        while (start < string.size() && std::isspace(string[start]))
+            ++start;
+
+        size_t end = string.size();
+        while (end > start && std::isspace(string[end - 1]))
+            --end;
+
+        string.erase(end);
+        string.erase(0, start);
+    }
+
+    StringParam StringParam::trim() const
+    {
+        std::span<const char> span = view();
+        if (span.empty())
+            return *this;
+
+        size_t start = 0;
+        while (start < span.size() && std::isspace(span[start]))
+            ++start;
+
+        size_t end = span.size();
+        while (end > start && std::isspace(span[end - 1]))
+            --end;
+
+        clip(start, end - start);
+        return *this;
+    }
+
+    StringParam StringParam::to_lower() const
+    {
+        std::span<char> span = mutview();
+        if (span.empty())
+            return *this;
+
+        for (char& c : span)
+            c = (char)(std::tolower(c));
+
+        return *this;
+    }
+
+    StringParam StringParam::to_upper() const
+    {
+        std::span<char> span = mutview();
+        if (span.empty())
+            return *this;
+
+        for (char& c : span)
+            c = (char)(std::toupper(c));
+
+        return *this;
+    }
+
+    int StringParam::to_int(const int base) const
+    {
+        std::span<const char> span = view();
+        int v;
+        auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
+
+        if (ec == std::errc())
+            return v;
+        else
+            throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
+    }
+
+    unsigned int StringParam::to_uint(const int base) const
+    {
+        std::span<const char> span = view();
+        unsigned int v;
+        auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v, base);
+
+        if (ec == std::errc())
+            return v;
+        else
+            throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
+    }
+
+    float StringParam::to_float() const
+    {
+        std::span<const char> span = view();
+        float v;
+        auto [_, ec] = std::from_chars(span.data(), span.data() + span.size(), v);
+
+        if (ec == std::errc())
+            return v;
+        else
+            throw Error(ErrorCode::CannotParse, std::to_string((int)ec));
+    }
+
+    StringParam::VariantType StringParam::copy_from(const StringParam& o)
+    {
+        return o.storage_.visit(
+            [](std::span<char> string) -> VariantType { return string; },
+            [](std::span<const char> string) -> VariantType { return string; },
+            [](std::string& string) -> VariantType { return std::span<char>(string); });
+    }
+
+    StringParam::VariantType StringParam::move_from(StringParam&& o) noexcept
+    {
+        return o.storage_.visit(
+            [](std::span<char> string) -> VariantType { return string; },
+            [](std::span<const char> string) -> VariantType { return string; },
+            [](std::string& string) -> VariantType { return std::move(string); });
+    }
+}
+
+size_t std::hash<oly::StringParam>::operator()(const oly::StringParam& param) const
+{
+    return param.hash();
 }

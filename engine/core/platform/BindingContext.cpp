@@ -162,7 +162,7 @@ namespace oly::input
 
 		void InputBindingContext::poll_cursor_pos()
 		{
-			if (cpos_poll.moving && (TIME.now<double>() > cpos_poll.callback_time))
+			if (cpos_poll.moving && (kTime.now<double>() > cpos_poll.callback_time))
 			{
 				cpos_poll.moving = false;
 				double x, y;
@@ -176,7 +176,7 @@ namespace oly::input
 
 		void InputBindingContext::poll_scroll()
 		{
-			if (scroll_poll.moving && (TIME.now<double>() > scroll_poll.callback_time))
+			if (scroll_poll.moving && (kTime.now<double>() > scroll_poll.callback_time))
 			{
 				scroll_poll.moving = false;
 				input::Signal signal(input::Phase::Completed, glm::vec2{}, input::Signal::Source::Mouse);
@@ -373,7 +373,7 @@ namespace oly::input
 			else
 				phase = input::Phase::Started;
 			cpos_poll.moving = true;
-			cpos_poll.callback_time = TIME.now<double>();
+			cpos_poll.callback_time = kTime.now<double>();
 
 			bool consumed = false;
 			for (const auto& [id, bindings] : cpos_bindings)
@@ -395,7 +395,7 @@ namespace oly::input
 			else
 				phase = input::Phase::Started;
 			scroll_poll.moving = true;
-			scroll_poll.callback_time = TIME.now<double>();
+			scroll_poll.callback_time = kTime.now<double>();
 
 			bool consumed = false;
 			for (const auto& [id, bindings] : scroll_bindings)

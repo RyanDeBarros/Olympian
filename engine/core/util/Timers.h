@@ -9,78 +9,103 @@
 
 namespace oly
 {
-	enum class TimeMode : char
-	{
-		Processed,
-		Real
-	};
+    enum class TimeMode : char
+    {
+        Processed,
+        Real
+    };
 
-	class StateTimer : public ITickService
-	{
-		std::vector<float> cumulative_intervals;
-		float total_length = 0.0f;
-		mutable float elapsed = 0.0f;
-		bool one_shot = false;
-		mutable bool playing = true;
-		TimeMode mode = TimeMode::Processed;
-		mutable GLuint _state = 0;
+    class StateTimer
+        : public ITickService
+    {
+    public:
+        struct State
+        {
+            GLuint index;
+            bool first_frame;
+        };
 
-	public:
-		StateTimer(float interval, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
-		StateTimer(const std::vector<float>& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
-		StateTimer(std::vector<float>&& intervals, bool one_shot = false, bool playing = true, TimeMode mode = TimeMode::Processed);
-		
-		float elapsed_time() const { return elapsed; }
-		void pause() { playing = false; }
-		void resume() { playing = true; }
-		bool is_playing() const { return playing; }
+    private:
+        std::vector<float> cumulative_intervals_;
+        float total_length_ = 0.0f;
+        mutable float elapsed_ = 0.0f;
+        bool one_shot_ = false;
+        mutable bool playing_ = true;
+        TimeMode mode_ = TimeMode::Processed;
+        mutable GLuint state_ = 0;
 
-	private:
-		void poll() const;
+    public:
+        StateTimer(
+            float interval,
+            bool one_shot = false,
+            bool playing = true,
+            TimeMode mode = TimeMode::Processed);
 
-	public:
-		void on_tick() override { poll(); }
+        StateTimer(
+            std::vector<float> intervals,
+            bool one_shot = false,
+            bool playing = true,
+            TimeMode mode = TimeMode::Processed);
 
-		struct State
-		{
-			GLuint index;
-			bool first_frame;
-		};
+    public:
+        void on_tick() override;
 
-		State state() const;
-	};
+        float elapsed_time() const;
+        void pause();
+        void resume();
+        bool is_playing() const;
 
-	class CallbackTimer : public ITickService
-	{
-	public:
-		using Callback = std::function<void(GLuint)>;
+        State state() const;
 
-		std::function<void(GLuint)> callback;
+    private:
+        void poll() const;
+    };
 
-	private:
-		std::vector<float> cumulative_intervals;
-		float total_length = 0.0f;
-		mutable float elapsed = 0.0f;
-		bool one_shot = false;
-		mutable bool playing = true;
-		bool continuous;
-		TimeMode mode = TimeMode::Processed;
-		mutable GLuint _state = 0;
+    class CallbackTimer
+        : public ITickService
+    {
+    public:
+        using Callback = std::function<void(GLuint)>;
 
-	public:
-		CallbackTimer(float interval, const Callback& callback = {}, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
-		CallbackTimer(const std::vector<float>& intervals, const Callback& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
-		CallbackTimer(std::vector<float>&& intervals, Callback&& callback, bool one_shot = false, bool playing = true, bool continuous = true, TimeMode mode = TimeMode::Processed);
+    public:
+        std::function<void(GLuint)> callback;
 
-		float elapsed_time() const { return elapsed; }
-		void pause() { playing = false; }
-		void resume() { playing = true; }
-		bool is_playing() const { return playing; }
+    private:
+        std::vector<float> cumulative_intervals_;
+        float total_length_ = 0.0f;
+        mutable float elapsed_ = 0.0f;
+        bool one_shot_ = false;
+        mutable bool playing_ = true;
+        bool continuous_;
+        TimeMode mode_ = TimeMode::Processed;
+        mutable GLuint state_ = 0;
 
-	private:
-		void poll() const;
+    public:
+        CallbackTimer(
+            float interval,
+            Callback callback = {},
+            bool one_shot = false,
+            bool playing = true,
+            bool continuous = true,
+            TimeMode mode = TimeMode::Processed);
 
-	public:
-		void on_tick() override { poll(); }
-	};
+        CallbackTimer(
+            std::vector<float> intervals,
+            Callback callback,
+            bool one_shot = false,
+            bool playing = true,
+            bool continuous = true,
+            TimeMode mode = TimeMode::Processed);
+
+    public:
+        void on_tick() override;
+
+        float elapsed_time() const;
+        void pause();
+        void resume();
+        bool is_playing() const;
+
+    private:
+        void poll() const;
+    };
 }

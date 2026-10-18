@@ -14,22 +14,22 @@ namespace oly::particles
         , lifetime({
             .sampler = imp::make_poly<UniformSampler1D>(),
             .domain = imp::make_poly<ConstantDomain1D>(3.f) })
-            , position({
-                .sampler = imp::make_poly<UniformSampler2D>(),
-                .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{}) })
-                , rotation({
-                    .sampler = imp::make_poly<UniformSampler1D>(),
-                    .domain = imp::make_poly<ConstantDomain1D>(0.f) })
-                    , size({
-                        .sampler = imp::make_poly<UniformSampler2D>(),
-                        .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.f, 10.f }) })
-                        , velocity({
-                            .sampler = imp::make_poly<UniformSampler2D>(),
-                            .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.f, 0.f }) })
-                            , color({
-                                .sampler = imp::make_poly<UniformSampler4D>(),
-                                .domain = imp::make_poly<ConstantDomain4D>(glm::vec4{ 1.f, 0.f, 0.f, 1.f }) })
-                                , spawner(imp::make_poly<ConstantParticleSpawner>(10.f))
+        , position({
+            .sampler = imp::make_poly<UniformSampler2D>(),
+            .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{}) })
+        , rotation({
+            .sampler = imp::make_poly<UniformSampler1D>(),
+            .domain = imp::make_poly<ConstantDomain1D>(0.f) })
+        , size({
+            .sampler = imp::make_poly<UniformSampler2D>(),
+            .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.f, 10.f }) })
+        , velocity({
+            .sampler = imp::make_poly<UniformSampler2D>(),
+            .domain = imp::make_poly<ConstantDomain2D>(glm::vec2{ 10.f, 0.f }) })
+        , color({
+            .sampler = imp::make_poly<UniformSampler4D>(),
+            .domain = imp::make_poly<ConstantDomain4D>(glm::vec4{ 1.f, 0.f, 0.f, 1.f }) })
+        , spawner(imp::make_poly<ConstantParticleSpawner>(10.f))
     {
     }
 

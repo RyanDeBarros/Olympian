@@ -13,9 +13,9 @@ namespace oly::internal
 		if (!condition)
 		{
 			if (file)
-				OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << LOG.nl;
+				OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << kLog.nl;
 			else
-				OLY_LOG_ERROR(true, "ASSERT") << description << LOG.nl;
+				OLY_LOG_ERROR(true, "ASSERT") << description << kLog.nl;
 			__debugbreak();
 		}
 	}

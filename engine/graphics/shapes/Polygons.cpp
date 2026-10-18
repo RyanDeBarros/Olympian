@@ -23,12 +23,29 @@ namespace oly::rendering
         , vbo_block_(vao_)
         , vertex_free_space({ 0, nmax<GLuint>() })
     {
-        shader_locations_.projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch(), "uProjection");
-        shader_locations_.invariant_projection = glGetUniformLocation(graphics::internal_shaders::polygon_batch(), "uInvariantProjection");
+        shader_locations_.projection = glGetUniformLocation(
+            graphics::internal_shaders::polygon_batch(),
+            "uProjection");
 
-        vbo_block_.attributes[VBOSlot::Position] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 0, .size = 2 };
-        vbo_block_.attributes[VBOSlot::Color] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{ .index = 1, .size = 4 };
-        vbo_block_.attributes[VBOSlot::Index] = graphics::VertexAttribute<graphics::VertexAttributeType::Int>{ .index = 2, .size = 1 };
+        shader_locations_.invariant_projection = glGetUniformLocation(
+            graphics::internal_shaders::polygon_batch(),
+            "uInvariantProjection");
+
+        vbo_block_.attributes[VBOSlot::Position] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{
+            .index = 0,
+            .size = 2
+        };
+
+        vbo_block_.attributes[VBOSlot::Color] = graphics::VertexAttribute<graphics::VertexAttributeType::Float>{
+            .index = 1,
+            .size = 4
+        };
+
+        vbo_block_.attributes[VBOSlot::Index] = graphics::VertexAttribute<graphics::VertexAttributeType::Int>{
+            .index = 2,
+            .size = 1
+        };
+
         vbo_block_.setup();
     }
 
@@ -41,8 +58,18 @@ namespace oly::rendering
         transform_ssbo_.pre_draw();
         glBindVertexArray(vao_);
         glUseProgram(graphics::internal_shaders::polygon_batch());
-        glUniformMatrix3fv(shader_locations_.projection, 1, GL_FALSE, glm::value_ptr(camera->projection_matrix()));
-        glUniformMatrix3fv(shader_locations_.invariant_projection, 1, GL_FALSE, glm::value_ptr(camera->invariant_projection_matrix()));
+
+        glUniformMatrix3fv(
+            shader_locations_.projection,
+            1,
+            GL_FALSE,
+            glm::value_ptr(camera->projection_matrix()));
+        
+        glUniformMatrix3fv(
+            shader_locations_.invariant_projection,
+            1,
+            GL_FALSE,
+            glm::value_ptr(camera->invariant_projection_matrix()));
 
         transform_ssbo_.buf.bind_ssbo_base(0);
         ebo_.render_elements(GL_TRIANGLES);
@@ -162,16 +189,16 @@ namespace oly::rendering
         set_batch(batch);
     }
 
-    internal::PolygonReference::PolygonReference(const PolygonReference& other)
-        : Super(other)
+    internal::PolygonReference::PolygonReference(const PolygonReference& o)
+        : Super(o)
     {
         if (auto batch = lock())
         {
-            if (batch->is_valid_id(other.id_))
+            if (batch->is_valid_id(o.id_))
             {
-                const GLuint num_vertices = batch->get_vertex_range(other.id_).length;
-                const glm::mat3 transform = batch->get_polygon_transform(other.id_);
-                bool camera_invariant_ = batch->is_polygon_camera_invariant(other.id_);
+                const GLuint num_vertices = batch->get_vertex_range(o.id_).length;
+                const glm::mat3 transform = batch->get_polygon_transform(o.id_);
+                bool camera_invariant_ = batch->is_polygon_camera_invariant(o.id_);
                 id_ = batch->generate_id(num_vertices);
                 batch->set_polygon_transform(id_, transform);
                 batch->set_polygon_camera_invariant(id_, camera_invariant_);
@@ -179,11 +206,11 @@ namespace oly::rendering
         }
     }
 
-    internal::PolygonReference::PolygonReference(PolygonReference&& other) noexcept
-        : Super(std::move(other))
-        , id_(other.id_)
+    internal::PolygonReference::PolygonReference(PolygonReference&& o) noexcept
+        : Super(std::move(o))
+        , id_(o.id_)
     {
-        other.id_ = PolygonBatch::kNullId;
+        o.id_ = PolygonBatch::kNullId;
     }
 
     internal::PolygonReference::~PolygonReference()
@@ -192,22 +219,22 @@ namespace oly::rendering
             batch->terminate_id(id_);
     }
 
-    internal::PolygonReference& internal::PolygonReference::operator=(const PolygonReference& other)
+    internal::PolygonReference& internal::PolygonReference::operator=(const PolygonReference& o)
     {
-        if (this != &other)
-            *this = dupl(other);
+        if (this != &o)
+            *this = dupl(o);
         return *this;
     }
 
-    internal::PolygonReference& internal::PolygonReference::operator=(PolygonReference&& other) noexcept
+    internal::PolygonReference& internal::PolygonReference::operator=(PolygonReference&& o) noexcept
     {
-        if (this != &other)
+        if (this != &o)
         {
             if (auto batch = lock())
                 batch->terminate_id(id_);
-            Super::operator=(std::move(other));
-            id_ = other.id_;
-            other.id_ = PolygonBatch::kNullId;
+            Super::operator=(std::move(o));
+            id_ = o.id_;
+            o.id_ = PolygonBatch::kNullId;
         }
         return *this;
     }
@@ -277,7 +304,10 @@ namespace oly::rendering
             throw Error(ErrorCode::NullPointer);
     }
 
-    void internal::PolygonReference::set_primitive_points(Range<GLuint> vertex_range, const glm::vec2* points, GLuint count) const
+    void internal::PolygonReference::set_primitive_points(
+        Range<GLuint> vertex_range,
+        const glm::vec2* points,
+        GLuint count) const
     {
         if (auto batch = lock()) [[likely]]
             batch->set_primitive_points(vertex_range, points, count);
@@ -285,7 +315,10 @@ namespace oly::rendering
             throw Error(ErrorCode::NullPointer);
     }
 
-    void internal::PolygonReference::set_primitive_colors(Range<GLuint> vertex_range, const glm::vec4* colors, GLuint count) const
+    void internal::PolygonReference::set_primitive_colors(
+        Range<GLuint> vertex_range,
+        const glm::vec4* colors,
+        GLuint count) const
     {
         if (auto batch = lock()) [[likely]]
             batch->set_primitive_colors(vertex_range, colors, count);
@@ -362,16 +395,16 @@ namespace oly::rendering
     {
     }
 
-    internal::PolygonSubmitter::PolygonSubmitter(const PolygonSubmitter& other)
-        : ref_(other.ref_)
+    internal::PolygonSubmitter::PolygonSubmitter(const PolygonSubmitter& o)
+        : ref_(o.ref_)
     {
     }
 
-    internal::PolygonSubmitter& internal::PolygonSubmitter::operator=(const PolygonSubmitter& other)
+    internal::PolygonSubmitter& internal::PolygonSubmitter::operator=(const PolygonSubmitter& o)
     {
-        if (this != &other)
+        if (this != &o)
         {
-            ref_ = other.ref_;
+            ref_ = o.ref_;
             flag_all();
         }
         return *this;
@@ -443,7 +476,7 @@ namespace oly::rendering
             catch (const Error& e)
             {
                 if (e.code == ErrorCode::Triangulation)
-                    _OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << LOG.nl;
+                    _OLY_ENGINE_LOG_WARNING("RENDERING") << "Error occurred during polygon triangulation." << kLog.nl;
                 else
                     throw;
             }
@@ -615,8 +648,13 @@ namespace oly::rendering
             size_t pt_idx = 0;
             for (auto& toml_point : *toml_points)
             {
-                if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+                if (auto pt = assets::Parser(
+                    (TOMLNode)toml_point,
+                    { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::kNoKey)())
+                {
                     points.push_back(*pt);
+                }
+                
                 ++pt_idx;
             }
         }
@@ -628,8 +666,13 @@ namespace oly::rendering
             size_t color_idx = 0;
             for (auto& toml_color : *toml_colors)
             {
-                if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                if (auto col = assets::Parser(
+                    (TOMLNode)toml_color,
+                    { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                {
                     colors.push_back(*col);
+                }
+
                 ++color_idx;
             }
         }
@@ -687,19 +730,20 @@ namespace oly::rendering
         return vertices;
     }
 
-    static void set_polygon_composite(const internal::PolygonReference& ref_, const cmath::Polygon2DComposite& composite_)
+    static void set_polygon_composite(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
     {
-        auto vertex_range = ref_.get_vertex_range();
+        auto vertex_range = ref.get_vertex_range();
         GLuint offset = 0;
-        for (const cmath::TriangulatedPolygon2D& poly : composite_)
+        for (const cmath::TriangulatedPolygon2D& poly : composite)
         {
             Range<GLuint> poly_range;
             poly_range.initial = vertex_range.initial + offset;
             if (poly_range.initial >= vertex_range.end())
                 return;
+
             poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-            ref_.set_primitive_points(poly_range, poly.polygon.points.data(), (GLuint)poly.polygon.points.size());
-            ref_.set_primitive_colors(poly_range, poly.polygon.colors.data(), (GLuint)poly.polygon.colors.size());
+            ref.set_primitive_points(poly_range, poly.polygon.points.data(), (GLuint)poly.polygon.points.size());
+            ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (GLuint)poly.polygon.colors.size());
             offset += (GLuint)poly.polygon.points.size();
         }
     }
@@ -709,18 +753,18 @@ namespace oly::rendering
         set_polygon_composite(get_ref(), composite_);
     }
 
-    static void set_polygon_points(const internal::PolygonReference& ref_, const cmath::Polygon2DComposite& composite_)
+    static void set_polygon_points(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
     {
-        auto vertex_range = ref_.get_vertex_range();
+        auto vertex_range = ref.get_vertex_range();
         GLuint offset = 0;
-        for (const cmath::TriangulatedPolygon2D& poly : composite_)
+        for (const cmath::TriangulatedPolygon2D& poly : composite)
         {
             Range<GLuint> poly_range;
             poly_range.initial = vertex_range.initial + offset;
             if (poly_range.initial >= vertex_range.end())
                 return;
             poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-            ref_.set_primitive_points(poly_range, poly.polygon.points.data(), (GLuint)poly.polygon.points.size());
+            ref.set_primitive_points(poly_range, poly.polygon.points.data(), (GLuint)poly.polygon.points.size());
             offset += (GLuint)poly.polygon.points.size();
         }
     }
@@ -730,18 +774,18 @@ namespace oly::rendering
         set_polygon_points(get_ref(), composite_);
     }
 
-    static void set_polygon_colors(const internal::PolygonReference& ref_, const cmath::Polygon2DComposite& composite_)
+    static void set_polygon_colors(const internal::PolygonReference& ref, const cmath::Polygon2DComposite& composite)
     {
-        auto vertex_range = ref_.get_vertex_range();
+        auto vertex_range = ref.get_vertex_range();
         GLuint offset = 0;
-        for (const cmath::TriangulatedPolygon2D& poly : composite_)
+        for (const cmath::TriangulatedPolygon2D& poly : composite)
         {
             Range<GLuint> poly_range;
             poly_range.initial = vertex_range.initial + offset;
             if (poly_range.initial >= vertex_range.end())
                 return;
             poly_range.length = std::min((GLuint)poly.polygon.points.size(), vertex_range.end() - poly_range.initial);
-            ref_.set_primitive_colors(poly_range, poly.polygon.colors.data(), (GLuint)poly.polygon.colors.size());
+            ref.set_primitive_colors(poly_range, poly.polygon.colors.data(), (GLuint)poly.polygon.colors.size());
             offset += (GLuint)poly.polygon.points.size();
         }
     }
@@ -794,8 +838,13 @@ namespace oly::rendering
                     size_t pt_idx = 0;
                     for (auto& toml_point : *toml_points)
                     {
-                        if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+                        if (auto pt = assets::Parser(
+                            (TOMLNode)toml_point,
+                            { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::kNoKey)())
+                        {
                             points.push_back(*pt);
+                        }
+
                         ++pt_idx;
                     }
                 }
@@ -806,13 +855,19 @@ namespace oly::rendering
                     size_t color_idx = 0;
                     for (auto& toml_color : *toml_colors)
                     {
-                        if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                        if (auto col = assets::Parser(
+                            (TOMLNode)toml_color,
+                            { "cannot parse color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                        {
                             colors.push_back(*col);
+                        }
+
                         ++color_idx;
                     }
                 }
 
-                polygon_.set_composite() = cmath::Polygon2DComposite{ cmath::create_ngon(std::move(colors), std::move(points)) };
+                polygon_.set_composite() = cmath::Polygon2DComposite{
+                    cmath::create_ngon(std::move(colors), std::move(points)) };
                 break;
             }
             case PolyCompositeMethod::BorderedNgon:
@@ -824,8 +879,13 @@ namespace oly::rendering
                     size_t pt_idx = 0;
                     for (auto& toml_point : *toml_points)
                     {
-                        if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+                        if (auto pt = assets::Parser(
+                            (TOMLNode)toml_point,
+                            { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::kNoKey)())
+                        {
                             ngon_base.points.push_back(*pt);
+                        }
+
                         ++pt_idx;
                     }
                 }
@@ -835,8 +895,13 @@ namespace oly::rendering
                     size_t color_idx = 0;
                     for (auto& toml_color : *toml_fill_colors)
                     {
-                        if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                        if (auto col = assets::Parser(
+                            (TOMLNode)toml_color,
+                            { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                        {
                             ngon_base.fill_colors.push_back(*col);
+                        }
+
                         ++color_idx;
                     }
                 }
@@ -846,8 +911,13 @@ namespace oly::rendering
                     size_t color_idx = 0;
                     for (auto& toml_color : *toml_border_colors)
                     {
-                        if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                        if (auto col = assets::Parser(
+                            (TOMLNode)toml_color,
+                            { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                        {
                             ngon_base.border_colors.push_back(*col);
+                        }
+
                         ++color_idx;
                     }
                 }
@@ -857,8 +927,13 @@ namespace oly::rendering
                 if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))
                     parser.optional(detail::Key::BorderPivot)(ngon_base.border_pivot.v);
 
-                polygon_.set_composite() = cmath::create_bordered_ngon(std::move(ngon_base.fill_colors), std::move(ngon_base.border_colors),
-                    ngon_base.border_width, ngon_base.border_pivot, std::move(ngon_base.points));
+                polygon_.set_composite() = cmath::create_bordered_ngon(
+                    std::move(ngon_base.fill_colors),
+                    std::move(ngon_base.border_colors),
+                    ngon_base.border_width,
+                    ngon_base.border_pivot,
+                    std::move(ngon_base.points));
+
                 break;
             }
             case PolyCompositeMethod::ConvexDecomposition:
@@ -870,8 +945,13 @@ namespace oly::rendering
                     size_t pt_idx = 0;
                     for (auto& toml_point : *toml_points)
                     {
-                        if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+                        if (auto pt = assets::Parser(
+                            (TOMLNode)toml_point,
+                            { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::kNoKey)())
+                        {
                             points.push_back(*pt);
+                        }
+
                         ++pt_idx;
                     }
                 }
@@ -1021,8 +1101,13 @@ namespace oly::rendering
             size_t pt_idx = 0;
             for (auto& toml_point : *toml_points)
             {
-                if (auto pt = assets::Parser((TOMLNode)toml_point, { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::NO_KEY)())
+                if (auto pt = assets::Parser(
+                    (TOMLNode)toml_point,
+                    { "cannot parse point #", pt_idx }).optional<glm::vec2>(assets::kNoKey)())
+                {
                     ngon_base.points.push_back(*pt);
+                }
+
                 ++pt_idx;
             }
         }
@@ -1032,8 +1117,13 @@ namespace oly::rendering
             size_t color_idx = 0;
             for (auto& toml_color : *toml_fill_colors)
             {
-                if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                if (auto col = assets::Parser(
+                    (TOMLNode)toml_color,
+                    { "cannot parse fill color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                {
                     ngon_base.fill_colors.push_back(*col);
+                }
+
                 ++color_idx;
             }
         }
@@ -1043,14 +1133,20 @@ namespace oly::rendering
             size_t color_idx = 0;
             for (auto& toml_color : *toml_border_colors)
             {
-                if (auto col = assets::Parser((TOMLNode)toml_color, { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::NO_KEY)())
+                if (auto col = assets::Parser(
+                    (TOMLNode)toml_color,
+                    { "cannot parse border color #", color_idx }).optional<glm::vec4>(assets::kNoKey)())
+                {
                     ngon_base.border_colors.push_back(*col);
+                }
+
                 ++color_idx;
             }
         }
 
         if (auto bordered_ = parser.optional<bool>(detail::Key::Bordered)())
             polygon_.set_bordered(*bordered_);
+
         parser.optional(detail::Key::BorderWidth)(ngon_base.border_width);
 
         if (!parser.optional<void, true>(detail::Key::BorderPivot)(ngon_base.border_pivot))

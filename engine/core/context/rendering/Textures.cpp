@@ -103,12 +103,12 @@ namespace oly::context
 
 	static assets::Parser load_texture_node(const detail::ResourcePath& file, toml::parse_result& toml, unsigned int texture_index)
 	{
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "Parsing texture [" << file << "]..." << kLog.nl;
 
 		detail::ResourcePath import_file = file.get_import_path();
 		if (!detail::MetaSplitter::decode_meta(import_file).has_type(detail::Key::Meta_Texture))
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Meta fields do not contain texture type." << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -118,7 +118,7 @@ namespace oly::context
 		if (texture_index >= texture_array->size())
 		{
 			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Texture index (" << texture_index
-				<< ") out of range for texture array size (" << texture_array->size() << ")" << LOG.nl;
+				<< ") out of range for texture array size (" << texture_array->size() << ")" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -156,7 +156,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -209,7 +209,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << kLog.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -219,12 +219,12 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!file.extension_matches(".svg"))
-			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << kLog.nl;
 
 		internal::TextureKey key{ file, texture_index };
         if (auto tex = internal::textures.left_get(key))
@@ -290,7 +290,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << kLog.nl;
 
 		internal::textures.set(key, texture);
 		return texture;
@@ -300,7 +300,7 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
@@ -345,7 +345,7 @@ namespace oly::context
 			}
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << kLog.nl;
 
 		return texture;
 	}
@@ -354,12 +354,12 @@ namespace oly::context
 	{
 		if (file.empty())
 		{
-			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << LOG.nl;
+			_OLY_ENGINE_LOG_ERROR("CONTEXT") << "Filename is empty" << kLog.nl;
 			throw Error(ErrorCode::LoadAsset);
 		}
 
 		if (!file.extension_matches(".svg"))
-			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << LOG.nl;
+			_OLY_ENGINE_LOG_WARNING("CONTEXT") << "Attempting to load non-svg file as svg texture: " << file << kLog.nl;
 
 		toml::parse_result toml;
 		assets::Parser parser = load_texture_node(file, toml, texture_index);
@@ -390,7 +390,7 @@ namespace oly::context
 				params.abstract->init(graphics::NSVGAbstract(std::move(abstract)));
 		}
 
-		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << LOG.nl;
+		_OLY_ENGINE_LOG_DEBUG("CONTEXT") << "...Texture [" << file << "] parsed" << kLog.nl;
 
 		return texture;
 	}

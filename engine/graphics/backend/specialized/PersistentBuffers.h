@@ -196,12 +196,12 @@ namespace oly::graphics
                 }
 
                 _OLY_ENGINE_LOG_DEBUG("GRAPHICS") << "Timeout in persistent buffer sync - attempt ("
-                    << i << ")" << LOG.nl;
+                    << i << ")" << kLog.nl;
             }
 
             accessible_ = false;
 
-            _OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
+            _OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << kLog.nl;
             throw Error(ErrorCode::OutOfTime);
         }
 
@@ -433,11 +433,11 @@ namespace oly::graphics
                 }
 
                 _OLY_ENGINE_LOG_DEBUG("GRAPHICS") << "Timeout in persistent buffer sync - attempt ("
-                    << i << ")" << LOG.nl;
+                    << i << ")" << kLog.nl;
             }
             accessible_[I] = false;
 
-            _OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << LOG.nl;
+            _OLY_ENGINE_LOG_ERROR("GRAPHICS") << "Timeout in persistent buffer sync - all attempts failed" << kLog.nl;
             throw Error(ErrorCode::OutOfTime);
         }
 

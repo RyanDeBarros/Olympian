@@ -11,139 +11,139 @@
 
 namespace oly::rendering
 {
-	TileMapLayer::TileMapLayer()
-		: Super(context::sprite_batch()->weak_from_this())
-	{
-	}
+    TileMapLayer::TileMapLayer()
+        : Super(context::sprite_batch()->weak_from_this())
+    {
+    }
 
-	TileMapLayer::TileMapLayer(Unbatched)
-	{
-	}
+    TileMapLayer::TileMapLayer(Unbatched)
+    {
+    }
 
-	TileMapLayer::TileMapLayer(SpriteBatch& batch)
-		: Super(batch->weak_from_this())
-	{
-	}
+    TileMapLayer::TileMapLayer(SpriteBatch& batch)
+        : Super(batch->weak_from_this())
+    {
+    }
 
-	void TileMapLayer::draw() const
-	{
-		for (const auto& [_, sprite] : sprite_map_)
-			sprite.draw();
-	}
+    void TileMapLayer::draw() const
+    {
+        for (const auto& [_, sprite] : sprite_map_)
+            sprite.draw();
+    }
 
     const Transform2D& TileMapLayer::get_local() const
     {
         return transformer.get_local();
     }
-    
+
     Transform2D& TileMapLayer::set_local()
     {
         return transformer.set_local();
     }
 
-	void TileMapLayer::set_camera_invariant(bool is_camera_invariant) const
-	{
-		for (const auto& [_, sprite] : sprite_map_)
-			sprite.set_camera_invariant(is_camera_invariant);
-	}
+    void TileMapLayer::set_camera_invariant(bool is_camera_invariant) const
+    {
+        for (const auto& [_, sprite] : sprite_map_)
+            sprite.set_camera_invariant(is_camera_invariant);
+    }
 
-	void TileMapLayer::set_batch(Unbatched)
-	{
-		reset();
-		for (auto& [_, sprite] : sprite_map_)
-			sprite.set_batch(kUnbatched);
-	}
+    void TileMapLayer::set_batch(Unbatched)
+    {
+        reset();
+        for (auto& [_, sprite] : sprite_map_)
+            sprite.set_batch(kUnbatched);
+    }
 
-	void TileMapLayer::set_batch(SpriteBatch& batch)
-	{
-		reset(*batch);
-		for (auto& [_, sprite] : sprite_map_)
-			sprite.set_batch(batch);
-	}
+    void TileMapLayer::set_batch(SpriteBatch& batch)
+    {
+        reset(*batch);
+        for (auto& [_, sprite] : sprite_map_)
+            sprite.set_batch(batch);
+    }
 
-	void TileMapLayer::paint_tile(glm::ivec2 tile)
-	{
-		if (!sprite_map_.count(tile))
-		{
-			if (auto batch = lock())
-			{
-				auto& sprite = sprite_map_.emplace(tile, *batch).first->second;
-				sprite.transformer.attach_parent(&transformer);
-				update_configuration(tile);
-				update_neighbour_configurations(tile);
-			}
-		}
-	}
+    void TileMapLayer::paint_tile(glm::ivec2 tile)
+    {
+        if (!sprite_map_.count(tile))
+        {
+            if (auto batch = lock())
+            {
+                auto& sprite = sprite_map_.emplace(tile, *batch).first->second;
+                sprite.transformer.attach_parent(&transformer);
+                update_configuration(tile);
+                update_neighbour_configurations(tile);
+            }
+        }
+    }
 
-	void TileMapLayer::unpaint_tile(glm::ivec2 tile)
-	{
-		auto it = sprite_map_.find(tile);
-		if (it != sprite_map_.end())
-		{
-			sprite_map_.erase(it);
-			update_neighbour_configurations(tile);
-		}
-	}
+    void TileMapLayer::unpaint_tile(glm::ivec2 tile)
+    {
+        auto it = sprite_map_.find(tile);
+        if (it != sprite_map_.end())
+        {
+            sprite_map_.erase(it);
+            update_neighbour_configurations(tile);
+        }
+    }
 
-	void TileMapLayer::update_neighbour_configurations(glm::ivec2 center)
-	{
-		update_configuration(center + glm::ivec2{  1,  0 });
-		update_configuration(center + glm::ivec2{  0,  1 });
-		update_configuration(center + glm::ivec2{ -1,  0 });
-		update_configuration(center + glm::ivec2{  0, -1 });
-		update_configuration(center + glm::ivec2{  1,  1 });
-		update_configuration(center + glm::ivec2{ -1,  1 });
-		update_configuration(center + glm::ivec2{ -1, -1 });
-		update_configuration(center + glm::ivec2{  1, -1 });
-	}
+    void TileMapLayer::update_neighbour_configurations(glm::ivec2 center)
+    {
+        update_configuration(center + glm::ivec2{ 1,  0 });
+        update_configuration(center + glm::ivec2{ 0,  1 });
+        update_configuration(center + glm::ivec2{ -1,  0 });
+        update_configuration(center + glm::ivec2{ 0, -1 });
+        update_configuration(center + glm::ivec2{ 1,  1 });
+        update_configuration(center + glm::ivec2{ -1,  1 });
+        update_configuration(center + glm::ivec2{ -1, -1 });
+        update_configuration(center + glm::ivec2{ 1, -1 });
+    }
 
-	void TileMapLayer::update_configuration(glm::ivec2 tile)
-	{
-		auto it = sprite_map_.find(tile);
-		if (it == sprite_map_.end())
-			return;
+    void TileMapLayer::update_configuration(glm::ivec2 tile)
+    {
+        auto it = sprite_map_.find(tile);
+        if (it == sprite_map_.end())
+            return;
 
-		Sprite& sprite = it->second;
+        Sprite& sprite = it->second;
 
-		detail::TileConfigGrid painted_tile{};
-		for (int y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
-			for (int x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
-				painted_tile[y][x] = sprite_map_.count(tile + glm::ivec2{ 1 - y, x - 1 });
+        detail::TileConfigGrid painted_tile{};
+        for (int y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
+            for (int x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
+                painted_tile[y][x] = sprite_map_.count(tile + glm::ivec2{ 1 - y, x - 1 });
 
-		auto tile_assignment = tileset->get_tile_assignment(painted_tile);
+        auto tile_assignment = tileset->get_tile_assignment(painted_tile);
 
-		sprite.set_texture(tile_assignment.desc.file, tile_assignment.desc.file_index);
-		sprite.set_tex_coords(tile_assignment.desc.uvs);
-		sprite.set_local().position = glm::vec2(tile);
-		
-		if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::X))
-			sprite.set_local().scale.x = -glm::abs(sprite.get_local().scale.x);
-		else
-			sprite.set_local().scale.x = glm::abs(sprite.get_local().scale.x);
+        sprite.set_texture(tile_assignment.desc.file, tile_assignment.desc.file_index);
+        sprite.set_tex_coords(tile_assignment.desc.uvs);
+        sprite.set_local().position = glm::vec2(tile);
 
-		if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::Y))
-			sprite.set_local().scale.y = -glm::abs(sprite.get_local().scale.y);
-		else
-			sprite.set_local().scale.y = glm::abs(sprite.get_local().scale.y);
-		
-		switch (tile_assignment.transformation.rotation)
-		{
-		case detail::TileRotation::By90:
-			sprite.set_local().rotation = glm::radians(90.0f);
-			break;
-		case detail::TileRotation::By180:
-			sprite.set_local().rotation = glm::radians(180.0f);
-			break;
-		case detail::TileRotation::By270:
-			sprite.set_local().rotation = glm::radians(270.0f);
-			break;
-		default:
-			sprite.set_local().rotation = 0.0f;
-			break;
-		}
-		
-		sprite.set_local().scale = 1.0f / context::get_texture_size(tile_assignment.desc.file);
-	}
+        if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::X))
+            sprite.set_local().scale.x = -glm::abs(sprite.get_local().scale.x);
+        else
+            sprite.set_local().scale.x = glm::abs(sprite.get_local().scale.x);
+
+        if (static_cast<bool>(tile_assignment.transformation.reflection & detail::TileReflection::Y))
+            sprite.set_local().scale.y = -glm::abs(sprite.get_local().scale.y);
+        else
+            sprite.set_local().scale.y = glm::abs(sprite.get_local().scale.y);
+
+        switch (tile_assignment.transformation.rotation)
+        {
+        case detail::TileRotation::By90:
+            sprite.set_local().rotation = glm::radians(90.0f);
+            break;
+        case detail::TileRotation::By180:
+            sprite.set_local().rotation = glm::radians(180.0f);
+            break;
+        case detail::TileRotation::By270:
+            sprite.set_local().rotation = glm::radians(270.0f);
+            break;
+        default:
+            sprite.set_local().rotation = 0.0f;
+            break;
+        }
+
+        sprite.set_local().scale = 1.0f / context::get_texture_size(tile_assignment.desc.file);
+    }
 
     TileMap TileMap::load(TOMLNode node)
     {
@@ -175,8 +175,18 @@ namespace oly::rendering
                         size_t tile_idx = 0;
                         for (auto& toml_tile : *tiles)
                         {
-                            if (auto tile = assets::Parser((TOMLNode)toml_tile, { "in tile #", tile_idx, " from tilemap layer #", layer_idx }).optional<glm::ivec2>(assets::NO_KEY)())
+                            if (auto tile = assets::Parser(
+                                (TOMLNode)toml_tile,
+                                {
+                                    "in tile #",
+                                    tile_idx,
+                                    " from tilemap layer #",
+                                    layer_idx
+                                }).optional<glm::ivec2>(assets::kNoKey)())
+                            {
                                 layer.paint_tile(*tile);
+                            }
+
                             ++tile_idx;
                         }
                     }
@@ -229,41 +239,41 @@ namespace oly::rendering
     {
         return transformer_;
     }
-    
+
     Transformer2DExposure<ex::AttachOnly> TileMap::set_transformer()
     {
         return transformer_;
     }
 
-	void TileMap::draw() const
-	{
-		for (const TileMapLayer& layer : layers_)
-			layer.draw();
-	}
+    void TileMap::draw() const
+    {
+        for (const TileMapLayer& layer : layers_)
+            layer.draw();
+    }
 
-	void TileMap::set_camera_invariant(bool camera_invariant)
-	{
-		camera_invariant_ = camera_invariant;
-		for (const TileMapLayer& layer : layers_)
-			layer.set_camera_invariant(camera_invariant);
-	}
+    void TileMap::set_camera_invariant(bool camera_invariant)
+    {
+        camera_invariant_ = camera_invariant;
+        for (const TileMapLayer& layer : layers_)
+            layer.set_camera_invariant(camera_invariant);
+    }
 
-	bool TileMap::is_camera_invariant() const
-	{
-		return camera_invariant_;
-	}
+    bool TileMap::is_camera_invariant() const
+    {
+        return camera_invariant_;
+    }
 
-	void TileMap::register_layer(TileMapLayer&& layer)
-	{
-		layer.transformer.attach_parent(&transformer_);
-		layer.set_camera_invariant(camera_invariant_);
-		layers_.push_back(std::move(layer));
-	}
-		
-	void TileMap::register_layer(size_t z, TileMapLayer&& layer)
-	{
-		layer.transformer.attach_parent(&transformer_);
-		layer.set_camera_invariant(camera_invariant_);
-		layers_.insert(layers_.begin() + z, std::move(layer));
-	}
+    void TileMap::register_layer(TileMapLayer&& layer)
+    {
+        layer.transformer.attach_parent(&transformer_);
+        layer.set_camera_invariant(camera_invariant_);
+        layers_.push_back(std::move(layer));
+    }
+
+    void TileMap::register_layer(size_t z, TileMapLayer&& layer)
+    {
+        layer.transformer.attach_parent(&transformer_);
+        layer.set_camera_invariant(camera_invariant_);
+        layers_.insert(layers_.begin() + z, std::move(layer));
+    }
 }

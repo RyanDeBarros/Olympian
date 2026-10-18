@@ -72,7 +72,7 @@ namespace oly::rendering
             emitter.on_tick(time_elapsed_ - last_tick_time_);
         
         last_tick_time_ = time_elapsed_;
-        time_elapsed_ += TIME.delta();
+        time_elapsed_ += kTime.delta(); // TODO in classes that use kTime - bool data member to use either kTime or kRealTime
     }
 
     void ParticleSystem::render() const

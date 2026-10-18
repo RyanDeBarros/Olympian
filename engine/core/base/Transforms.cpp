@@ -33,7 +33,7 @@ namespace oly
 				_OLY_POLYKLASS_CASES_END;
 
 			if (modifier)
-				modifier->overload(parser->field(assets::NO_KEY));
+				modifier->overload(parser->field(assets::kNoKey));
 		}
 	}
 

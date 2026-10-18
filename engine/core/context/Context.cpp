@@ -43,11 +43,11 @@ namespace oly::context
 			
 			if (auto enables_parser = logger_parser->optional(detail::Key::Enable).subparser())
 			{
-				enables_parser->optional(detail::Key::Debug)(LOG.enable.debug);
-				enables_parser->optional(detail::Key::Info)(LOG.enable.info);
-				enables_parser->optional(detail::Key::Warning)(LOG.enable.warning);
-				enables_parser->optional(detail::Key::Error)(LOG.enable.error);
-				enables_parser->optional(detail::Key::Fatal)(LOG.enable.fatal);
+				enables_parser->optional(detail::Key::Debug)(kLog.enable.debug);
+				enables_parser->optional(detail::Key::Info)(kLog.enable.info);
+				enables_parser->optional(detail::Key::Warning)(kLog.enable.warning);
+				enables_parser->optional(detail::Key::Error)(kLog.enable.error);
+				enables_parser->optional(detail::Key::Fatal)(kLog.enable.fatal);
 			}
 		}
 
@@ -58,10 +58,12 @@ namespace oly::context
 	{
 		if (auto framerate_parser = parser.optional(detail::Key::FrameRate).subparser())
 		{
-			framerate_parser->optional(detail::Key::FrameLengthClip)(TIME.frame_length_clip);
-			framerate_parser->optional(detail::Key::TimeScale)(TIME.time_scale);
+			framerate_parser->optional(detail::Key::FrameLengthClip)(kTime.frame_length_clip);
+			framerate_parser->optional(detail::Key::TimeScale)(kTime.time_scale);
 		}
-		TIME.init();
+
+		kTime.init();
+        kRealTime.init();
 	}
 
 	struct TerminationFinalization
@@ -77,7 +79,7 @@ namespace oly::context
 	{
         if (glfwInit() != GLFW_TRUE)
         {
-            _OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << LOG.nl;
+            _OLY_ENGINE_LOG_FATAL("CONTEXT") << "glfwInit() failed." << kLog.nl;
             throw Error(ErrorCode::GlfwInit);
         }
         stbi_set_flip_vertically_on_load(true);
@@ -115,19 +117,21 @@ namespace oly::context
 
 	void Context::run()
 	{
-		LOG.flush();
+        kLog.flush();
 
         while (internal::render_frame())
             internal::TickServiceRegistry::instance().tick();
 		
-        LOG.flush();
+        kLog.flush();
 	}
 
     namespace internal
     {
         bool render_frame()
         {
-            TIME.sync();
+            kTime.sync();
+            kRealTime.sync();
+
             internal::render_pipeline();
             return internal::platform_frame();
         }
