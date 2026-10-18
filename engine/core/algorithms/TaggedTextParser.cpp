@@ -6,11 +6,11 @@
 
 namespace oly::algo
 {
-	UTFTaggedTextParser::UTFTaggedTextParser(const imp::utf::string& input)
-	{
+    UTFTaggedTextParser::UTFTaggedTextParser(const imp::utf::string& input)
+    {
         std::stack<imp::utf::string> tag_stack;
         imp::utf::string buffer;
-        
+
         auto it = input.begin();
 
         while (it)
@@ -55,7 +55,7 @@ namespace oly::algo
                     else
                         tag_stack.push(tag);
                 }
-                
+
                 if (it && *it == '>')
                     it.advance();
             }
@@ -66,8 +66,8 @@ namespace oly::algo
         // Flush remaining text
         if (!buffer.empty())
             groups.push_back({ buffer, tag_stack });
-        
+
         if (!tag_stack.empty())
             _OLY_ENGINE_LOG_WARNING("ALGO") << "Not all tags were closed by the end of input string" << kLog.nl;
-	}
+    }
 }
