@@ -2,100 +2,97 @@
 
 #include "external/GL.h"
 
-namespace oly
+namespace oly::input
 {
-	namespace input
-	{
-		struct CharEventData
-		{
-			unsigned int codepoint;
-		};
+    struct CharEventData
+    {
+        unsigned int codepoint;
+    };
 
-		struct CharModsEventData
-		{
-			unsigned int codepoint;
-			int mods;
-		};
+    struct CharModsEventData
+    {
+        unsigned int codepoint;
+        int mods;
+    };
 
-		struct CursorEnterEventData
-		{
-			bool entered;
-		};
+    struct CursorEnterEventData
+    {
+        bool entered;
+    };
 
-		struct CursorPosEventData
-		{
-			double x, y;
-		};
+    struct CursorPosEventData
+    {
+        double x, y;
+    };
 
-		struct PathDropEventData
-		{
-			int count;
-			const char** paths;
-		};
+    struct PathDropEventData
+    {
+        int count;
+        const char** paths;
+    };
 
-		struct FramebufferResizeEventData
-		{
-			int w, h;
-		};
+    struct FramebufferResizeEventData
+    {
+        int w, h;
+    };
 
-		struct KeyEventData
-		{
-			int key;
-			int scancode;
-			int action;
-			int mods;
-		};
+    struct KeyEventData
+    {
+        int key;
+        int scancode;
+        int action;
+        int mods;
+    };
 
-		struct MouseButtonEventData
-		{
-			int button;
-			int action;
-			int mods;
-		};
+    struct MouseButtonEventData
+    {
+        int button;
+        int action;
+        int mods;
+    };
 
-		struct ScrollEventData
-		{
-			double xoff, yoff;
-		};
+    struct ScrollEventData
+    {
+        double xoff, yoff;
+    };
 
-		struct WindowCloseEventData
-		{
-		};
+    struct WindowCloseEventData
+    {
+    };
 
-		struct WindowContentScaleEventData
-		{
-			float x, y;
-		};
+    struct WindowContentScaleEventData
+    {
+        float x, y;
+    };
 
-		struct WindowFocusEventData
-		{
-			bool focused;
-		};
+    struct WindowFocusEventData
+    {
+        bool focused;
+    };
 
-		struct WindowIconifyEventData
-		{
-			bool iconified;
-		};
+    struct WindowIconifyEventData
+    {
+        bool iconified;
+    };
 
-		struct WindowMaximizeEventData
-		{
-			bool maximized;
-		};
+    struct WindowMaximizeEventData
+    {
+        bool maximized;
+    };
 
-		struct WindowPosEventData
-		{
-			int x, y;
-		};
+    struct WindowPosEventData
+    {
+        int x, y;
+    };
 
-		struct WindowRefreshEventData
-		{
-		};
+    struct WindowRefreshEventData
+    {
+    };
 
-		struct WindowResizeEventData
-		{
-			int w, h;
-		};
+    struct WindowResizeEventData
+    {
+        int w, h;
+    };
 
-		extern void init_handlers(GLFWwindow* w);
-	}
+    extern void init_handlers(GLFWwindow* w);
 }

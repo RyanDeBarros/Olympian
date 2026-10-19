@@ -1,8 +1,9 @@
 #pragma once
 
-#include "external/TOML.h"
-#include "core/platform/Window.h"
 #include "core/platform/Gamepad.h"
+#include "core/platform/Window.h"
+
+#include "external/TOML.h"
 
 #include <imp/fixed_vector.hpp>
 
@@ -10,43 +11,49 @@
 
 namespace oly::platform
 {
-	struct PlatformSetup
-	{
-		WindowHint window_hint;
-		int window_width = 0, window_height = 0;
-		std::string window_title;
+    struct PlatformSetup
+    {
+        WindowHint window_hint;
+        int window_width = 0;
+        int window_height = 0;
+        std::string window_title;
 
-		unsigned int num_gamepads = 0;
+        unsigned int num_gamepads = 0;
 
-		glm::ivec2 window_size() const { return { window_width, window_height }; }
-	};
+        glm::ivec2 window_size() const;
+    };
 
-	class Platform;
+    class Platform;
 
-	namespace internal
-	{
-		extern std::unique_ptr<Platform> create_platform(const PlatformSetup&);
-	}
+    namespace internal
+    {
+        extern std::unique_ptr<Platform> create_platform(const PlatformSetup&);
+    }
 
-	class Platform
-	{
-		Window _window;
-		imp::fixed_vector<Gamepad> _gamepads;
-		int _num_gamepads = 0;
+    class Platform
+    {
+        friend std::unique_ptr<Platform> internal::create_platform(const PlatformSetup&);
 
-		friend std::unique_ptr<Platform> internal::create_platform(const PlatformSetup&);
-		Platform(const PlatformSetup& setup);
+    private:
+        Window window_;
+        imp::fixed_vector<Gamepad> gamepads_;
+        int num_gamepads_ = 0;
 
-	public:
-		Platform(const Platform&) = delete;
-		Platform(Platform&&) noexcept = delete;
+    public:
+        GLenum per_frame_clear_mask = GL_COLOR_BUFFER_BIT;
 
-		GLenum per_frame_clear_mask = GL_COLOR_BUFFER_BIT;
-		bool frame();
+    private:
+        Platform(const PlatformSetup& setup);
 
-		const Window& window() const { return _window; }
-		Window& window() { return _window; }
-		const Gamepad& gamepad(int i = 0) const { return _gamepads[i]; }
-		Gamepad& gamepad(int i = 0) { return _gamepads[i]; }
-	};
+    public:
+        Platform(const Platform&) = delete;
+        Platform(Platform&&) noexcept = delete;
+
+        bool frame();
+
+        const Window& window() const;
+        Window& window();
+        const Gamepad& gamepad(int i = 0) const;
+        Gamepad& gamepad(int i = 0);
+    };
 }

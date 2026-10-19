@@ -9,128 +9,134 @@
 
 namespace oly
 {
-	namespace input
-	{
-		struct GamepadEventData
-		{
-			int jevent;
-		};
+    namespace input
+    {
+        struct GamepadEventData
+        {
+            int jevent;
+        };
 
-		struct GamepadButton
-		{
-			static constexpr int LAST = GLFW_GAMEPAD_BUTTON_LAST;
+        struct GamepadButton
+        {
+            static constexpr int kLast = GLFW_GAMEPAD_BUTTON_LAST;
 
-		private:
-			int v;
+        private:
+            int v_;
 
-		public:
-			explicit GamepadButton(int v) { this->v = glm::clamp(v, 0, LAST); }
-			operator int() const { return v; }
+        public:
+            explicit constexpr GamepadButton(int v)
+                : v_(glm::clamp(v, 0, kLast))
+            {
+            }
 
-			static const GamepadButton A;
-			static const GamepadButton B;
-			static const GamepadButton X;
-			static const GamepadButton Y;
-			static const GamepadButton CROSS;
-			static const GamepadButton CIRCLE;
-			static const GamepadButton SQUARE;
-			static const GamepadButton TRIANGLE;
-			static const GamepadButton LEFT_BUMPER;
-			static const GamepadButton RIGHT_BUMPER;
-			static const GamepadButton BACK;
-			static const GamepadButton START;
-			static const GamepadButton GUIDE;
-			static const GamepadButton LEFT_THUMB;
-			static const GamepadButton RIGHT_THUMB;
-			static const GamepadButton DPAD_UP;
-			static const GamepadButton DPAD_RIGHT;
-			static const GamepadButton DPAD_DOWN;
-			static const GamepadButton DPAD_LEFT;
-		};
+            constexpr operator int() const
+            {
+                return v_;
+            }
 
-		inline const GamepadButton GamepadButton::A = GamepadButton(GLFW_GAMEPAD_BUTTON_A);
-		inline const GamepadButton GamepadButton::B = GamepadButton(GLFW_GAMEPAD_BUTTON_B);
-		inline const GamepadButton GamepadButton::X = GamepadButton(GLFW_GAMEPAD_BUTTON_X);
-		inline const GamepadButton GamepadButton::Y = GamepadButton(GLFW_GAMEPAD_BUTTON_Y);
-		inline const GamepadButton GamepadButton::CROSS = GamepadButton(GLFW_GAMEPAD_BUTTON_CROSS);
-		inline const GamepadButton GamepadButton::CIRCLE = GamepadButton(GLFW_GAMEPAD_BUTTON_CIRCLE);
-		inline const GamepadButton GamepadButton::SQUARE = GamepadButton(GLFW_GAMEPAD_BUTTON_SQUARE);
-		inline const GamepadButton GamepadButton::TRIANGLE = GamepadButton(GLFW_GAMEPAD_BUTTON_TRIANGLE);
-		inline const GamepadButton GamepadButton::LEFT_BUMPER = GamepadButton(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER);
-		inline const GamepadButton GamepadButton::RIGHT_BUMPER = GamepadButton(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
-		inline const GamepadButton GamepadButton::BACK = GamepadButton(GLFW_GAMEPAD_BUTTON_BACK);
-		inline const GamepadButton GamepadButton::START = GamepadButton(GLFW_GAMEPAD_BUTTON_START);
-		inline const GamepadButton GamepadButton::GUIDE = GamepadButton(GLFW_GAMEPAD_BUTTON_GUIDE);
-		inline const GamepadButton GamepadButton::LEFT_THUMB = GamepadButton(GLFW_GAMEPAD_BUTTON_LEFT_THUMB);
-		inline const GamepadButton GamepadButton::RIGHT_THUMB = GamepadButton(GLFW_GAMEPAD_BUTTON_RIGHT_THUMB);
-		inline const GamepadButton GamepadButton::DPAD_UP = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_UP);
-		inline const GamepadButton GamepadButton::DPAD_RIGHT = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_RIGHT);
-		inline const GamepadButton GamepadButton::DPAD_DOWN = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_DOWN);
-		inline const GamepadButton GamepadButton::DPAD_LEFT = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_LEFT);
+            static const GamepadButton kA;
+            static const GamepadButton kB;
+            static const GamepadButton kX;
+            static const GamepadButton kY;
+            static const GamepadButton kCross;
+            static const GamepadButton kCircle;
+            static const GamepadButton kSquare;
+            static const GamepadButton kTriangle;
+            static const GamepadButton kLeftBumper;
+            static const GamepadButton kRightBumper;
+            static const GamepadButton kBack;
+            static const GamepadButton kStart;
+            static const GamepadButton kGuide;
+            static const GamepadButton kLeftThumb;
+            static const GamepadButton kRightThumb;
+            static const GamepadButton kDpadUp;
+            static const GamepadButton kDpadRight;
+            static const GamepadButton kDpadDown;
+            static const GamepadButton kDpadLeft;
+        };
 
-		struct GamepadAxis1D
-		{
-			static constexpr int LAST = GLFW_GAMEPAD_AXIS_LAST;
+        inline constexpr GamepadButton GamepadButton::kA = GamepadButton(GLFW_GAMEPAD_BUTTON_A);
+        inline constexpr GamepadButton GamepadButton::kB = GamepadButton(GLFW_GAMEPAD_BUTTON_B);
+        inline constexpr GamepadButton GamepadButton::kX = GamepadButton(GLFW_GAMEPAD_BUTTON_X);
+        inline constexpr GamepadButton GamepadButton::kY = GamepadButton(GLFW_GAMEPAD_BUTTON_Y);
+        inline constexpr GamepadButton GamepadButton::kCross = GamepadButton(GLFW_GAMEPAD_BUTTON_CROSS);
+        inline constexpr GamepadButton GamepadButton::kCircle = GamepadButton(GLFW_GAMEPAD_BUTTON_CIRCLE);
+        inline constexpr GamepadButton GamepadButton::kSquare = GamepadButton(GLFW_GAMEPAD_BUTTON_SQUARE);
+        inline constexpr GamepadButton GamepadButton::kTriangle = GamepadButton(GLFW_GAMEPAD_BUTTON_TRIANGLE);
+        inline constexpr GamepadButton GamepadButton::kLeftBumper = GamepadButton(GLFW_GAMEPAD_BUTTON_LEFT_BUMPER);
+        inline constexpr GamepadButton GamepadButton::kRightBumper = GamepadButton(GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER);
+        inline constexpr GamepadButton GamepadButton::kBack = GamepadButton(GLFW_GAMEPAD_BUTTON_BACK);
+        inline constexpr GamepadButton GamepadButton::kStart = GamepadButton(GLFW_GAMEPAD_BUTTON_START);
+        inline constexpr GamepadButton GamepadButton::kGuide = GamepadButton(GLFW_GAMEPAD_BUTTON_GUIDE);
+        inline constexpr GamepadButton GamepadButton::kLeftThumb = GamepadButton(GLFW_GAMEPAD_BUTTON_LEFT_THUMB);
+        inline constexpr GamepadButton GamepadButton::kRightThumb = GamepadButton(GLFW_GAMEPAD_BUTTON_RIGHT_THUMB);
+        inline constexpr GamepadButton GamepadButton::kDpadUp = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_UP);
+        inline constexpr GamepadButton GamepadButton::kDpadRight = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_RIGHT);
+        inline constexpr GamepadButton GamepadButton::kDpadDown = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_DOWN);
+        inline constexpr GamepadButton GamepadButton::kDpadLeft = GamepadButton(GLFW_GAMEPAD_BUTTON_DPAD_LEFT);
 
-		private:
-			int v;
+        struct GamepadAxis1D
+        {
+            static constexpr int kLast = GLFW_GAMEPAD_AXIS_LAST;
 
-		public:
-			explicit GamepadAxis1D(int v) { this->v = glm::clamp(v, 0, LAST); }
-			operator int() const { return v; }
+        private:
+            int v_;
 
-			static const GamepadAxis1D LEFT_X;
-			static const GamepadAxis1D LEFT_Y;
-			static const GamepadAxis1D RIGHT_X;
-			static const GamepadAxis1D RIGHT_Y;
-			static const GamepadAxis1D LEFT_TRIGGER;
-			static const GamepadAxis1D RIGHT_TRIGGER;
-		};
+        public:
+            explicit constexpr GamepadAxis1D(int v)
+                : v_(glm::clamp(v, 0, kLast))
+            {
+            }
 
-		inline const GamepadAxis1D GamepadAxis1D::LEFT_X = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_X);
-		inline const GamepadAxis1D GamepadAxis1D::LEFT_Y = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_Y);
-		inline const GamepadAxis1D GamepadAxis1D::RIGHT_X = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_X);
-		inline const GamepadAxis1D GamepadAxis1D::RIGHT_Y = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_Y);
-		inline const GamepadAxis1D GamepadAxis1D::LEFT_TRIGGER = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER);
-		inline const GamepadAxis1D GamepadAxis1D::RIGHT_TRIGGER = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
-	}
+            constexpr operator int() const
+            {
+                return v_;
+            }
 
-	namespace platform
-	{
-		class Gamepad
-		{
-			GLFWgamepadstate g;
-			int c;
+            static const GamepadAxis1D kLeftX;
+            static const GamepadAxis1D kLeftY;
+            static const GamepadAxis1D kRightX;
+            static const GamepadAxis1D kRightY;
+            static const GamepadAxis1D kLeftTrigger;
+            static const GamepadAxis1D kRightTrigger;
+        };
 
-		public:
-			EventHandler<input::GamepadEventData> handler;
+        inline constexpr GamepadAxis1D GamepadAxis1D::kLeftX = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_X);
+        inline constexpr GamepadAxis1D GamepadAxis1D::kLeftY = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_Y);
+        inline constexpr GamepadAxis1D GamepadAxis1D::kRightX = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_X);
+        inline constexpr GamepadAxis1D GamepadAxis1D::kRightY = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_Y);
+        inline constexpr GamepadAxis1D GamepadAxis1D::kLeftTrigger = GamepadAxis1D(GLFW_GAMEPAD_AXIS_LEFT_TRIGGER);
+        inline constexpr GamepadAxis1D GamepadAxis1D::kRightTrigger = GamepadAxis1D(GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
+    }
 
-			Gamepad(int controller) : c(controller) { poll(); }
+    namespace platform
+    {
+        class Gamepad
+        {
+            GLFWgamepadstate state_;
+            int controller_;
 
-			void poll() { glfwGetGamepadState(c, &g); glfwSetJoystickUserPointer(c, this); }
-			int controller() const { return c; }
-			bool connected() const { return glfwJoystickPresent(c); }
-			bool has_mapping() const { return glfwJoystickIsGamepad(c); }
-			
-			int button_state(input::GamepadButton button) const { return g.buttons[button]; }
-			float axis_1d_state(input::GamepadAxis1D axis) const { return g.axes[axis]; }
-			glm::vec2 axis_2d_state(detail::GamepadAxis2D axis) const
-			{
-				if (axis == detail::GamepadAxis2D::LeftXY)
-					return { g.axes[input::GamepadAxis1D::LEFT_X], g.axes[input::GamepadAxis1D::LEFT_Y] };
-				else if (axis == detail::GamepadAxis2D::RightXY)
-					return { g.axes[input::GamepadAxis1D::RIGHT_X], g.axes[input::GamepadAxis1D::RIGHT_Y] };
-				else
-					return {};
-			}
+        public:
+            EventHandler<input::GamepadEventData> handler;
 
-			const char* name() const { return glfwGetJoystickName(c); }
-			const char* identifier() const { return glfwGetJoystickGUID(c); }
-		};
-	}
+            Gamepad(int controller);
 
-	namespace input
-	{
-		extern void init_joystick_handler();
-	}
+            void poll();
+            int controller() const;
+            bool connected() const;
+            bool has_mapping() const;
+
+            int button_state(input::GamepadButton button) const;
+            float axis_1d_state(input::GamepadAxis1D axis) const;
+            glm::vec2 axis_2d_state(detail::GamepadAxis2D axis) const;
+
+            const char* name() const;
+            const char* identifier() const;
+        };
+    }
+
+    namespace input
+    {
+        extern void init_joystick_handler();
+    }
 }

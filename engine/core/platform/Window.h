@@ -1,125 +1,140 @@
 #pragma once
 
-#include "external/GLM.h"
-#include "core/platform/WindowEvents.h"
 #include "core/platform/EventHandler.h"
+#include "core/platform/WindowEvents.h"
+
+#include "external/GLM.h"
 
 namespace oly::platform
 {
-	struct WindowHint
-	{
-		struct
-		{
-			bool resizable = true;
-			bool visible = true;
-			bool decorated = true;
-			bool focused = true;
-			bool auto_iconify = true;
-			bool floating = false;
-			bool maximized = false;
-			bool center_cursor = true;
-			bool transparent_framebuffer = false;
-			bool focus_on_show = true;
-			bool scale_to_monitor = false;
-			bool scale_framebuffer = true;
-			bool mouse_passthrough = false;
-			unsigned int position_x = GLFW_ANY_POSITION;
-			unsigned int position_y = GLFW_ANY_POSITION;
-			int refresh_rate = GLFW_DONT_CARE;
-			bool stereo = false;
-			bool srgb_capable = false;
-			bool double_buffer = true;
-			int context_version_major = 4; // 1
-			int context_version_minor = 5; // 0
-			bool opengl_forward_compat = false;
-			bool context_debug = false;
-			int opengl_profile = GLFW_OPENGL_CORE_PROFILE; // GLFW_OPENGL_ANY_PROFILE
-		} window;
+    struct WindowHint
+    {
+        struct
+        {
+            bool resizable = true;
+            bool visible = true;
+            bool decorated = true;
+            bool focused = true;
+            bool auto_iconify = true;
+            bool floating = false;
+            bool maximized = false;
+            bool center_cursor = true;
+            bool transparent_framebuffer = false;
+            bool focus_on_show = true;
+            bool scale_to_monitor = false;
+            bool scale_framebuffer = true;
+            bool mouse_passthrough = false;
+            unsigned int position_x = GLFW_ANY_POSITION;
+            unsigned int position_y = GLFW_ANY_POSITION;
+            int refresh_rate = GLFW_DONT_CARE;
+            bool stereo = false;
+            bool srgb_capable = false;
+            bool double_buffer = true;
+            int context_version_major = 4; // 1
+            int context_version_minor = 5; // 0
+            bool opengl_forward_compat = false;
+            bool context_debug = false;
+            int opengl_profile = GLFW_OPENGL_CORE_PROFILE; // GLFW_OPENGL_ANY_PROFILE
+        } window;
 
-		struct
-		{
-			int swap_interval = 1;
-			glm::vec4 clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
-		} context;
+        struct
+        {
+            int swap_interval = 1;
+            glm::vec4 clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
+        } context;
 
-		void window_hint() const;
-		void context_hint() const;
-	};
+        void window_hint() const;
+        void context_hint() const;
+    };
 
-	class Window;
+    class Window;
 
-	namespace internal
-	{
-		struct RootWindowResizeHandler : public EventHandler<input::WindowResizeEventData>
-		{
-			Window& window;
-			float resizing_frame_length = 1.0f / 60.0f;
+    namespace internal
+    {
+        struct RootWindowResizeHandler
+            : public EventHandler<input::WindowResizeEventData>
+        {
+            Window& window;
+            float resizing_frame_length = 1.0f / 60.0f;
 
-			RootWindowResizeHandler(Window& window);
+        private:
+            float last_update_ = 0.0f;
 
-		private:
-			float last_update = 0.0f;
+        public:
+            RootWindowResizeHandler(Window& window);
 
-		public:
-			bool block(const input::WindowResizeEventData& data) override;
-			bool consume(const input::WindowResizeEventData& data) override;
-		};
+            bool block(const input::WindowResizeEventData& data) override;
+            bool consume(const input::WindowResizeEventData& data) override;
+        };
 
-	}
+    }
 
-	class Window
-	{
-		friend struct internal::RootWindowResizeHandler;
-		GLFWwindow* w;
-		glm::ivec2 size;
+    class Window
+    {
+        friend struct internal::RootWindowResizeHandler;
 
-	public:
-		Window(int width, int height, const char* title, const WindowHint& hint = {}, GLFWmonitor* monitor = nullptr, GLFWwindow* share = nullptr);
-		Window(const Window&) = delete;
-		Window(Window&&) noexcept;
-		~Window();
-		Window& operator=(Window&&) noexcept;
+    public:
+        struct HandlerList
+        {
+            EventHandler<input::CharEventData> character;
+            EventHandler<input::CharModsEventData> char_mods;
+            EventHandler<input::CursorEnterEventData> cursor_enter;
+            EventHandler<input::CursorPosEventData> cursor_pos;
+            EventHandler<input::PathDropEventData> path_drop;
+            EventHandler<input::FramebufferResizeEventData> framebuffer_resize;
+            EventHandler<input::KeyEventData> key;
+            EventHandler<input::MouseButtonEventData> mouse_button;
+            EventHandler<input::ScrollEventData> scroll;
+            EventHandler<input::WindowCloseEventData> window_close;
+            EventHandler<input::WindowContentScaleEventData> window_content_scale;
+            EventHandler<input::WindowFocusEventData> window_focus;
+            EventHandler<input::WindowIconifyEventData> window_iconify;
+            EventHandler<input::WindowMaximizeEventData> window_maximize;
+            EventHandler<input::WindowPosEventData> window_pos;
+            EventHandler<input::WindowRefreshEventData> window_refresh;
+            internal::RootWindowResizeHandler window_resize;
 
-		operator GLFWwindow* () const { return w; }
-		glm::ivec2 get_size() const { return size; }
-		int get_width() const { return size.x; }
-		int get_height() const { return size.y; }
-		void set_size(glm::ivec2 size);
-		void set_width(int width);
-		void set_height(int height);
-		float aspect_ratio() const;
+            HandlerList(Window& window);
+        };
 
-		void make_context_current() const;
-		bool should_close() const;
-		void should_close(bool close) const;
-		void swap_buffers() const;
+    private:
+        GLFWwindow* win_;
+        glm::ivec2 size_;
 
-		struct Handlers
-		{
-			EventHandler<input::CharEventData> character;
-			EventHandler<input::CharModsEventData> char_mods;
-			EventHandler<input::CursorEnterEventData> cursor_enter;
-			EventHandler<input::CursorPosEventData> cursor_pos;
-			EventHandler<input::PathDropEventData> path_drop;
-			EventHandler<input::FramebufferResizeEventData> framebuffer_resize;
-			EventHandler<input::KeyEventData> key;
-			EventHandler<input::MouseButtonEventData> mouse_button;
-			EventHandler<input::ScrollEventData> scroll;
-			EventHandler<input::WindowCloseEventData> window_close;
-			EventHandler<input::WindowContentScaleEventData> window_content_scale;
-			EventHandler<input::WindowFocusEventData> window_focus;
-			EventHandler<input::WindowIconifyEventData> window_iconify;
-			EventHandler<input::WindowMaximizeEventData> window_maximize;
-			EventHandler<input::WindowPosEventData> window_pos;
-			EventHandler<input::WindowRefreshEventData> window_refresh;
-			internal::RootWindowResizeHandler window_resize;
+    public:
+        HandlerList handlers;
 
-			Handlers(Window& window) : window_resize(window) {}
-		} handlers;
+        Window(
+            int width,
+            int height,
+            const char* title,
+            const WindowHint& hint = {},
+            GLFWmonitor* monitor = nullptr,
+            GLFWwindow* share = nullptr);
+        
+        Window(const Window&) = delete;
+        Window(Window&&) noexcept;
+        ~Window();
+        
+        Window& operator=(Window&&) noexcept;
 
-		glm::vec2 get_cursor_screen_position() const;
-		glm::vec2 screen_to_view_coordinates(glm::vec2 screen_pos) const;
-		glm::vec2 get_cursor_view_position() const;
-		glm::vec2 view_to_screen_coordinates(glm::vec2 view_pos) const;
-	};
+        operator GLFWwindow*() const;
+        glm::ivec2 get_size() const;
+        int get_width() const;
+        int get_height() const;
+        void set_size(glm::ivec2 size);
+        void set_width(int width);
+        void set_height(int height);
+        float aspect_ratio() const;
+
+        void make_context_current() const;
+        bool should_close() const;
+        void should_close(bool close) const;
+        void swap_buffers() const;
+
+        glm::vec2 get_cursor_screen_position() const;
+        glm::vec2 screen_to_view_coordinates(glm::vec2 screen_pos) const;
+        glm::vec2 get_cursor_view_position() const;
+        glm::vec2 view_to_screen_coordinates(glm::vec2 view_pos) const;
+    };
 }
