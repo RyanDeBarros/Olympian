@@ -1,117 +1,127 @@
 #include "Platform.h"
 
-#include "core/context/Context.h"
-#include "core/base/Errors.h"
-#include "core/base/Assert.h"
-#include "core/util/Logger.h"
-#include "core/util/Loader.h"
-#include "core/util/Parser.h"
 #include "core/algorithms/STLUtils.h"
+
+#include "core/base/Assert.h"
+#include "core/base/Errors.h"
+
+#include "core/context/Context.h"
+
+#include "core/util/Loader.h"
+#include "core/util/Logger.h"
+#include "core/util/Parser.h"
+
 #include "graphics/Camera.h"
 
 #include "assets/MetaSplitter.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::context
 {
-	namespace internal
-	{
-		std::unique_ptr<platform::Platform> platform;
-		std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
-	}
+    namespace internal
+    {
+        std::unique_ptr<platform::Platform> platform;
+        std::unique_ptr<input::internal::InputBindingContext> input_binding_context;
+    }
 
-	struct PlatformOnTerminate
-	{
-		void operator()() const
-		{
-			internal::platform.reset();
-			internal::input_binding_context.reset();
-		}
-	};
+    struct PlatformOnTerminate
+    {
+        void operator()() const
+        {
+            internal::platform.reset();
+            internal::input_binding_context.reset();
+        }
+    };
 
-	void internal::init_platform(TOMLNode node)
-	{
-		assets::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
+    void internal::init_platform(TOMLNode node)
+    {
+        assets::Parser top_parser(node, { "(platform init)" }, ErrorCode::PlatformInit, true);
 
-		platform::PlatformSetup platform_setup;
-		auto platform_toml = top_parser.required<TOMLNode>(detail::Key::Platform)();
-		assets::Parser platform_parser(platform_toml, { "(platform init)"});
+        platform::PlatformSetup platform_setup;
+        auto platform_toml = top_parser.required<TOMLNode>(detail::Key::Platform)();
+        assets::Parser platform_parser(platform_toml, { "(platform init)" });
 
-		auto toml_window = platform_parser.required<TOMLNode>(detail::Key::Window)();
-		assets::Parser window_parser(toml_window);
+        auto toml_window = platform_parser.required<TOMLNode>(detail::Key::Window)();
+        assets::Parser window_parser(toml_window);
 
-		window_parser.required(detail::Key::Width)(platform_setup.window_width);
-		window_parser.required(detail::Key::Height)(platform_setup.window_height);
-		window_parser.required(detail::Key::Title)(platform_setup.window_title);
+        window_parser.required(detail::Key::Width)(platform_setup.window_width);
+        window_parser.required(detail::Key::Height)(platform_setup.window_height);
+        window_parser.required(detail::Key::Title)(platform_setup.window_title);
 
-		if (auto toml_window_hint = window_parser.required<TOMLNode>(detail::Key::WindowHint)())
-		{
-			assets::Parser parser(toml_window_hint, { "(platform init)" });
-			parser.optional(detail::Key::ClearColor)(platform_setup.window_hint.context.clear_color);
-			parser.optional(detail::Key::SwapInterval)(platform_setup.window_hint.context.swap_interval);
-			parser.optional(detail::Key::Resizable)(platform_setup.window_hint.window.resizable);
-			parser.optional(detail::Key::Visible)(platform_setup.window_hint.window.visible);
-			parser.optional(detail::Key::Decorated)(platform_setup.window_hint.window.decorated);
-			parser.optional(detail::Key::Focused)(platform_setup.window_hint.window.focused);
-			parser.optional(detail::Key::AutoIconify)(platform_setup.window_hint.window.auto_iconify);
-			parser.optional(detail::Key::Floating)(platform_setup.window_hint.window.floating);
-			parser.optional(detail::Key::Maximized)(platform_setup.window_hint.window.maximized);
-			parser.optional(detail::Key::CenterCursor)(platform_setup.window_hint.window.center_cursor);
-			parser.optional(detail::Key::TransparentFramebuffer)(platform_setup.window_hint.window.transparent_framebuffer);
-			parser.optional(detail::Key::FocusOnShow)(platform_setup.window_hint.window.focus_on_show);
-			parser.optional(detail::Key::ScaleToMonitor)(platform_setup.window_hint.window.scale_to_monitor);
-			parser.optional(detail::Key::ScaleFramebuffer)(platform_setup.window_hint.window.scale_framebuffer);
-			parser.optional(detail::Key::MousePassthrough)(platform_setup.window_hint.window.mouse_passthrough);
-			parser.optional(detail::Key::PositionX)(platform_setup.window_hint.window.position_x);
-			parser.optional(detail::Key::PositionY)(platform_setup.window_hint.window.position_y);
-			parser.optional(detail::Key::RefreshRate)(platform_setup.window_hint.window.refresh_rate);
-			parser.optional(detail::Key::Stereo)(platform_setup.window_hint.window.stereo);
-			parser.optional(detail::Key::SrgbCapable)(platform_setup.window_hint.window.srgb_capable);
-			parser.optional(detail::Key::DoubleBuffer)(platform_setup.window_hint.window.double_buffer);
-			parser.optional(detail::Key::OpenglForwardCompat)(platform_setup.window_hint.window.opengl_forward_compat);
-			parser.optional(detail::Key::ContextDebug)(platform_setup.window_hint.window.context_debug);
-		}
+        if (auto toml_window_hint = window_parser.required<TOMLNode>(detail::Key::WindowHint)())
+        {
+            assets::Parser parser(toml_window_hint, { "(platform init)" });
+            parser.optional(detail::Key::ClearColor)(platform_setup.window_hint.context.clear_color);
+            parser.optional(detail::Key::SwapInterval)(platform_setup.window_hint.context.swap_interval);
+            parser.optional(detail::Key::Resizable)(platform_setup.window_hint.window.resizable);
+            parser.optional(detail::Key::Visible)(platform_setup.window_hint.window.visible);
+            parser.optional(detail::Key::Decorated)(platform_setup.window_hint.window.decorated);
+            parser.optional(detail::Key::Focused)(platform_setup.window_hint.window.focused);
+            parser.optional(detail::Key::AutoIconify)(platform_setup.window_hint.window.auto_iconify);
+            parser.optional(detail::Key::Floating)(platform_setup.window_hint.window.floating);
+            parser.optional(detail::Key::Maximized)(platform_setup.window_hint.window.maximized);
+            parser.optional(detail::Key::CenterCursor)(platform_setup.window_hint.window.center_cursor);
+            parser.optional(detail::Key::TransparentFramebuffer)(
+                platform_setup.window_hint.window.transparent_framebuffer);
+            parser.optional(detail::Key::FocusOnShow)(platform_setup.window_hint.window.focus_on_show);
+            parser.optional(detail::Key::ScaleToMonitor)(platform_setup.window_hint.window.scale_to_monitor);
+            parser.optional(detail::Key::ScaleFramebuffer)(platform_setup.window_hint.window.scale_framebuffer);
+            parser.optional(detail::Key::MousePassthrough)(platform_setup.window_hint.window.mouse_passthrough);
+            parser.optional(detail::Key::PositionX)(platform_setup.window_hint.window.position_x);
+            parser.optional(detail::Key::PositionY)(platform_setup.window_hint.window.position_y);
+            parser.optional(detail::Key::RefreshRate)(platform_setup.window_hint.window.refresh_rate);
+            parser.optional(detail::Key::Stereo)(platform_setup.window_hint.window.stereo);
+            parser.optional(detail::Key::SrgbCapable)(platform_setup.window_hint.window.srgb_capable);
+            parser.optional(detail::Key::DoubleBuffer)(platform_setup.window_hint.window.double_buffer);
+            parser.optional(detail::Key::OpenglForwardCompat)(platform_setup.window_hint.window.opengl_forward_compat);
+            parser.optional(detail::Key::ContextDebug)(platform_setup.window_hint.window.context_debug);
+        }
 
-		platform_setup.num_gamepads = glm::clamp(platform_parser.defaulted(detail::Key::Gamepads)(0u), 0u, (unsigned int)GLFW_JOYSTICK_LAST);
+        platform_setup.num_gamepads = glm::clamp(
+            platform_parser.defaulted(detail::Key::Gamepads)(0u),
+            0u,
+            (unsigned int)GLFW_JOYSTICK_LAST);
 
-		internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(platform_setup.num_gamepads);
+        internal::input_binding_context = std::make_unique<input::internal::InputBindingContext>(
+            platform_setup.num_gamepads);
 
-		internal::platform = platform::internal::create_platform(platform_setup);
+        internal::platform = platform::internal::create_platform(platform_setup);
 
-		SingletonTickService<TickPhase::None, void, TerminatePhase::Platform, PlatformOnTerminate>::instance();
-	}
+        SingletonTickService<TickPhase::None, void, TerminatePhase::Platform, PlatformOnTerminate>::instance();
+    }
 
-	void internal::init_viewport(TOMLNode node)
-	{
-		bool camera_boxed = true;
-		bool camera_stretch = true;
+    void internal::init_viewport(TOMLNode node)
+    {
+        bool camera_boxed = true;
+        bool camera_stretch = true;
 
-		if (auto window_parser = assets::Parser(node).optional(detail::Key::Window).subparser())
-		{
-			if (auto viewport_parser = window_parser->optional(detail::Key::Viewport).subparser())
-			{
-				viewport_parser->optional(detail::Key::Boxed)(camera_boxed);
-				viewport_parser->optional(detail::Key::Stretch)(camera_stretch);
-			}
-		}
-		
-		rendering::internal::initialize_default_camera(camera_boxed, camera_stretch);
-	}
+        if (auto window_parser = assets::Parser(node).optional(detail::Key::Window).subparser())
+        {
+            if (auto viewport_parser = window_parser->optional(detail::Key::Viewport).subparser())
+            {
+                viewport_parser->optional(detail::Key::Boxed)(camera_boxed);
+                viewport_parser->optional(detail::Key::Stretch)(camera_stretch);
+            }
+        }
 
-	bool internal::platform_frame()
-	{
-		oly::internal::check_errors();
-		kLog.flush();
-		return internal::platform->frame();
-	}
+        rendering::internal::initialize_default_camera(camera_boxed, camera_stretch);
+    }
 
-	platform::Platform& get_platform()
-	{
-		return *internal::platform;
-	}
+    bool internal::platform_frame()
+    {
+        oly::internal::check_errors();
+        kLog.flush();
+        return internal::platform->frame();
+    }
 
-	input::internal::InputBindingContext& input_binding_context()
-	{
-		return *internal::input_binding_context;
-	}
+    platform::Platform& get_platform()
+    {
+        return *internal::platform;
+    }
+
+    input::internal::InputBindingContext& input_binding_context()
+    {
+        return *internal::input_binding_context;
+    }
 }

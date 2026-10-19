@@ -4,13 +4,15 @@
 
 namespace oly::context
 {
-	class Context : public imp::instance_guard<Context>
-	{
-	public:
-		Context();
-		~Context();
-	    void run();
-	};
+    class Context
+        : public imp::instance_guard<Context>
+    {
+    public:
+        Context();
+        ~Context();
+
+        void run();
+    };
 
     namespace internal
     {
