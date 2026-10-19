@@ -6,11 +6,11 @@
 
 namespace oly::rendering
 {
-	class TileSet;
+    class TileSet;
 }
 
 namespace oly::context
 {
-	extern SmartReference<rendering::TileSet> load_tileset(const detail::ResourcePath& file);
-	extern void free_tileset(const detail::ResourcePath& file);
+    extern SmartReference<rendering::TileSet> load_tileset(const detail::ResourcePath& file);
+    extern void free_tileset(const detail::ResourcePath& file);
 }

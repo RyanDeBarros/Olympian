@@ -4,11 +4,11 @@
 
 namespace oly::context
 {
-	namespace internal
-	{
-		extern void init_sprites();
-	}
+    namespace internal
+    {
+        extern void init_sprites();
+    }
 
-	extern rendering::SpriteBatch& sprite_batch();
-	extern void render_sprites();
+    extern rendering::SpriteBatch& sprite_batch();
+    extern void render_sprites();
 }
