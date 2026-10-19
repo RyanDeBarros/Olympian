@@ -1,8 +1,8 @@
 #pragma once
 
-#include <utility>
-
 #include "core/base/Constants.h"
+
+#include <imp/hash.hpp>
 
 namespace oly
 {
@@ -28,34 +28,77 @@ namespace oly
 		return x >= 0.0f ? x : x + mod;
 	}
 
-	constexpr int roundi(float v)
+	constexpr int roundi(float v_)
 	{
-		return (v >= 0.0f) ? static_cast<int>(v + 0.5f) : static_cast<int>(v - 0.5f);
+		return (v_ >= 0.0f) ? static_cast<int>(v_ + 0.5f) : static_cast<int>(v_ - 0.5f);
 	}
 
 	class BigSize
 	{
-		size_t order = 0;
-		size_t v;
+		size_t order_ = 0;
+		size_t v_;
 
 	public:
-		BigSize(size_t v = 0) : v(v) {}
+        constexpr BigSize(size_t v = 0)
+            : v_(v)
+        {
+        }
 		
-		BigSize& operator++() { if (v == SIZE_MAX) { ++order; v = 0; } else { ++v; } return *this; }
-		BigSize operator++(int) { BigSize s = *this; ++*this; return s; }
-		bool operator==(const BigSize&) const = default;
-		bool operator<(const BigSize& rhs) const { return order < rhs.order || (order == rhs.order && v < rhs.order); }
+		constexpr BigSize& operator++()
+        {
+            if (v_ == SIZE_MAX)
+            {
+                ++order_;
+                v_ = 0;
+            }
+            else
+                ++v_;
 
-		size_t get_order() const { return order; }
-		size_t get_remainder() const { return v; }
-		size_t hash() const { return std::hash<size_t>{}(v) ^ (std::hash<size_t>{}(order) << 1); }
+            return *this;
+        }
+		
+        constexpr BigSize operator++(int)
+        {
+            BigSize s = *this;
+            ++*this;
+            return s;
+        }
+		
+        constexpr bool operator==(const BigSize&) const = default;
+		
+        constexpr bool operator<(const BigSize& rhs) const
+        {
+            return order_ < rhs.order_ || (order_ == rhs.order_ && v_ < rhs.order_);
+        }
+
+        // TODO operator<=, operator>, operator>= for completeness
+
+        constexpr size_t get_order() const
+        {
+            return order_;
+        }
+        
+        constexpr size_t get_remainder() const
+        {
+            return v_;
+        }
+        
+        constexpr size_t hash() const
+        {
+            return imp::hasher()
+                .with(v_)
+                .with(order_);
+        }
 	};
 
-	typedef std::pair<float, float> fpair;
+	using fpair = std::pair<float, float>;
 }
 
 template<>
 struct std::hash<oly::BigSize>
 {
-	size_t operator()(const oly::BigSize& bgz) const { return bgz.hash(); }
+	size_t operator()(const oly::BigSize& bgz) const
+    {
+        return bgz.hash();
+    }
 };

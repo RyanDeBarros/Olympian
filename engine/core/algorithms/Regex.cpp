@@ -157,47 +157,47 @@ namespace oly::algo::re
         text.to_lower();
         if (text == "white")
         {
-            color = colors::WHITE;
+            color = colors::kWhite;
             return true;
         }
         else if (text == "black")
         {
-            color = colors::BLACK;
+            color = colors::kBlack;
             return true;
         }
         else if (text == "red")
         {
-            color = colors::RED;
+            color = colors::kRed;
             return true;
         }
         else if (text == "green")
         {
-            color = colors::GREEN;
+            color = colors::kGreen;
             return true;
         }
         else if (text == "blue")
         {
-            color = colors::BLUE;
+            color = colors::kBlue;
             return true;
         }
         else if (text == "cyan")
         {
-            color = colors::CYAN;
+            color = colors::kCyan;
             return true;
         }
         else if (text == "magenta")
         {
-            color = colors::MAGENTA;
+            color = colors::kMagenta;
             return true;
         }
         else if (text == "yellow")
         {
-            color = colors::YELLOW;
+            color = colors::kYellow;
             return true;
         }
         else if (text == "orange")
         {
-            color = colors::ORANGE;
+            color = colors::kOrange;
             return true;
         }
         else

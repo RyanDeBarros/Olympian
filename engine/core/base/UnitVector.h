@@ -98,7 +98,7 @@ namespace oly
 	template<>
 	struct ToleranceImpl<UnitVector2D>
 	{
-		static constexpr double TOL = 1e-7;
+		static constexpr double kTol = 1e-7;
 	};
 }
 

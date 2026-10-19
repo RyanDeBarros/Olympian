@@ -46,7 +46,7 @@ namespace oly::rendering
     {
         Font font;
         imp::utf::string text = "";
-        Color text_color = colors::WHITE;
+        Color text_color = colors::kWhite;
         float adj_offset = 0.f;
         glm::vec2 scale = glm::vec2(1.f);
         BoundedFloat<0.f, 1.f> line_y_pivot = 0.f;

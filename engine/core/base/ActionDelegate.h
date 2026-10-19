@@ -2,229 +2,237 @@
 
 #include "core/base/Errors.h"
 
-#include <vector>
 #include <functional>
+#include <vector>
 
-// TODO v10 move to imp
+// TODO move to imp
 
 namespace oly
 {
-	template<typename... Args>
-	class ActionReceiver;
+    template<typename... Args>
+    class ActionReceiver;
 
-	template<typename... Args>
-	class ActionDelegator
-	{
-		using Receiver = ActionReceiver<Args...>;
-		friend class Receiver;
+    template<typename... Args>
+    class ActionDelegator
+    {
+        using Receiver = ActionReceiver<Args...>;
+        friend class Receiver;
 
-		std::vector<Receiver*> receivers;
+    private:
+        std::vector<Receiver*> receivers_;
 
-	public:
-		ActionDelegator() = default;
-		
-		ActionDelegator(const ActionDelegator<Args...>&) = delete;
-		
-		ActionDelegator(ActionDelegator<Args...>&& o) noexcept
-			: receivers(std::move(o.receivers))
-		{
-			set_receivers();
-		}
+    public:
+        ActionDelegator() = default;
 
-		~ActionDelegator()
-		{
-			unset_receivers();
-		}
+        ActionDelegator(const ActionDelegator<Args...>&) = delete;
+
+        ActionDelegator(ActionDelegator<Args...>&& o) noexcept
+            : receivers_(std::move(o.receivers_))
+        {
+            set_receivers();
+        }
+
+        ~ActionDelegator()
+        {
+            unset_receivers();
+        }
 
         ActionDelegator& operator=(const ActionDelegator<Args...>&) = delete;
 
-		ActionDelegator& operator=(ActionDelegator<Args...>&& o) noexcept
-		{
-			if (this != &o)
-			{
-				unset_receivers();
-				receivers = std::move(o.receivers);
-				set_receivers();
-			}
-			return *this;
-		}
+        ActionDelegator& operator=(ActionDelegator<Args...>&& o) noexcept
+        {
+            if (this != &o)
+            {
+                unset_receivers();
+                receivers_ = std::move(o.receivers_);
+                set_receivers();
+            }
 
-		void connect(Receiver& receiver)
-		{
-			receiver.connect(*this);
-		}
+            return *this;
+        }
 
-		void disconnect_all()
-		{
-			unset_receivers();
-			receivers.clear();
-		}
+        void connect(Receiver& receiver)
+        {
+            receiver.connect(*this);
+        }
 
-		size_t receiver_count() const
-		{
-			return receivers.size();
-		}
+        void disconnect_all()
+        {
+            unset_receivers();
+            receivers_.clear();
+        }
 
-		const Receiver& get_receiver(size_t i) const
-		{
-			return *receivers[i];
-		}
+        size_t receiver_count() const
+        {
+            return receivers_.size();
+        }
 
-		Receiver& get_receiver(size_t i)
-		{
-			return *receivers[i];
-		}
+        const Receiver& get_receiver(size_t i) const
+        {
+            return *receivers_[i];
+        }
 
-		void emit(Args... action) const
-		{
-			for (Receiver* receiver : receivers)
-				receiver->call(std::forward<Args>(action)...);
-		}
+        Receiver& get_receiver(size_t i)
+        {
+            return *receivers_[i];
+        }
 
-	private:
-		void set_receivers()
-		{
-			for (Receiver* receiver : receivers)
-				receiver->delegator = this;
-		}
+        void emit(Args... action) const
+        {
+            for (Receiver* receiver : receivers_)
+                receiver->call(std::forward<Args>(action)...);
+        }
 
-		void unset_receivers()
-		{
-			for (Receiver* receiver : receivers)
-				receiver->delegator = nullptr;
-		}
-	};
+    private:
+        void set_receivers()
+        {
+            for (Receiver* receiver : receivers_)
+                receiver->delegator_ = this;
+        }
 
-	template<typename... Args>
-	class ActionReceiver
-	{
-		using Delegator = ActionDelegator<Args...>;
-		friend class Delegator;
+        void unset_receivers()
+        {
+            for (Receiver* receiver : receivers_)
+                receiver->delegator_ = nullptr;
+        }
+    };
 
-		ActionDelegator<Args...>* delegator = nullptr;
+    template<typename... Args>
+    class ActionReceiver
+    {
+        using Delegator = ActionDelegator<Args...>;
+        friend class Delegator;
 
-	public:
-		ActionReceiver() = default;
+    private:
+        ActionDelegator<Args...>* delegator_ = nullptr;
 
-		ActionReceiver(const ActionReceiver<Args...>& other)
-			: delegator(other.delegator)
-		{
-			add_to_delegator();
-		}
+    public:
+        ActionReceiver() = default;
 
-		ActionReceiver(ActionReceiver<Args...>&& other) noexcept
-			: delegator(other.delegator)
-		{
-			other.remove_from_delegator();
-			other.delegator = nullptr;
-			add_to_delegator();
-		}
+        ActionReceiver(const ActionReceiver<Args...>& o)
+            : delegator_(o.delegator_)
+        {
+            add_to_delegator();
+        }
 
-		~ActionReceiver()
-		{
-			remove_from_delegator();
-		}
+        ActionReceiver(ActionReceiver<Args...>&& o) noexcept
+            : delegator_(o.delegator_)
+        {
+            o.remove_from_delegator();
+            o.delegator_ = nullptr;
+            add_to_delegator();
+        }
 
-		ActionReceiver<Args...>& operator=(const ActionReceiver<Args...>& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (delegator != other.delegator)
-				{
-					remove_from_delegator();
-					delegator = other.delegator;
-					add_to_delegator();
-				}
-			}
-			return *this;
-		}
+        ~ActionReceiver()
+        {
+            remove_from_delegator();
+        }
 
-		ActionReceiver<Args...>& operator=(ActionReceiver<Args...>&& other) noexcept
-		{
-			if (this != &other)
-			{
-				if (delegator != other.delegator)
-				{
-					remove_from_delegator();
-					delegator = other.delegator;
-					other.remove_from_delegator();
-					other.delegator = nullptr;
-					add_to_delegator();
-				}
-				else
-				{
-					other.remove_from_delegator();
-					other.delegator = nullptr;
-				}
-			}
-			return *this;
-		}
+        ActionReceiver<Args...>& operator=(const ActionReceiver<Args...>& o) noexcept
+        {
+            if (this != &o)
+            {
+                if (delegator_ != o.delegator_)
+                {
+                    remove_from_delegator();
+                    delegator_ = o.delegator_;
+                    add_to_delegator();
+                }
+            }
 
-		void connect(Delegator& d)
-		{
-			if (&d != delegator)
-			{
-				if (delegator)
-					remove_from_delegator();
-				delegator = &d;
-				add_to_delegator();
-			}
-		}
+            return *this;
+        }
 
-		void disconnect()
-		{
-			remove_from_delegator();
-		}
+        ActionReceiver<Args...>& operator=(ActionReceiver<Args...>&& o) noexcept
+        {
+            if (this != &o)
+            {
+                if (delegator_ != o.delegator_)
+                {
+                    remove_from_delegator();
+                    delegator_ = o.delegator_;
+                    o.remove_from_delegator();
+                    o.delegator_ = nullptr;
+                    add_to_delegator();
+                }
+                else
+                {
+                    o.remove_from_delegator();
+                    o.delegator_ = nullptr;
+                }
+            }
 
-		const Delegator& get_delegator() const
-		{
-			if (delegator)
-				return *delegator;
-			else
-				throw Error(ErrorCode::NullPointer);
-		}
+            return *this;
+        }
 
-		Delegator& get_delegator()
-		{
-			if (delegator)
-				return *delegator;
-			else
-				throw Error(ErrorCode::NullPointer);
-		}
+        void connect(Delegator& d)
+        {
+            if (&d != delegator_)
+            {
+                if (delegator_)
+                    remove_from_delegator();
+                delegator_ = &d;
+                add_to_delegator();
+            }
+        }
 
-		virtual void call(Args... action) = 0;
+        void disconnect()
+        {
+            remove_from_delegator();
+        }
 
-	private:
-		void add_to_delegator()
-		{
-			if (delegator)
-				delegator->receivers.push_back(this);
-		}
+        const Delegator& get_delegator() const
+        {
+            if (delegator_)
+                return *delegator_;
+            else
+                throw Error(ErrorCode::NullPointer);
+        }
 
-		void remove_from_delegator()
-		{
-			if (delegator)
-			{
-				auto& receivers = delegator->receivers;
-				auto it = std::find(receivers.begin(), receivers.end(), this);
-				receivers.erase(it);
-			}
-		}
-	};
+        Delegator& get_delegator()
+        {
+            if (delegator_)
+                return *delegator_;
+            else
+                throw Error(ErrorCode::NullPointer);
+        }
 
-	template<typename... Args>
-	struct ActionFunctionReceiver : public ActionReceiver<Args...>
-	{
-		using Function = std::function<void(Args...)>;
+        virtual void call(Args... action) = 0;
 
-		Function fn;
+    private:
+        void add_to_delegator()
+        {
+            if (delegator_)
+                delegator_->receivers_.push_back(this);
+        }
 
-		ActionFunctionReceiver(const Function& fn) : fn(fn) {}
-		ActionFunctionReceiver(Function&& fn) : fn(std::move(fn)) {}
+        void remove_from_delegator()
+        {
+            if (delegator_)
+            {
+                auto& receivers_ = delegator_->receivers_;
+                auto it = std::find(receivers_.begin(), receivers_.end(), this);
+                receivers_.erase(it);
+            }
+        }
+    };
 
-		void call(Args... action) override
-		{
-			fn(action...);
-		}
-	};
+    template<typename... Args>
+    struct ActionFunctionReceiver
+        : public ActionReceiver<Args...>
+    {
+        using Function = std::function<void(Args...)>;
+
+        Function fn;
+        
+        ActionFunctionReceiver(Function fn)
+            : fn(std::move(fn))
+        {
+        }
+
+        void call(Args... action) override
+        {
+            fn(action...);
+        }
+    };
 }
