@@ -1,8 +1,8 @@
 #pragma once
 
-#include "core/base/ActionDelegate.h"
-
 #include "physics/dynamics/bodies/RigidBody.h"
+
+#include <imp/action.hpp>
 
 namespace oly::physics
 {
@@ -13,7 +13,7 @@ namespace oly::physics
 		DynamicsComponent dynamics_;
 
 	public:
-		ActionDelegator<col2d::OverlapEventData> delegator;
+		imp::action_delegator<col2d::OverlapEventData> delegator;
 
 		StaticBody();
 		StaticBody(const StaticBody&) = delete;

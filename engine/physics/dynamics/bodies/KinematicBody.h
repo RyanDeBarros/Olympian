@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/base/ActionDelegate.h"
-
 #include "physics/dynamics/bodies/RigidBody.h"
 
 #include "physics/dynamics/components/KinematicPhysicsComponent.h"
+
+#include <imp/action.hpp>
 
 namespace oly::physics
 {
@@ -15,7 +15,7 @@ namespace oly::physics
 		KinematicPhysicsComponent dynamics_;
 
 	public:
-		ActionDelegator<col2d::ContactEventData> delegator;
+		imp::action_delegator<col2d::ContactEventData> delegator;
 
 		KinematicBody();
         KinematicBody(const KinematicBody&) = delete;

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "core/base/ActionDelegate.h"
-
 #include "physics/dynamics/bodies/RigidBody.h"
 
 #include "physics/dynamics/components/LinearPhysicsComponent.h"
+
+#include <imp/action.hpp>
 
 namespace oly::physics
 {
@@ -15,7 +15,7 @@ namespace oly::physics
 		LinearPhysicsComponent dynamics_;
 
 	public:
-		ActionDelegator<col2d::CollisionEventData> delegator;
+		imp::action_delegator<col2d::CollisionEventData> delegator;
 
 		LinearBody();
 		LinearBody(const LinearBody&) = delete;
