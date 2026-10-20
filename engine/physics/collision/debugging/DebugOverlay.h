@@ -70,7 +70,7 @@ namespace oly::debug
 			 * Factor by which to reduce the size of texture to the preferred minimum size.
 			 * At 0, the texture's size is set to the preferred minimum, while at 1, the texture's size is the full bounds of the object.
 			 */
-			BoundedUnitInterval quality = 1.0f;
+			BUInterval quality = 1.0f;
 			glm::vec2 preferred_min_size = glm::vec2(50.0f);
 
 			glm::vec2 compress(math::Rect2D& bounds) const;

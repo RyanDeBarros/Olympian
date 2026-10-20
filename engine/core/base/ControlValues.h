@@ -57,26 +57,26 @@ namespace oly
     };
 
     template<float Min, float Max>
-    using BoundedFloat = BoundedValue<float, Min, Max>;
-    template<int Min, int Max>
-    using BoundedInt = BoundedValue<int, Min, Max>;
-    template<unsigned int Min, unsigned int Max>
-    using BoundedUInt = BoundedValue<unsigned int, Min, Max>;
+    using BFloat = BoundedValue<float, Min, Max>;
 
-    // TODO rename to pfloat and move to imp
-    using PositiveFloat = BoundedFloat<0.0f, nmax<float>()>;
-    // TODO rename to spfloat and move to imp
-    using StrictlyPositiveFloat = BoundedFloat<0.000001f, nmax<float>()>;
-    using BoundedUnitInterval = BoundedFloat<0.0f, 1.0f>;
-    using BoundedRadians = BoundedFloat<0.0f, glm::two_pi<float>()>;
+    template<int Min, int Max>
+    using BInt = BoundedValue<int, Min, Max>;
+
+    template<unsigned int Min, unsigned int Max>
+    using BUInt = BoundedValue<unsigned int, Min, Max>;
+
+    using PFloat = BFloat<0.0f, nmax<float>()>;
+    using SPFloat = BFloat<0.000001f, nmax<float>()>;
+    using BUInterval = BFloat<0.0f, 1.0f>;
+    using BRadians = BFloat<0.0f, glm::two_pi<float>()>;
 
     struct PowerInterval
     {
     private:
-        BoundedUnitInterval inner_ = 0.5f;
-        BoundedUnitInterval outer_ = 0.5f;
-        BoundedUnitInterval inner_midpoint_ = 0.5f;
-        PositiveFloat power_ = 1.0f;
+        BUInterval inner_ = 0.5f;
+        BUInterval outer_ = 0.5f;
+        BUInterval inner_midpoint_ = 0.5f;
+        PFloat power_ = 1.0f;
 
     public:
         PowerInterval(float inner_midpoint = 0.5f, float outer = 0.5f);

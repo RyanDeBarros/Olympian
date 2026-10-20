@@ -425,7 +425,7 @@ namespace oly::physics
             {
                 if (glm::abs(post_state_.angular_velocity) <= angular_snapping.speed_threshold)
                 {
-                    const auto distance = [](BoundedRadians a, BoundedRadians b) {
+                    const auto distance = [](BRadians a, BRadians b) {
                         return unsigned_fmod(b - a, glm::two_pi<float>());
                     };
 

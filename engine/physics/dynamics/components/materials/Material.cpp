@@ -23,7 +23,7 @@ namespace oly::physics
 		}
 	}
 
-    Restitution::Restitution(BoundedUnitInterval v)
+    Restitution::Restitution(BUInterval v)
         : value_(v)
         , sqrt_(glm::sqrt(value_))
     {

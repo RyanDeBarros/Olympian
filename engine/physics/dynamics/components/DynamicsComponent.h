@@ -22,7 +22,7 @@ namespace oly::physics
         glm::vec2 relative_linear_velocity,
         float angular_velocity_a,
         float angular_velocity_b,
-        PositiveFloat speed_threshold = (float)col2d::kLinearTolerance);
+        PFloat speed_threshold = (float)col2d::kLinearTolerance);
 
     class DynamicsComponent;
 

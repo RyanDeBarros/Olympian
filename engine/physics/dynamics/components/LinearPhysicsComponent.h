@@ -13,8 +13,8 @@ namespace oly::physics
         friend class LinearPhysicsComponent;
 
     private:
-        StrictlyPositiveFloat mass_ = 1.0f;
-        StrictlyPositiveFloat mass_inverse_ = 1.0f;
+        SPFloat mass_ = 1.0f;
+        SPFloat mass_inverse_ = 1.0f;
 
         std::vector<glm::vec2> applied_accelerations_;
         std::vector<glm::vec2> applied_forces_;
@@ -61,7 +61,7 @@ namespace oly::physics
 
     struct LinearSubMaterial
     {
-        PositiveFloat drag = 0.0f;
+        PFloat drag = 0.0f;
         LinearCollisionDamping linear_collision_damping;
         LinearSnapping x_snapping;
         LinearSnapping y_snapping;

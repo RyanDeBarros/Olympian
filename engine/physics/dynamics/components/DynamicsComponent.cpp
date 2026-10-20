@@ -8,7 +8,7 @@ namespace oly::physics
         glm::vec2 relative_linear_velocity,
         float angular_velocity_a,
         float angular_velocity_b,
-        PositiveFloat speed_threshold)
+        PFloat speed_threshold)
     {
         if (!near_zero(tangent.dot(relative_contact_velocity), speed_threshold))
             return FrictionType::Kinetic;

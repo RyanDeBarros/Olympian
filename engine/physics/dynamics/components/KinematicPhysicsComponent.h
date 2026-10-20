@@ -38,13 +38,13 @@ namespace oly::physics
         mutable std::vector<AppliedImpulse> applied_impulses;
 
     private:
-        StrictlyPositiveFloat mass_ = 1.0f;
-        StrictlyPositiveFloat mass_inverse_ = 1.0f;
+        SPFloat mass_ = 1.0f;
+        SPFloat mass_inverse_ = 1.0f;
 
-        StrictlyPositiveFloat moi_ = 1.0f;
-        StrictlyPositiveFloat moi_inverse_ = 1.0f;
+        SPFloat moi_ = 1.0f;
+        SPFloat moi_inverse_ = 1.0f;
 
-        StrictlyPositiveFloat moi_multiplier_ = 1.0f;
+        SPFloat moi_multiplier_ = 1.0f;
 
         mutable glm::vec2 net_linear_applied_acceleration_ = {};
         mutable float net_angular_applied_acceleration_ = 0.0f;
@@ -112,8 +112,8 @@ namespace oly::physics
 
     struct KinematicSubMaterial
     {
-        PositiveFloat linear_drag = 0.0f;
-        PositiveFloat angular_drag = 1.0f;
+        PFloat linear_drag = 0.0f;
+        PFloat angular_drag = 1.0f;
 
         LinearCollisionDamping linear_collision_damping;
         AngularCollisionDamping angular_collision_damping;

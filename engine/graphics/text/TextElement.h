@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core/base/Color.h"
-#include "core/base/Parameters.h"
+#include "core/base/ControlValues.h"
 
 #include "graphics/text/FontFamily.h"
 
@@ -49,7 +49,7 @@ namespace oly::rendering
         Color text_color = colors::kWhite;
         float adj_offset = 0.f;
         glm::vec2 scale = glm::vec2(1.f);
-        BoundedFloat<0.f, 1.f> line_y_pivot = 0.f;
+        BUInterval line_y_pivot = 0.f;
         glm::vec2 jitter_offset = {};
 
         static std::vector<TextElement> expand(const TextElement& element);

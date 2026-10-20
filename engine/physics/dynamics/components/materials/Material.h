@@ -1,6 +1,6 @@
 #pragma once
 
-#include "core/base/Parameters.h"
+#include "core/base/ControlValues.h"
 #include "core/base/SmartReference.h"
 
 namespace oly::physics
@@ -23,13 +23,13 @@ namespace oly::physics
 	struct Restitution
 	{
 	private:
-		BoundedUnitInterval value_;
-		BoundedUnitInterval sqrt_;
+		BUInterval value_;
+		BUInterval sqrt_;
 
 	public:
 		FactorBlendOp mode = FactorBlendOp::Minimum;
 
-        Restitution(BoundedUnitInterval v = 0.3f);
+        Restitution(BUInterval v = 0.3f);
 
         float value() const;
 		float sqrt() const;
@@ -47,12 +47,12 @@ namespace oly::physics
 	struct Friction
 	{
 	private:
-		PositiveFloat static_friction_ = 0.5f;
-		PositiveFloat sqrt_static_friction_ = glm::sqrt(static_friction_);
-		PositiveFloat kinetic_friction_ = 0.3f;
-		PositiveFloat sqrt_kinetic_friction_ = glm::sqrt(kinetic_friction_);
-		PositiveFloat rolling_friction_ = 0.4f;
-		PositiveFloat sqrt_rolling_friction_ = glm::sqrt(rolling_friction_);
+		PFloat static_friction_ = 0.5f;
+		PFloat sqrt_static_friction_ = glm::sqrt(static_friction_);
+		PFloat kinetic_friction_ = 0.3f;
+		PFloat sqrt_kinetic_friction_ = glm::sqrt(kinetic_friction_);
+		PFloat rolling_friction_ = 0.4f;
+		PFloat sqrt_rolling_friction_ = glm::sqrt(rolling_friction_);
 
 	public:
 		FactorBlendOp static_mode = FactorBlendOp::GeometricMean;
