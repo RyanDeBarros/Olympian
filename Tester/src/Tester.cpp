@@ -208,7 +208,7 @@ int main()
 		star.concave_polygon.push_back(outer_star_radius * glm::vec2{ glm::cos((i + 0.25f) * glm::two_pi<float>() / num_star_points), glm::sin((i + 0.25f) * glm::two_pi<float>() / num_star_points) });
 	}
 
-	oly::physics::KinematicBodyRef player = oly::REF_INIT;
+	oly::physics::KinematicBodyRef player = oly::kRefInit;
 	pc.rigid_body = player;
 	player->properties().set_moi_multiplier(2000.0f);
 	player->properties().net_linear_acceleration += oly::physics::kGravity;
@@ -228,7 +228,7 @@ int main()
 	oly::col2d::Ray ray{ .origin = { -400.0f, -400.0f }, .direction = oly::UnitVector2D(glm::pi<float>() * 0.25f), .clip = 250.0f };
 
 	oly::col2d::Capsule capsule{ .center = { -400.0f, -400.0f }, .obb_width = 200.0f, .obb_height = 100.0f, .rotation = -0.5f * glm::pi<float>() };
-	oly::physics::KinematicBodyRef obstacle0 = oly::REF_INIT;
+	oly::physics::KinematicBodyRef obstacle0 = oly::kRefInit;
 	obstacle0->add_collider(capsule);
 	obstacle0->collider().layer() |= obstacle_layer;
 	obstacle0->collider().mask() |= player_mask | obstacle_mask;
@@ -241,31 +241,31 @@ int main()
 
 	capsule.center = { -400.0f, -400.0f };
 	capsule.center.y += 200.0f;
-	oly::physics::LinearBodyRef obstacle1 = oly::REF_INIT;
+	oly::physics::LinearBodyRef obstacle1 = oly::kRefInit;
 	obstacle1->add_collider(capsule);
 	obstacle1->collider().layer() |= obstacle_layer;
 	obstacle1->collider().mask() |= player_mask;
 	obstacle1->properties().set_mass(0.0001f);
 
 	capsule.center.y += 200.0f;
-	oly::physics::StaticBodyRef obstacle2 = oly::REF_INIT;
+	oly::physics::StaticBodyRef obstacle2 = oly::kRefInit;
 	obstacle2->add_collider(capsule);
 	obstacle2->collider().layer() |= obstacle_layer;
 	obstacle2->collider().mask() |= player_mask;
 
 	capsule.center.y += 200.0f;
-	oly::physics::StaticBodyRef obstacle3 = oly::REF_INIT;
+	oly::physics::StaticBodyRef obstacle3 = oly::kRefInit;
 	obstacle3->add_collider(capsule);
 	obstacle3->collider().layer() |= obstacle_layer;
 	obstacle3->collider().mask() |= player_mask;
 
 	capsule.center.y += 200.0f;
-	oly::physics::StaticBodyRef obstacle4 = oly::REF_INIT;
+	oly::physics::StaticBodyRef obstacle4 = oly::kRefInit;
 	obstacle4->add_collider(capsule);
 	obstacle4->collider().layer() |= obstacle_layer;
 	obstacle4->collider().mask() |= player_mask;
 
-	oly::physics::StaticBodyRef ground = oly::REF_INIT;
+	oly::physics::StaticBodyRef ground = oly::kRefInit;
 	ground->add_collider(oly::col2d::TCompound({
 		oly::col2d::AABB{.x1 = -10'000.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -450.0f },
 		oly::col2d::AABB{.x1 = 400.0f, .x2 = 10'000.0f, .y1 = -550.0f, .y2 = -250.0f }
@@ -273,11 +273,11 @@ int main()
 	ground->collider().layer() |= obstacle_layer;
 	ground->collider().mask() |= player_mask;
 
-	oly::physics::StaticBodyRef semi_solid = oly::REF_INIT;
+	oly::physics::StaticBodyRef semi_solid = oly::kRefInit;
 	semi_solid->add_collider(oly::col2d::AABB{ .x1 = -100.0f, .x2 = 300.0f, .y1 = 300.0f, .y2 = 400.0f });
 	semi_solid->collider().layer() |= obstacle_layer;
 	semi_solid->collider().mask() |= player_mask;
-	semi_solid->collider().one_way_blocking = oly::UnitVector2D::Up;
+	semi_solid->collider().one_way_blocking = oly::UnitVector2D::kUp;
 
 	oly::col2d::CircleCast circle_cast{ .ray = oly::col2d::Ray{ .origin = {}, .direction = oly::UnitVector2D(-0.25f * glm::pi<float>()), .clip = 200.0f }, .radius = 25.0f };
 

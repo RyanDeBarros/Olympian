@@ -116,15 +116,15 @@ namespace oly::col2d
 			{
 				float(*bx)(const Element& e) = nullptr;
 				if constexpr (MinX)
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Left); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::kLeft); };
 				else
-					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Right); };
+					bx = [](const Element& e) -> float { return e.projection_max(UnitVector2D::kRight); };
 				
 				float(*by)(const Element& e) = nullptr;
 				if constexpr (MinY)
-					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::Down); };
+					by = [](const Element& e) -> float { return e.projection_max(UnitVector2D::kDown); };
 				else
-					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::Up); };
+					by = [](const Element& e) -> float { return e.projection_min(UnitVector2D::kUp); };
 
 				if constexpr (XY)
 				{
@@ -707,7 +707,7 @@ namespace oly::col2d
             return transformer_;
         }
 		
-        Transformer2DExposure<ex::Full> set_transformer()
+        Transformer2DExposure<ex::kFull> set_transformer()
         {
             return transformer_;
         }

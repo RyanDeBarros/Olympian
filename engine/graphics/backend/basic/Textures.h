@@ -262,7 +262,7 @@ namespace oly::graphics
     class Anim
     {
         unsigned char* buf_ = nullptr;
-        SmartReference<AnimDimensions> dim_ = REF_INIT;
+        SmartReference<AnimDimensions> dim_ = kRefInit;
 
     public:
         Anim(const detail::ResourcePath& filepath, SpritesheetOptions options = {});

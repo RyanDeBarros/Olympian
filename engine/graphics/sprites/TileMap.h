@@ -66,7 +66,7 @@ namespace oly::rendering
         Transform2D& set_local();
 
         Transformer2DExposure<> get_transformer() const;
-        Transformer2DExposure<ex::AttachOnly> set_transformer();
+        Transformer2DExposure<ex::kAttachOnly> set_transformer();
 
 		void draw() const;
 

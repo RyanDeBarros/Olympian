@@ -311,7 +311,7 @@ namespace oly::context
         auto toml = io::load_toml(file);
         assets::Parser parser(toml);
 
-        rendering::FontFamilyRef font_family = REF_INIT;
+        rendering::FontFamilyRef font_family = kRefInit;
         if (auto styles = parser.optional<TOMLNode>(detail::Key::Style)())
         {
             if (styles->as_table())

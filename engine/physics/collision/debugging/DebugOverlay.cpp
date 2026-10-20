@@ -405,7 +405,7 @@ namespace oly::debug
 
         if (debug_group_.shapes.empty())
         {
-            sprite_.set_texture(REF_NULL);
+            sprite_.set_texture(kRefNull);
             return;
         }
 
@@ -445,7 +445,7 @@ namespace oly::debug
 
         if (bounds.width() <= 0 || bounds.height() <= 0)
         {
-            sprite_.set_texture(REF_NULL);
+            sprite_.set_texture(kRefNull);
             return;
         }
 

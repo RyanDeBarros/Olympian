@@ -129,14 +129,14 @@ namespace oly::col2d::sat
 			static OverlapResult impl(const AABB& c, const Other& other)
 			{
 				{
-					UnitVector2D axis = UnitVector2D::Right;
+					UnitVector2D axis = UnitVector2D::kRight;
 					auto [min2, max2] = other.projection_interval(axis);
 					if (sat(c.x1, c.x2, min2, max2, axis) <= 0.0f)
 						return false;
 				}
 
 				{
-					UnitVector2D axis = UnitVector2D::Up;
+					UnitVector2D axis = UnitVector2D::kUp;
 					auto [min2, max2] = other.projection_interval(axis);
 					if (sat(c.y1, c.y2, min2, max2, axis) <= 0.0f)
 						return false;
@@ -151,7 +151,7 @@ namespace oly::col2d::sat
 		{
 			static void update_collision(const AABB& c, const Other& other, CollisionResult& info)
 			{
-				UnitVector2D axis = UnitVector2D::Right;
+				UnitVector2D axis = UnitVector2D::kRight;
 				float depth = sat(c, other, axis);
 				if (depth <= 0.0f)
 				{
@@ -164,7 +164,7 @@ namespace oly::col2d::sat
 					info.penetration_depth = depth;
 					info.unit_impulse = axis;
 				}
-				axis = UnitVector2D::Up;
+				axis = UnitVector2D::kUp;
 				depth = sat(c, other, axis);
 				if (depth <= 0.0f)
 				{

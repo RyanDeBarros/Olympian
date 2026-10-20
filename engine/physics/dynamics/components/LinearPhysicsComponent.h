@@ -78,7 +78,7 @@ namespace oly::physics
         mutable glm::vec2 collision_linear_impulse_ = {};
 
     public:
-        LinearSubMaterialRef submaterial = REF_DEFAULT;
+        LinearSubMaterialRef submaterial = kRefDefault;
         LinearPhysicsProperties properties;
 
     public:

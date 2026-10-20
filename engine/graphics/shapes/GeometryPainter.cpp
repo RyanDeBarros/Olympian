@@ -62,7 +62,7 @@ namespace oly::rendering
     {
         painter_.context_locked_ = true;
 
-        Camera2DRef new_camera = REF_INIT;
+        Camera2DRef new_camera = kRefInit;
         new_camera->project_to_rect((math::Rect2D)bounds);
         new_camera->transformer.set_local().rotation = rotation;
         new_camera->transformer.set_local().scale = scale;

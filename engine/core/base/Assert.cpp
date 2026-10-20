@@ -2,61 +2,71 @@
 
 namespace oly::internal
 {
-	bool check_opengl_error()
-	{
-		if (auto err = glGetError())
-		{
-			const char* description = "";
-			switch (err)
-			{
-			case GL_INVALID_ENUM:
-				description = "Invalid Enum";
-				break;
-			case GL_INVALID_VALUE:
-				description = "Invalid Value";
-				break;
-			case GL_INVALID_OPERATION:
-				description = "Invalid Operation";
-				break;
-			case GL_INVALID_FRAMEBUFFER_OPERATION:
-				description = "Invalid Framebuffer Operation";
-				break;
-			case GL_OUT_OF_MEMORY:
-				description = "Out of Memory";
-				break;
-			case GL_STACK_UNDERFLOW:
-				description = "Stack Underflow";
-				break;
-			case GL_STACK_OVERFLOW:
-				description = "Stack Overflow";
-				break;
-			}
-			OLY_LOG_ERROR(kLog.opengl(err)) << description << kLog.nl;
-#ifdef _DEBUG
-			__debugbreak();
-#endif
-			return true;
-		}
-		return false;
-	}
+    bool check_opengl_error()
+    {
+        if (auto err = glGetError())
+        {
+            const char* description = "";
+            switch (err)
+            {
+            case GL_INVALID_ENUM:
+                description = "Invalid Enum";
+                break;
 
-	bool check_glfw_error()
-	{
-		const char* description = "";
-		if (auto err = glfwGetError(&description))
-		{
-			OLY_LOG_ERROR(kLog.glfw(err)) << description << kLog.nl;
-#ifdef _DEBUG
-			__debugbreak();
-#endif
-			return true;
-		}
-		return false;
-	}
+            case GL_INVALID_VALUE:
+                description = "Invalid Value";
+                break;
 
-	void check_errors()
-	{
-		while (check_opengl_error());
-		while (check_glfw_error());
-	}
+            case GL_INVALID_OPERATION:
+                description = "Invalid Operation";
+                break;
+
+            case GL_INVALID_FRAMEBUFFER_OPERATION:
+                description = "Invalid Framebuffer Operation";
+                break;
+
+            case GL_OUT_OF_MEMORY:
+                description = "Out of Memory";
+                break;
+
+            case GL_STACK_UNDERFLOW:
+                description = "Stack Underflow";
+                break;
+
+            case GL_STACK_OVERFLOW:
+                description = "Stack Overflow";
+                break;
+            }
+
+            OLY_LOG_ERROR(kLog.opengl(err)) << description << kLog.nl;
+
+#ifdef _DEBUG
+            __debugbreak();
+#endif
+            return true;
+        }
+        return false;
+    }
+
+    bool check_glfw_error()
+    {
+        const char* description = "";
+        if (auto err = glfwGetError(&description))
+        {
+            OLY_LOG_ERROR(kLog.glfw(err)) << description << kLog.nl;
+
+#ifdef _DEBUG
+            __debugbreak();
+#endif
+
+            return true;
+        }
+        return false;
+    }
+
+    void check_errors()
+    {
+        while (check_opengl_error());
+        while (check_glfw_error());
+    }
 }

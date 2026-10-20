@@ -4,8 +4,8 @@
 #include "core/base/SmartReference.h"
 #include "core/base/UnitVector.h"
 
-#include "external/TOML.h"
 #include "external/GLM.h"
+#include "external/TOML.h"
 
 #include <imp/dependent_false.hpp>
 #include <imp/id_generator.hpp>
@@ -14,316 +14,297 @@
 
 namespace oly
 {
-	namespace vectors
-	{
-		constexpr glm::vec2 I2 = { 1.0f, 0.0f };
-		constexpr glm::vec3 I3 = { 1.0f, 0.0f, 0.0f };
-		constexpr glm::vec4 I4 = { 1.0f, 0.0f, 0.0f, 0.0f };
-		constexpr glm::vec2 J2 = { 0.0f, 1.0f };
-		constexpr glm::vec3 J3 = { 0.0f, 1.0f, 0.0f };
-		constexpr glm::vec4 J4 = { 0.0f, 1.0f, 0.0f, 0.0f };
-		constexpr glm::vec3 K3 = { 0.0f, 0.0f, 1.0f };
-		constexpr glm::vec4 K4 = { 0.0f, 0.0f, 1.0f, 0.0f };
-		constexpr glm::vec3 H3 = { 0.0f, 0.0f, 1.0f };
-		constexpr glm::vec4 H4 = { 0.0f, 0.0f, 0.0f, 1.0f };
-	}
+    namespace vectors
+    {
+        constexpr glm::vec2 kI2 = { 1.0f, 0.0f };
+        constexpr glm::vec3 kI3 = { 1.0f, 0.0f, 0.0f };
+        constexpr glm::vec4 kI4 = { 1.0f, 0.0f, 0.0f, 0.0f };
+        constexpr glm::vec2 kJ2 = { 0.0f, 1.0f };
+        constexpr glm::vec3 kJ3 = { 0.0f, 1.0f, 0.0f };
+        constexpr glm::vec4 kJ4 = { 0.0f, 1.0f, 0.0f, 0.0f };
+        constexpr glm::vec3 kK3 = { 0.0f, 0.0f, 1.0f };
+        constexpr glm::vec4 kK4 = { 0.0f, 0.0f, 1.0f, 0.0f };
+        constexpr glm::vec3 kH3 = { 0.0f, 0.0f, 1.0f };
+        constexpr glm::vec4 kH4 = { 0.0f, 0.0f, 0.0f, 1.0f };
+    }
 
-	constexpr glm::mat3 translation_matrix(glm::vec2 position)
-	{
-		return { vectors::I3, vectors::J3, glm::vec3(position, 1.0f) };
-	}
+    constexpr glm::mat3 translation_matrix(glm::vec2 position)
+    {
+        return { vectors::kI3, vectors::kJ3, glm::vec3(position, 1.0f) };
+    }
 
-	inline glm::mat2 rotation_matrix_2x2(float rotation)
-	{
-		float cos = glm::cos(rotation);
-		float sin = glm::sin(rotation);
-		return { { cos, sin }, { -sin, cos } };
-	}
+    extern glm::mat2 rotation_matrix_2x2(float rotation);
+    extern glm::mat3 rotation_matrix(float rotation);
 
-	inline glm::mat3 rotation_matrix(float rotation)
-	{
-		float cos = glm::cos(rotation);
-		float sin = glm::sin(rotation);
-		return { { cos, sin, 0.0f }, { -sin, cos, 0.0f }, vectors::H3 };
-	}
+    constexpr glm::mat3 scale_matrix(glm::vec2 scale)
+    {
+        return { scale.x * vectors::kI3, scale.y * vectors::kJ3, vectors::kH3 };
+    }
 
-	constexpr glm::mat3 scale_matrix(glm::vec2 scale)
-	{
-		return { scale.x * vectors::I3, scale.y * vectors::J3, vectors::H3 };
-	}
+    struct Transform2D
+    {
+        glm::vec2 position = { 0.0f, 0.0f };
+        float rotation = 0.0f;
+        glm::vec2 scale = { 1.0f, 1.0f };
 
-	struct Transform2D
-	{
-		glm::vec2 position = { 0.0f, 0.0f };
-		float rotation = 0.0f;
-		glm::vec2 scale = { 1.0f, 1.0f };
+        static Transform2D load(TOMLNode node);
 
-		constexpr glm::mat3 matrix() const
-		{
-			return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
-		}
+        constexpr glm::mat3 matrix() const
+        {
+            return translation_matrix(position) * rotation_matrix(rotation) * scale_matrix(scale);
+        }
 
-		void overload(TOMLNode node);
+        void overload(TOMLNode node);
+    };
 
-		static Transform2D load(TOMLNode node)
-		{
-			Transform2D transform;
-			transform.overload(node);
-			return transform;
-		}
-	};
-
-	struct TransformModifier2D : public imp::polymorphic
-	{
+    struct TransformModifier2D
+        : public imp::polymorphic
+    {
         IMP_POLYMORPHIC_IMPL((TransformModifier2D));
 
-		virtual ~TransformModifier2D() = default;
-		virtual void operator()(glm::mat3& global) const {}
+        virtual ~TransformModifier2D() = default;
+        virtual void operator()(glm::mat3& global) const {}
 
-		virtual void overload(TOMLNode node) {}
-		static void overload(imp::poly<TransformModifier2D>& modifier, TOMLNode node);
-	
-		static imp::poly<TransformModifier2D> load(TOMLNode node)
-		{
-			imp::poly<TransformModifier2D> modifier = nullptr;
-			overload(modifier, node);
-			return modifier;
-		}
-	};
+        virtual void overload(TOMLNode node) {}
 
-	class Transformer2D;
+        static void overload(imp::poly<TransformModifier2D>& modifier, TOMLNode node);
+        static imp::poly<TransformModifier2D> load(TOMLNode node);
+    };
 
-	namespace internal
-	{
-		class Transformer2DRegistry final : public imp::soft_singleton<Transformer2DRegistry>
-		{
-			typedef glm::uint Index;
+    class Transformer2D;
 
-			imp::soft_id_generator<Index> id_generator;
-			static const Index NULL_INDEX = Index(-1);
+    namespace internal
+    {
+        class Transformer2DRegistry final
+            : public imp::soft_singleton<Transformer2DRegistry>
+        {
+            using Index = glm::uint;
+            friend class imp::soft_singleton<Transformer2DRegistry>;
 
-			friend class imp::soft_singleton<Transformer2DRegistry>;
+        private:
+            static const Index kNullIndex = Index(-1);
 
-			Transformer2DRegistry()
-				: id_generator(0, nmax<Index>() - 1)
-			{
-			}
+            imp::soft_id_generator<Index> id_generator_;
+            std::vector<Transformer2D*> transformers_;
+            std::vector<Index> parent_;
+            std::vector<Index> index_in_parent_;
+            std::vector<std::vector<Index>> children_;
 
-			std::vector<Transformer2D*> transformers;
-			std::vector<Index> parent;
-			std::vector<Index> index_in_parent;
-			std::vector<std::vector<Index>> children;
+        private:
+            Transformer2DRegistry();
 
-		public:
-			class Handle
-			{
-				friend class Transformer2D;
+        public:
+            class Handle
+            {
+                friend class Transformer2D;
 
-				Index id;
+            private:
+                Index id_;
 
-				void init(Transformer2D* transformer);
-				void del();
+                Handle(Transformer2D* transformer);
+                Handle(Transformer2D* transformer, const Handle&);
+                Handle(Transformer2D* transformer, Handle&&) noexcept;
 
-				Handle(Transformer2D* transformer);
-				Handle(Transformer2D* transformer, const Handle&);
-				Handle(Transformer2D* transformer, Handle&&) noexcept;
+            public:
+                ~Handle();
 
-			public:
-				~Handle();
+            private:
+                Handle& operator=(const Handle&);
+                Handle& operator=(Handle&&) noexcept;
 
-			private:
-				Handle& operator=(const Handle&);
-				Handle& operator=(Handle&&) noexcept;
+            public:
+                void unparent() const;
+                void clear_children() const;
+                Transformer2D* get_parent() const;
 
-			public:
-				void unparent() const;
-				void clear_children() const;
-				Transformer2D* get_parent() const;
+                Transformer2D* get_top_level_parent() const;
 
-			private:
-				void set_parent(Index new_parent) const;
-				void children_post_set_internal() const;
-				void children_post_set_external() const;
+                void attach_parent(Transformer2D* parent) const;
+                void attach_child(Transformer2D& child) const;
+                Index children_count() const;
+                Transformer2D* get_child(Index index) const;
 
-			public:
-				Transformer2D* get_top_level_parent() const;
+                void break_from_chain() const;
 
-				void attach_parent(Transformer2D* parent) const;
-				void attach_child(Transformer2D& child) const;
-				Index children_count() const;
-				Transformer2D* get_child(Index index) const;
+            private:
+                void init(Transformer2D* transformer);
+                void del();
 
-				void break_from_chain() const;
-			};
-		};
-	}
+                void set_parent(Index new_parent) const;
+                void children_post_set_internal() const;
+                void children_post_set_external() const;
+            };
+        };
+    }
 
-	class Transformer2D
-	{
-		friend class internal::Transformer2DRegistry::Handle;
+    class Transformer2D
+    {
+        friend class internal::Transformer2DRegistry::Handle;
 
-		Transform2D local;
-		internal::Transformer2DRegistry::Handle handle;
-		mutable glm::mat3 _global = glm::mat3(1.0f);
-		mutable bool _dirty_internal = true;
-		mutable bool _dirty_external = true;
-		imp::poly<TransformModifier2D> modifier;
+    private:
+        Transform2D local_;
+        internal::Transformer2DRegistry::Handle handle_;
+        mutable glm::mat3 global_ = glm::mat3(1.0f);
+        mutable bool dirty_internal_ = true;
+        mutable bool dirty_external_ = true;
+        imp::poly<TransformModifier2D> modifier_;
 
-	public:
-		Transformer2D(Transform2D local = {});
-		Transformer2D(Transform2D local, imp::poly<TransformModifier2D> modifier);
-		Transformer2D(const Transformer2D&);
-		Transformer2D(Transformer2D&&) noexcept;
-		~Transformer2D();
-		Transformer2D& operator=(const Transformer2D&);
-		Transformer2D& operator=(Transformer2D&&) noexcept;
+    public:
+        Transformer2D(Transform2D local = {});
+        Transformer2D(Transform2D local, imp::poly<TransformModifier2D> modifier);
+        Transformer2D(const Transformer2D&);
+        Transformer2D(Transformer2D&&) noexcept;
+        ~Transformer2D();
+        Transformer2D& operator=(const Transformer2D&);
+        Transformer2D& operator=(Transformer2D&&) noexcept;
 
-		const internal::Transformer2DRegistry::Handle& get_handle() const { return handle; }
+    public:
+        static Transformer2D load(TOMLNode node);
 
-		glm::mat3 global() const { pre_get(); return _global; }
-		void set_global(const glm::mat3& g) { _global = g; post_set(); _dirty_internal = false; }
+        const internal::Transformer2DRegistry::Handle& get_handle() const;
 
-	private:
-		void post_set() const;
-		void post_set_internal() const;
-		void post_set_external() const;
-		void pre_get() const;
+        glm::mat3 global() const;
+        void set_global(const glm::mat3& g);
 
-	public:
-		bool flush() const;
-		bool dirty() const { return _dirty_external; }
-		const Transform2D& get_local() const { return local; }
-		Transform2D& set_local() { post_set(); return local; }
+        bool flush() const;
+        bool dirty() const;
 
-		UnitVector2D forward() const;
+        const Transform2D& get_local() const;
+        Transform2D& set_local();
 
-		imp::poly<TransformModifier2D>& set_modifier() { post_set(); return modifier; }
+        UnitVector2D forward() const;
 
-		template<std::derived_from<TransformModifier2D> T>
-		const T& get_modifier() const { return dynamic_cast<const T&>(*modifier); }
-		
+        imp::poly<TransformModifier2D>& set_modifier();
+
         template<std::derived_from<TransformModifier2D> T>
-		T& ref_modifier() { post_set(); return dynamic_cast<T&>(*modifier); }
+        const T& get_modifier() const
+        {
+            return dynamic_cast<const T&>(*modifier_);
+        }
 
-		void attach_parent(Transformer2D* parent) const { handle.attach_parent(parent); }
-		void attach_child(Transformer2D& child) const { handle.attach_child(child); }
+        template<std::derived_from<TransformModifier2D> T>
+        T& ref_modifier()
+        {
+            post_set();
+            return dynamic_cast<T&>(*modifier_);
+        }
 
-		static Transformer2D load(TOMLNode node);
-	};
+        void attach_parent(Transformer2D* parent) const;
+        void attach_child(Transformer2D& child) const;
+
+    private:
+        void post_set() const;
+        void post_set_internal() const;
+        void post_set_external() const;
+        void pre_get() const;
+    };
 
     using Transformer2DRef = SmartReference<Transformer2D>;
 
-	constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
-	{
-		return translation_matrix(size * (glm::vec2(0.5f) - pivot));
-	}
+    constexpr glm::mat3 pivot_matrix(glm::vec2 pivot, glm::vec2 size)
+    {
+        return translation_matrix(size * (glm::vec2(0.5f) - pivot));
+    }
 
-	struct PivotTransformModifier2D : public TransformModifier2D
-	{
+    struct PivotTransformModifier2D
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((PivotTransformModifier2D));
 
-		glm::vec2 pivot = { 0.5f, 0.5f };
-		glm::vec2 size = { 0.0f, 0.0f };
+        glm::vec2 pivot = { 0.5f, 0.5f };
+        glm::vec2 size = { 0.0f, 0.0f };
 
-		PivotTransformModifier2D(glm::vec2 pivot = glm::vec2(0.5f), glm::vec2 size = glm::vec2(0.0f)) : pivot(pivot), size(size) {}
+        PivotTransformModifier2D(glm::vec2 pivot = glm::vec2(0.5f), glm::vec2 size = glm::vec2(0.0f));
 
-		virtual void operator()(glm::mat3& global) const override;
-		virtual void overload(TOMLNode node) override;
-	};
+        virtual void operator()(glm::mat3& global) const override;
+        virtual void overload(TOMLNode node) override;
+    };
 
-	constexpr glm::mat3 shearing_matrix(glm::vec2 shearing)
-	{
-		return { { 1.0f, shearing.y, 0.0f }, { shearing.x, 1.0f, 0.0f }, vectors::H3 };
-	}
+    constexpr glm::mat3 shearing_matrix(glm::vec2 shearing)
+    {
+        return { { 1.0f, shearing.y, 0.0f }, { shearing.x, 1.0f, 0.0f }, vectors::kH3 };
+    }
 
-	struct ShearTransformModifier2D : public TransformModifier2D
-	{
+    struct ShearTransformModifier2D
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((ShearTransformModifier2D));
 
-		glm::vec2 shearing = { 0.0f, 0.0f };
+        glm::vec2 shearing = { 0.0f, 0.0f };
 
-		ShearTransformModifier2D(glm::vec2 shearing = glm::vec2(0.0f)) : shearing(shearing) {}
+        ShearTransformModifier2D(glm::vec2 shearing = glm::vec2(0.0f));
 
-		virtual void operator()(glm::mat3& global) const override;
-		virtual void overload(TOMLNode node) override;
-	};
+        virtual void operator()(glm::mat3& global) const override;
+        virtual void overload(TOMLNode node) override;
+    };
 
-	struct OffsetTransformModifier2D : public TransformModifier2D
-	{
+    struct OffsetTransformModifier2D
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((OffsetTransformModifier2D));
 
-		glm::vec2 offset = { 0.0f, 0.0f };
+        glm::vec2 offset = { 0.0f, 0.0f };
 
-		OffsetTransformModifier2D(glm::vec2 offset = glm::vec2(0.0f)) : offset(offset) {}
+        OffsetTransformModifier2D(glm::vec2 offset = glm::vec2(0.0f));
 
-		virtual void operator()(glm::mat3& global) const override;
-		virtual void overload(TOMLNode node) override;
-	};
+        virtual void operator()(glm::mat3& global) const override;
+        virtual void overload(TOMLNode node) override;
+    };
 
-	template<size_t N>
-	struct CompoundTransformModifier2D
-	{
-		static_assert(imp::dependent_false_v<N>);
-	};
+    template<size_t N>
+    struct CompoundTransformModifier2D
+    {
+        static_assert(imp::dependent_false_v<N>);
+    };
 
-	template<>
-	struct CompoundTransformModifier2D<2> : public TransformModifier2D
-	{
+    template<>
+    struct CompoundTransformModifier2D<2>
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<2>));
 
-		imp::poly<TransformModifier2D> t1;
-		imp::poly<TransformModifier2D> t2;
+        imp::poly<TransformModifier2D> t1;
+        imp::poly<TransformModifier2D> t2;
 
-		virtual void operator()(glm::mat3& global) const override
-		{
-			(*t1)(global);
-			(*t2)(global);
-		}
-	};
+        virtual void operator()(glm::mat3& global) const override;
+    };
 
-	template<>
-	struct CompoundTransformModifier2D<3> : public TransformModifier2D
-	{
+    template<>
+    struct CompoundTransformModifier2D<3>
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<3>));
 
-		imp::poly<TransformModifier2D> t1;
-		imp::poly<TransformModifier2D> t2;
-		imp::poly<TransformModifier2D> t3;
+        imp::poly<TransformModifier2D> t1;
+        imp::poly<TransformModifier2D> t2;
+        imp::poly<TransformModifier2D> t3;
 
-		virtual void operator()(glm::mat3& global) const override
-		{
-			(*t1)(global);
-			(*t2)(global);
-			(*t3)(global);
-		}
-	};
+        virtual void operator()(glm::mat3& global) const override;
+    };
 
-	template<>
-	struct CompoundTransformModifier2D<4> : public TransformModifier2D
-	{
+    template<>
+    struct CompoundTransformModifier2D<4>
+        : public TransformModifier2D
+    {
         IMP_POLYMORPHIC_IMPL((CompoundTransformModifier2D<4>));
 
-		imp::poly<TransformModifier2D> t1;
-		imp::poly<TransformModifier2D> t2;
-		imp::poly<TransformModifier2D> t3;
-		imp::poly<TransformModifier2D> t4;
+        imp::poly<TransformModifier2D> t1;
+        imp::poly<TransformModifier2D> t2;
+        imp::poly<TransformModifier2D> t3;
+        imp::poly<TransformModifier2D> t4;
 
-		virtual void operator()(glm::mat3& global) const override
-		{
-			(*t1)(global);
-			(*t2)(global);
-			(*t3)(global);
-			(*t4)(global);
-		}
-	};
+        virtual void operator()(glm::mat3& global) const override;
+    };
 
-	extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
-	extern glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point);
-	extern glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction);
-	extern glm::vec2 transform_direction(const glm::mat3x2& tr, glm::vec2 direction);
-	extern glm::vec2 transform_normal(const glm::mat3& tr, glm::vec2 normal);
-	extern glm::vec2 transform_normal(const glm::mat3x2& tr, glm::vec2 normal);
-	
-	inline glm::mat3 augment(const glm::mat2& l, glm::vec2 t) { return { glm::vec3(l[0], 0.0f), glm::vec3(l[1], 0.0f), glm::vec3(t, 1.0f) }; }
-	inline glm::mat3 augment(const glm::mat3x2& tr) { return { glm::vec3(tr[0], 0.0f), glm::vec3(tr[1], 0.0f), glm::vec3(tr[2], 1.0f) }; }
+    extern glm::vec2 transform_point(const glm::mat3& tr, glm::vec2 point);
+    extern glm::vec2 transform_point(const glm::mat3x2& tr, glm::vec2 point);
+
+    extern glm::vec2 transform_direction(const glm::mat3& tr, glm::vec2 direction);
+    extern glm::vec2 transform_direction(const glm::mat3x2& tr, glm::vec2 direction);
+    
+    extern glm::vec2 transform_normal(const glm::mat3& tr, glm::vec2 normal);
+    extern glm::vec2 transform_normal(const glm::mat3x2& tr, glm::vec2 normal);
+
+    extern glm::mat3 augment(const glm::mat2& l, glm::vec2 t);
+    extern glm::mat3 augment(const glm::mat3x2& tr);
 }

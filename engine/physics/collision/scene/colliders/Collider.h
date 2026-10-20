@@ -82,7 +82,7 @@ namespace oly::col2d
         Transform2D& set_local();
 
         Transformer2DExposure<> get_transformer() const;
-        Transformer2DExposure<ex::Full> set_transformer();
+        Transformer2DExposure<ex::kFull> set_transformer();
 
         Layer layer() const;
         Layer& layer();

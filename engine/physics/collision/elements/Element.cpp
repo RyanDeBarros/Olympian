@@ -229,8 +229,8 @@ namespace oly::col2d
 
 #define OLY_ELEMENT_AABB_WRAP(p)\
 		{\
-			fpair ix = p->projection_interval(UnitVector2D::Right);\
-			fpair iy = p->projection_interval(UnitVector2D::Up);\
+			fpair ix = p->projection_interval(UnitVector2D::kRight);\
+			fpair iy = p->projection_interval(UnitVector2D::kUp);\
 			return AABB{ .x1 = ix.first, .x2 = ix.second, .y1 = iy.first, .y2 = iy.second };\
 		}
 

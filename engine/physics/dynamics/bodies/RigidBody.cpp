@@ -113,7 +113,7 @@ namespace oly::physics
         return *transformer_;
     }
 
-    Transformer2DExposure<ex::Full> RigidBody::set_transformer()
+    Transformer2DExposure<ex::kFull> RigidBody::set_transformer()
     {
         return *transformer_;
     }

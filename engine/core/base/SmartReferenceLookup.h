@@ -6,49 +6,54 @@
 
 namespace oly
 {
-	template<typename Object, typename Constructor>
-	class SmartReferenceLookup
-	{
-		struct Hash
-		{
-			size_t operator()(Constructor ctor) const { return ctor.hash(); }
-		};
+    template<typename Object, typename Constructor>
+    class SmartReferenceLookup
+    {
+        struct Hash
+        {
+            size_t operator()(Constructor ctor) const
+            {
+                return ctor.hash();
+            }
+        };
 
-		std::unordered_map<Constructor, WeakReference<Object>, Hash> map;
-		std::unordered_map<Object*, Constructor> lut;
+    private:
+        std::unordered_map<Constructor, WeakReference<Object>, Hash> map_;
+        std::unordered_map<Object*, Constructor> lut_;
 
-		static void on_ref_delete(Object& obj, void* usr)
-		{
-			reinterpret_cast<SmartReferenceLookup<Object, Constructor>*>(usr)->on_ref_delete_impl(obj);
-		}
+    public:
+        SmartReference<Object> get(const Constructor& ctor)
+        {
+            auto it = map_.find(ctor);
+            if (it != map_.end())
+                return it->second.lock();
+            else
+            {
+                SmartReference<Object> obj(ctor());
+                obj.set_on_delete(&on_ref_delete, this);
+                map_.emplace(ctor, obj.weak());
+                lut_.emplace(obj.base(), ctor);
+                return obj;
+            }
+        }
 
-		void on_ref_delete_impl(Object& obj)
-		{
-			auto it = lut.find(&obj);
-			map.erase(it->second);
-			lut.erase(it);
-		}
+        void clear()
+        {
+            map_.clear();
+            lut_.clear();
+        }
 
-	public:
-		SmartReference<Object> get(const Constructor& ctor)
-		{
-			auto it = map.find(ctor);
-			if (it != map.end())
-				return it->second.lock();
-			else
-			{
-				SmartReference<Object> obj(ctor());
-				obj.set_on_delete(&on_ref_delete, this);
-				map.emplace(ctor, obj.weak());
-				lut.emplace(obj.base(), ctor);
-				return obj;
-			}
-		}
+    private:
+        static void on_ref_delete(Object& obj, void* usr)
+        {
+            reinterpret_cast<SmartReferenceLookup<Object, Constructor>*>(usr)->on_ref_delete_impl(obj);
+        }
 
-		void clear()
-		{
-			map.clear();
-			lut.clear();
-		}
-	};
+        void on_ref_delete_impl(Object& obj)
+        {
+            auto it = lut_.find(&obj);
+            map_.erase(it->second);
+            lut_.erase(it);
+        }
+    };
 }

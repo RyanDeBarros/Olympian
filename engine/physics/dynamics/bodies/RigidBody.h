@@ -21,7 +21,7 @@ namespace oly::physics
 
 	protected:
 		std::vector<col2d::Collider> colliders_;
-		Transformer2DRef transformer_ = REF_INIT;
+		Transformer2DRef transformer_ = kRefInit;
 
 	public:
         bool collision_enabled = true;
@@ -50,7 +50,7 @@ namespace oly::physics
 
     public:
         Transformer2DExposure<> get_transformer() const;
-		Transformer2DExposure<ex::Full> set_transformer();
+		Transformer2DExposure<ex::kFull> set_transformer();
         void assign_transformer(const Transformer2DRef& ref);
 
         const Transform2D& get_local() const;

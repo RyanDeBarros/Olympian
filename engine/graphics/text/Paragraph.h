@@ -186,7 +186,7 @@ namespace oly::rendering
         void set_batch(SpriteBatch& batch);
 
         Transformer2DExposure<> get_transformer() const;
-        Transformer2DExposure<ex::AttachOnly> set_transformer();
+        Transformer2DExposure<ex::kAttachOnly> set_transformer();
 
         const ParagraphFormat& get_format() const;
         ParagraphFormatExposure set_format();

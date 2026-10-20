@@ -669,7 +669,7 @@ namespace oly::rendering
         return transformer_;
     }
 
-    Transformer2DExposure<ex::AttachOnly> Paragraph::set_transformer()
+    Transformer2DExposure<ex::kAttachOnly> Paragraph::set_transformer()
     {
         return transformer_;
     }

@@ -6,7 +6,7 @@ namespace oly::rendering
 {
 	void internal::initialize_default_camera(bool boxed, bool stretch)
 	{
-		Camera2DRef(REF_DEFAULT)->reinitialize(boxed, stretch);
+		Camera2DRef(kRefDefault)->reinitialize(boxed, stretch);
 	}
 
 	Camera2D::Camera2D(bool boxed, bool stretch)

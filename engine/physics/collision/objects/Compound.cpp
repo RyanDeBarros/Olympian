@@ -45,7 +45,7 @@ namespace oly::col2d
         return transformer_;
     }
     
-    Transformer2DExposure<ex::Full> TCompound::set_transformer()
+    Transformer2DExposure<ex::kFull> TCompound::set_transformer()
     {
         return transformer_;
     }

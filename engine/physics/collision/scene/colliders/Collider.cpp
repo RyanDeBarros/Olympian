@@ -94,7 +94,7 @@ namespace oly::col2d
         return internal::lut_transformer(obj_);
     }
 
-    Transformer2DExposure<ex::Full> Collider::set_transformer()
+    Transformer2DExposure<ex::kFull> Collider::set_transformer()
     {
         return internal::lut_transformer(obj_);
     }

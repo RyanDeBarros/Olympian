@@ -44,7 +44,7 @@ namespace oly::physics
         mutable State post_state_;
 
     public:
-        MaterialRef material = REF_DEFAULT;
+        MaterialRef material = kRefDefault;
 
         virtual ~DynamicsComponent() = default;
 

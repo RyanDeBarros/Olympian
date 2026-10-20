@@ -4,21 +4,22 @@
 
 namespace oly::internal
 {
-	extern bool check_opengl_error();
-	extern bool check_glfw_error();
-	extern void check_errors();
+    extern bool check_opengl_error();
+    extern bool check_glfw_error();
+    extern void check_errors();
 
-	constexpr void assertcond(bool condition, const char* description = "", const char* file = nullptr, int line = 0)
-	{
-		if (!condition)
-		{
-			if (file)
-				OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << kLog.nl;
-			else
-				OLY_LOG_ERROR(true, "ASSERT") << description << kLog.nl;
-			__debugbreak();
-		}
-	}
+    constexpr void assertcond(bool condition, const char* description = "", const char* file = nullptr, int line = 0)
+    {
+        if (!condition)
+        {
+            if (file)
+                OLY_LOG_ERROR(true, "ASSERT") << description << " at " << file << ":" << line << kLog.nl;
+            else
+                OLY_LOG_ERROR(true, "ASSERT") << description << kLog.nl;
+
+            __debugbreak();
+        }
+    }
 }
 
 #define OLY_ASSERT(x) { oly::internal::assertcond((x), #x, __FILE__, __LINE__); }

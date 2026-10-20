@@ -63,7 +63,7 @@ namespace oly::rendering
             imp::soft_id_generator<GLuint> id_generator;
 
         public:
-            Camera2DRef camera = REF_DEFAULT;
+            Camera2DRef camera = kRefDefault;
 
         public:
             PolygonBatch();

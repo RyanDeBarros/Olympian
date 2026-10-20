@@ -137,7 +137,7 @@ namespace oly::rendering
             QuadInfoStore quad_info_store_;
 
         public:
-            Camera2DRef camera = REF_DEFAULT;
+            Camera2DRef camera = kRefDefault;
             glm::vec4 global_modulation = glm::vec4(1.0f);
 
         public:

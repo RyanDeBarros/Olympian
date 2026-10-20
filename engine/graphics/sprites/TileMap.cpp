@@ -240,7 +240,7 @@ namespace oly::rendering
         return transformer_;
     }
 
-    Transformer2DExposure<ex::AttachOnly> TileMap::set_transformer()
+    Transformer2DExposure<ex::kAttachOnly> TileMap::set_transformer()
     {
         return transformer_;
     }

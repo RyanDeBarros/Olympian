@@ -50,10 +50,10 @@ namespace oly::rendering
 
         struct
         {
-            SmartReference<graphics::Shader> compute_spawn_ref = REF_NULL;
+            SmartReference<graphics::Shader> compute_spawn_ref = kRefNull;
             GLuint compute_spawn = 0;
 
-            SmartReference<graphics::Shader> compute_update_ref = REF_NULL;
+            SmartReference<graphics::Shader> compute_update_ref = kRefNull;
             GLuint compute_update = 0;
 
             GLuint renderer = 0;
@@ -100,7 +100,7 @@ namespace oly::rendering
             OldOnYoung
         } age_sort = AgeSort::YoungOnOld;
 
-        rendering::Camera2DRef camera = REF_DEFAULT;
+        rendering::Camera2DRef camera = kRefDefault;
         Transformer2D transformer;
 
     public:

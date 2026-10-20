@@ -121,7 +121,7 @@ namespace oly::rendering
         return transformer_;
     }
     
-    Transformer2DExposure<ex::AttachOnly> NineSlice::set_transformer()
+    Transformer2DExposure<ex::kAttachOnly> NineSlice::set_transformer()
     {
         return transformer_;
     }

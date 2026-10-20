@@ -14,6 +14,6 @@ namespace oly
 
     rendering::Camera2D& default_camera()
     {
-        return *rendering::Camera2DRef(REF_DEFAULT);
+        return *rendering::Camera2DRef(kRefDefault);
     }
 }

@@ -134,7 +134,7 @@ namespace oly::physics
         mutable float collision_angular_impulse = 0.0f;
 
     public:
-        KinematicSubMaterialRef submaterial = REF_DEFAULT;
+        KinematicSubMaterialRef submaterial = kRefDefault;
         KinematicPhysicsProperties properties;
 
     public:

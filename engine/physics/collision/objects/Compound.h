@@ -58,7 +58,7 @@ namespace oly::col2d
         bool is_dirty() const;
 
         Transformer2DExposure<> get_transformer() const;
-        Transformer2DExposure<ex::Full> set_transformer();
+        Transformer2DExposure<ex::kFull> set_transformer();
 
         const Compound& get_compound() const;
         Compound& set_compound();
