@@ -65,13 +65,27 @@ namespace oly
         }
 		
         constexpr bool operator==(const BigSize&) const = default;
+        constexpr bool operator!=(const BigSize&) const = default;
 		
         constexpr bool operator<(const BigSize& rhs) const
         {
             return order_ < rhs.order_ || (order_ == rhs.order_ && v_ < rhs.order_);
         }
 
-        // TODO operator<=, operator>, operator>= for completeness
+        constexpr bool operator<=(const BigSize& rhs) const
+        {
+            return order_ < rhs.order_ || (order_ == rhs.order_ && v_ <= rhs.order_);
+        }
+
+        constexpr bool operator>(const BigSize& rhs) const
+        {
+            return order_ >= rhs.order_ && (order_ != rhs.order_ || v_ > rhs.order_);
+        }
+
+        constexpr bool operator>=(const BigSize& rhs) const
+        {
+            return order_ >= rhs.order_ && (order_ != rhs.order_ || v_ <= rhs.order_);
+        }
 
         constexpr size_t get_order() const
         {
