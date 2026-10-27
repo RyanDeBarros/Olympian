@@ -149,8 +149,6 @@ namespace oly::physics
         return dw;
     }
 
-    // DOC update latex on resolution bias removal and collision damping variables.
-
     void KinematicPhysicsComponent::post_tick() const
     {
         if (!collisions_.empty())

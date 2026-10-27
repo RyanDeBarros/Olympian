@@ -8,8 +8,6 @@
 
 namespace oly::rendering
 {
-	// DOC for all these classes
-
 	struct IDrawable
         : public imp::tree_node<IDrawable>
 	{
