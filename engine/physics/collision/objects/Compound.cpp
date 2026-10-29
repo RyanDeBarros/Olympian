@@ -4,21 +4,21 @@
 
 namespace oly::col2d
 {
-	float Compound::projection_max(UnitVector2D axis) const
-	{
-		float proj_max = -nmax<float>();
-		for (const Element& element : elements)
-			proj_max = std::max(proj_max, element.projection_max(axis));
-		return proj_max;
-	}
-	
-	float Compound::projection_min(UnitVector2D axis) const
-	{
-		float proj_min = nmax<float>();
-		for (const Element& element : elements)
-			proj_min = std::min(proj_min, element.projection_min(axis));
-		return proj_min;
-	}
+    float Compound::projection_max(UnitVector2D axis) const
+    {
+        float proj_max = -nmax<float>();
+        for (const Element& element : elements)
+            proj_max = std::max(proj_max, element.projection_max(axis));
+        return proj_max;
+    }
+
+    float Compound::projection_min(UnitVector2D axis) const
+    {
+        float proj_min = nmax<float>();
+        for (const Element& element : elements)
+            proj_min = std::min(proj_min, element.projection_min(axis));
+        return proj_min;
+    }
 
     TCompound::TCompound(std::vector<Element> elements)
         : compound_({ std::move(elements) })
@@ -29,12 +29,12 @@ namespace oly::col2d
     {
         return transformer_.get_local();
     }
-    
+
     Transform2D& TCompound::set_local()
     {
         return transformer_.set_local();
     }
-    
+
     bool TCompound::is_dirty() const
     {
         return dirty_ || transformer_.dirty();
@@ -44,7 +44,7 @@ namespace oly::col2d
     {
         return transformer_;
     }
-    
+
     Transformer2DExposure<ex::kFull> TCompound::set_transformer()
     {
         return transformer_;
@@ -99,21 +99,21 @@ namespace oly::col2d
         return compound_.perf;
     }
 
-	float TCompound::projection_max(UnitVector2D axis) const
-	{
-		float proj_max = -nmax<float>();
-		for (const Element& element : get_baked())
-			proj_max = std::max(proj_max, element.projection_max(axis));
-		return proj_max;
-	}
+    float TCompound::projection_max(UnitVector2D axis) const
+    {
+        float proj_max = -nmax<float>();
+        for (const Element& element : get_baked())
+            proj_max = std::max(proj_max, element.projection_max(axis));
+        return proj_max;
+    }
 
-	float TCompound::projection_min(UnitVector2D axis) const
-	{
-		float proj_min = nmax<float>();
-		for (const Element& element : get_baked())
-			proj_min = std::min(proj_min, element.projection_min(axis));
-		return proj_min;
-	}
+    float TCompound::projection_min(UnitVector2D axis) const
+    {
+        float proj_min = nmax<float>();
+        for (const Element& element : get_baked())
+            proj_min = std::min(proj_min, element.projection_min(axis));
+        return proj_min;
+    }
 
     void TCompound::bake() const
     {

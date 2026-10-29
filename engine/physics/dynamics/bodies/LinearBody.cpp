@@ -2,30 +2,30 @@
 
 namespace oly::physics
 {
-	LinearBody::LinearBody()
-		: RigidBody()
-	{
-	}
+    LinearBody::LinearBody()
+        : RigidBody()
+    {
+    }
 
-	LinearBody::LinearBody(LinearBody&& o) noexcept
-		: RigidBody(std::move(o))
+    LinearBody::LinearBody(LinearBody&& o) noexcept
+        : RigidBody(std::move(o))
         , dynamics_(std::move(o.dynamics_))
         , delegator(std::move(o.delegator))
-	{
-		bind_all();
-	}
+    {
+        bind_all();
+    }
 
-	LinearBody::~LinearBody()
-	{
-		unbind_all();
-	}
+    LinearBody::~LinearBody()
+    {
+        unbind_all();
+    }
 
     LinearBody& LinearBody::operator=(LinearBody&& o) noexcept
     {
         if (this != &o)
         {
-            LinearBody::operator=(std::move(o));
-            
+            RigidBody::operator=(std::move(o));
+
             dynamics_ = std::move(o.dynamics_);
             delegator = std::move(o.delegator);
         }
@@ -43,29 +43,29 @@ namespace oly::physics
         return dynamics_.is_colliding();
     }
 
-	void LinearBody::physics_pre_tick()
-	{
-		dynamics_.pre_tick(transformer_->global());
-	}
+    void LinearBody::physics_pre_tick()
+    {
+        dynamics_.pre_tick(transformer_->global());
+    }
 
-	void LinearBody::physics_post_tick()
-	{
-		dynamics_.post_tick();
-		transformer_->set_global(Transform2D{
+    void LinearBody::physics_post_tick()
+    {
+        dynamics_.post_tick();
+        transformer_->set_global(Transform2D{
             .position = dynamics_.get_state().position,
             .rotation = dynamics_.get_state().rotation,
             .scale = transformer_->get_local().scale }.matrix());
-	}
+    }
 
-	void LinearBody::bind(const col2d::Collider& collider) const
-	{
-		col2d::CollisionController::bind(collider, &LinearBody::handle_collides);
-	}
+    void LinearBody::bind(const col2d::Collider& collider) const
+    {
+        col2d::CollisionController::bind(collider, &LinearBody::handle_collides);
+    }
 
-	void LinearBody::unbind(const col2d::Collider& collider) const
-	{
-		col2d::CollisionController::unbind(collider, &LinearBody::handle_collides);
-	}
+    void LinearBody::unbind(const col2d::Collider& collider) const
+    {
+        col2d::CollisionController::unbind(collider, &LinearBody::handle_collides);
+    }
 
     const DynamicsComponent& LinearBody::get_dynamics() const
     {
@@ -76,7 +76,7 @@ namespace oly::physics
     {
         return dynamics_;
     }
-    
+
     LinearPhysicsComponent& LinearBody::dynamics()
     {
         return dynamics_;
@@ -86,7 +86,7 @@ namespace oly::physics
     {
         return dynamics_.material;
     }
-    
+
     MaterialRef& LinearBody::material()
     {
         return dynamics_.material;
@@ -96,7 +96,7 @@ namespace oly::physics
     {
         return dynamics_.submaterial;
     }
-    
+
     LinearSubMaterialRef& LinearBody::sub_material()
     {
         return dynamics_.submaterial;
@@ -106,7 +106,7 @@ namespace oly::physics
     {
         return dynamics_.properties;
     }
-    
+
     LinearPhysicsProperties& LinearBody::properties()
     {
         return dynamics_.properties;

@@ -8,32 +8,32 @@
 
 namespace oly::physics
 {
-	namespace internal
-	{
-		struct RigidBodyOnTick;
-	}
+    namespace internal
+    {
+        struct RigidBodyOnTick;
+    }
 
-	class RigidBody
+    class RigidBody
         : public col2d::CollisionController
         , public imp::auto_trackable<RigidBody>
-	{
+    {
         friend class internal::RigidBodyOnTick;
 
-	protected:
-		std::vector<col2d::Collider> colliders_;
-		Transformer2DRef transformer_ = kRefInit;
+    protected:
+        std::vector<col2d::Collider> colliders_;
+        Transformer2DRef transformer_ = kRefInit;
 
-	public:
+    public:
         bool collision_enabled = true;
 
-		RigidBody();
-		RigidBody(const Transformer2DRef& ref);
-		RigidBody(const RigidBody&);
-		RigidBody(RigidBody&&) noexcept;
-		virtual ~RigidBody() = default;
+        RigidBody();
+        RigidBody(const Transformer2DRef& ref);
+        RigidBody(const RigidBody&);
+        RigidBody(RigidBody&&) noexcept;
+        virtual ~RigidBody() = default;
 
-		RigidBody& operator=(const RigidBody&);
-		RigidBody& operator=(RigidBody&&) noexcept;
+        RigidBody& operator=(const RigidBody&);
+        RigidBody& operator=(RigidBody&&) noexcept;
 
     public:
         virtual State state() const = 0;
@@ -50,22 +50,22 @@ namespace oly::physics
 
     public:
         Transformer2DExposure<> get_transformer() const;
-		Transformer2DExposure<ex::kFull> set_transformer();
+        Transformer2DExposure<ex::kFull> set_transformer();
         void assign_transformer(const Transformer2DRef& ref);
 
         const Transform2D& get_local() const;
         Transform2D& set_local();
 
-		col2d::Collider& add_collider(col2d::Collider&& collider);
-		
+        col2d::Collider& add_collider(col2d::Collider&& collider);
+
         template<col2d::internal::CObj_check CObj>
-		col2d::Collider& add_collider(CObj&& obj)
+        col2d::Collider& add_collider(CObj&& obj)
         {
             return add_collider(col2d::Collider(std::forward<CObj>(obj)));
         }
-		
+
         template<col2d::internal::Elem_check Shape>
-		col2d::Collider& add_collider(Shape&& obj)
+        col2d::Collider& add_collider(Shape&& obj)
         {
             return add_collider(col2d::TPrimitive(std::forward<Shape>(obj)));
         }
@@ -73,7 +73,7 @@ namespace oly::physics
         col2d::Collider& add_collider(const col2d::Capsule& capsule);
         col2d::Collider& add_collider(const col2d::PolygonCollision& polygon);
 
-		void erase_collider(size_t i);
+        void erase_collider(size_t i);
         void clear_colliders();
 
         const col2d::Collider& collider(size_t i = 0) const;
@@ -96,9 +96,9 @@ namespace oly::physics
         static const RigidBody* rigid_body(const col2d::Collider& collider);
         static const DynamicsComponent& dynamics_of(const RigidBody& other);
 
-	private:
-		void remove_collider(const col2d::Collider& collider);
-	};
+    private:
+        void remove_collider(const col2d::Collider& collider);
+    };
 
     using RigidBodyRef = SmartReference<RigidBody>;
 }

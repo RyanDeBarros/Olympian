@@ -15,230 +15,230 @@
 
 namespace oly::col2d
 {
-	// Matched
+    // Matched
 
-	// ######################################################################################################################################################
-	// KDOP
+    // ######################################################################################################################################################
+    // KDOP
 
-	template<size_t K>
-	inline OverlapResult point_hits(const KDOP<K>& c, glm::vec2 test)
-	{
-		glm::vec2 local_test = internal::KDOPGlobalAccess<K>::local_point(c, test);
-		for (size_t i = 0; i < K; ++i)
-		{
-			float proj = KDOP<K>::uniform_axis(i).dot(local_test);
-			if (proj < c.get_clipped_minimum(i) || proj > c.get_clipped_maximum(i))
-				return false;
-		}
-		return true;
-	}
-	
-	template<size_t K>
-	inline OverlapResult ray_hits(const KDOP<K>& c, Ray ray)
-	{
-		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
-		for (size_t i = 0; i < K; ++i)
-		{
-			if (!internal::ray_hits_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i)))
-				return false;
-		}
-		return true;
-	}
-	
-	template<size_t K>
-	inline RaycastResult raycast(const KDOP<K>& c, Ray ray)
-	{
-		RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
-		Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
-		float max_entry = -nmax<float>();
-		for (size_t i = 0; i < K; ++i)
-		{
-			if (!internal::raycast_update_on_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i), info, max_entry))
-				return { .hit = RaycastResult::Hit::NoHit };
-		}
-		if (info.hit == RaycastResult::Hit::TrueHit)
-		{
-			glm::vec2 local_clip = max_entry * (glm::vec2)local_ray.direction;
-			info.contact = ray.origin + internal::KDOPGlobalAccess<K>::global_direction(c, local_clip);
-			info.normal = internal::KDOPGlobalAccess<K>::global_normal(c, info.normal);
-		}
-		return info;
-	}
-	
-	template<size_t K1, size_t K2>
-	inline OverlapResult overlaps(const KDOP<K1>& c1, const KDOP<K2>& c2)
-	{
-		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::overlaps(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow)
-					throw;
-			}
-		}
-		return sat::overlaps(c1, c2);
-	}
-	
-	template<size_t K1, size_t K2>
-	inline CollisionResult collides(const KDOP<K1>& c1, const KDOP<K2>& c2)
-	{
-		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::collides(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return sat::collides(c1, c2);
-	}
-	
-	template<size_t K1, size_t K2>
-	inline ContactResult contacts(const KDOP<K1>& c1, const KDOP<K2>& c2)
-	{
-		if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::contacts(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return sat::contacts(c1, c2);
-	}
+    template<size_t K>
+    inline OverlapResult point_hits(const KDOP<K>& c, glm::vec2 test)
+    {
+        glm::vec2 local_test = internal::KDOPGlobalAccess<K>::local_point(c, test);
+        for (size_t i = 0; i < K; ++i)
+        {
+            float proj = KDOP<K>::uniform_axis(i).dot(local_test);
+            if (proj < c.get_clipped_minimum(i) || proj > c.get_clipped_maximum(i))
+                return false;
+        }
+        return true;
+    }
 
-	// ######################################################################################################################################################
+    template<size_t K>
+    inline OverlapResult ray_hits(const KDOP<K>& c, Ray ray)
+    {
+        Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
+        for (size_t i = 0; i < K; ++i)
+        {
+            if (!internal::ray_hits_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i)))
+                return false;
+        }
+        return true;
+    }
 
-	// Mixed
+    template<size_t K>
+    inline RaycastResult raycast(const KDOP<K>& c, Ray ray)
+    {
+        RaycastResult info{ .hit = RaycastResult::Hit::EmbeddedOrigin, .contact = ray.origin };
+        Ray local_ray = internal::KDOPGlobalAccess<K>::local_ray(c, ray);
+        float max_entry = -nmax<float>();
+        for (size_t i = 0; i < K; ++i)
+        {
+            if (!internal::raycast_update_on_slab(c.get_clipped_minimum(i), c.get_clipped_maximum(i), local_ray, KDOP<K>::uniform_axis(i), info, max_entry))
+                return { .hit = RaycastResult::Hit::NoHit };
+        }
+        if (info.hit == RaycastResult::Hit::TrueHit)
+        {
+            glm::vec2 local_clip = max_entry * (glm::vec2)local_ray.direction;
+            info.contact = ray.origin + internal::KDOPGlobalAccess<K>::global_direction(c, local_clip);
+            info.normal = internal::KDOPGlobalAccess<K>::global_normal(c, info.normal);
+        }
+        return info;
+    }
 
-	// ######################################################################################################################################################
-	// KDOP - Circle
+    template<size_t K1, size_t K2>
+    inline OverlapResult overlaps(const KDOP<K1>& c1, const KDOP<K2>& c2)
+    {
+        if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::overlaps(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow)
+                    throw;
+            }
+        }
+        return sat::overlaps(c1, c2);
+    }
 
-	template<size_t K>
-	inline OverlapResult overlaps(const KDOP<K>& c1, const Circle& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::overlaps(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow)
-					throw;
-			}
-		}
-		return internal::circle_overlaps_polygon(c2, c1.points());
-	}
+    template<size_t K1, size_t K2>
+    inline CollisionResult collides(const KDOP<K1>& c1, const KDOP<K2>& c2)
+    {
+        if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::collides(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return sat::collides(c1, c2);
+    }
 
-	template<size_t K>
-	inline OverlapResult overlaps(const Circle& c1, const KDOP<K>& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::overlaps(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow)
-					throw;
-			}
-		}
-		return internal::circle_overlaps_polygon(c1, c2.points());
-	}
+    template<size_t K1, size_t K2>
+    inline ContactResult contacts(const KDOP<K1>& c1, const KDOP<K2>& c2)
+    {
+        if (2 * (K1 + K2) >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::contacts(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return sat::contacts(c1, c2);
+    }
 
-	template<size_t K>
-	inline CollisionResult collides(const KDOP<K>& c1, const Circle& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::collides(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return internal::circle_collides_polygon(c2, c1.points()).invert();
-	}
+    // ######################################################################################################################################################
 
-	template<size_t K>
-	inline CollisionResult collides(const Circle& c1, const KDOP<K>& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::collides(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return internal::circle_collides_polygon(c1, c2.points());
-	}
+    // Mixed
 
-	template<size_t K>
-	inline ContactResult contacts(const KDOP<K>& c1, const Circle& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::contacts(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
-	}
+    // ######################################################################################################################################################
+    // KDOP - Circle
 
-	template<size_t K>
-	inline ContactResult contacts(const Circle& c1, const KDOP<K>& c2)
-	{
-		if (2 * K + 1 >= gjk::kVerticesThreshold)
-		{
-			try
-			{
-				return gjk::contacts(c1, c2);
-			}
-			catch (const Error& e)
-			{
-				if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
-					throw;
-			}
-		}
-		return internal::circle_contacts_polygon(c1, c2, c2.points());
-	}
+    template<size_t K>
+    inline OverlapResult overlaps(const KDOP<K>& c1, const Circle& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::overlaps(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_overlaps_polygon(c2, c1.points());
+    }
 
-	// ######################################################################################################################################################
+    template<size_t K>
+    inline OverlapResult overlaps(const Circle& c1, const KDOP<K>& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::overlaps(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_overlaps_polygon(c1, c2.points());
+    }
 
-	// ######################################################################################################################################################
-	// KDOP - Rest
-	
+    template<size_t K>
+    inline CollisionResult collides(const KDOP<K>& c1, const Circle& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::collides(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_collides_polygon(c2, c1.points()).invert();
+    }
+
+    template<size_t K>
+    inline CollisionResult collides(const Circle& c1, const KDOP<K>& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::collides(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_collides_polygon(c1, c2.points());
+    }
+
+    template<size_t K>
+    inline ContactResult contacts(const KDOP<K>& c1, const Circle& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::contacts(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_contacts_polygon(c2, c1, c1.points()).invert();
+    }
+
+    template<size_t K>
+    inline ContactResult contacts(const Circle& c1, const KDOP<K>& c2)
+    {
+        if (2 * K + 1 >= gjk::kVerticesThreshold)
+        {
+            try
+            {
+                return gjk::contacts(c1, c2);
+            }
+            catch (const Error& e)
+            {
+                if (e.code != ErrorCode::GjkOverflow && e.code != ErrorCode::EpaOverflow)
+                    throw;
+            }
+        }
+        return internal::circle_contacts_polygon(c1, c2, c2.points());
+    }
+
+    // ######################################################################################################################################################
+
+    // ######################################################################################################################################################
+    // KDOP - Rest
+
 #define OLY_KDOP_COLLISION_METHODS(Shape, shape_vertices1, shape_vertices2)\
 	template<size_t K>\
 	inline OverlapResult overlaps(const KDOP<K>& c1, const Shape& c2)\
@@ -343,10 +343,10 @@ namespace oly::col2d
 		return sat::contacts(c1, c2);\
 	}
 
-	OLY_KDOP_COLLISION_METHODS(AABB, 4, 4);
-	OLY_KDOP_COLLISION_METHODS(OBB, 4, 4);
-	OLY_KDOP_COLLISION_METHODS(ConvexHull, c1.points().size(), c2.points().size());
+    OLY_KDOP_COLLISION_METHODS(AABB, 4, 4);
+    OLY_KDOP_COLLISION_METHODS(OBB, 4, 4);
+    OLY_KDOP_COLLISION_METHODS(ConvexHull, c1.points().size(), c2.points().size());
 #undef OLY_KDOP_COLLISION_METHODS
 
-	// ######################################################################################################################################################
+    // ######################################################################################################################################################
 }

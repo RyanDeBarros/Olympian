@@ -2,7 +2,10 @@
 
 namespace oly::debug
 {
-    DebugShapeGroup create_shape_group(const col2d::ContactResult::Contact& contact, glm::vec4 color, float arrow_width)
+    DebugShapeGroup create_shape_group(
+        const col2d::ContactResult::Contact& contact,
+        glm::vec4 color,
+        float arrow_width)
     {
         rendering::StaticArrowExtension impulse;
         impulse.set_color(color);
@@ -12,7 +15,11 @@ namespace oly::debug
         return impulse;
     }
 
-    void modify_shape_group(DebugOverlay& overlay, const col2d::ContactResult::Contact& contact, float arrow_width, size_t shape_index)
+    void modify_shape_group(
+        DebugOverlay& overlay,
+        const col2d::ContactResult::Contact& contact,
+        float arrow_width,
+        size_t shape_index)
     {
         if (auto obj = overlay[shape_index]->safe_get<rendering::StaticArrowExtension>())
         {
@@ -48,7 +55,9 @@ namespace oly::debug
         {
             obj->adjust_standard_head_for_width(arrow_width);
             obj->set_start() = ray.origin;
-            obj->set_end() = ray.clip == 0.0f ? (ray.origin + kInfiniteRayLength * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+            obj->set_end() = ray.clip == 0.0f
+                ? (ray.origin + kInfiniteRayLength * (glm::vec2)ray.direction)
+                : ray.origin + ray.clip * (glm::vec2)ray.direction;
             overlay.shapes_modified();
         }
         else
@@ -56,12 +65,18 @@ namespace oly::debug
             rendering::StaticArrowExtension arrow = overlay.get_layer().create_arrow();
             arrow.adjust_standard_head_for_width(arrow_width);
             arrow.set_start() = ray.origin;
-            arrow.set_end() = ray.clip == 0.0f ? (ray.origin + kInfiniteRayLength * (glm::vec2)ray.direction) : ray.origin + ray.clip * (glm::vec2)ray.direction;
+            arrow.set_end() = ray.clip == 0.0f
+                ? (ray.origin + kInfiniteRayLength * (glm::vec2)ray.direction)
+                : ray.origin + ray.clip * (glm::vec2)ray.direction;
             overlay.set_shape_group(std::move(arrow));
         }
     }
 
-    DebugShapeGroup create_shape_group(const col2d::RaycastResult& result, glm::vec4 color, float impulse_length, float arrow_width)
+    DebugShapeGroup create_shape_group(
+        const col2d::RaycastResult& result,
+        glm::vec4 color,
+        float impulse_length,
+        float arrow_width)
     {
         if (result.hit == col2d::RaycastResult::Hit::TrueHit)
         {
@@ -72,7 +87,12 @@ namespace oly::debug
             return {};
     }
 
-    void modify_shape_group(DebugOverlay& overlay, const col2d::RaycastResult& result, float impulse_length, float arrow_width, size_t shape_index)
+    void modify_shape_group(
+        DebugOverlay& overlay,
+        const col2d::RaycastResult& result,
+        float impulse_length,
+        float arrow_width,
+        size_t shape_index)
     {
         if (result.hit == col2d::RaycastResult::Hit::TrueHit)
         {
@@ -104,7 +124,11 @@ namespace oly::debug
         return overlay;
     }
 
-    void modify_shape_group(DebugOverlay& overlay, const col2d::CircleCast& cast, float arrow_width, size_t shape_index)
+    void modify_shape_group(
+        DebugOverlay& overlay,
+        const col2d::CircleCast& cast,
+        float arrow_width,
+        size_t shape_index)
     {
         overlay.resize_shape_group(std::max(shape_index + 4, overlay.shape_count()));
         modify_shape_group(overlay, cast.finite_capsule(kInfiniteRayLength).mid_obb(), shape_index);

@@ -394,7 +394,8 @@ namespace oly::assets
         struct Defaulted;
 
         template<typename Translator, typename Validator>
-        struct Defaulted<void, Translator, Validator> : public Accessor<false, Validator>
+        struct Defaulted<void, Translator, Validator>
+            : public Accessor<false, Validator>
         {
             using EnumType = typename Translator::EnumType;
 
@@ -412,7 +413,8 @@ namespace oly::assets
         };
 
         template<typename Predefined, typename Validator>
-        struct Defaulted<Predefined, void, Validator> : public Accessor<false, Validator>
+        struct Defaulted<Predefined, void, Validator>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -426,7 +428,8 @@ namespace oly::assets
         };
 
         template<typename T, typename Validator>
-        struct Defaulted<std::vector<T>, void, Validator> : public Accessor<false, Validator>
+        struct Defaulted<std::vector<T>, void, Validator>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -437,7 +440,8 @@ namespace oly::assets
         };
 
         template<typename Validator>
-        struct Defaulted<void, void, Validator> : public Accessor<false, Validator>
+        struct Defaulted<void, void, Validator>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -453,7 +457,8 @@ namespace oly::assets
         struct Optional;
 
         template<typename Translator, typename Validator, bool TypeFallback>
-        struct Optional<void, Translator, Validator, TypeFallback> : public Accessor<false, Validator>
+        struct Optional<void, Translator, Validator, TypeFallback>
+            : public Accessor<false, Validator>
         {
             using EnumType = typename Translator::EnumType;
 
@@ -477,7 +482,8 @@ namespace oly::assets
         };
 
         template<typename Predefined, typename Validator, bool TypeFallback>
-        struct Optional<Predefined, void, Validator, TypeFallback> : public Accessor<false, Validator>
+        struct Optional<Predefined, void, Validator, TypeFallback>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -488,7 +494,8 @@ namespace oly::assets
         };
 
         template<typename Validator, bool TypeFallback>
-        struct Optional<TOMLNode, void, Validator, TypeFallback> : public Accessor<false, Validator>
+        struct Optional<TOMLNode, void, Validator, TypeFallback>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -499,7 +506,8 @@ namespace oly::assets
         };
 
         template<typename Validator, bool TypeFallback>
-        struct Optional<TOMLArray, void, Validator, TypeFallback> : public Accessor<false, Validator>
+        struct Optional<TOMLArray, void, Validator, TypeFallback>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -510,7 +518,8 @@ namespace oly::assets
         };
 
         template<typename Validator, bool TypeFallback>
-        struct Optional<void, void, Validator, TypeFallback> : public Accessor<false, Validator>
+        struct Optional<void, void, Validator, TypeFallback>
+            : public Accessor<false, Validator>
         {
             using Accessor<false, Validator>::Accessor;
 
@@ -563,7 +572,8 @@ namespace oly::assets
         struct Required;
 
         template<typename Translator, typename Validator>
-        struct Required<void, Translator, Validator> : public Accessor<true, Validator>
+        struct Required<void, Translator, Validator>
+            : public Accessor<true, Validator>
         {
             using Accessor<true, Validator>::Accessor;
 
@@ -574,7 +584,8 @@ namespace oly::assets
         };
 
         template<typename Predefined, typename Validator>
-        struct Required<Predefined, void, Validator> : public Accessor<true, Validator>
+        struct Required<Predefined, void, Validator>
+            : public Accessor<true, Validator>
         {
             using Accessor<true, Validator>::Accessor;
 
@@ -585,7 +596,8 @@ namespace oly::assets
         };
 
         template<typename Validator>
-        struct Required<TOMLNode, void, Validator> : public Accessor<true, Validator>
+        struct Required<TOMLNode, void, Validator>
+            : public Accessor<true, Validator>
         {
             using Accessor<true, Validator>::Accessor;
 
@@ -596,7 +608,8 @@ namespace oly::assets
         };
 
         template<typename Validator>
-        struct Required<TOMLArray, void, Validator> : public Accessor<true, Validator>
+        struct Required<TOMLArray, void, Validator>
+            : public Accessor<true, Validator>
         {
             using Accessor<true, Validator>::Accessor;
 
@@ -607,7 +620,8 @@ namespace oly::assets
         };
 
         template<typename T, size_t N, typename Validator>
-        struct Required<std::array<T, N>, void, Validator> : public Accessor<true, Validator>
+        struct Required<std::array<T, N>, void, Validator>
+            : public Accessor<true, Validator>
         {
             static_assert(N > 1);
 
@@ -620,7 +634,8 @@ namespace oly::assets
         };
 
         template<typename Validator>
-        struct Required<void, void, Validator> : public Accessor<true, Validator>
+        struct Required<void, void, Validator>
+            : public Accessor<true, Validator>
         {
             using Accessor<true, Validator>::Accessor;
 

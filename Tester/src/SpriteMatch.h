@@ -2,7 +2,8 @@
 
 #include <Olympian.h>
 
-struct SpriteMatch : public oly::rendering::IDrawable
+struct SpriteMatch
+    : public oly::rendering::IDrawable
 {
 	oly::Transformer2D transformer;
 	oly::rendering::Drawable<oly::rendering::Sprite> sprite0;

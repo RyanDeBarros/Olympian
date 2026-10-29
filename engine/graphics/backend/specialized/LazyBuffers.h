@@ -146,7 +146,8 @@ namespace oly::graphics
     };
 
     template<typename StructType, std::unsigned_integral IndexType, Mutability M>
-    class LazyBuffer : public CPUSideBuffer<StructType, M>
+    class LazyBuffer
+        : public CPUSideBuffer<StructType, M>
     {
         mutable std::set<IndexType> dirty_;
 

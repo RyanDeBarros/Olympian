@@ -5,7 +5,8 @@
 
 #include "PlayerController.h"
 
-struct KeyHandler : public oly::EventHandler<oly::input::KeyEventData>
+struct KeyHandler
+    : public oly::EventHandler<oly::input::KeyEventData>
 {
 	virtual bool consume(const oly::input::KeyEventData& data) override
 	{
@@ -52,7 +53,8 @@ struct PixelArtText
 	}
 };
 
-struct TesterRenderPipeline : public oly::IRenderPipeline, public oly::ITickService
+struct TesterRenderPipeline
+    : public oly::IRenderPipeline, public oly::ITickService
 {
 	oly::rendering::PolygonBatch polygon_batch;
 

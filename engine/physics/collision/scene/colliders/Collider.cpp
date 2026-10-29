@@ -17,56 +17,56 @@ namespace oly::col2d
     {
     }
 
-	Collider::Collider(const Collider& o)
-		: obj_(o.obj_)
+    Collider::Collider(const Collider& o)
+        : obj_(o.obj_)
         , handles(*this, o.handles)
         , dirty_(o.dirty_)
         , dispatch_handle_(*this, o.dispatch_handle_)
         , quad_wrap_(o.quad_wrap_)
-	{
-	}
+    {
+    }
 
-	Collider::Collider(Collider&& o) noexcept
-		: obj_(std::move(o.obj_))
+    Collider::Collider(Collider&& o) noexcept
+        : obj_(std::move(o.obj_))
         , handles(*this, std::move(o.handles))
         , dirty_(o.dirty_)
         , rigid_body_(o.rigid_body_)
         , dispatch_handle_(*this, std::move(o.dispatch_handle_))
         , quad_wrap_(o.quad_wrap_)
-	{
+    {
         o.rigid_body_ = nullptr;
-	}
+    }
 
-	Collider& Collider::operator=(const Collider& o)
-	{
-		if (this != &o)
-		{
-			obj_ = o.obj_;
-			dirty_ = o.dirty_;
-			dispatch_handle_ = o.dispatch_handle_;
-			quad_wrap_ = o.quad_wrap_;
-			handles = o.handles;
-		}
+    Collider& Collider::operator=(const Collider& o)
+    {
+        if (this != &o)
+        {
+            obj_ = o.obj_;
+            dirty_ = o.dirty_;
+            dispatch_handle_ = o.dispatch_handle_;
+            quad_wrap_ = o.quad_wrap_;
+            handles = o.handles;
+        }
 
-		return *this;
-	}
+        return *this;
+    }
 
-	Collider& Collider::operator=(Collider&& o) noexcept
-	{
-		if (this != &o)
-		{
-			obj_ = std::move(o.obj_);
-			dirty_ = o.dirty_;
-			dispatch_handle_ = std::move(o.dispatch_handle_);
-			quad_wrap_ = o.quad_wrap_;
-			handles = std::move(o.handles);
+    Collider& Collider::operator=(Collider&& o) noexcept
+    {
+        if (this != &o)
+        {
+            obj_ = std::move(o.obj_);
+            dirty_ = o.dirty_;
+            dispatch_handle_ = std::move(o.dispatch_handle_);
+            quad_wrap_ = o.quad_wrap_;
+            handles = std::move(o.handles);
 
             rigid_body_ = o.rigid_body_;
             o.rigid_body_ = nullptr;
-		}
+        }
 
-		return *this;
-	}
+        return *this;
+    }
 
     void Collider::emplace(internal::ColliderObject&& obj)
     {
@@ -83,7 +83,7 @@ namespace oly::col2d
     {
         return internal::lut_transformer(obj_).get_local();
     }
-    
+
     Transform2D& Collider::set_local()
     {
         return internal::lut_transformer(obj_).set_local();
@@ -113,18 +113,18 @@ namespace oly::col2d
     {
         return internal::lut_mask(obj_);
     }
-    
+
     Mask& Collider::mask()
     {
         return internal::lut_mask(obj_);
     }
 
-	bool Collider::one_way_blocks(const Collider& active) const
-	{
-		return !active.rigid_body_
+    bool Collider::one_way_blocks(const Collider& active) const
+    {
+        return !active.rigid_body_
             || !one_way_blocking
             || one_way_blocking->dot(active.rigid_body_->state().linear_velocity) < 0.0f;
-	}
+    }
 
     OverlapResult Collider::point_hits(glm::vec2 test) const
     {
@@ -135,12 +135,12 @@ namespace oly::col2d
     {
         return internal::lut_ray_hits(obj_, ray);
     }
-    
+
     RaycastResult Collider::raycast(Ray ray) const
     {
         return internal::lut_raycast(obj_, ray);
     }
-    
+
     OverlapResult Collider::overlaps(const Collider& other) const
     {
         return internal::lut_overlaps(obj_, other.obj_);
@@ -173,7 +173,7 @@ namespace oly::col2d
     {
         return internal::lut_create_debug_overlay(layer, obj_, color, paint_options);
     }
-    
+
     void Collider::modify_debug_overlay(debug::DebugOverlay& overlay, size_t shape_index) const
     {
         internal::lut_modify_debug_overlay(overlay, obj_, shape_index);
@@ -184,15 +184,15 @@ namespace oly::col2d
         return dirty_ || internal::lut_is_dirty(obj_);
     }
 
-	void Collider::flush() const
-	{
-		if (!is_dirty())
-			return;
+    void Collider::flush() const
+    {
+        if (!is_dirty())
+            return;
 
-		dirty_ = false;
-		internal::lut_flush(obj_);
-		handles.flush();
-	}
+        dirty_ = false;
+        internal::lut_flush(obj_);
+        handles.flush();
+    }
 
     internal::ColliderObjectConstVariant Collider::get_object_variant() const
     {

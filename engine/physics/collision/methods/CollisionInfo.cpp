@@ -2,7 +2,12 @@
 
 namespace oly::col2d
 {
-    void ContactManifold::clamp(UnitVector2D axis, const ContactManifold c1, const ContactManifold c2, glm::vec2& p1, glm::vec2& p2)
+    void ContactManifold::clamp(
+        UnitVector2D axis,
+        const ContactManifold c1,
+        const ContactManifold c2,
+        glm::vec2& p1,
+        glm::vec2& p2)
     {
         UnitVector2D tangent = axis.get_quarter_turn();
 

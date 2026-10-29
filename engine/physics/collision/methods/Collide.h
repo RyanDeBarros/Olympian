@@ -8,123 +8,130 @@
 
 namespace oly::col2d
 {
-	namespace internal
-	{
-		extern OverlapResult ray_hits_slab(float min_proj, float max_proj, Ray ray, const UnitVector2D& axis);
-		extern bool raycast_update_on_slab(float min_proj, float max_proj, Ray ray, const UnitVector2D& axis, RaycastResult& info, float& max_entry);
-	}
+    namespace internal
+    {
+        extern OverlapResult ray_hits_slab(float min_proj, float max_proj, Ray ray, const UnitVector2D& axis);
 
-	// Matched
+        extern bool raycast_update_on_slab(
+            float min_proj,
+            float max_proj,
+            Ray ray,
+            const UnitVector2D& axis,
+            RaycastResult& info,
+            float& max_entry);
+    }
 
-	// ######################################################################################################################################################
-	// Circle
-	extern OverlapResult point_hits(const Circle& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const Circle& c, Ray ray);
-	extern RaycastResult raycast(const Circle& c, Ray ray);
-	extern OverlapResult overlaps(const Circle& c1, const Circle& c2);
-	extern CollisionResult collides(const Circle& c1, const Circle& c2);
-	extern ContactResult contacts(const Circle& c1, const Circle& c2);
-	// ######################################################################################################################################################
+    // Matched
 
-	// ######################################################################################################################################################
-	// AABB
-	extern OverlapResult point_hits(const AABB& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const AABB& c, Ray ray);
-	extern RaycastResult raycast(const AABB& c, Ray ray);
-	extern OverlapResult overlaps(const AABB& c1, const AABB& c2);
-	extern CollisionResult collides(const AABB& c1, const AABB& c2);
-	extern ContactResult contacts(const AABB& c1, const AABB& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
+    // Circle
+    extern OverlapResult point_hits(const Circle& c, glm::vec2 test);
+    extern OverlapResult ray_hits(const Circle& c, Ray ray);
+    extern RaycastResult raycast(const Circle& c, Ray ray);
+    extern OverlapResult overlaps(const Circle& c1, const Circle& c2);
+    extern CollisionResult collides(const Circle& c1, const Circle& c2);
+    extern ContactResult contacts(const Circle& c1, const Circle& c2);
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// OBB
-	extern OverlapResult point_hits(const OBB& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const OBB& c, Ray ray);
-	extern RaycastResult raycast(const OBB& c, Ray ray);
-	extern OverlapResult overlaps(const OBB& c1, const OBB& c2);
-	extern CollisionResult collides(const OBB& c1, const OBB& c2);
-	extern ContactResult contacts(const OBB& c1, const OBB& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
+    // AABB
+    extern OverlapResult point_hits(const AABB& c, glm::vec2 test);
+    extern OverlapResult ray_hits(const AABB& c, Ray ray);
+    extern RaycastResult raycast(const AABB& c, Ray ray);
+    extern OverlapResult overlaps(const AABB& c1, const AABB& c2);
+    extern CollisionResult collides(const AABB& c1, const AABB& c2);
+    extern ContactResult contacts(const AABB& c1, const AABB& c2);
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// ConvexHull
-	extern OverlapResult point_hits(const ConvexHull& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const ConvexHull& c, Ray ray);
-	extern RaycastResult raycast(const ConvexHull& c, Ray ray);
-	extern OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2);
-	extern CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2);
-	extern ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
+    // OBB
+    extern OverlapResult point_hits(const OBB& c, glm::vec2 test);
+    extern OverlapResult ray_hits(const OBB& c, Ray ray);
+    extern RaycastResult raycast(const OBB& c, Ray ray);
+    extern OverlapResult overlaps(const OBB& c1, const OBB& c2);
+    extern CollisionResult collides(const OBB& c1, const OBB& c2);
+    extern ContactResult contacts(const OBB& c1, const OBB& c2);
+    // ################################################################################################################
 
-	// Mixed
+    // ################################################################################################################
+    // ConvexHull
+    extern OverlapResult point_hits(const ConvexHull& c, glm::vec2 test);
+    extern OverlapResult ray_hits(const ConvexHull& c, Ray ray);
+    extern RaycastResult raycast(const ConvexHull& c, Ray ray);
+    extern OverlapResult overlaps(const ConvexHull& c1, const ConvexHull& c2);
+    extern CollisionResult collides(const ConvexHull& c1, const ConvexHull& c2);
+    extern ContactResult contacts(const ConvexHull& c1, const ConvexHull& c2);
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// Circle - AABB
-	extern OverlapResult overlaps(const Circle& c1, const AABB& c2);
+    // Mixed
+
+    // ################################################################################################################
+    // Circle - AABB
+    extern OverlapResult overlaps(const Circle& c1, const AABB& c2);
     extern OverlapResult overlaps(const AABB& c1, const Circle& c2);
-	extern CollisionResult collides(const Circle& c1, const AABB& c2);
+    extern CollisionResult collides(const Circle& c1, const AABB& c2);
     extern CollisionResult collides(const AABB& c1, const Circle& c2);
-	extern ContactResult contacts(const Circle& c1, const AABB& c2);
+    extern ContactResult contacts(const Circle& c1, const AABB& c2);
     extern ContactResult contacts(const AABB& c1, const Circle& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// Circle - OBB
-	extern OverlapResult overlaps(const Circle& c1, const OBB& c2);
+    // ################################################################################################################
+    // Circle - OBB
+    extern OverlapResult overlaps(const Circle& c1, const OBB& c2);
     extern OverlapResult overlaps(const OBB& c1, const Circle& c2);
-	extern CollisionResult collides(const Circle& c1, const OBB& c2);
+    extern CollisionResult collides(const Circle& c1, const OBB& c2);
     extern CollisionResult collides(const OBB& c1, const Circle& c2);
-	extern ContactResult contacts(const Circle& c1, const OBB& c2);
+    extern ContactResult contacts(const Circle& c1, const OBB& c2);
     extern ContactResult contacts(const OBB& c1, const Circle& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// AABB - OBB
-	extern OverlapResult overlaps(const AABB& c1, const OBB& c2);
+    // ################################################################################################################
+    // AABB - OBB
+    extern OverlapResult overlaps(const AABB& c1, const OBB& c2);
     extern OverlapResult overlaps(const OBB& c1, const AABB& c2);
-	extern CollisionResult collides(const AABB& c1, const OBB& c2);
+    extern CollisionResult collides(const AABB& c1, const OBB& c2);
     extern CollisionResult collides(const OBB& c1, const AABB& c2);
-	extern ContactResult contacts(const AABB& c1, const OBB& c2);
+    extern ContactResult contacts(const AABB& c1, const OBB& c2);
     extern ContactResult contacts(const OBB& c1, const AABB& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// Circle - ConvexHull
-	extern OverlapResult overlaps(const Circle& c1, const ConvexHull& c2);
+    // ################################################################################################################
+    // Circle - ConvexHull
+    extern OverlapResult overlaps(const Circle& c1, const ConvexHull& c2);
     extern OverlapResult overlaps(const ConvexHull& c1, const Circle& c2);
-	extern CollisionResult collides(const Circle& c1, const ConvexHull& c2);
+    extern CollisionResult collides(const Circle& c1, const ConvexHull& c2);
     extern CollisionResult collides(const ConvexHull& c1, const Circle& c2);
-	extern ContactResult contacts(const Circle& c1, const ConvexHull& c2);
+    extern ContactResult contacts(const Circle& c1, const ConvexHull& c2);
     extern ContactResult contacts(const ConvexHull& c1, const Circle& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// ConvexHull - AABB
-	extern OverlapResult overlaps(const ConvexHull& c1, const AABB& c2);
+    // ################################################################################################################
+    // ConvexHull - AABB
+    extern OverlapResult overlaps(const ConvexHull& c1, const AABB& c2);
     extern OverlapResult overlaps(const AABB& c1, const ConvexHull& c2);
-	extern CollisionResult collides(const ConvexHull& c1, const AABB& c2);
+    extern CollisionResult collides(const ConvexHull& c1, const AABB& c2);
     extern CollisionResult collides(const AABB& c1, const ConvexHull& c2);
-	extern ContactResult contacts(const ConvexHull& c1, const AABB& c2);
+    extern ContactResult contacts(const ConvexHull& c1, const AABB& c2);
     extern ContactResult contacts(const AABB& c1, const ConvexHull& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// ConvexHull - OBB
-	extern OverlapResult overlaps(const ConvexHull& c1, const OBB& c2);
+    // ################################################################################################################
+    // ConvexHull - OBB
+    extern OverlapResult overlaps(const ConvexHull& c1, const OBB& c2);
     extern OverlapResult overlaps(const OBB& c1, const ConvexHull& c2);
-	extern CollisionResult collides(const ConvexHull& c1, const OBB& c2);
+    extern CollisionResult collides(const ConvexHull& c1, const OBB& c2);
     extern CollisionResult collides(const OBB& c1, const ConvexHull& c2);
-	extern ContactResult contacts(const ConvexHull& c1, const OBB& c2);
+    extern ContactResult contacts(const ConvexHull& c1, const OBB& c2);
     extern ContactResult contacts(const OBB& c1, const ConvexHull& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
 
-	// ######################################################################################################################################################
-	// Element
-	extern OverlapResult point_hits(const Element& c, glm::vec2 test);
-	extern OverlapResult ray_hits(const Element& c, Ray ray);
-	extern RaycastResult raycast(const Element& c, Ray ray);
-	extern OverlapResult overlaps(const Element& c1, const Element& c2);
-	extern CollisionResult collides(const Element& c1, const Element& c2);
-	extern ContactResult contacts(const Element& c1, const Element& c2);
-	// ######################################################################################################################################################
+    // ################################################################################################################
+    // Element
+    extern OverlapResult point_hits(const Element& c, glm::vec2 test);
+    extern OverlapResult ray_hits(const Element& c, Ray ray);
+    extern RaycastResult raycast(const Element& c, Ray ray);
+    extern OverlapResult overlaps(const Element& c1, const Element& c2);
+    extern CollisionResult collides(const Element& c1, const Element& c2);
+    extern ContactResult contacts(const Element& c1, const Element& c2);
+    // ################################################################################################################
 }

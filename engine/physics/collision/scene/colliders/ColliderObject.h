@@ -24,20 +24,20 @@ namespace oly::col2d::internal
 
     IMP_TYPE_DELIMITER(_OLY_COBJ_GENERATOR, CObj);
 
-	class ColliderObject
-	{
+    class ColliderObject
+    {
         imp::box obj_;
 
-	public:
-		template<CObj_check CObj>
-		ColliderObject(CObj&& obj) : obj_(imp::forward_to_box(std::forward<CObj>(obj))) {}
+    public:
+        template<CObj_check CObj>
+        ColliderObject(CObj&& obj) : obj_(imp::forward_to_box(std::forward<CObj>(obj))) {}
 
-		ColliderObject()
+        ColliderObject()
             : obj_(imp::make_box<TPrimitive>())
         {
         }
-		
-		const void* raw_obj() const
+        
+        const void* raw_obj() const
         {
             return obj_.unsafe_raw();
         }
@@ -46,28 +46,28 @@ namespace oly::col2d::internal
         {
             return obj_.unsafe_raw();
         }
-		
+        
         size_t type_index() const
         {
             return CObj_index(obj_.type());
         }
 
-		template<CObj_check CObj>
-		const CObj& get() const
-		{
+        template<CObj_check CObj>
+        const CObj& get() const
+        {
             if (auto obj = obj_.as<CObj>())
                 return *obj;
-			else
-				throw Error(ErrorCode::INVALID_TYPE);
-		}
+            else
+                throw Error(ErrorCode::INVALID_TYPE);
+        }
 
-		template<CObj_check CObj>
-		CObj& set()
-		{
+        template<CObj_check CObj>
+        CObj& set()
+        {
             if (auto obj = obj_.as<CObj>())
                 return *obj;
-			else
-				throw Error(ErrorCode::INVALID_TYPE);
-		}
-	};
+            else
+                throw Error(ErrorCode::INVALID_TYPE);
+        }
+    };
 }

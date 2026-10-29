@@ -4,7 +4,8 @@
 
 #include <physics/dynamics/bodies/KinematicBody.h>
 
-struct PlayerController : public oly::InputController
+struct PlayerController
+    : public oly::InputController
 {
 	bool dragging = false;
 	glm::vec2 ref_cursor_pos = {};

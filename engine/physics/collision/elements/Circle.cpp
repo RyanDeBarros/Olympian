@@ -63,7 +63,12 @@ namespace oly::col2d
         if (global_ == glm::mat2(1.0f))
             return { .p1 = center + global_offset_ + radius * (glm::vec2)axis };
         else
-            return { .p1 = global_ * center + global_offset_ + radius * (glm::vec2)axis * math::inv_magnitude(global_inverse_ * axis) };
+        {
+            return {
+                .p1 = global_ * center + global_offset_
+                    + radius * (glm::vec2)axis * math::inv_magnitude(global_inverse_ * axis)
+            };
+        }
     }
 
     float Circle::area() const

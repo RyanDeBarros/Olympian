@@ -16,114 +16,114 @@
 
 namespace oly::col2d::gjk
 {
-	inline static constexpr size_t kVerticesThreshold = 16;
+    inline static constexpr size_t kVerticesThreshold = 16;
 
-	template<typename Shape1, typename Shape2>
-	inline glm::vec2 support(const Shape1& c1, const Shape2& c2, const UnitVector2D& axis)
-	{
-		return c1.deepest_manifold(axis).pt() - c2.deepest_manifold(-axis).pt();
-	}
+    template<typename Shape1, typename Shape2>
+    inline glm::vec2 support(const Shape1& c1, const Shape2& c2, const UnitVector2D& axis)
+    {
+        return c1.deepest_manifold(axis).pt() - c2.deepest_manifold(-axis).pt();
+    }
 
     extern bool handle_simplex(std::vector<glm::vec2>& simplex, UnitVector2D& axis);
 
-	template<typename Shape1, typename Shape2>
-	inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2, size_t max_iterations = 20)
-	{
-		UnitVector2D axis;
-		std::vector<glm::vec2> simplex;
-		simplex.push_back(support(c1, c2, axis));
-		axis = -simplex.back();
+    template<typename Shape1, typename Shape2>
+    inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2, size_t max_iterations = 20)
+    {
+        UnitVector2D axis;
+        std::vector<glm::vec2> simplex;
+        simplex.push_back(support(c1, c2, axis));
+        axis = -simplex.back();
 
-		for (size_t i = 0; i < max_iterations; ++i)
-		{
-			glm::vec2 p = support(c1, c2, axis);
-			if (axis.dot(p) <= 0.0f)
-				return false;
+        for (size_t i = 0; i < max_iterations; ++i)
+        {
+            glm::vec2 p = support(c1, c2, axis);
+            if (axis.dot(p) <= 0.0f)
+                return false;
 
-			simplex.push_back(p);
-			if (handle_simplex(simplex, axis))
-				return true;
-		}
+            simplex.push_back(p);
+            if (handle_simplex(simplex, axis))
+                return true;
+        }
 
-		_OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << kLog.nl;
-		throw Error(ErrorCode::GjkOverflow);
-	}
+        _OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << kLog.nl;
+        throw Error(ErrorCode::GjkOverflow);
+    }
 
-	template<typename Shape1, typename Shape2>
-	inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
-	{
-		UnitVector2D axis;
-		std::vector<glm::vec2> simplex;
-		simplex.push_back(support(c1, c2, axis));
-		axis = -simplex.back();
-		bool intersecting = false;
+    template<typename Shape1, typename Shape2>
+    inline CollisionResult collides(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
+    {
+        UnitVector2D axis;
+        std::vector<glm::vec2> simplex;
+        simplex.push_back(support(c1, c2, axis));
+        axis = -simplex.back();
+        bool intersecting = false;
 
-		for (size_t i = 0; i < gjk_max_iterations; ++i)
-		{
-			glm::vec2 p = support(c1, c2, axis);
-			if (axis.dot(p) <= 0.0f)
-				return { .overlap = false };
+        for (size_t i = 0; i < gjk_max_iterations; ++i)
+        {
+            glm::vec2 p = support(c1, c2, axis);
+            if (axis.dot(p) <= 0.0f)
+                return { .overlap = false };
 
-			simplex.push_back(p);
-			if (handle_simplex(simplex, axis))
-			{
-				intersecting = true;
-				break;
-			}
-		}
-		if (!intersecting)
-		{
-			_OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << kLog.nl;
-			throw Error(ErrorCode::GjkOverflow);
-		}
+            simplex.push_back(p);
+            if (handle_simplex(simplex, axis))
+            {
+                intersecting = true;
+                break;
+            }
+        }
+        if (!intersecting)
+        {
+            _OLY_ENGINE_LOG_WARNING("COL2D") << "GJK overflow" << kLog.nl;
+            throw Error(ErrorCode::GjkOverflow);
+        }
 
-		// EPA
+        // EPA
 
-		struct Edge
-		{
-			size_t index;
-			float distance;
-			UnitVector2D normal;
-		};
+        struct Edge
+        {
+            size_t index;
+            float distance;
+            UnitVector2D normal;
+        };
 
-		static const auto find_closest_edge = [](const std::vector<glm::vec2>& polygon) -> Edge {
-			float min_dist = nmax<float>();
-			Edge closest{};
-			for (size_t i = 0; i < polygon.size(); ++i)
-			{
-				glm::vec2 a = polygon[i];
-				glm::vec2 b = polygon[(i + 1) % polygon.size()];
-				UnitVector2D normal = UnitVector2D(b - a).get_quarter_turn();
-				
-				float dist = normal.dot(a);
-				if (dist < min_dist)
-				{
-					min_dist = dist;
-					closest = { i, dist, normal };
-				}
-			}
-			return closest;
-			};
+        static const auto find_closest_edge = [](const std::vector<glm::vec2>& polygon) -> Edge {
+            float min_dist = nmax<float>();
+            Edge closest{};
+            for (size_t i = 0; i < polygon.size(); ++i)
+            {
+                glm::vec2 a = polygon[i];
+                glm::vec2 b = polygon[(i + 1) % polygon.size()];
+                UnitVector2D normal = UnitVector2D(b - a).get_quarter_turn();
 
-		for (size_t i = 0; i < epa_max_iterations; ++i)
-		{
-			Edge edge = find_closest_edge(simplex);
-			glm::vec2 p = support(c1, c2, edge.normal);
-			float d = edge.normal.dot(p);
+                float dist = normal.dot(a);
+                if (dist < min_dist)
+                {
+                    min_dist = dist;
+                    closest = { i, dist, normal };
+                }
+            }
+            return closest;
+        };
 
-			if (oly::near_zero(d - edge.distance, epa_epsilon))
-				return { .overlap = true, .penetration_depth = d, .unit_impulse = -edge.normal };
+        for (size_t i = 0; i < epa_max_iterations; ++i)
+        {
+            Edge edge = find_closest_edge(simplex);
+            glm::vec2 p = support(c1, c2, edge.normal);
+            float d = edge.normal.dot(p);
 
-			simplex.insert(simplex.begin() + edge.index + 1, p);
-		}
+            if (oly::near_zero(d - edge.distance, epa_epsilon))
+                return { .overlap = true, .penetration_depth = d, .unit_impulse = -edge.normal };
 
-		_OLY_ENGINE_LOG_WARNING("COL2D") << "EPA overflow" << kLog.nl;
-		throw Error(ErrorCode::EpaOverflow);
-	}
+            simplex.insert(simplex.begin() + edge.index + 1, p);
+        }
 
-	template<typename Shape1, typename Shape2>
-	inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
-	{
-		return standard_contact_result(c1, c2, collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon));
-	}
+        _OLY_ENGINE_LOG_WARNING("COL2D") << "EPA overflow" << kLog.nl;
+        throw Error(ErrorCode::EpaOverflow);
+    }
+
+    template<typename Shape1, typename Shape2>
+    inline ContactResult contacts(const Shape1& c1, const Shape2& c2, size_t gjk_max_iterations = 20, size_t epa_max_iterations = 64, float epa_epsilon = kLinearTolerance)
+    {
+        return standard_contact_result(c1, c2, collides(c1, c2, gjk_max_iterations, epa_max_iterations, epa_epsilon));
+    }
 }

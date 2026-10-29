@@ -2,66 +2,68 @@
 
 namespace oly::col2d::internal
 {
-	using VariantFn = ColliderObjectVariant(*)(void*);
-	using ConstVariantFn = ColliderObjectConstVariant(*)(const void*);
+    using VariantFn = ColliderObjectVariant(*)(void*);
+    using ConstVariantFn = ColliderObjectConstVariant(*)(const void*);
 
-	struct LUTVariant
-	{
-		VariantFn variant[CObj_count];
-		ConstVariantFn const_variant[CObj_count];
-	} lut;
+    struct LUTVariant
+    {
+        VariantFn variant[CObj_count];
+        ConstVariantFn const_variant[CObj_count];
+    } lut;
 
-	static void load_variant_lut()
-	{
-#define OLY_LUT_VARIANT(Class) lut.variant[CObj_index<Class>()] = [](void* ptr) -> ColliderObjectVariant { return static_cast<Class*>(ptr); };
+    static void load_variant_lut()
+    {
+#define OLY_LUT_VARIANT(Class) lut.variant[CObj_index<Class>()] = \
+        [](void* ptr) -> ColliderObjectVariant { return static_cast<Class*>(ptr); };
 
-		OLY_LUT_VARIANT(TPrimitive);
-		OLY_LUT_VARIANT(TCompound);
-		OLY_LUT_VARIANT(TBVH<AABB>);
-		OLY_LUT_VARIANT(TBVH<OBB>);
-		OLY_LUT_VARIANT(TBVH<KDOP2>);
-		OLY_LUT_VARIANT(TBVH<KDOP3>);
-		OLY_LUT_VARIANT(TBVH<KDOP4>);
-		OLY_LUT_VARIANT(TBVH<KDOP5>);
-		OLY_LUT_VARIANT(TBVH<KDOP6>);
-		OLY_LUT_VARIANT(TBVH<KDOP7>);
-		OLY_LUT_VARIANT(TBVH<KDOP8>);
+        OLY_LUT_VARIANT(TPrimitive);
+        OLY_LUT_VARIANT(TCompound);
+        OLY_LUT_VARIANT(TBVH<AABB>);
+        OLY_LUT_VARIANT(TBVH<OBB>);
+        OLY_LUT_VARIANT(TBVH<KDOP2>);
+        OLY_LUT_VARIANT(TBVH<KDOP3>);
+        OLY_LUT_VARIANT(TBVH<KDOP4>);
+        OLY_LUT_VARIANT(TBVH<KDOP5>);
+        OLY_LUT_VARIANT(TBVH<KDOP6>);
+        OLY_LUT_VARIANT(TBVH<KDOP7>);
+        OLY_LUT_VARIANT(TBVH<KDOP8>);
 
 #undef OLY_LUT_VARIANT
-	}
+    }
 
-	static void load_const_variant_lut()
-	{
-#define OLY_LUT_CONST_VARIANT(Class) lut.const_variant[CObj_index<Class>()] = [](const void* ptr) -> ColliderObjectConstVariant { return static_cast<const Class*>(ptr); };
+    static void load_const_variant_lut()
+    {
+#define OLY_LUT_CONST_VARIANT(Class) lut.const_variant[CObj_index<Class>()] = \
+        [](const void* ptr) -> ColliderObjectConstVariant { return static_cast<const Class*>(ptr); };
 
-		OLY_LUT_CONST_VARIANT(TPrimitive);
-		OLY_LUT_CONST_VARIANT(TCompound);
-		OLY_LUT_CONST_VARIANT(TBVH<AABB>);
-		OLY_LUT_CONST_VARIANT(TBVH<OBB>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP2>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP3>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP4>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP5>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP6>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP7>);
-		OLY_LUT_CONST_VARIANT(TBVH<KDOP8>);
+        OLY_LUT_CONST_VARIANT(TPrimitive);
+        OLY_LUT_CONST_VARIANT(TCompound);
+        OLY_LUT_CONST_VARIANT(TBVH<AABB>);
+        OLY_LUT_CONST_VARIANT(TBVH<OBB>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP2>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP3>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP4>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP5>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP6>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP7>);
+        OLY_LUT_CONST_VARIANT(TBVH<KDOP8>);
 
 #undef OLY_LUT_CONST_VARIANT
-	}
+    }
 
-	void load_variant_luts()
-	{
-		load_variant_lut();
-		load_const_variant_lut();
-	}
+    void load_variant_luts()
+    {
+        load_variant_lut();
+        load_const_variant_lut();
+    }
 
-	ColliderObjectConstVariant lut_variant(const ColliderObject& c)
-	{
-		return (lut.const_variant[c.type_index()])(c.raw_obj());
-	}
+    ColliderObjectConstVariant lut_variant(const ColliderObject& c)
+    {
+        return (lut.const_variant[c.type_index()])(c.raw_obj());
+    }
 
-	ColliderObjectVariant lut_variant(ColliderObject& c)
-	{
-		return (lut.variant[c.type_index()])(const_cast<void*>(c.raw_obj()));
-	}
+    ColliderObjectVariant lut_variant(ColliderObject& c)
+    {
+        return (lut.variant[c.type_index()])(const_cast<void*>(c.raw_obj()));
+    }
 }

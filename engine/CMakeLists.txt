@@ -5,8 +5,8 @@ include(FetchContent)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 
@@ -26,9 +26,9 @@ set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
-	glfw
-	GIT_REPOSITORY https://github.com/glfw/glfw.git
-	GIT_TAG        3.4
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
 )
 
 FetchContent_MakeAvailable(glfw)
@@ -108,9 +108,9 @@ FetchContent_MakeAvailable(nanosvg)
 # ====================
 
 FetchContent_Declare(
-	quartic
-	GIT_REPOSITORY https://github.com/sasamil/Quartic.git
-	GIT_TAG 45bf9bb8a28b3e214bc2a9c5a59f3db61c8b6b17
+    quartic
+    GIT_REPOSITORY https://github.com/sasamil/Quartic.git
+    GIT_TAG 45bf9bb8a28b3e214bc2a9c5a59f3db61c8b6b17
 )
 
 FetchContent_MakeAvailable(quartic)
@@ -126,27 +126,27 @@ add_library(OlympianEngine STATIC)
 
 # Engine compile options (MSVC specific)
 if (MSVC)
-	target_compile_options(OlympianEngine PUBLIC /Zc:__cplusplus)
+    target_compile_options(OlympianEngine PUBLIC /Zc:__cplusplus)
 endif()
 
 # Engine compile definitions
 target_compile_definitions(OlympianEngine PUBLIC
-	GLEW_STATIC
+    GLEW_STATIC
 )
 
 # Include directories
 target_include_directories(OlympianEngine PUBLIC
-	${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
     ${stb_SOURCE_DIR}
-	${nanosvg_SOURCE_DIR}/src
+    ${nanosvg_SOURCE_DIR}/src
     ${quartic_SOURCE_DIR}
 )
 
 # Link engine dependencies
 target_link_libraries(OlympianEngine PUBLIC
-	OpenGL::GL
-	libglew_static
-	glfw
+    OpenGL::GL
+    libglew_static
+    glfw
     glm::glm
     tomlplusplus::tomlplusplus
     quartic
@@ -157,7 +157,7 @@ target_link_libraries(OlympianEngine PUBLIC OlympianDetail)
 
 # Add sources and subdirectories
 target_sources(OlympianEngine PRIVATE
-	Olympian.cpp
+    Olympian.cpp
 )
 
 add_subdirectory(core)

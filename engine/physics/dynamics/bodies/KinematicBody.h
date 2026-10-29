@@ -8,19 +8,19 @@
 
 namespace oly::physics
 {
-	class KinematicBody
+    class KinematicBody
         : public RigidBody
-	{
+    {
     private:
-		KinematicPhysicsComponent dynamics_;
+        KinematicPhysicsComponent dynamics_;
 
-	public:
-		imp::action_delegator<col2d::ContactEventData> delegator;
+    public:
+        imp::action_delegator<col2d::ContactEventData> delegator;
 
-		KinematicBody();
+        KinematicBody();
         KinematicBody(const KinematicBody&) = delete;
-		KinematicBody(KinematicBody&&) noexcept;
-		~KinematicBody();
+        KinematicBody(KinematicBody&&) noexcept;
+        ~KinematicBody();
 
         KinematicBody& operator=(const KinematicBody&) = delete;
         KinematicBody& operator=(KinematicBody&&) noexcept;
@@ -53,7 +53,7 @@ namespace oly::physics
 
     private:
         void handle_contacts(const col2d::ContactEventData& data) const;
-	};
+    };
 
-	using KinematicBodyRef = SmartReference<KinematicBody>;
+    using KinematicBodyRef = SmartReference<KinematicBody>;
 }

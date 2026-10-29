@@ -14,326 +14,326 @@
 
 namespace oly::col2d::sat
 {
-	namespace internal
-	{
-		template<typename Shape1, typename Shape2>
-		struct OverlapTest
-		{
-			static_assert(imp::dependent_false_v<Shape1>, "OverlapTest not supported for the provided shape combo.");
-		};
+    namespace internal
+    {
+        template<typename Shape1, typename Shape2>
+        struct OverlapTest
+        {
+            static_assert(imp::dependent_false_v<Shape1>, "OverlapTest not supported for the provided shape combo.");
+        };
 
-		template<typename Shape1, typename Shape2>
-		struct FullOverlapTest
-		{
-			static OverlapResult call(const Shape1& c1, const Shape2& c2)
-			{
-				return internal::OverlapTest<Shape1, Shape2>::impl(c1, c2) && internal::OverlapTest<Shape2, Shape1>::impl(c2, c1);
-			}
-		};
+        template<typename Shape1, typename Shape2>
+        struct FullOverlapTest
+        {
+            static OverlapResult call(const Shape1& c1, const Shape2& c2)
+            {
+                return internal::OverlapTest<Shape1, Shape2>::impl(c1, c2) && internal::OverlapTest<Shape2, Shape1>::impl(c2, c1);
+            }
+        };
 
-		template<typename Shape1, typename Shape2>
-		struct CollisionTest
-		{
-			static_assert(imp::dependent_false_v<Shape1>, "CollisionTest not supported for the provided shape combo.");
-		};
+        template<typename Shape1, typename Shape2>
+        struct CollisionTest
+        {
+            static_assert(imp::dependent_false_v<Shape1>, "CollisionTest not supported for the provided shape combo.");
+        };
 
-		template<typename Shape1, typename Shape2>
-		struct FullCollisionTest
-		{
-			static CollisionResult call(const Shape1& c1, const Shape2& c2)
-			{
-				CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-				internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
-				if (!info.overlap)
-					return info;
-				internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info.invert());
-				if (!info.invert().overlap)
-					return info;
-				return info;
-			}
-		};
-	}
+        template<typename Shape1, typename Shape2>
+        struct FullCollisionTest
+        {
+            static CollisionResult call(const Shape1& c1, const Shape2& c2)
+            {
+                CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
+                internal::CollisionTest<Shape1, Shape2>::update_collision(c1, c2, info);
+                if (!info.overlap)
+                    return info;
+                internal::CollisionTest<Shape2, Shape1>::update_collision(c2, c1, info.invert());
+                if (!info.invert().overlap)
+                    return info;
+                return info;
+            }
+        };
+    }
 
-	template<typename Shape1, typename Shape2>
-	inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2)
-	{
-		return internal::FullOverlapTest<Shape1, Shape2>::call(c1, c2);
-	}
+    template<typename Shape1, typename Shape2>
+    inline OverlapResult overlaps(const Shape1& c1, const Shape2& c2)
+    {
+        return internal::FullOverlapTest<Shape1, Shape2>::call(c1, c2);
+    }
 
-	template<typename Shape1, typename Shape2>
-	inline CollisionResult collides(const Shape1& c1, const Shape2& c2)
-	{
-		return internal::FullCollisionTest<Shape1, Shape2>::call(c1, c2);
-	}
+    template<typename Shape1, typename Shape2>
+    inline CollisionResult collides(const Shape1& c1, const Shape2& c2)
+    {
+        return internal::FullCollisionTest<Shape1, Shape2>::call(c1, c2);
+    }
 
-	template<typename Shape1, typename Shape2>
-	inline ContactResult contacts(const Shape1& c1, const Shape2& c2)
-	{
-		return standard_contact_result(c1, c2, collides(c1, c2));
-	}
+    template<typename Shape1, typename Shape2>
+    inline ContactResult contacts(const Shape1& c1, const Shape2& c2)
+    {
+        return standard_contact_result(c1, c2, collides(c1, c2));
+    }
 
-	namespace internal
-	{
+    namespace internal
+    {
         extern float sat(float min1, float max1, float min2, float max2, UnitVector2D& axis);
 
-		template<typename Shape1, typename Shape2>
-		static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)
-		{
-			auto [min1, max1] = c1.projection_interval(axis);
-			auto [min2, max2] = c2.projection_interval(axis);
-			return sat(min1, max1, min2, max2, axis);
-		}
+        template<typename Shape1, typename Shape2>
+        static float sat(const Shape1& c1, const Shape2& c2, UnitVector2D& axis)
+        {
+            auto [min1, max1] = c1.projection_interval(axis);
+            auto [min2, max2] = c2.projection_interval(axis);
+            return sat(min1, max1, min2, max2, axis);
+        }
 
-		template<typename Other>
-		struct OverlapTest<ConvexHull, Other>
-		{
-			static OverlapResult impl(const ConvexHull& c, const Other& other)
-			{
-				for (size_t i = 0; i < c.points().size(); ++i)
-				{
-					UnitVector2D axis = c.edge_normal(i);
-					if (sat(c, other, axis) <= 0.0f)
-						return false;
-				}
-				return true;
-			}
-		};
+        template<typename Other>
+        struct OverlapTest<ConvexHull, Other>
+        {
+            static OverlapResult impl(const ConvexHull& c, const Other& other)
+            {
+                for (size_t i = 0; i < c.points().size(); ++i)
+                {
+                    UnitVector2D axis = c.edge_normal(i);
+                    if (sat(c, other, axis) <= 0.0f)
+                        return false;
+                }
+                return true;
+            }
+        };
 
-		template<typename Other>
-		struct CollisionTest<ConvexHull, Other>
-		{
-			static void update_collision(const ConvexHull& c, const Other& other, CollisionResult& info)
-			{
-				for (size_t i = 0; i < c.points().size(); ++i)
-				{
-					UnitVector2D axis = c.edge_normal(i);
-					float depth = sat(c, other, axis);
-					if (depth <= 0.0f)
-					{
-						info.overlap = false;
-						info.penetration_depth = 0.0f;
-						return;
-					}
-					else if (depth < info.penetration_depth)
-					{
-						info.penetration_depth = depth;
-						info.unit_impulse = axis;
-					}
-				}
-			}
-		};
+        template<typename Other>
+        struct CollisionTest<ConvexHull, Other>
+        {
+            static void update_collision(const ConvexHull& c, const Other& other, CollisionResult& info)
+            {
+                for (size_t i = 0; i < c.points().size(); ++i)
+                {
+                    UnitVector2D axis = c.edge_normal(i);
+                    float depth = sat(c, other, axis);
+                    if (depth <= 0.0f)
+                    {
+                        info.overlap = false;
+                        info.penetration_depth = 0.0f;
+                        return;
+                    }
+                    else if (depth < info.penetration_depth)
+                    {
+                        info.penetration_depth = depth;
+                        info.unit_impulse = axis;
+                    }
+                }
+            }
+        };
 
-		template<typename Other>
-		struct OverlapTest<AABB, Other>
-		{
-			static OverlapResult impl(const AABB& c, const Other& other)
-			{
-				{
-					UnitVector2D axis = UnitVector2D::kRight;
-					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(c.x1, c.x2, min2, max2, axis) <= 0.0f)
-						return false;
-				}
+        template<typename Other>
+        struct OverlapTest<AABB, Other>
+        {
+            static OverlapResult impl(const AABB& c, const Other& other)
+            {
+                {
+                    UnitVector2D axis = UnitVector2D::kRight;
+                    auto [min2, max2] = other.projection_interval(axis);
+                    if (sat(c.x1, c.x2, min2, max2, axis) <= 0.0f)
+                        return false;
+                }
 
-				{
-					UnitVector2D axis = UnitVector2D::kUp;
-					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(c.y1, c.y2, min2, max2, axis) <= 0.0f)
-						return false;
-				}
+                {
+                    UnitVector2D axis = UnitVector2D::kUp;
+                    auto [min2, max2] = other.projection_interval(axis);
+                    if (sat(c.y1, c.y2, min2, max2, axis) <= 0.0f)
+                        return false;
+                }
 
-				return true;
-			}
-		};
+                return true;
+            }
+        };
 
-		template<typename Other>
-		struct CollisionTest<AABB, Other>
-		{
-			static void update_collision(const AABB& c, const Other& other, CollisionResult& info)
-			{
-				UnitVector2D axis = UnitVector2D::kRight;
-				float depth = sat(c, other, axis);
-				if (depth <= 0.0f)
-				{
-					info.overlap = false;
-					info.penetration_depth = 0.0f;
-					return;
-				}
-				else if (depth < info.penetration_depth)
-				{
-					info.penetration_depth = depth;
-					info.unit_impulse = axis;
-				}
-				axis = UnitVector2D::kUp;
-				depth = sat(c, other, axis);
-				if (depth <= 0.0f)
-				{
-					info.overlap = false;
-					info.penetration_depth = 0.0f;
-				}
-				else if (depth < info.penetration_depth)
-				{
-					info.penetration_depth = depth;
-					info.unit_impulse = axis;
-				}
-			}
-		};
+        template<typename Other>
+        struct CollisionTest<AABB, Other>
+        {
+            static void update_collision(const AABB& c, const Other& other, CollisionResult& info)
+            {
+                UnitVector2D axis = UnitVector2D::kRight;
+                float depth = sat(c, other, axis);
+                if (depth <= 0.0f)
+                {
+                    info.overlap = false;
+                    info.penetration_depth = 0.0f;
+                    return;
+                }
+                else if (depth < info.penetration_depth)
+                {
+                    info.penetration_depth = depth;
+                    info.unit_impulse = axis;
+                }
+                axis = UnitVector2D::kUp;
+                depth = sat(c, other, axis);
+                if (depth <= 0.0f)
+                {
+                    info.overlap = false;
+                    info.penetration_depth = 0.0f;
+                }
+                else if (depth < info.penetration_depth)
+                {
+                    info.penetration_depth = depth;
+                    info.unit_impulse = axis;
+                }
+            }
+        };
 
-		template<typename Other>
-		struct OverlapTest<OBB, Other>
-		{
-			static OverlapResult impl(const OBB& c, const Other& other)
-			{
-				{
-					UnitVector2D axis = c.get_major_axis();
-					float cw = axis.dot(c.center);
-					auto [min2, max2] = other.projection_interval(axis);
-					if (sat(cw - 0.5f * c.width, cw + 0.5f * c.width, min2, max2, axis) <= 0.0f)
-						return false;
-				}
+        template<typename Other>
+        struct OverlapTest<OBB, Other>
+        {
+            static OverlapResult impl(const OBB& c, const Other& other)
+            {
+                {
+                    UnitVector2D axis = c.get_major_axis();
+                    float cw = axis.dot(c.center);
+                    auto [min2, max2] = other.projection_interval(axis);
+                    if (sat(cw - 0.5f * c.width, cw + 0.5f * c.width, min2, max2, axis) <= 0.0f)
+                        return false;
+                }
 
-				{
-					UnitVector2D axis = c.get_minor_axis();
-					float ch = axis.dot(c.center);
-					auto [min2, max2]  = other.projection_interval(axis);
-					if (sat(ch - 0.5f * c.height, ch + 0.5f * c.height, min2, max2, axis) <= 0.0f)
-						return false;
-				}
+                {
+                    UnitVector2D axis = c.get_minor_axis();
+                    float ch = axis.dot(c.center);
+                    auto [min2, max2] = other.projection_interval(axis);
+                    if (sat(ch - 0.5f * c.height, ch + 0.5f * c.height, min2, max2, axis) <= 0.0f)
+                        return false;
+                }
 
-				return true;
-			}
-		};
+                return true;
+            }
+        };
 
-		template<typename Other>
-		struct CollisionTest<OBB, Other>
-		{
-			static void update_collision(const OBB& c, const Other& other, CollisionResult& info)
-			{
-				UnitVector2D axis = c.get_major_axis();
-				float depth = sat(c, other, axis);
-				if (depth <= 0.0f)
-				{
-					info.overlap = false;
-					info.penetration_depth = 0.0f;
-					return;
-				}
-				else if (depth < info.penetration_depth)
-				{
-					info.penetration_depth = depth;
-					info.unit_impulse = axis;
-				}
-				axis = c.get_minor_axis();
-				depth = sat(c, other, axis);
-				if (depth <= 0.0f)
-				{
-					info.overlap = false;
-					info.penetration_depth = 0.0f;
-				}
-				else if (depth < info.penetration_depth)
-				{
-					info.penetration_depth = depth;
-					info.unit_impulse = axis;
-				}
-			}
-		};
+        template<typename Other>
+        struct CollisionTest<OBB, Other>
+        {
+            static void update_collision(const OBB& c, const Other& other, CollisionResult& info)
+            {
+                UnitVector2D axis = c.get_major_axis();
+                float depth = sat(c, other, axis);
+                if (depth <= 0.0f)
+                {
+                    info.overlap = false;
+                    info.penetration_depth = 0.0f;
+                    return;
+                }
+                else if (depth < info.penetration_depth)
+                {
+                    info.penetration_depth = depth;
+                    info.unit_impulse = axis;
+                }
+                axis = c.get_minor_axis();
+                depth = sat(c, other, axis);
+                if (depth <= 0.0f)
+                {
+                    info.overlap = false;
+                    info.penetration_depth = 0.0f;
+                }
+                else if (depth < info.penetration_depth)
+                {
+                    info.penetration_depth = depth;
+                    info.unit_impulse = axis;
+                }
+            }
+        };
 
-		template<size_t K, typename Other>
-		struct OverlapTest<KDOP<K>, Other>
-		{
-			static OverlapResult impl(const KDOP<K>& c, const Other& other)
-			{
-				for (size_t i = 0; i < K; ++i)
-				{
-					const fpair i2 = other.projection_interval(c.edge_normal(i));
-					if (std::min(c.global_clipped_maximum(i), i2.second) - std::max(c.global_clipped_minimum(i), i2.first) <= 0.0f)
-						return false;
-				}
-				return true;
-			}
-		};
+        template<size_t K, typename Other>
+        struct OverlapTest<KDOP<K>, Other>
+        {
+            static OverlapResult impl(const KDOP<K>& c, const Other& other)
+            {
+                for (size_t i = 0; i < K; ++i)
+                {
+                    const fpair i2 = other.projection_interval(c.edge_normal(i));
+                    if (std::min(c.global_clipped_maximum(i), i2.second) - std::max(c.global_clipped_minimum(i), i2.first) <= 0.0f)
+                        return false;
+                }
+                return true;
+            }
+        };
 
-		template<size_t K, typename Other>
-		struct CollisionTest<KDOP<K>, Other>
-		{
-			static void update_collision(const KDOP<K>& c, const Other& other, CollisionResult& info)
-			{
-				for (size_t i = 0; i < K; ++i)
-				{
-					UnitVector2D axis = c.edge_normal(i);
-					const auto [min2, max2] = other.projection_interval(axis);
-					const float depth = sat(c.global_clipped_minimum(i), c.global_clipped_maximum(i), min2, max2, axis);
-					if (depth <= 0.0f)
-					{
-						info.overlap = false;
-						info.penetration_depth = 0.0f;
-						return;
-					}
-					else if (depth < info.penetration_depth)
-					{
-						info.penetration_depth = depth;
-						info.unit_impulse = axis;
-					}
-				}
-			}
-		};
+        template<size_t K, typename Other>
+        struct CollisionTest<KDOP<K>, Other>
+        {
+            static void update_collision(const KDOP<K>& c, const Other& other, CollisionResult& info)
+            {
+                for (size_t i = 0; i < K; ++i)
+                {
+                    UnitVector2D axis = c.edge_normal(i);
+                    const auto [min2, max2] = other.projection_interval(axis);
+                    const float depth = sat(c.global_clipped_minimum(i), c.global_clipped_maximum(i), min2, max2, axis);
+                    if (depth <= 0.0f)
+                    {
+                        info.overlap = false;
+                        info.penetration_depth = 0.0f;
+                        return;
+                    }
+                    else if (depth < info.penetration_depth)
+                    {
+                        info.penetration_depth = depth;
+                        info.unit_impulse = axis;
+                    }
+                }
+            }
+        };
 
-		template<size_t K>
-		struct FullOverlapTest<KDOP<K>, KDOP<K>>
-		{
-			static OverlapResult call(const KDOP<K>& c1, const KDOP<K>& c2)
-			{
-				int offset2 = 0, sign2 = 1;
-				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
-				{
-					for (int i = 0; i < K; ++i)
-					{
-						const int j = sign2 * i + offset2;
-						if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(j)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(j)) <= 0.0f)
-							return false;
-					}
-					return true;
-				}
-				else
-					return internal::OverlapTest<KDOP<K>, KDOP<K>>::impl(c1, c2) && internal::OverlapTest<KDOP<K>, KDOP<K>>::impl(c2, c1);
-			}
-		};
+        template<size_t K>
+        struct FullOverlapTest<KDOP<K>, KDOP<K>>
+        {
+            static OverlapResult call(const KDOP<K>& c1, const KDOP<K>& c2)
+            {
+                int offset2 = 0, sign2 = 1;
+                if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
+                {
+                    for (int i = 0; i < K; ++i)
+                    {
+                        const int j = sign2 * i + offset2;
+                        if (std::min(c1.get_clipped_maximum(i), c2.get_clipped_maximum(j)) - std::max(c1.get_clipped_minimum(i), c2.get_clipped_minimum(j)) <= 0.0f)
+                            return false;
+                    }
+                    return true;
+                }
+                else
+                    return internal::OverlapTest<KDOP<K>, KDOP<K>>::impl(c1, c2) && internal::OverlapTest<KDOP<K>, KDOP<K>>::impl(c2, c1);
+            }
+        };
 
-		template<size_t K>
-		struct FullCollisionTest<KDOP<K>, KDOP<K>>
-		{
-			static CollisionResult call(const KDOP<K>& c1, const KDOP<K>& c2)
-			{
-				int offset2 = 0, sign2 = 1;
-				if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
-				{
-					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					for (int i = 0; i < K; ++i)
-					{
-						UnitVector2D axis = c1.edge_normal(i);
-						const int j = sign2 * i + offset2;
-						const float depth = sat(c1.global_clipped_minimum(i), c1.global_clipped_maximum(i), c2.global_clipped_minimum(j), c2.global_clipped_maximum(j), axis);
-						if (depth <= 0.0f)
-							return { .overlap = false };
-						else if (depth < info.penetration_depth)
-						{
-							info.penetration_depth = depth;
-							info.unit_impulse = axis;
-						}
-					}
-					return info;
-				}
-				else
-				{
-					CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
-					internal::CollisionTest<KDOP<K>, KDOP<K>>::update_collision(c1, c2, info);
-					if (!info.overlap)
-						return info;
-					internal::CollisionTest<KDOP<K>, KDOP<K>>::update_collision(c2, c1, info.invert());
-					if (!info.invert().overlap)
-						return info;
-					return info;
-				}
-			}
-		};
-	}
+        template<size_t K>
+        struct FullCollisionTest<KDOP<K>, KDOP<K>>
+        {
+            static CollisionResult call(const KDOP<K>& c1, const KDOP<K>& c2)
+            {
+                int offset2 = 0, sign2 = 1;
+                if (col2d::internal::KDOPGlobalAccess<K>::compatible_globals(c1, c2, offset2, sign2))
+                {
+                    CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
+                    for (int i = 0; i < K; ++i)
+                    {
+                        UnitVector2D axis = c1.edge_normal(i);
+                        const int j = sign2 * i + offset2;
+                        const float depth = sat(c1.global_clipped_minimum(i), c1.global_clipped_maximum(i), c2.global_clipped_minimum(j), c2.global_clipped_maximum(j), axis);
+                        if (depth <= 0.0f)
+                            return { .overlap = false };
+                        else if (depth < info.penetration_depth)
+                        {
+                            info.penetration_depth = depth;
+                            info.unit_impulse = axis;
+                        }
+                    }
+                    return info;
+                }
+                else
+                {
+                    CollisionResult info{ .overlap = true, .penetration_depth = nmax<float>() };
+                    internal::CollisionTest<KDOP<K>, KDOP<K>>::update_collision(c1, c2, info);
+                    if (!info.overlap)
+                        return info;
+                    internal::CollisionTest<KDOP<K>, KDOP<K>>::update_collision(c2, c1, info.invert());
+                    if (!info.invert().overlap)
+                        return info;
+                    return info;
+                }
+            }
+        };
+    }
 }

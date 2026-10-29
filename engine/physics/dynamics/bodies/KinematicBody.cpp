@@ -2,23 +2,23 @@
 
 namespace oly::physics
 {
-	KinematicBody::KinematicBody()
-		: RigidBody()
-	{
-	}
+    KinematicBody::KinematicBody()
+        : RigidBody()
+    {
+    }
 
-	KinematicBody::KinematicBody(KinematicBody&& o) noexcept
-		: RigidBody(std::move(o))
+    KinematicBody::KinematicBody(KinematicBody&& o) noexcept
+        : RigidBody(std::move(o))
         , dynamics_(std::move(o.dynamics_))
         , delegator(std::move(o.delegator))
-	{
-		bind_all();
-	}
+    {
+        bind_all();
+    }
 
-	KinematicBody::~KinematicBody()
-	{
-		unbind_all();
-	}
+    KinematicBody::~KinematicBody()
+    {
+        unbind_all();
+    }
 
     KinematicBody& KinematicBody::operator=(KinematicBody&& o) noexcept
     {
@@ -43,29 +43,29 @@ namespace oly::physics
         return dynamics_.is_colliding();
     }
 
-	void KinematicBody::physics_pre_tick()
-	{
-		dynamics_.pre_tick(transformer_->global());
-	}
+    void KinematicBody::physics_pre_tick()
+    {
+        dynamics_.pre_tick(transformer_->global());
+    }
 
-	void KinematicBody::physics_post_tick()
-	{
-		dynamics_.post_tick();
-		transformer_->set_global(Transform2D{
+    void KinematicBody::physics_post_tick()
+    {
+        dynamics_.post_tick();
+        transformer_->set_global(Transform2D{
             .position = dynamics_.get_state().position,
             .rotation = dynamics_.get_state().rotation,
             .scale = transformer_->get_local().scale }.matrix());
-	}
+    }
 
-	void KinematicBody::bind(const col2d::Collider& collider) const
-	{
-		col2d::CollisionController::bind(collider, &KinematicBody::handle_contacts);
-	}
+    void KinematicBody::bind(const col2d::Collider& collider) const
+    {
+        col2d::CollisionController::bind(collider, &KinematicBody::handle_contacts);
+    }
 
-	void KinematicBody::unbind(const col2d::Collider& collider) const
-	{
-		col2d::CollisionController::unbind(collider, &KinematicBody::handle_contacts);
-	}
+    void KinematicBody::unbind(const col2d::Collider& collider) const
+    {
+        col2d::CollisionController::unbind(collider, &KinematicBody::handle_contacts);
+    }
 
     const DynamicsComponent& KinematicBody::get_dynamics() const
     {
@@ -76,7 +76,7 @@ namespace oly::physics
     {
         return dynamics_;
     }
-    
+
     KinematicPhysicsComponent& KinematicBody::dynamics()
     {
         return dynamics_;
@@ -86,27 +86,27 @@ namespace oly::physics
     {
         return dynamics_.material;
     }
-    
+
     MaterialRef& KinematicBody::material()
     {
         return dynamics_.material;
     }
-    
+
     const KinematicSubMaterialRef& KinematicBody::sub_material() const
     {
         return dynamics_.submaterial;
     }
-    
+
     KinematicSubMaterialRef& KinematicBody::sub_material()
     {
         return dynamics_.submaterial;
     }
-    
+
     const KinematicPhysicsProperties& KinematicBody::properties() const
     {
         return dynamics_.properties;
     }
-    
+
     KinematicPhysicsProperties& KinematicBody::properties()
     {
         return dynamics_.properties;

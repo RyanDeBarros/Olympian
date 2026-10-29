@@ -9,18 +9,18 @@
 
 namespace oly::col2d
 {
-	struct Capsule
-	{
-		glm::vec2 center = {};
+    struct Capsule
+    {
+        glm::vec2 center = {};
         float obb_width = 0.f;
         float obb_height = 0.f;
         float rotation = 0.f;
 
         glm::mat2 get_rotation_matrix() const;
 
-		OBB mid_obb() const;
-		Circle lower_circle() const;
-		Circle upper_circle() const;
+        OBB mid_obb() const;
+        Circle lower_circle() const;
+        Circle upper_circle() const;
 
         UnitVector2D horizontal() const;
         UnitVector2D vertical() const;
@@ -28,10 +28,10 @@ namespace oly::col2d
         Compound compound() const;
         TCompound tcompound() const;
 
-		template<typename Shape = OBB>
-		BVH<Shape> bvh() const { return convert<Shape>(compound()); }
-		
         template<typename Shape = OBB>
-		TBVH<Shape> tbvh() const { return convert<Shape>(tcompound()); }
-	};
+        BVH<Shape> bvh() const { return convert<Shape>(compound()); }
+
+        template<typename Shape = OBB>
+        TBVH<Shape> tbvh() const { return convert<Shape>(tcompound()); }
+    };
 }

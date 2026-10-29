@@ -1,8 +1,8 @@
 target_sources(OlympianEngine PRIVATE
-	BVH.cpp
+    BVH.cpp
     Capsule.cpp
     Combinations.cpp
-	Compound.cpp
+    Compound.cpp
     Polygon.cpp
     Primitive.cpp
 )
