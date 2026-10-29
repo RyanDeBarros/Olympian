@@ -8,6 +8,6 @@
 
 namespace oly
 {
-	extern Logger::Impl operator<<(Logger::Impl, const imp::utf::string& str);
-	extern Logger::Impl operator<<(Logger::Impl, const detail::ResourcePath& file);
+    extern Logger::Impl operator<<(Logger::Impl, const imp::utf::string& str);
+    extern Logger::Impl operator<<(Logger::Impl, const detail::ResourcePath& file);
 }

@@ -1,9 +1,9 @@
 target_sources(OlympianEngine PRIVATE
-	BindingContext.cpp
-	Gamepad.cpp
-	InputController.cpp
-	Platform.cpp
+    BindingContext.cpp
+    Gamepad.cpp
+    InputController.cpp
+    Platform.cpp
     Signal.cpp
-	Window.cpp
-	WindowEvents.cpp
+    Window.cpp
+    WindowEvents.cpp
 )

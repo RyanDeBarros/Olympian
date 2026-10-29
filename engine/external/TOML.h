@@ -14,6 +14,6 @@
 
 namespace oly
 {
-	using TOMLNode = toml::node_view<const toml::node>;
-	using TOMLArray = const toml::array*;
+    using TOMLNode = toml::node_view<const toml::node>;
+    using TOMLArray = const toml::array*;
 }

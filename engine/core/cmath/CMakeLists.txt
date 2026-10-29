@@ -1,4 +1,4 @@
 target_sources(OlympianEngine PRIVATE
-	ColoredGeometry.cpp
-	Triangulation.cpp
+    ColoredGeometry.cpp
+    Triangulation.cpp
 )

@@ -1,8 +1,8 @@
 target_sources(OlympianEngine PRIVATE
-	Assert.cpp
+    Assert.cpp
     Errors.cpp
     ControlValues.cpp
     SmartReference.cpp
-	Transforms.cpp
-	UnitVector.cpp
+    Transforms.cpp
+    UnitVector.cpp
 )

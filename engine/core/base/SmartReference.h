@@ -31,7 +31,7 @@ namespace oly
         SmartPoolBaseType<std::decay_t<T2>>>;
 
 #define OLY_SMART_POOL_BASE(Class, Base) template<> struct oly::SmartPoolBase<Class> { using Type = Base;\
-		static_assert(std::is_base_of_v<Base, Class>, "OLY_SMART_POOL_BASE: Class must derive from base."); };
+        static_assert(std::is_base_of_v<Base, Class>, "OLY_SMART_POOL_BASE: Class must derive from base."); };
 
     template<typename>
     struct SmartReference;
@@ -241,11 +241,11 @@ namespace oly
         struct RefInit
         {
         };
-        
+
         struct RefDefault
         {
         };
-        
+
         struct RefNull
         {
         };
@@ -851,7 +851,7 @@ namespace oly
 
             algo::clear_stack(unoccupied_);
             marked_for_deletion_.clear();
-            
+
             for (SmartReferenceLink* reference_head : reference_heads_)
             {
                 while (reference_head)

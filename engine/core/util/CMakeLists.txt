@@ -1,12 +1,12 @@
 target_sources(OlympianEngine PRIVATE
-	DebugTrace.cpp
+    DebugTrace.cpp
     DeferredStringParam.cpp
-	IO.cpp
-	Loader.cpp
-	Logger.cpp
-	LoggerOperators.cpp
-	Parser.cpp
-	StringParam.cpp
-	Time.cpp
-	Timers.cpp
+    IO.cpp
+    Loader.cpp
+    Logger.cpp
+    LoggerOperators.cpp
+    Parser.cpp
+    StringParam.cpp
+    Time.cpp
+    Timers.cpp
 )
