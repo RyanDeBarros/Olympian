@@ -106,8 +106,8 @@ namespace oly::rendering
         private:
             static const GLuint kNullId = GLuint(-1);
 
-            graphics::PersistentEBO<6> ebo_;
             graphics::VertexArray vao_;
+            graphics::PersistentEBO<6> ebo_;
             GLuint shader_;
             SmartReference<graphics::Shader> shader_ref_;
 

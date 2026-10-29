@@ -149,14 +149,14 @@ namespace oly::graphics::internal_shaders
 	void load()
 	{
 		polygon_batch_ptr_ = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir() / "polygon_batch_.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir() / "polygon_batch_.frag", .type = ShaderType::Fragment }
+			{ .path = shaders_dir() / "polygon_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "polygon_batch.frag", .type = ShaderType::Fragment }
 		});
 		polygon_batch_ = *polygon_batch_ptr_;
 
 		ellipse_batch_ptr_ = std::make_unique<Shader>(std::vector<ShaderPathSource>{
-			{ .path = shaders_dir() / "ellipse_batch_.vert", .type = ShaderType::Vertex },
-			{ .path = shaders_dir() / "ellipse_batch_.frag", .type = ShaderType::Fragment }
+			{ .path = shaders_dir() / "ellipse_batch.vert", .type = ShaderType::Vertex },
+			{ .path = shaders_dir() / "ellipse_batch.frag", .type = ShaderType::Fragment }
 		});
 		ellipse_batch_ = *ellipse_batch_ptr_;
 

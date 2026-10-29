@@ -1,101 +1,129 @@
 #version 450 core
+
 #extension GL_NV_gpu_shader5 : enable
 
-uniform mat3 uProjection;
-uniform mat3 uInvariantProjection;
-uniform vec4 uGlobalModulation;
+
+uniform mat3  uProjection;
+uniform mat3  uInvariantProjection;
+uniform vec4  uGlobalModulation;
 uniform float uTime;
+
+
+out      vec2     tTexCoord;
+out flat uint16_t tTexSlot;
+out flat vec4     tModulation;
+out flat uint16_t tFramePlusOne;
+out flat uint16_t tIsTextGlyph;
+out      vec2     tModTexCoord;
+out flat uint16_t tModTexSlot;
+
 
 struct TexData
 {
-	uvec2 handle;
-	vec2 dimensions;
-};
-layout(std430, binding = 0) readonly buffer TextureData {
-	TexData uTexData[];
+    uvec2 handle;
+    vec2  dimensions;
 };
 
-const uint16_t GLYPH_FLAG = uint16_t(1);
-const uint16_t CAM_INV_FLAG = uint16_t(2);
+layout(std430, binding = 0) readonly buffer TextureData {
+    TexData uTexData[];
+};
 
 struct QuadInfo
 {
-	uint16_t texSlot;
-	uint16_t texCoordSlot;
-	uint16_t colorSlot;
-	uint16_t frameSlot;
-	uint16_t flags;
-	uint16_t modTexSlot;
-	uint16_t modTexCoordSlot;
+    uint16_t texSlot;
+    uint16_t texCoordSlot;
+    uint16_t colorSlot;
+    uint16_t frameSlot;
+    uint16_t flags;
+    uint16_t modTexSlot;
+    uint16_t modTexCoordSlot;
 };
+
 layout(std430, binding = 1) readonly buffer QuadInfos {
-	QuadInfo uQuadInfo[];
+    QuadInfo uQuadInfo[];
 };
 
 struct Mat3
 {
-	float m00, m01, m02, m10, m11, m12, m20, m21, m22;
+    float m00, m01, m02, m10, m11, m12, m20, m21, m22;
 };
-mat3 matrix(Mat3 m) {
-	return mat3(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, m.m20, m.m21, m.m22);
-}
+
 layout(std430, binding = 2) readonly buffer QuadTransforms {
-	Mat3 uTransforms[];
+    Mat3 uTransforms[];
 };
 
 layout(std430, binding = 3) readonly buffer TextureCoords {
-	vec4 uTexCoords[];
+    vec4 uTexCoords[];
 };
 
 layout(std140, binding = 0) uniform Modulations {
-	vec4 uModulation[/*$MODULATIONS*/];
+    vec4 uModulation[/*$MODULATIONS*/];
 };
 
 struct AnimFrameFormat
 {
-	uint starting_frame;
-	uint num_frames;
-	float starting_time;
-	float delay_seconds;
+    uint starting_frame;
+    uint num_frames;
+    float starting_time;
+    float delay_seconds;
 };
+
 layout(std140, binding = 1) uniform Anims {
-	AnimFrameFormat uAnims[/*$ANIMS*/];
+    AnimFrameFormat uAnims[/*$ANIMS*/];
 };
+
+
+const uint16_t kGlyphFlag = uint16_t(1);
+const uint16_t kCamInvFlag = uint16_t(2);
+
+
+mat3 matrix(Mat3 m) {
+    return mat3(m.m00, m.m01, m.m02, m.m10, m.m11, m.m12, m.m20, m.m21, m.m22);
+}
+
 
 vec2 calc_position(vec2 dimensions) {
-	return dimensions * (vec2(((gl_VertexID + 1) >> 1) & 1, (gl_VertexID >> 1) & 1) - 0.5);
+    return dimensions * (vec2(((gl_VertexID + 1) >> 1) & 1, (gl_VertexID >> 1) & 1) - 0.5);
 }
+
 
 vec2 calc_tex_coords(vec4 uvs) {
-	return vec2(uvs[((gl_VertexID + 1) >> 1) & 1], uvs[2 + ((gl_VertexID >> 1) & 1)]);
+    return vec2(uvs[((gl_VertexID + 1) >> 1) & 1], uvs[2 + ((gl_VertexID >> 1) & 1)]);
 }
+
 
 uint16_t calc_frame(AnimFrameFormat anim) {
-	int frame_offset = anim.delay_seconds == 0.0 ? 0 : int(floor((uTime - anim.starting_time) / anim.delay_seconds));
-	return uint16_t((anim.starting_frame + frame_offset) % anim.num_frames);
+    int frame_offset = anim.delay_seconds == 0.0
+        ? 0
+        : int(floor((uTime - anim.starting_time) / anim.delay_seconds));
+
+    return uint16_t((anim.starting_frame + frame_offset) % anim.num_frames);
 }
 
-out vec2 tTexCoord;
-flat out uint16_t tTexSlot;
-flat out vec4 tModulation;
-flat out uint16_t tFramePlusOne;
-flat out uint16_t tIsTextGlyph;
-out vec2 tModTexCoord;
-flat out uint16_t tModTexSlot;
 
 void main() {
-	QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
-	if (quad.texSlot > uint16_t(0)) {
-		mat3 projection = ((quad.flags & CAM_INV_FLAG) > uint16_t(0)) ? uInvariantProjection : uProjection;
-		gl_Position.xy = (projection * matrix(uTransforms[gl_VertexID >> 2]) * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)).xy;
-		tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
-		tTexSlot = quad.texSlot;
-		tModulation = uGlobalModulation * uModulation[quad.colorSlot];
-		tFramePlusOne = quad.frameSlot > uint16_t(0) ? uint16_t(1) + calc_frame(uAnims[quad.frameSlot]) : uint16_t(0);
-		tIsTextGlyph = quad.flags & GLYPH_FLAG;
-		tModTexCoord = calc_tex_coords(uTexCoords[quad.modTexCoordSlot]);
-		tModTexSlot = quad.modTexSlot;
-	} else {
-		gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
-	}
+    QuadInfo quad = uQuadInfo[gl_VertexID >> 2];
+
+    if (quad.texSlot > uint16_t(0)) {
+        mat3 projection = ((quad.flags & kCamInvFlag) > uint16_t(0)) ? uInvariantProjection : uProjection;
+        gl_Position.xy = (
+            projection
+            * matrix(uTransforms[gl_VertexID >> 2])
+            * vec3(calc_position(uTexData[quad.texSlot].dimensions), 1.0)
+        ).xy;
+
+        tTexCoord = calc_tex_coords(uTexCoords[quad.texCoordSlot]);
+        tTexSlot = quad.texSlot;
+        tModulation = uGlobalModulation * uModulation[quad.colorSlot];
+        
+        tFramePlusOne = quad.frameSlot > uint16_t(0)
+            ? uint16_t(1) + calc_frame(uAnims[quad.frameSlot])
+            : uint16_t(0);
+        
+        tIsTextGlyph = quad.flags & kGlyphFlag;
+        tModTexCoord = calc_tex_coords(uTexCoords[quad.modTexCoordSlot]);
+        tModTexSlot = quad.modTexSlot;
+    } else {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0); // degenerate outside NDC
+    }
 }
