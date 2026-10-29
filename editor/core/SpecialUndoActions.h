@@ -4,41 +4,41 @@
 
 namespace oly::editor
 {
-	template<std::derived_from<imp::undo_action> Action>
-	struct ReversedUndoAction : public Action
-	{
-		bool forward() override
-		{
-			return Action::backward();
-		}
-		
-		bool backward() override
-		{
-			return Action::forward();
-		}
-	};
+    template<std::derived_from<imp::undo_action> Action>
+    struct ReversedUndoAction : public Action
+    {
+        bool forward() override
+        {
+            return Action::backward();
+        }
 
-	struct CompoundUndoAction : public imp::undo_action
-	{
-		std::vector<std::unique_ptr<imp::undo_action>> forward_queue;
+        bool backward() override
+        {
+            return Action::forward();
+        }
+    };
 
-		bool forward() override;
-		bool backward() override;
-		size_t empirical_size() const override;
-	};
+    struct CompoundUndoAction : public imp::undo_action
+    {
+        std::vector<std::unique_ptr<imp::undo_action>> forward_queue;
 
-	class CompoundUndoActionQueue
-	{
-		struct Entry
-		{
-			std::unique_ptr<imp::undo_action> _action;
-			bool _execute_on_push;
-		};
+        bool forward() override;
+        bool backward() override;
+        size_t empirical_size() const override;
+    };
 
-		std::vector<Entry> _entries;
+    class CompoundUndoActionQueue
+    {
+        struct Entry
+        {
+            std::unique_ptr<imp::undo_action> _action;
+            bool _execute_on_push;
+        };
 
-	public:
-		void Append(std::unique_ptr<imp::undo_action>&& action, bool execute_on_push);
-		void PushAll(imp::undo_history& undo_history);
-	};
+        std::vector<Entry> _entries;
+
+    public:
+        void Append(std::unique_ptr<imp::undo_action>&& action, bool execute_on_push);
+        void PushAll(imp::undo_history& undo_history);
+    };
 }

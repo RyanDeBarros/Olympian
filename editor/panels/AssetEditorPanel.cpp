@@ -17,376 +17,376 @@
 
 namespace oly::editor
 {
-	static constexpr const char* kOpenFile = "OpenFileDlg";
-
-	static std::string open_file_parent = ".";
-
-	AssetEditorPanel& AssetEditorPanel::Instance()
-	{
-		if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
-			return *panel;
-		else
-			imtk::breakout_error::throw_("No instance of AssetEditorPanel");
-	}
-
-	AssetEditorPanel::AssetEditorPanel()
-		: _tab_unsaved_changes_modal("Tab")
-		, _window_unsaved_changes_modal("Window")
-		, _shutdown_unsaved_changes_modal("Shutdown")
-	{
-	}
-
-	void AssetEditorPanel::InitImpl()
-	{
-		open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
-	}
-
-	const char* AssetEditorPanel::GetTitle() const
-	{
-		return "Asset Editor";
-	}
-
-	void AssetEditorPanel::Draw()
-	{
-		auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar);
-		bool draw_window = true;
-		if (window.RequestsClose())
-		{
-			CloseAllTabs(_window_unsaved_changes_modal.pop);
-			if (_window_unsaved_changes_modal.pop.is_opening())
-			{
-				Open();
-				ImGui::SetWindowFocus();
-			}
-			else
-				draw_window = false;
-		}
-
-		if (draw_window && window.IsVisible())
-		{
-			PollShortcuts();
-
-			DrawTabBar();
-
-			if (_selected_tab)
-				_selected_tab->DrawMenuBar();
-			else
-				DrawDefaultMenuBar();
-
-			ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
-
-			if (ImGuiFileDialog::Instance()->Display(kOpenFile, ImGuiWindowFlags_NoCollapse))
-			{
-				if (ImGuiFileDialog::Instance()->IsOk())
-				{
-					std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
-					open_file_parent = path.parent_path().string();
-					Editor::OpenFile(path);
-				}
-
-				ImGuiFileDialog::Instance()->Close();
-			}
-		}
-
-		if (DrawUnsavedChangesModal(_window_unsaved_changes_modal))
-			Close();
-
-		if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal))
-		{
-			Close();
-			Editor::RequestShutdown();
-		}
-	}
-
-	void AssetEditorPanel::PollShortcuts()
-	{
-		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
-			OpenFile();
-
-		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-			SaveSelectedTab();
-
-		if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-			SaveAllTabs();
-
-		if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
-		{
-			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-				SelectedTabUndo();
-
-			if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-				SelectedTabRedo();
-		}
-	}
-
-	void AssetEditorPanel::DrawTabBar()
-	{
-		ImGuiTabBarFlags tab_bar_flags =
-			ImGuiTabBarFlags_AutoSelectNewTabs |
-			ImGuiTabBarFlags_DrawSelectedOverline |
-			ImGuiTabBarFlags_Reorderable;
-
-		imtk::id_scope scope(this);
-		if (auto _ = imtk::tab_bar("##AssetTabs", tab_bar_flags))
-		{
-			std::vector<size_t> closed;
-
-			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); )
-			{
-				IDocument& doc = DocumentManager::Instance().GetDocument(i);
-				if (doc.Exists())
-					++i;
-				else
-				{
-					if (_selected_tab == &doc)
-						_selected_tab = nullptr;
-
-					if (_focused_tab == &doc)
-						_focused_tab = nullptr;
-
-					DocumentManager::Instance().Remove(i);
-				}
-			}
-
-			IDocument* previously_selected_doc = _selected_tab;
-			_selected_tab = nullptr;
-			std::unordered_set<IDocument*> seen_documents;
-
-			for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
-			{
-				scope.push(i);
-				IDocument& doc = DocumentManager::Instance().GetDocument(i);
-				seen_documents.insert(&doc);
-				bool open = true;
-
-				ImGuiTabItemFlags tab_item_flags = 0;
-				if (doc.IsDirty())
-					tab_item_flags |= ImGuiTabItemFlags_UnsavedDocument;
-
-				if (_focused_tab == &doc)
-					tab_item_flags |= ImGuiTabItemFlags_SetSelected;
-
-				if (auto _ = imtk::tab_item(doc.TabName() + "##" + std::to_string(i), tab_item_flags, &open))
-				{
-					if (auto _ = imtk::context_menu::item("##AssetTabContextMenu"))
-					{
-						detail::ResourcePath path = doc.GetOlyPath();
-						if (detail::MetaSplitter::decode_meta(path).is_import())
-							path = path.get_source_path();
-
-						if (ImGui::MenuItem("Show in Content Browser"))
-							ContentBrowserPanel::ShowInContentBrowser(path);
-
-						if (ImGui::MenuItem("Reveal in explorer"))
-							PathInfo::RevealInExplorer(path.get_absolute(), false);
-					}
-
-					doc.Draw();
-					_selected_tab = &doc;
-				}
-
-				if (!open)
-				{
-					if (!doc.IsDirty())
-					{
-						closed.push_back(i);
-						if (&doc == _selected_tab)
-							_selected_tab = nullptr;
-					}
-					else if (!_pending_close_set.contains(&doc))
-					{
-						_pending_close_set.insert(&doc);
-						_pending_close.push_back(&doc);
-						_tab_unsaved_changes_modal.pop.open();
-					}
-				}
-			}
-
-			RemoveOldPendingDocuments(seen_documents);
-
-			if (!_window_unsaved_changes_modal.pop.is_opening())
-			{
-				DrawTabUnsavedChangesModal(closed);
-			}
-			else
-			{
-				_pending_close.clear();
-				_pending_close_set.clear();
-			}
-
-			std::sort(closed.begin(), closed.end());
-			for (auto it = closed.rbegin(); it != closed.rend(); ++it)
-				DocumentManager::Instance().Remove(*it);
-
-			_focused_tab = nullptr;
-		}
-	}
-
-	void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents)
-	{
-		for (auto it = _pending_close.begin(); it != _pending_close.end();)
-		{
-			if (seen_documents.contains(*it))
-				++it;
-			else
-				it = _pending_close.erase(it);
-		}
-
-		for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
-		{
-			if (seen_documents.contains(*it))
-				++it;
-			else
-				it = _pending_close_set.erase(it);
-		}
-	}
-
-	static imtk::unsaved_changes_modal::result DrawUnsavedChangesModalImpl(imtk::unsaved_changes_modal& modal, IDocument* doc)
-	{
-		if (!doc)
-			return imtk::unsaved_changes_modal::result::no_draw;
-
-		modal.description.clear();
-		modal.description.push_back("Asset " + doc->TabName());
-		modal.description.push_back("Full path: " + doc->GetOlyPath().string());
-		const auto result = modal.draw();
-
-		if (result == imtk::unsaved_changes_modal::result::save_changes)
-			doc->DumpAsset();
-
-		if (result == imtk::unsaved_changes_modal::result::discard_changes)
-			doc->LoadAsset();
-
-		return result;
-	}
-
-	void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
-	{
-		if (_pending_close.empty())
-			return;
-
-		IDocument* doc = _pending_close.front();
-		const auto result = DrawUnsavedChangesModalImpl(_tab_unsaved_changes_modal, doc);
-
-		if (_tab_unsaved_changes_modal.closing(result))
-		{
-			closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-			if (doc == _selected_tab)
-				_selected_tab = nullptr;
-		}
-
-		if (result != imtk::unsaved_changes_modal::result::no_draw && result != imtk::unsaved_changes_modal::result::no_interaction)
-		{
-			_pending_close.erase(_pending_close.begin());
-			_pending_close_set.erase(doc);
-		}
-	}
-
-	bool AssetEditorPanel::DrawUnsavedChangesModal(imtk::unsaved_changes_modal& popup)
-	{
-		switch (DrawUnsavedChangesModalImpl(popup, _selected_tab))
-		{
-		case imtk::unsaved_changes_modal::result::save_changes:
-		case imtk::unsaved_changes_modal::result::discard_changes:
-			CloseAllTabs(popup.pop);
-			return !popup.pop.is_opening();
-
-		case imtk::unsaved_changes_modal::result::cancel_close:
-			popup.pop.close();
-			return false;
-
-		default:
-			return false;
-		}
-	}
-
-	void AssetEditorPanel::CloseAllTabs(imtk::popup& popup)
-	{
-		_pending_close.clear();
-		_pending_close_set.clear();
-		popup.close();
-
-		for (int i = DocumentManager::Instance().DocumentCount() - 1; i >= 0; --i)
-		{
-			IDocument& doc = DocumentManager::Instance().GetDocument(i);
-			_selected_tab = &doc;
-
-			if (doc.IsDirty())
-			{
-				popup.open();
-				break;
-			}
-
-			DocumentManager::Instance().Remove(i);
-			_selected_tab = nullptr;
-		}
-	}
-
-	void AssetEditorPanel::DrawDefaultMenuBar()
-	{
-		if (auto _ = imtk::menu_bar())
-		{
-			if (auto _ = imtk::menu("File"))
-			{
-				if (ImGui::MenuItem("Open File", "Ctrl+O"))
-					OpenFile();
-			}
-		}
-	}
-
-	void AssetEditorPanel::OpenFile()
-	{
-		IGFD::FileDialogConfig config;
-		config.path = open_file_parent;
-		config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
-
-		ImGuiFileDialog::Instance()->OpenDialog(kOpenFile, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
-	}
-
-	void AssetEditorPanel::FocusTab(IDocument* doc)
-	{
-		_focused_tab = doc;
-	}
-
-	bool AssetEditorPanel::IsSelected(IDocument* doc) const
-	{
-		return _selected_tab == doc;
-	}
-
-	void AssetEditorPanel::SaveSelectedTab() const
-	{
-		if (_selected_tab)
-			_selected_tab->DumpAsset();
-	}
-
-	void AssetEditorPanel::SaveAllTabs() const
-	{
-		for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
-			DocumentManager::Instance().GetDocument(i).DumpAsset();
-	}
-
-	void AssetEditorPanel::SelectedTabUndo() const
-	{
-		if (_selected_tab)
-			_selected_tab->Undo();
-	}
-
-	void AssetEditorPanel::SelectedTabRedo() const
-	{
-		if (_selected_tab)
-			_selected_tab->Redo();
-	}
-
-	bool AssetEditorPanel::RequestShutdown()
-	{
-		CloseAllTabs(_shutdown_unsaved_changes_modal.pop);
-		if (_shutdown_unsaved_changes_modal.pop.is_opening())
-		{
-			Open();
-			GainFocus();
-			return false;
-		}
-		else
-			return true;
-	}
+    static constexpr const char* kOpenFile = "OpenFileDlg";
+
+    static std::string open_file_parent = ".";
+
+    AssetEditorPanel& AssetEditorPanel::Instance()
+    {
+        if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
+            return *panel;
+        else
+            imtk::breakout_error::throw_("No instance of AssetEditorPanel");
+    }
+
+    AssetEditorPanel::AssetEditorPanel()
+        : _tab_unsaved_changes_modal("Tab")
+        , _window_unsaved_changes_modal("Window")
+        , _shutdown_unsaved_changes_modal("Shutdown")
+    {
+    }
+
+    void AssetEditorPanel::InitImpl()
+    {
+        open_file_parent = ProjectInfo::Instance().ResourceRoot().generic_string();
+    }
+
+    const char* AssetEditorPanel::GetTitle() const
+    {
+        return "Asset Editor";
+    }
+
+    void AssetEditorPanel::Draw()
+    {
+        auto window = DrawDockedWindow(ImGuiWindowFlags_MenuBar);
+        bool draw_window = true;
+        if (window.RequestsClose())
+        {
+            CloseAllTabs(_window_unsaved_changes_modal.pop);
+            if (_window_unsaved_changes_modal.pop.is_opening())
+            {
+                Open();
+                ImGui::SetWindowFocus();
+            }
+            else
+                draw_window = false;
+        }
+
+        if (draw_window && window.IsVisible())
+        {
+            PollShortcuts();
+
+            DrawTabBar();
+
+            if (_selected_tab)
+                _selected_tab->DrawMenuBar();
+            else
+                DrawDefaultMenuBar();
+
+            ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize * 0.5f, ImGuiCond_FirstUseEver);
+
+            if (ImGuiFileDialog::Instance()->Display(kOpenFile, ImGuiWindowFlags_NoCollapse))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    std::filesystem::path path = ImGuiFileDialog::Instance()->GetFilePathName();
+                    open_file_parent = path.parent_path().string();
+                    Editor::OpenFile(path);
+                }
+
+                ImGuiFileDialog::Instance()->Close();
+            }
+        }
+
+        if (DrawUnsavedChangesModal(_window_unsaved_changes_modal))
+            Close();
+
+        if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal))
+        {
+            Close();
+            Editor::RequestShutdown();
+        }
+    }
+
+    void AssetEditorPanel::PollShortcuts()
+    {
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_RouteGlobal))
+            OpenFile();
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+            SaveSelectedTab();
+
+        if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiMod_Shift | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
+            SaveAllTabs();
+
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
+        {
+            if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+                SelectedTabUndo();
+
+            if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+                SelectedTabRedo();
+        }
+    }
+
+    void AssetEditorPanel::DrawTabBar()
+    {
+        ImGuiTabBarFlags tab_bar_flags =
+            ImGuiTabBarFlags_AutoSelectNewTabs |
+            ImGuiTabBarFlags_DrawSelectedOverline |
+            ImGuiTabBarFlags_Reorderable;
+
+        imtk::id_scope scope(this);
+        if (auto _ = imtk::tab_bar("##AssetTabs", tab_bar_flags))
+        {
+            std::vector<size_t> closed;
+
+            for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); )
+            {
+                IDocument& doc = DocumentManager::Instance().GetDocument(i);
+                if (doc.Exists())
+                    ++i;
+                else
+                {
+                    if (_selected_tab == &doc)
+                        _selected_tab = nullptr;
+
+                    if (_focused_tab == &doc)
+                        _focused_tab = nullptr;
+
+                    DocumentManager::Instance().Remove(i);
+                }
+            }
+
+            IDocument* previously_selected_doc = _selected_tab;
+            _selected_tab = nullptr;
+            std::unordered_set<IDocument*> seen_documents;
+
+            for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
+            {
+                scope.push(i);
+                IDocument& doc = DocumentManager::Instance().GetDocument(i);
+                seen_documents.insert(&doc);
+                bool open = true;
+
+                ImGuiTabItemFlags tab_item_flags = 0;
+                if (doc.IsDirty())
+                    tab_item_flags |= ImGuiTabItemFlags_UnsavedDocument;
+
+                if (_focused_tab == &doc)
+                    tab_item_flags |= ImGuiTabItemFlags_SetSelected;
+
+                if (auto _ = imtk::tab_item(doc.TabName() + "##" + std::to_string(i), tab_item_flags, &open))
+                {
+                    if (auto _ = imtk::context_menu::item("##AssetTabContextMenu"))
+                    {
+                        detail::ResourcePath path = doc.GetOlyPath();
+                        if (detail::MetaSplitter::decode_meta(path).is_import())
+                            path = path.get_source_path();
+
+                        if (ImGui::MenuItem("Show in Content Browser"))
+                            ContentBrowserPanel::ShowInContentBrowser(path);
+
+                        if (ImGui::MenuItem("Reveal in explorer"))
+                            PathInfo::RevealInExplorer(path.get_absolute(), false);
+                    }
+
+                    doc.Draw();
+                    _selected_tab = &doc;
+                }
+
+                if (!open)
+                {
+                    if (!doc.IsDirty())
+                    {
+                        closed.push_back(i);
+                        if (&doc == _selected_tab)
+                            _selected_tab = nullptr;
+                    }
+                    else if (!_pending_close_set.contains(&doc))
+                    {
+                        _pending_close_set.insert(&doc);
+                        _pending_close.push_back(&doc);
+                        _tab_unsaved_changes_modal.pop.open();
+                    }
+                }
+            }
+
+            RemoveOldPendingDocuments(seen_documents);
+
+            if (!_window_unsaved_changes_modal.pop.is_opening())
+            {
+                DrawTabUnsavedChangesModal(closed);
+            }
+            else
+            {
+                _pending_close.clear();
+                _pending_close_set.clear();
+            }
+
+            std::sort(closed.begin(), closed.end());
+            for (auto it = closed.rbegin(); it != closed.rend(); ++it)
+                DocumentManager::Instance().Remove(*it);
+
+            _focused_tab = nullptr;
+        }
+    }
+
+    void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents)
+    {
+        for (auto it = _pending_close.begin(); it != _pending_close.end();)
+        {
+            if (seen_documents.contains(*it))
+                ++it;
+            else
+                it = _pending_close.erase(it);
+        }
+
+        for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
+        {
+            if (seen_documents.contains(*it))
+                ++it;
+            else
+                it = _pending_close_set.erase(it);
+        }
+    }
+
+    static imtk::unsaved_changes_modal::result DrawUnsavedChangesModalImpl(imtk::unsaved_changes_modal& modal, IDocument* doc)
+    {
+        if (!doc)
+            return imtk::unsaved_changes_modal::result::no_draw;
+
+        modal.description.clear();
+        modal.description.push_back("Asset " + doc->TabName());
+        modal.description.push_back("Full path: " + doc->GetOlyPath().string());
+        const auto result = modal.draw();
+
+        if (result == imtk::unsaved_changes_modal::result::save_changes)
+            doc->DumpAsset();
+
+        if (result == imtk::unsaved_changes_modal::result::discard_changes)
+            doc->LoadAsset();
+
+        return result;
+    }
+
+    void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
+    {
+        if (_pending_close.empty())
+            return;
+
+        IDocument* doc = _pending_close.front();
+        const auto result = DrawUnsavedChangesModalImpl(_tab_unsaved_changes_modal, doc);
+
+        if (_tab_unsaved_changes_modal.closing(result))
+        {
+            closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
+            if (doc == _selected_tab)
+                _selected_tab = nullptr;
+        }
+
+        if (result != imtk::unsaved_changes_modal::result::no_draw && result != imtk::unsaved_changes_modal::result::no_interaction)
+        {
+            _pending_close.erase(_pending_close.begin());
+            _pending_close_set.erase(doc);
+        }
+    }
+
+    bool AssetEditorPanel::DrawUnsavedChangesModal(imtk::unsaved_changes_modal& popup)
+    {
+        switch (DrawUnsavedChangesModalImpl(popup, _selected_tab))
+        {
+        case imtk::unsaved_changes_modal::result::save_changes:
+        case imtk::unsaved_changes_modal::result::discard_changes:
+            CloseAllTabs(popup.pop);
+            return !popup.pop.is_opening();
+
+        case imtk::unsaved_changes_modal::result::cancel_close:
+            popup.pop.close();
+            return false;
+
+        default:
+            return false;
+        }
+    }
+
+    void AssetEditorPanel::CloseAllTabs(imtk::popup& popup)
+    {
+        _pending_close.clear();
+        _pending_close_set.clear();
+        popup.close();
+
+        for (int i = DocumentManager::Instance().DocumentCount() - 1; i >= 0; --i)
+        {
+            IDocument& doc = DocumentManager::Instance().GetDocument(i);
+            _selected_tab = &doc;
+
+            if (doc.IsDirty())
+            {
+                popup.open();
+                break;
+            }
+
+            DocumentManager::Instance().Remove(i);
+            _selected_tab = nullptr;
+        }
+    }
+
+    void AssetEditorPanel::DrawDefaultMenuBar()
+    {
+        if (auto _ = imtk::menu_bar())
+        {
+            if (auto _ = imtk::menu("File"))
+            {
+                if (ImGui::MenuItem("Open File", "Ctrl+O"))
+                    OpenFile();
+            }
+        }
+    }
+
+    void AssetEditorPanel::OpenFile()
+    {
+        IGFD::FileDialogConfig config;
+        config.path = open_file_parent;
+        config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
+
+        ImGuiFileDialog::Instance()->OpenDialog(kOpenFile, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
+    }
+
+    void AssetEditorPanel::FocusTab(IDocument* doc)
+    {
+        _focused_tab = doc;
+    }
+
+    bool AssetEditorPanel::IsSelected(IDocument* doc) const
+    {
+        return _selected_tab == doc;
+    }
+
+    void AssetEditorPanel::SaveSelectedTab() const
+    {
+        if (_selected_tab)
+            _selected_tab->DumpAsset();
+    }
+
+    void AssetEditorPanel::SaveAllTabs() const
+    {
+        for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
+            DocumentManager::Instance().GetDocument(i).DumpAsset();
+    }
+
+    void AssetEditorPanel::SelectedTabUndo() const
+    {
+        if (_selected_tab)
+            _selected_tab->Undo();
+    }
+
+    void AssetEditorPanel::SelectedTabRedo() const
+    {
+        if (_selected_tab)
+            _selected_tab->Redo();
+    }
+
+    bool AssetEditorPanel::RequestShutdown()
+    {
+        CloseAllTabs(_shutdown_unsaved_changes_modal.pop);
+        if (_shutdown_unsaved_changes_modal.pop.is_opening())
+        {
+            Open();
+            GainFocus();
+            return false;
+        }
+        else
+            return true;
+    }
 }

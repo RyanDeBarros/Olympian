@@ -6,75 +6,75 @@
 
 namespace oly::editor
 {
-	struct TreeViewNode
-	{
-		std::filesystem::path path;
-		std::vector<std::unique_ptr<TreeViewNode>> subnodes;
-		imtk::texture icon;
-		bool dropdown_open = false;
-		bool is_import = false;
-		float timer = 0.f;
+    struct TreeViewNode
+    {
+        std::filesystem::path path;
+        std::vector<std::unique_ptr<TreeViewNode>> subnodes;
+        imtk::texture icon;
+        bool dropdown_open = false;
+        bool is_import = false;
+        float timer = 0.f;
 
-		TreeViewNode(std::filesystem::path path);
+        TreeViewNode(std::filesystem::path path);
 
-		void Analyse();
-		void Update();
-		std::string Name() const;
-		std::string DisplayName() const;
-		void Validate();
-		bool IsBranching() const;
-		void Open();
-		void OpenBranch();
-		void CloseBranch();
-		void RefreshSubnodes();
-		void CollapseAll();
-		bool IsFullyCollapsed() const;
-	};
+        void Analyse();
+        void Update();
+        std::string Name() const;
+        std::string DisplayName() const;
+        void Validate();
+        bool IsBranching() const;
+        void Open();
+        void OpenBranch();
+        void CloseBranch();
+        void RefreshSubnodes();
+        void CollapseAll();
+        bool IsFullyCollapsed() const;
+    };
 
-	struct TreeViewConfig
-	{
-		imtk::w::icon_button ignore_imports;
+    struct TreeViewConfig
+    {
+        imtk::w::icon_button ignore_imports;
 
-		TreeViewConfig();
-	};
+        TreeViewConfig();
+    };
 
-	class TreeViewPanel : public IPanel
-	{
-		std::unique_ptr<TreeViewNode> _root;
-		TreeViewConfig _config;
+    class TreeViewPanel : public IPanel
+    {
+        std::unique_ptr<TreeViewNode> _root;
+        TreeViewConfig _config;
 
-	public:
-		static TreeViewPanel& Instance();
+    public:
+        static TreeViewPanel& Instance();
 
-		void InitImpl() override;
-		const char* GetTitle() const override;
-		void Draw() override;
+        void InitImpl() override;
+        const char* GetTitle() const override;
+        void Draw() override;
 
-		static TreeViewPanel& FocusInstance();
-		static void ShowResourceFolderInTreeView(const detail::ResourcePath& folder);
+        static TreeViewPanel& FocusInstance();
+        static void ShowResourceFolderInTreeView(const detail::ResourcePath& folder);
 
-	private:
-		bool PassesFilter(TreeViewNode& node) const;
+    private:
+        bool PassesFilter(TreeViewNode& node) const;
 
-		void DrawHeader();
-		void DrawNode(TreeViewNode& node, int indent, int& local_file_index);
-		void DrawNodePrefix(TreeViewNode& node);
-		void DrawRowBg(TreeViewNode& node, int& local_file_index);
-	};
+        void DrawHeader();
+        void DrawNode(TreeViewNode& node, int indent, int& local_file_index);
+        void DrawNodePrefix(TreeViewNode& node);
+        void DrawRowBg(TreeViewNode& node, int& local_file_index);
+    };
 
-	struct TreeViewPathDDP : public imtk::drag_droppable
-	{
-		std::string path;
+    struct TreeViewPathDDP : public imtk::drag_droppable
+    {
+        std::string path;
 
-		TreeViewPathDDP(std::string path);
+        TreeViewPathDDP(std::string path);
 
-		void send(const std::function<void(const void*, size_t)>& dump) const override;
-	};
+        void send(const std::function<void(const void*, size_t)>& dump) const override;
+    };
 }
 
 template<>
 struct imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>
 {
-	using payload_view = std::string_view;
-	payload_view view(const void* buf, size_t size) const;
+    using payload_view = std::string_view;
+    payload_view view(const void* buf, size_t size) const;
 };

@@ -4,29 +4,29 @@
 
 namespace oly::editor
 {
-	void PanelManager::Init()
-	{
-		for (const auto& [_, panel] : _panels)
-			panel->Init();
-	}
+    void PanelManager::Init()
+    {
+        for (const auto& [_, panel] : _panels)
+            panel->Init();
+    }
 
-	void PanelManager::Draw()
-	{
-		for (const auto& [_, panel] : _panels)
-			panel->Draw();
-	}
+    void PanelManager::Draw()
+    {
+        for (const auto& [_, panel] : _panels)
+            panel->Draw();
+    }
 
-	IPanel& PanelManager::Add(imp::type_erasure index, std::unique_ptr<IPanel>&& panel)
-	{
-		return *_panels.try_emplace(index, std::move(panel)).first->second.get();
-	}
+    IPanel& PanelManager::Add(imp::type_erasure index, std::unique_ptr<IPanel>&& panel)
+    {
+        return *_panels.try_emplace(index, std::move(panel)).first->second.get();
+    }
 
-	IPanel* PanelManager::Get(imp::type_erasure index)
-	{
-		auto it = _panels.find(index);
-		if (it != _panels.end())
-			return it->second.get();
-		else
-			return nullptr;
-	}
+    IPanel* PanelManager::Get(imp::type_erasure index)
+    {
+        auto it = _panels.find(index);
+        if (it != _panels.end())
+            return it->second.get();
+        else
+            return nullptr;
+    }
 }

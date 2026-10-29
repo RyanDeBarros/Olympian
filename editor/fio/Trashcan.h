@@ -4,11 +4,11 @@
 
 namespace oly::editor::fio
 {
-	struct Trashcan
-	{
-		static bool Delete(const detail::ResourcePath& resource);
-		static bool Restore(const detail::ResourcePath& resource);
-		static size_t EstimatedSize();
-		static void ForceClear();
-	};
+    struct Trashcan
+    {
+        static bool Delete(const detail::ResourcePath& resource);
+        static bool Restore(const detail::ResourcePath& resource);
+        static size_t EstimatedSize();
+        static void ForceClear();
+    };
 }

@@ -6,7 +6,7 @@
 
 namespace imtk::field
 {
-	using rect_fld = primitive_fld<oly::editor::Rect>;
-	using uv_rect_fld = primitive_fld<oly::editor::UVRect>;
-	using top_side_padding_fld = primitive_fld<oly::editor::TopSidePadding>;
+    using rect_fld = primitive_fld<oly::editor::Rect>;
+    using uv_rect_fld = primitive_fld<oly::editor::UVRect>;
+    using top_side_padding_fld = primitive_fld<oly::editor::TopSidePadding>;
 }

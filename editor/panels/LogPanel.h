@@ -4,13 +4,13 @@
 
 namespace oly::editor
 {
-	class LogPanel : public IPanel
-	{
-	public:
-		static LogPanel& Instance();
+    class LogPanel : public IPanel
+    {
+    public:
+        static LogPanel& Instance();
 
-		void InitImpl() override;
-		const char* GetTitle() const override;
-		void Draw() override;
-	};
+        void InitImpl() override;
+        const char* GetTitle() const override;
+        void Draw() override;
+    };
 }

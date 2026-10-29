@@ -6,49 +6,49 @@
 
 namespace oly::editor
 {
-	ContentBrowserLiveSettingsDesc::ContentBrowserLiveSettingsDesc() :
-		columns(20u, detail::Key::Columns),
-		favorites({ detail::ResourcePath(ProjectInfo::Instance().ResourceRoot()).get_resource_shorthand() }, detail::Key::Favorites),
-		font_scale(1.f, detail::Key::FontScale)
-	{
-	}
+    ContentBrowserLiveSettingsDesc::ContentBrowserLiveSettingsDesc() :
+        columns(20u, detail::Key::Columns),
+        favorites({ detail::ResourcePath(ProjectInfo::Instance().ResourceRoot()).get_resource_shorthand() }, detail::Key::Favorites),
+        font_scale(1.f, detail::Key::FontScale)
+    {
+    }
 
-	LiveSettingsDesc::LiveSettingsDesc() :
-		content_browser(detail::Key::ContentBrowser)
-	{
-	}
+    LiveSettingsDesc::LiveSettingsDesc() :
+        content_browser(detail::Key::ContentBrowser)
+    {
+    }
 
-	void LiveSettings::Load()
-	{
-		std::filesystem::path path = GetPath().get_absolute();
-		toml::table table;
-		if (std::filesystem::is_regular_file(path))
-		{
-			try
-			{
-				table = toml::parse_file(path.string());
-			}
-			catch (const toml::parse_error& e)
-			{
-				imtk::log_warning("Cannot load editor live settings: " + std::string(e.what()));
-			}
-		}
+    void LiveSettings::Load()
+    {
+        std::filesystem::path path = GetPath().get_absolute();
+        toml::table table;
+        if (std::filesystem::is_regular_file(path))
+        {
+            try
+            {
+                table = toml::parse_file(path.string());
+            }
+            catch (const toml::parse_error& e)
+            {
+                imtk::log_warning("Cannot load editor live settings: " + std::string(e.what()));
+            }
+        }
 
-		desc.load(imtk::toml_node(table));
-	}
+        desc.load(imtk::toml_node(table));
+    }
 
-	void LiveSettings::Dump()
-	{
-		toml::table table;
-		desc.dump(table);
-		std::filesystem::path path = GetPath().get_absolute();
-		std::filesystem::create_directories(path.parent_path());
-		std::ofstream file(path);
-		file << table;
-	}
+    void LiveSettings::Dump()
+    {
+        toml::table table;
+        desc.dump(table);
+        std::filesystem::path path = GetPath().get_absolute();
+        std::filesystem::create_directories(path.parent_path());
+        std::ofstream file(path);
+        file << table;
+    }
 
-	detail::ResourcePath LiveSettings::GetPath() const
-	{
-		return ProjectInfo::Instance().EditorRoot() / "LiveSettings.toml";
-	}
+    detail::ResourcePath LiveSettings::GetPath() const
+    {
+        return ProjectInfo::Instance().EditorRoot() / "LiveSettings.toml";
+    }
 }

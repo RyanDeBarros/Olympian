@@ -24,205 +24,205 @@
 #include "assets/TranslateKey.h"
 
 namespace oly::editor
-{	
-	Editor::Editor() :
-		_project_select_window(std::make_unique<ProjectSelectWindow>()),
-		_main_window(std::make_unique<MainWindow>()),
-		_shortcut_manager(std::make_unique<ShortcutManager>()),
-		_project_info(std::make_unique<ProjectInfo>())
-	{
-		_os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
+{
+    Editor::Editor() :
+        _project_select_window(std::make_unique<ProjectSelectWindow>()),
+        _main_window(std::make_unique<MainWindow>()),
+        _shortcut_manager(std::make_unique<ShortcutManager>()),
+        _project_info(std::make_unique<ProjectInfo>())
+    {
+        _os_window = std::make_unique<imtk::os_window>(1, 1, "Olympian Editor");
 
-		LoadAllIcons();
+        LoadAllIcons();
 
-		imtk::post_window_init({
-			.reset_icon = Icon(IconResource::Revert),
-			.key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
-			.key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); },
-			.dynamic_lists = {
-				.drag_icon = Icon(IconResource::Handle),
-				.create_icon = Icon(IconResource::Plus),
-				.delete_icon = Icon(IconResource::Minus),
-				.clear_icon = Icon(IconResource::Close),
-			},
-			.list_indexers = {
-				.create_icon = Icon(IconResource::Plus),
-				.delete_icon = Icon(IconResource::Minus),
-				.clear_icon = Icon(IconResource::Close),
-			},
-		});
+        imtk::post_window_init({
+            .reset_icon = Icon(IconResource::Revert),
+            .key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
+            .key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); },
+            .dynamic_lists = {
+                .drag_icon = Icon(IconResource::Handle),
+                .create_icon = Icon(IconResource::Plus),
+                .delete_icon = Icon(IconResource::Minus),
+                .clear_icon = Icon(IconResource::Close),
+            },
+            .list_indexers = {
+                .create_icon = Icon(IconResource::Plus),
+                .delete_icon = Icon(IconResource::Minus),
+                .clear_icon = Icon(IconResource::Close),
+            },
+            });
 
-		glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
-			ShortcutManager::Instance().HandlePathDrop(count, paths);
-		});
+        glfwSetDropCallback(_os_window->get(), [](GLFWwindow* window, int count, const char** paths) {
+            ShortcutManager::Instance().HandlePathDrop(count, paths);
+        });
 
-		glfwSetWindowCloseCallback(_os_window->get(), [](GLFWwindow* w) {
-			glfwSetWindowShouldClose(w, GLFW_FALSE);
-			Editor::instance().RequestShutdown();
-		});
+        glfwSetWindowCloseCallback(_os_window->get(), [](GLFWwindow* w) {
+            glfwSetWindowShouldClose(w, GLFW_FALSE);
+            Editor::instance().RequestShutdown();
+        });
 
-		_app_state = AppState::ProjectSelect;
-		_project_select_window->Open();
-	}
+        _app_state = AppState::ProjectSelect;
+        _project_select_window->Open();
+    }
 
-	Editor::~Editor() = default;
+    Editor::~Editor() = default;
 
-	imp::event<>& Editor::OnPreferencesChanged()
-	{
-		return instance()._on_preferences_changed;
-	}
+    imp::event<>& Editor::OnPreferencesChanged()
+    {
+        return instance()._on_preferences_changed;
+    }
 
-	bool Editor::ShouldClose() const
-	{
-		return _os_window->should_close();
-	}
+    bool Editor::ShouldClose() const
+    {
+        return _os_window->should_close();
+    }
 
-	void Editor::Tick()
-	{
-		_os_window->begin_frame();
-		imtk::begin_frame();
+    void Editor::Tick()
+    {
+        _os_window->begin_frame();
+        imtk::begin_frame();
 
-		imtk::handle_errors([this]() {
-			_shortcut_manager->PollShortcuts();
+        imtk::handle_errors([this]() {
+            _shortcut_manager->PollShortcuts();
 
-			switch (_app_state)
-			{
-			case AppState::ProjectSelect:
-				_project_select_window->Draw();
-				break;
-			case AppState::Main:
-				_main_window->Draw();
-				break;
-			}
-		});
+            switch (_app_state)
+            {
+            case AppState::ProjectSelect:
+                _project_select_window->Draw();
+                break;
+            case AppState::Main:
+                _main_window->Draw();
+                break;
+            }
+        });
 
-		imtk::end_frame();
-		_os_window->end_frame();
-	}
-	
-	void Editor::SetOSWindowSize(int width, int height)
-	{
-		instance()._os_window->set_size(width, height);
-	}
+        imtk::end_frame();
+        _os_window->end_frame();
+    }
 
-	void Editor::SetOSWindowMaximized(bool maximized)
-	{
-		instance()._os_window->set_maximized(maximized);
-	}
+    void Editor::SetOSWindowSize(int width, int height)
+    {
+        instance()._os_window->set_size(width, height);
+    }
 
-	void Editor::SetOSWindowFullScreen(bool fullscreen)
-	{
-		instance()._os_window->set_fullscreen(fullscreen);
-	}
+    void Editor::SetOSWindowMaximized(bool maximized)
+    {
+        instance()._os_window->set_maximized(maximized);
+    }
 
-	bool Editor::IsOSWindowFullScreen()
-	{
-		return instance()._os_window->is_fullscreen();
-	}
+    void Editor::SetOSWindowFullScreen(bool fullscreen)
+    {
+        instance()._os_window->set_fullscreen(fullscreen);
+    }
 
-	void Editor::RequestShutdown()
-	{
-		if (instance()._app_state == AppState::Main)
-		{
-			if (!PreferencesPanel::Instance().RequestShutdown())
-				return;
+    bool Editor::IsOSWindowFullScreen()
+    {
+        return instance()._os_window->is_fullscreen();
+    }
 
-			if (!AssetEditorPanel::Instance().RequestShutdown())
-				return;
-		}
+    void Editor::RequestShutdown()
+    {
+        if (instance()._app_state == AppState::Main)
+        {
+            if (!PreferencesPanel::Instance().RequestShutdown())
+                return;
 
-		if (instance()._live_settings)
-			instance()._live_settings->Dump();
+            if (!AssetEditorPanel::Instance().RequestShutdown())
+                return;
+        }
 
-		glfwSetWindowShouldClose(instance()._os_window->get(), GLFW_TRUE);
-	}
+        if (instance()._live_settings)
+            instance()._live_settings->Dump();
 
-	PreferencesDesc& Editor::GetPreferences()
-	{
-		return *instance()._preferences_desc;
-	}
+        glfwSetWindowShouldClose(instance()._os_window->get(), GLFW_TRUE);
+    }
 
-	LiveSettingsDesc& Editor::GetLiveSettings()
-	{
-		return instance()._live_settings->desc;
-	}
+    PreferencesDesc& Editor::GetPreferences()
+    {
+        return *instance()._preferences_desc;
+    }
 
-	AppState Editor::GetAppState()
-	{
-		return instance()._app_state;
-	}
+    LiveSettingsDesc& Editor::GetLiveSettings()
+    {
+        return instance()._live_settings->desc;
+    }
 
-	ProjectSelectWindow& Editor::GetProjectSelectWindow()
-	{
-		return *instance()._project_select_window;
-	}
+    AppState Editor::GetAppState()
+    {
+        return instance()._app_state;
+    }
 
-	MainWindow& Editor::GetMainWindow()
-	{
-		return *instance()._main_window;
-	}
+    ProjectSelectWindow& Editor::GetProjectSelectWindow()
+    {
+        return *instance()._project_select_window;
+    }
 
-	ShortcutManager& Editor::GetShortcutManager()
-	{
-		return *instance()._shortcut_manager;
-	}
+    MainWindow& Editor::GetMainWindow()
+    {
+        return *instance()._main_window;
+    }
 
-	ProjectInfo& Editor::GetProjectInfo()
-	{
-		return *instance()._project_info;
-	}
+    ShortcutManager& Editor::GetShortcutManager()
+    {
+        return *instance()._shortcut_manager;
+    }
 
-	void Editor::OpenProject(const std::filesystem::path& path)
-	{
-		instance()._app_state = AppState::Main;
-		instance()._project_info->Init(path);
-		instance()._main_window->Open();
+    ProjectInfo& Editor::GetProjectInfo()
+    {
+        return *instance()._project_info;
+    }
 
-		instance()._preferences_desc = std::make_unique<PreferencesDesc>();
-		instance()._live_settings = std::make_unique<LiveSettings>();
-		instance()._live_settings->Load();
-	}
+    void Editor::OpenProject(const std::filesystem::path& path)
+    {
+        instance()._app_state = AppState::Main;
+        instance()._project_info->Init(path);
+        instance()._main_window->Open();
 
-	void Editor::OpenFile(const std::filesystem::path& path)
-	{
-		OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
-		if (code == OpenAssetCode::Success)
-		{
-			AssetEditorPanel::Instance().Open();
-			AssetEditorPanel::Instance().GainFocus();
-			return;
-		}
+        instance()._preferences_desc = std::make_unique<PreferencesDesc>();
+        instance()._live_settings = std::make_unique<LiveSettings>();
+        instance()._live_settings->Load();
+    }
 
-		std::string message = "cannot open " + path.generic_string() + ": ";
-		switch (code)
-		{
-		case OpenAssetCode::UnsupportedAssetType:
-			message += "asset type not supported";
-			break;
+    void Editor::OpenFile(const std::filesystem::path& path)
+    {
+        OpenAssetCode code = DocumentManager::Instance().OpenAsset(path);
+        if (code == OpenAssetCode::Success)
+        {
+            AssetEditorPanel::Instance().Open();
+            AssetEditorPanel::Instance().GainFocus();
+            return;
+        }
 
-		case OpenAssetCode::UnsupportedAssetVersion:
-			message += "asset meta version not supported";
-			break;
+        std::string message = "cannot open " + path.generic_string() + ": ";
+        switch (code)
+        {
+        case OpenAssetCode::UnsupportedAssetType:
+            message += "asset type not supported";
+            break;
 
-		case OpenAssetCode::UnsupportedExtension:
-			message += "asset has unsupported file extension";
-			break;
+        case OpenAssetCode::UnsupportedAssetVersion:
+            message += "asset meta version not supported";
+            break;
 
-		case OpenAssetCode::DoesNotExist:
-			message += "file does not exist";
-			break;
-		}
+        case OpenAssetCode::UnsupportedExtension:
+            message += "asset has unsupported file extension";
+            break;
 
-		imtk::notify_error(std::move(message));
-	}
+        case OpenAssetCode::DoesNotExist:
+            message += "file does not exist";
+            break;
+        }
 
-	bool Editor::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)
-	{
-		return DocumentManager::Instance().InitNewAsset(path, meta_type);
-	}
+        imtk::notify_error(std::move(message));
+    }
 
-	bool Editor::ImportAsset(const detail::ResourcePath& source_asset)
-	{
-		return DocumentManager::Instance().ImportAsset(source_asset);
-	}
+    bool Editor::InitNewAsset(detail::ResourcePath path, detail::Key meta_type)
+    {
+        return DocumentManager::Instance().InitNewAsset(path, meta_type);
+    }
+
+    bool Editor::ImportAsset(const detail::ResourcePath& source_asset)
+    {
+        return DocumentManager::Instance().ImportAsset(source_asset);
+    }
 }

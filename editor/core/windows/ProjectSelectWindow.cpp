@@ -20,8 +20,8 @@ namespace oly::editor
         CheckProjectFile();
     }
 
-	void ProjectSelectWindow::Draw()
-	{
+    void ProjectSelectWindow::Draw()
+    {
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
         ImGui::SetNextWindowPos(viewport->WorkPos);
         ImGui::SetNextWindowSize(viewport->WorkSize);
@@ -47,7 +47,7 @@ namespace oly::editor
             if (auto grid = imtk::prop::grid())
                 DrawOpenExistingGroup();
         }
-	}
+    }
 
     void ProjectSelectWindow::DrawOpenExistingGroup()
     {

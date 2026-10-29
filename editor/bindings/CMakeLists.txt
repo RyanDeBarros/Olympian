@@ -1,4 +1,4 @@
 target_sources(OlympianEditor PRIVATE
-	Fields.cpp
-	Widgets.cpp
+    Fields.cpp
+    Widgets.cpp
 )

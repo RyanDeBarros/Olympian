@@ -5,25 +5,25 @@
 
 namespace oly::editor
 {
-	class PreferencesPanel : public IPanel
-	{
-		PreferencesDocument _doc;
-		imtk::unsaved_changes_modal _window_unsaved_changes_modal;
-		imtk::unsaved_changes_modal _shutdown_unsaved_changes_modal;
-		
-	public:
-		static PreferencesPanel& Instance();
+    class PreferencesPanel : public IPanel
+    {
+        PreferencesDocument _doc;
+        imtk::unsaved_changes_modal _window_unsaved_changes_modal;
+        imtk::unsaved_changes_modal _shutdown_unsaved_changes_modal;
 
-		PreferencesPanel();
+    public:
+        static PreferencesPanel& Instance();
 
-		void InitImpl() override;
-		const char* GetTitle() const override;
-		void Draw() override;
+        PreferencesPanel();
 
-	private:
-		bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal);
+        void InitImpl() override;
+        const char* GetTitle() const override;
+        void Draw() override;
 
-	public:
-		bool RequestShutdown();
-	};
+    private:
+        bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal);
+
+    public:
+        bool RequestShutdown();
+    };
 }

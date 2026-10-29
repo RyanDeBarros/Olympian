@@ -5,737 +5,737 @@
 
 namespace oly::editor
 {
-	static auto MakeSignalComboName(auto& double_desc)
-	{
-		return [&double_desc](size_t i) {
-			auto& desc = double_desc.scratch.signals;
-			if (i < desc.size())
-			{
-				std::string id = desc[i].id.value;
-				if (!id.empty())
-					return id;
-			}
-			return "<Signal #" + std::to_string(i) + ">";
-		};
-	}
+    static auto MakeSignalComboName(auto& double_desc)
+    {
+        return [&double_desc](size_t i) {
+            auto& desc = double_desc.scratch.signals;
+            if (i < desc.size())
+            {
+                std::string id = desc[i].id.value;
+                if (!id.empty())
+                    return id;
+            }
+            return "<Signal #" + std::to_string(i) + ">";
+        };
+    }
 
-	static auto MakeRouteComboName(auto& double_desc)
-	{
-		return [&double_desc](size_t i) {
-			auto& desc = double_desc.scratch.routes;
-			if (i < desc.size())
-			{
-				std::string id = desc[i].id.value;
-				if (!id.empty())
-					return id;
-			}
-			return "<Route #" + std::to_string(i) + ">";
-		};
-	}
+    static auto MakeRouteComboName(auto& double_desc)
+    {
+        return [&double_desc](size_t i) {
+            auto& desc = double_desc.scratch.routes;
+            if (i < desc.size())
+            {
+                std::string id = desc[i].id.value;
+                if (!id.empty())
+                    return id;
+            }
+            return "<Route #" + std::to_string(i) + ">";
+        };
+    }
 
     static imtk::w::list_indexer::config SignalListConfig()
     {
         return {
-            .prompt         = "Select signal",
+            .prompt = "Select signal",
             .create_tooltip = "New signal",
             .delete_tooltip = "Delete signal",
-            .clear_tooltip  = "Clear signals"
+            .clear_tooltip = "Clear signals"
         };
     }
 
     static imtk::w::list_indexer::config RouteListConfig()
     {
         return {
-            .prompt         = "Select route",
+            .prompt = "Select route",
             .create_tooltip = "New route",
             .delete_tooltip = "Delete route",
-            .clear_tooltip  = "Clear routes"
+            .clear_tooltip = "Clear routes"
         };
     }
 
-	SignalDocument::SignalDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path))
-		, _signal_slots(SignalListConfig(), MakeSignalComboName(_desc))
-		, _route_slots(RouteListConfig(), MakeRouteComboName(_desc))
-	{
-	}
+    SignalDocument::SignalDocument(detail::ResourcePath oly_path)
+        : IDocument(std::move(oly_path))
+        , _signal_slots(SignalListConfig(), MakeSignalComboName(_desc))
+        , _route_slots(RouteListConfig(), MakeRouteComboName(_desc))
+    {
+    }
 
-	const char* SignalDocument::GetVersion()
-	{
-		return "1.0";
-	}
+    const char* SignalDocument::GetVersion()
+    {
+        return "1.0";
+    }
 
-	void SignalDocument::InitImpl()
-	{
-		if (!GetOlyPath().is_resource())
-			imtk::notify_warning("Asset is not located in resource folder");
+    void SignalDocument::InitImpl()
+    {
+        if (!GetOlyPath().is_resource())
+            imtk::notify_warning("Asset is not located in resource folder");
 
-		LoadAsset();
-	}
+        LoadAsset();
+    }
 
-	void SignalDocument::Draw()
-	{
-		auto pre_draw = PreDraw();
+    void SignalDocument::Draw()
+    {
+        auto pre_draw = PreDraw();
 
-		_signal_id_counter.clear();
-		for (const auto& subdesc : _desc.scratch.signals)
-			_signal_id_counter.increment(subdesc.id.value);
+        _signal_id_counter.clear();
+        for (const auto& subdesc : _desc.scratch.signals)
+            _signal_id_counter.increment(subdesc.id.value);
 
-		_route_id_counter.clear();
-		for (const auto& subdesc : _desc.scratch.routes)
-			_route_id_counter.increment(subdesc.id.value);
+        _route_id_counter.clear();
+        for (const auto& subdesc : _desc.scratch.routes)
+            _route_id_counter.increment(subdesc.id.value);
 
-		_id_counter.clear();
-		_id_counter.accumulate(_signal_id_counter);
-		_id_counter.accumulate(_route_id_counter);
+        _id_counter.clear();
+        _id_counter.accumulate(_signal_id_counter);
+        _id_counter.accumulate(_route_id_counter);
 
-		_stop_listening = true;
-		imtk::id_scope scope(this);
+        _stop_listening = true;
+        imtk::id_scope scope(this);
 
-		if (auto _ = imtk::tab_bar(""))
-		{
-			if (auto _ = imtk::tab_item("Signals"))
-				Draw(_desc.scratch.signals);
+        if (auto _ = imtk::tab_bar(""))
+        {
+            if (auto _ = imtk::tab_item("Signals"))
+                Draw(_desc.scratch.signals);
 
-			if (auto _ = imtk::tab_item("Routes"))
-				Draw(_desc.scratch.routes);
-		}
+            if (auto _ = imtk::tab_item("Routes"))
+                Draw(_desc.scratch.routes);
+        }
 
-		if (_stop_listening)
-			_listen_mode = ListenMode::None;
-	}
+        if (_stop_listening)
+            _listen_mode = ListenMode::None;
+    }
 
-	void SignalDocument::LoadImpl()
-	{
-		if (_oly_path.is_file())
-		{
-			_meta = detail::MetaSplitter::decode_meta(_oly_path);
+    void SignalDocument::LoadImpl()
+    {
+        if (_oly_path.is_file())
+        {
+            _meta = detail::MetaSplitter::decode_meta(_oly_path);
 
-			toml::table table;
-			std::string err = _oly_path.load_toml(table);
-			if (err.empty())
-				Load(imtk::toml_node(table), _desc.disk);
-			else
-				imtk::notify_error("cannot load signal - corrupted asset: " + _oly_path.string());
+            toml::table table;
+            std::string err = _oly_path.load_toml(table);
+            if (err.empty())
+                Load(imtk::toml_node(table), _desc.disk);
+            else
+                imtk::notify_error("cannot load signal - corrupted asset: " + _oly_path.string());
 
-			MarkClean();
-		}
-		else
-		{
-			Load(imtk::toml_node(), _desc.disk);
+            MarkClean();
+        }
+        else
+        {
+            Load(imtk::toml_node(), _desc.disk);
 
-			_meta = {};
-			_meta.map[detail::Key::Meta_Version] = GetVersion();
-			_meta.map[detail::Key::Meta_Import] = "0";
-			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Signal);
+            _meta = {};
+            _meta.map[detail::Key::Meta_Version] = GetVersion();
+            _meta.map[detail::Key::Meta_Import] = "0";
+            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Signal);
 
-			MarkDirty();
-		}
+            MarkDirty();
+        }
 
-		_desc.load_from_disk();
-		_signal_slots.model.init(imtk::make_vector_adapter<SignalDesc::Printer>(_desc.scratch.signals));
-		_route_slots.model.init(imtk::make_vector_adapter<RouteDesc::Printer>(_desc.scratch.routes));
-	}
+        _desc.load_from_disk();
+        _signal_slots.model.init(imtk::make_vector_adapter<SignalDesc::Printer>(_desc.scratch.signals));
+        _route_slots.model.init(imtk::make_vector_adapter<RouteDesc::Printer>(_desc.scratch.routes));
+    }
 
-	void SignalDocument::DumpImpl()
-	{
-		toml::table table;
-		Dump(table, _desc.scratch);
-		_oly_path.dump_toml(table, _meta);
-		_desc.write_to_disk();
-		MarkClean();
-	}
+    void SignalDocument::DumpImpl()
+    {
+        toml::table table;
+        Dump(table, _desc.scratch);
+        _oly_path.dump_toml(table, _meta);
+        _desc.write_to_disk();
+        MarkClean();
+    }
 
-	void SignalDocument::ResetAssetImpl()
-	{
-		Load(imtk::toml_node(), _desc.scratch);
-	}
+    void SignalDocument::ResetAssetImpl()
+    {
+        Load(imtk::toml_node(), _desc.scratch);
+    }
 
-	const imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor() const
-	{
-		return _desc;
-	}
+    const imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor() const
+    {
+        return _desc;
+    }
 
-	imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor()
-	{
-		return _desc;
-	}
+    imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor()
+    {
+        return _desc;
+    }
 
-	void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
-	{
-		_signal_slots.model.sync(imtk::make_vector_adapter<SignalDesc::Printer>(desc));
+    void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
+    {
+        _signal_slots.model.sync(imtk::make_vector_adapter<SignalDesc::Printer>(desc));
 
-		if (auto scope = imtk::id_scope("##Signal"))
-			_signal_slots.draw();
+        if (auto scope = imtk::id_scope("##Signal"))
+            _signal_slots.draw();
 
-		if (auto form = imtk::prop::form())
-		{
-			if (!desc.empty())
-				Draw(desc[_signal_slots.model.index()]);
+        if (auto form = imtk::prop::form())
+        {
+            if (!desc.empty())
+                Draw(desc[_signal_slots.model.index()]);
 
-			if (_signal_slots.model.consume_ops(imtk::make_vector_op_adapter<SignalDesc::Printer>(desc)))
-				MarkDirty();
+            if (_signal_slots.model.consume_ops(imtk::make_vector_op_adapter<SignalDesc::Printer>(desc)))
+                MarkDirty();
 
-			_signal_slots.model.consume_index_modified();
-		}
-	}
+            _signal_slots.model.consume_index_modified();
+        }
+    }
 
-	void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
-	{
-		_route_slots.model.sync(imtk::make_vector_adapter<RouteDesc::Printer>(desc));
+    void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
+    {
+        _route_slots.model.sync(imtk::make_vector_adapter<RouteDesc::Printer>(desc));
 
-		if (auto scope = imtk::id_scope("##Route"))
-			_route_slots.draw();
+        if (auto scope = imtk::id_scope("##Route"))
+            _route_slots.draw();
 
-		if (auto form = imtk::prop::form())
-		{
-			if (!desc.empty())
-				Draw(desc[_route_slots.model.index()]);
+        if (auto form = imtk::prop::form())
+        {
+            if (!desc.empty())
+                Draw(desc[_route_slots.model.index()]);
 
-			if (_route_slots.model.consume_ops(imtk::make_vector_op_adapter<RouteDesc::Printer>(desc)))
-				MarkDirty();
+            if (_route_slots.model.consume_ops(imtk::make_vector_op_adapter<RouteDesc::Printer>(desc)))
+                MarkDirty();
 
-			_route_slots.model.consume_index_modified();
-		}
-	}
+            _route_slots.model.consume_index_modified();
+        }
+    }
 
-	void SignalDocument::Draw(SignalDesc& desc)
-	{
-		if (auto dup_outline = imtk::prop::value_outline())
-		{
-			desc.id.draw();
-			if (_id_counter.count(desc.id.value) > 1)
-			{
-				if (imtk::prop::value::get_draw_result().state.hovered())
-					ImGui::SetTooltip("Duplicate signal/route id");
+    void SignalDocument::Draw(SignalDesc& desc)
+    {
+        if (auto dup_outline = imtk::prop::value_outline())
+        {
+            desc.id.draw();
+            if (_id_counter.count(desc.id.value) > 1)
+            {
+                if (imtk::prop::value::get_draw_result().state.hovered())
+                    ImGui::SetTooltip("Duplicate signal/route id");
 
-				dup_outline.draw(imtk::col::error);
-			}
-		}
+                dup_outline.draw(imtk::col::error);
+            }
+        }
 
-		auto initial_binding = desc.binding.value;
-		desc.binding.draw();
+        auto initial_binding = desc.binding.value;
+        desc.binding.draw();
 
-		switch (desc.binding.value)
-		{
+        switch (desc.binding.value)
+        {
 #define SWITCH_CASE(T) \
-		case detail::SignalBindingType::T: \
-		{ \
-			if (!desc.variant.try_get<T##Desc>()) \
-			{ \
-				SignalDesc initial_desc = imtk::desc::clone_data(desc); \
-				initial_desc.binding.value = initial_binding; \
-				desc.variant.set<T##Desc>(); \
-				imtk::desc::push_set_action<SignalDesc, SignalDesc::Printer>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
-			} \
-			break; \
-		}
+        case detail::SignalBindingType::T: \
+        { \
+            if (!desc.variant.try_get<T##Desc>()) \
+            { \
+                SignalDesc initial_desc = imtk::desc::clone_data(desc); \
+                initial_desc.binding.value = initial_binding; \
+                desc.variant.set<T##Desc>(); \
+                imtk::desc::push_set_action<SignalDesc, SignalDesc::Printer>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
+            } \
+            break; \
+        }
 
-			BINDING_TYPE_GENERATOR(SWITCH_CASE)
+            BINDING_TYPE_GENERATOR(SWITCH_CASE)
 
 #undef SWITCH_CASE
-		}
+        }
 
-		desc.variant.visit([this](auto& desc) { Draw(desc); });
-	}
-	
-	void SignalDocument::Draw(RouteDesc& desc)
-	{
-		_route_local_signal_id_counter.clear();
-		_route_local_signal_id_counter.accumulate(desc.signals.value);
+        desc.variant.visit([this](auto& desc) { Draw(desc); });
+    }
 
-		if (auto dup_outline = imtk::prop::value_outline())
-		{
-			desc.id.draw();
-			if (_id_counter.count(desc.id.value) > 1)
-			{
-				if (imtk::prop::row::get_draw_result().state.hovered())
-					ImGui::SetTooltip("Duplicate signal/route id");
+    void SignalDocument::Draw(RouteDesc& desc)
+    {
+        _route_local_signal_id_counter.clear();
+        _route_local_signal_id_counter.accumulate(desc.signals.value);
 
-				dup_outline.draw(imtk::col::error);
-			}
-		}
+        if (auto dup_outline = imtk::prop::value_outline())
+        {
+            desc.id.draw();
+            if (_id_counter.count(desc.id.value) > 1)
+            {
+                if (imtk::prop::row::get_draw_result().state.hovered())
+                    ImGui::SetTooltip("Duplicate signal/route id");
 
-		if (!desc.signals.widget.body.row_draw)
-		{
-			desc.signals.widget.body.row_draw = [this, &desc](imtk::dynamic_row& row) -> imtk::item_result {
-				std::string& element = desc.signals.edit.buffer()[row.index()];
+                dup_outline.draw(imtk::col::error);
+            }
+        }
 
-				imtk::outline outline;
-				auto result = imtk::w::bound_widget<std::string>(element).draw();
+        if (!desc.signals.widget.body.row_draw)
+        {
+            desc.signals.widget.body.row_draw = [this, &desc](imtk::dynamic_row& row) -> imtk::item_result {
+                std::string& element = desc.signals.edit.buffer()[row.index()];
 
-				if (!_signal_id_counter.contains(element))
-				{
-					outline.draw(imtk::col::warning);
-					if (result.state.hovered())
-						ImGui::SetTooltip("Signal id is not present in asset");
-				}
-				else if (_route_local_signal_id_counter.count(element) > 1)
-				{
-					outline.draw(imtk::col::warning);
-					if (result.state.hovered())
-						ImGui::SetTooltip("Duplicate signal id listing in route");
-				}
+                imtk::outline outline;
+                auto result = imtk::w::bound_widget<std::string>(element).draw();
 
-				if (result.state.activated())
-					row.on_select();
+                if (!_signal_id_counter.contains(element))
+                {
+                    outline.draw(imtk::col::warning);
+                    if (result.state.hovered())
+                        ImGui::SetTooltip("Signal id is not present in asset");
+                }
+                else if (_route_local_signal_id_counter.count(element) > 1)
+                {
+                    outline.draw(imtk::col::warning);
+                    if (result.state.hovered())
+                        ImGui::SetTooltip("Duplicate signal id listing in route");
+                }
 
-				return result;
-			};
-		}
+                if (result.state.activated())
+                    row.on_select();
 
-		if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label.c_str(), desc.signals.edit, desc.signals.def, desc.signals.widget.model))
-			imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
+                return result;
+            };
+        }
 
-		desc.signals.consume_ops();
-		desc.signals.check_undo_action();
-	}
+        if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label.c_str(), desc.signals.edit, desc.signals.def, desc.signals.widget.model))
+            imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
 
-	void SignalDocument::Draw(KeyDesc& desc)
-	{
-		const auto initial = desc.key.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.key.label.c_str(), desc.key.index_, desc.key.def_index))
-		{
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-				_stop_listening = false;
-				std::optional<detail::KeyInput> key;
-				imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
-				ImGui::SameLine();
-				if (key)
-				{
-					if (*key != desc.key.value())
-					{
-						desc.key.set_value(*key);
-						result.modified = true;
-					}
-					else
-						result.modified = false;
-				}
-				return result | imtk::w::combo_widget(desc.key.index_, desc.key.names).draw();
-			}));
-		}
-		
-		if (initial != desc.key.index_)
-			imtk::field::push_set_action(desc.key.link.compute_path(), initial, desc.key.index_);
+        desc.signals.consume_ops();
+        desc.signals.check_undo_action();
+    }
 
-		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
-		{
-			bool disabled_required_mods[desc.required_mods.count]{};
-			for (size_t i = 0; i < desc.required_mods.count; ++i)
-				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.draw(disabled_required_mods);
+    void SignalDocument::Draw(KeyDesc& desc)
+    {
+        const auto initial = desc.key.index_;
+        if (auto row = imtk::prop::make_row_scope(desc.key.label.c_str(), desc.key.index_, desc.key.def_index))
+        {
+            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                _stop_listening = false;
+                std::optional<detail::KeyInput> key;
+                imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
+                ImGui::SameLine();
+                if (key)
+                {
+                    if (*key != desc.key.value())
+                    {
+                        desc.key.set_value(*key);
+                        result.modified = true;
+                    }
+                    else
+                        result.modified = false;
+                }
+                return result | imtk::w::combo_widget(desc.key.index_, desc.key.names).draw();
+            }));
+        }
 
-			bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
-			for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
-				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.draw(disabled_forbidden_mods);
-		}
+        if (initial != desc.key.index_)
+            imtk::field::push_set_action(desc.key.link.compute_path(), initial, desc.key.index_);
 
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(MouseButtonDesc& desc)
-	{
-		const auto initial = desc.button.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
-		{
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-				_stop_listening = false;
-				std::optional<detail::MouseButton> mb;
-				imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
-				ImGui::SameLine();
-				if (mb)
-				{
-					if (*mb != desc.button.value())
-					{
-						desc.button.set_value(*mb);
-						result.modified = true;
-					}
-					else
-						result.modified = false;
-				}
-				return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
-			}));
-		}
+        if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
+        {
+            bool disabled_required_mods[desc.required_mods.count]{};
+            for (size_t i = 0; i < desc.required_mods.count; ++i)
+                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+            desc.required_mods.draw(disabled_required_mods);
 
-		if (initial != desc.button.index_)
-			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
+            bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
+            for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
+                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            desc.forbidden_mods.draw(disabled_forbidden_mods);
+        }
 
-		if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
-		{
-			bool disabled_required_mods[desc.required_mods.count]{};
-			for (size_t i = 0; i < desc.required_mods.count; ++i)
-				disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
-			desc.required_mods.draw(disabled_required_mods);
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
 
-			bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
-			for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
-				disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
-			desc.forbidden_mods.draw(disabled_forbidden_mods);
-		}
+    void SignalDocument::Draw(MouseButtonDesc& desc)
+    {
+        const auto initial = desc.button.index_;
+        if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
+        {
+            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                _stop_listening = false;
+                std::optional<detail::MouseButton> mb;
+                imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
+                ImGui::SameLine();
+                if (mb)
+                {
+                    if (*mb != desc.button.value())
+                    {
+                        desc.button.set_value(*mb);
+                        result.modified = true;
+                    }
+                    else
+                        result.modified = false;
+                }
+                return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
+            }));
+        }
 
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(GamepadButtonDesc& desc)
-	{
-		const auto initial = desc.button.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
-		{
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-				_stop_listening = false;
-				std::optional<GLenum> button;
-				imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
-				ImGui::SameLine();
-				if (button)
-				{
-					if (*button != desc.button.value())
-					{
-						desc.button.set_value(*button);
-						result.modified = true;
-					}
-					else
-						result.modified = false;
-				}
-				return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
-			}));
-		}
+        if (initial != desc.button.index_)
+            imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
 
-		if (initial != desc.button.index_)
-			imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
+        if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
+        {
+            bool disabled_required_mods[desc.required_mods.count]{};
+            for (size_t i = 0; i < desc.required_mods.count; ++i)
+                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+            desc.required_mods.draw(disabled_required_mods);
 
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(GamepadAxis1DDesc& desc)
-	{
-		const auto initial = desc.axis.index_;
-		if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), desc.axis.index_, desc.axis.def_index))
-		{
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-				_stop_listening = false;
-				std::optional<GLenum> axis;
-				imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
-				ImGui::SameLine();
-				if (axis)
-				{
-					if (*axis != desc.axis.value())
-					{
-						desc.axis.set_value(*axis);
-						result.modified = true;
-					}
-					else
-						result.modified = false;
-				}
-				return result | imtk::w::combo_widget(desc.axis.index_, desc.axis.names).draw();
-			}));
-		}
+            bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
+            for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
+                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            desc.forbidden_mods.draw(disabled_forbidden_mods);
+        }
 
-		if (initial != desc.axis.index_)
-			imtk::field::push_set_action(desc.axis.link.compute_path(), initial, desc.axis.index_);
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
 
-		desc.deadzone.draw();
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(GamepadAxis2DDesc& desc)
-	{
-		const detail::GamepadAxis2D og = desc.axis.value;
-		int int_value = static_cast<int>(desc.axis.value);
-		const int int_default = static_cast<int>(desc.axis.def);
+    void SignalDocument::Draw(GamepadButtonDesc& desc)
+    {
+        const auto initial = desc.button.index_;
+        if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
+        {
+            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                _stop_listening = false;
+                std::optional<GLenum> button;
+                imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
+                ImGui::SameLine();
+                if (button)
+                {
+                    if (*button != desc.button.value())
+                    {
+                        desc.button.set_value(*button);
+                        result.modified = true;
+                    }
+                    else
+                        result.modified = false;
+                }
+                return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
+            }));
+        }
 
-		if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), int_value, int_default))
-		{
-			imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
-				_stop_listening = false;
-				std::optional<detail::GamepadAxis2D> axis;
-				imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
-				ImGui::SameLine();
-				if (axis)
-				{
-					if (static_cast<int>(*axis) != int_value)
-					{
-						int_value = static_cast<int>(*axis);
-						result.modified = true;
-					}
-					else
-						result.modified = false;
-				}
-				return result | imtk::w::combo_widget(int_value, desc.axis.combo_names()).draw();
-			}));
-		}
+        if (initial != desc.button.index_)
+            imtk::field::push_set_action(desc.button.link.compute_path(), initial, desc.button.index_);
 
-		desc.axis.value = static_cast<detail::GamepadAxis2D>(int_value);
-		if (og != desc.axis.value)
-			imtk::field::push_set_action(desc.axis.link.compute_path(), og, desc.axis.value);
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
 
-		desc.deadzone.draw();
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(CursorPosDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
-	
-	void SignalDocument::Draw(ScrollDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		if (auto subform = imtk::prop::subform("Modifiers"))
-			Draw(*desc.modifier);
-	}
+    void SignalDocument::Draw(GamepadAxis1DDesc& desc)
+    {
+        const auto initial = desc.axis.index_;
+        if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), desc.axis.index_, desc.axis.def_index))
+        {
+            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                _stop_listening = false;
+                std::optional<GLenum> axis;
+                imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
+                ImGui::SameLine();
+                if (axis)
+                {
+                    if (*axis != desc.axis.value())
+                    {
+                        desc.axis.set_value(*axis);
+                        result.modified = true;
+                    }
+                    else
+                        result.modified = false;
+                }
+                return result | imtk::w::combo_widget(desc.axis.index_, desc.axis.names).draw();
+            }));
+        }
 
-	void SignalDocument::Draw(Modifier0dDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Draw(desc.base);
-	}
-	
-	void SignalDocument::Draw(Modifier1dDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Draw(desc.base);
-	}
-	
-	void SignalDocument::Draw(Modifier2dDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Draw(desc.base);
-	}
-	
-	void SignalDocument::Draw(ModifierBaseDesc& desc)
-	{
-		IMTK_DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
-	}
+        if (initial != desc.axis.index_)
+            imtk::field::push_set_action(desc.axis.link.compute_path(), initial, desc.axis.index_);
 
-	void SignalDocument::Load(imtk::toml_node node, SignalFullDesc& desc)
-	{
-		const toml::array* signal_array = desc.signals.subnode(node).as_array();
-		if (signal_array && !signal_array->empty())
-		{
-			for (size_t i = 0; i < signal_array->size(); ++i)
-				desc.signals.push_back();
-			
-			for (size_t i = 0; i < desc.signals.size(); ++i)
-				Load(imtk::toml_node(*signal_array->get(i)), desc.signals[i]);
-		}
+        desc.deadzone.draw();
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
 
-		const toml::array* route_array = desc.routes.subnode(node).as_array();
-		if (route_array && !route_array->empty())
-		{
-			for (size_t i = 0; i < route_array->size(); ++i)
-				desc.routes.push_back();
+    void SignalDocument::Draw(GamepadAxis2DDesc& desc)
+    {
+        const detail::GamepadAxis2D og = desc.axis.value;
+        int int_value = static_cast<int>(desc.axis.value);
+        const int int_default = static_cast<int>(desc.axis.def);
 
-			for (size_t i = 0; i < desc.routes.size(); ++i)
-				Load(imtk::toml_node(*route_array->get(i)), desc.routes[i]);
-		}
-	}
+        if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), int_value, int_default))
+        {
+            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
+                _stop_listening = false;
+                std::optional<detail::GamepadAxis2D> axis;
+                imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
+                ImGui::SameLine();
+                if (axis)
+                {
+                    if (static_cast<int>(*axis) != int_value)
+                    {
+                        int_value = static_cast<int>(*axis);
+                        result.modified = true;
+                    }
+                    else
+                        result.modified = false;
+                }
+                return result | imtk::w::combo_widget(int_value, desc.axis.combo_names()).draw();
+            }));
+        }
 
-	void SignalDocument::Load(imtk::toml_node node, SignalDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+        desc.axis.value = static_cast<detail::GamepadAxis2D>(int_value);
+        if (og != desc.axis.value)
+            imtk::field::push_set_action(desc.axis.link.compute_path(), og, desc.axis.value);
 
-		switch (desc.binding.value)
-		{
+        desc.deadzone.draw();
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
+
+    void SignalDocument::Draw(CursorPosDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
+
+    void SignalDocument::Draw(ScrollDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(SCROLL_PARTIAL_GENERATOR);
+        if (auto subform = imtk::prop::subform("Modifiers"))
+            Draw(*desc.modifier);
+    }
+
+    void SignalDocument::Draw(Modifier0dDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+        Draw(desc.base);
+    }
+
+    void SignalDocument::Draw(Modifier1dDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+        Draw(desc.base);
+    }
+
+    void SignalDocument::Draw(Modifier2dDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+        Draw(desc.base);
+    }
+
+    void SignalDocument::Draw(ModifierBaseDesc& desc)
+    {
+        IMTK_DRAW_FIELDS(MODIFIER_BASE_GENERATOR);
+    }
+
+    void SignalDocument::Load(imtk::toml_node node, SignalFullDesc& desc)
+    {
+        const toml::array* signal_array = desc.signals.subnode(node).as_array();
+        if (signal_array && !signal_array->empty())
+        {
+            for (size_t i = 0; i < signal_array->size(); ++i)
+                desc.signals.push_back();
+
+            for (size_t i = 0; i < desc.signals.size(); ++i)
+                Load(imtk::toml_node(*signal_array->get(i)), desc.signals[i]);
+        }
+
+        const toml::array* route_array = desc.routes.subnode(node).as_array();
+        if (route_array && !route_array->empty())
+        {
+            for (size_t i = 0; i < route_array->size(); ++i)
+                desc.routes.push_back();
+
+            for (size_t i = 0; i < desc.routes.size(); ++i)
+                Load(imtk::toml_node(*route_array->get(i)), desc.routes[i]);
+        }
+    }
+
+    void SignalDocument::Load(imtk::toml_node node, SignalDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+
+        switch (desc.binding.value)
+        {
 #define SWITCH_CASE(T) \
-		case detail::SignalBindingType::T: \
-		{ \
-			T##Desc subdesc; \
-			Load(node, subdesc); \
-			desc.variant.set(std::move(subdesc)); \
-			break; \
-		}
+        case detail::SignalBindingType::T: \
+        { \
+            T##Desc subdesc; \
+            Load(node, subdesc); \
+            desc.variant.set(std::move(subdesc)); \
+            break; \
+        }
 
-			BINDING_TYPE_GENERATOR(SWITCH_CASE)
+            BINDING_TYPE_GENERATOR(SWITCH_CASE)
 
 #undef SWITCH_CASE
-		}
-	}
+        }
+    }
 
-	void SignalDocument::Load(imtk::toml_node node, RouteDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(ROUTE_GENERATOR);
-	}
+    void SignalDocument::Load(imtk::toml_node node, RouteDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(ROUTE_GENERATOR);
+    }
 
-	void SignalDocument::Load(imtk::toml_node node, KeyDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
+    void SignalDocument::Load(imtk::toml_node node, KeyDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(KEY_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Load(imtk::toml_node node, MouseButtonDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
+    void SignalDocument::Load(imtk::toml_node node, MouseButtonDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Load(imtk::toml_node node, GamepadButtonDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, GamepadAxis1DDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, GamepadAxis2DDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, CursorPosDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, ScrollDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
-		Load(desc.modifier.subnode(node), *desc.modifier);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, Modifier0dDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Load(node, desc.base);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, Modifier1dDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Load(node, desc.base);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, Modifier2dDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Load(node, desc.base);
-	}
-	
-	void SignalDocument::Load(imtk::toml_node node, ModifierBaseDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
-	}
+    void SignalDocument::Load(imtk::toml_node node, GamepadButtonDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
-	{
-		toml::array signal_array;
-		for (auto& d : desc.signals)
-			Dump(signal_array.emplace_back<toml::table>(), d);
-		desc.signals.dump_into(table, std::move(signal_array));
+    void SignalDocument::Load(imtk::toml_node node, GamepadAxis1DDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-		toml::array route_array;
-		for (auto& d : desc.routes)
-			Dump(route_array.emplace_back<toml::table>(), d);
-		desc.routes.dump_into(table, std::move(route_array));
-	}
+    void SignalDocument::Load(imtk::toml_node node, GamepadAxis2DDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(SIGNAL_PARTIAL_GENERATOR);
-		desc.variant.visit([this, &table](auto& desc) { Dump(table, desc); });
-	}
+    void SignalDocument::Load(imtk::toml_node node, CursorPosDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Dump(toml::table& table, RouteDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(ROUTE_GENERATOR);
-	}
+    void SignalDocument::Load(imtk::toml_node node, ScrollDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(SCROLL_PARTIAL_GENERATOR);
+        Load(desc.modifier.subnode(node), *desc.modifier);
+    }
 
-	void SignalDocument::Dump(toml::table& table, KeyDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
+    void SignalDocument::Load(imtk::toml_node node, Modifier0dDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+        Load(node, desc.base);
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, MouseButtonDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+    void SignalDocument::Load(imtk::toml_node node, Modifier1dDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+        Load(node, desc.base);
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, GamepadButtonDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+    void SignalDocument::Load(imtk::toml_node node, Modifier2dDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+        Load(node, desc.base);
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, GamepadAxis1DDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+    void SignalDocument::Load(imtk::toml_node node, ModifierBaseDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(MODIFIER_BASE_GENERATOR);
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, GamepadAxis2DDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+    void SignalDocument::Dump(toml::table& table, SignalFullDesc& desc)
+    {
+        toml::array signal_array;
+        for (auto& d : desc.signals)
+            Dump(signal_array.emplace_back<toml::table>(), d);
+        desc.signals.dump_into(table, std::move(signal_array));
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, CursorPosDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+        toml::array route_array;
+        for (auto& d : desc.routes)
+            Dump(route_array.emplace_back<toml::table>(), d);
+        desc.routes.dump_into(table, std::move(route_array));
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, ScrollDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
+    void SignalDocument::Dump(toml::table& table, SignalDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(SIGNAL_PARTIAL_GENERATOR);
+        desc.variant.visit([this, &table](auto& desc) { Dump(table, desc); });
+    }
 
-		toml::table subtable;
-		Dump(subtable, *desc.modifier);
-		desc.modifier.dump_into(table, std::move(subtable));
-	}
-	
-	void SignalDocument::Dump(toml::table& table, Modifier0dDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
-		Dump(table, desc.base);
-	}
-	
-	void SignalDocument::Dump(toml::table& table, Modifier1dDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
-		Dump(table, desc.base);
-	}
-	
-	void SignalDocument::Dump(toml::table& table, Modifier2dDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
-		Dump(table, desc.base);
-	}
-	
-	void SignalDocument::Dump(toml::table& table, ModifierBaseDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(MODIFIER_BASE_GENERATOR);
-	}
+    void SignalDocument::Dump(toml::table& table, RouteDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(ROUTE_GENERATOR);
+    }
+
+    void SignalDocument::Dump(toml::table& table, KeyDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(KEY_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, MouseButtonDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(MOUSE_BUTTON_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, GamepadButtonDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(GAMEPAD_BUTTON_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, GamepadAxis1DDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(GAMEPAD_AXIS_1D_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, GamepadAxis2DDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(GAMEPAD_AXIS_2D_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, CursorPosDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(CURSOR_POS_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, ScrollDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(SCROLL_PARTIAL_GENERATOR);
+
+        toml::table subtable;
+        Dump(subtable, *desc.modifier);
+        desc.modifier.dump_into(table, std::move(subtable));
+    }
+
+    void SignalDocument::Dump(toml::table& table, Modifier0dDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(MODIFIER_0D_PARTIAL_GENERATOR);
+        Dump(table, desc.base);
+    }
+
+    void SignalDocument::Dump(toml::table& table, Modifier1dDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(MODIFIER_1D_PARTIAL_GENERATOR);
+        Dump(table, desc.base);
+    }
+
+    void SignalDocument::Dump(toml::table& table, Modifier2dDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(MODIFIER_2D_PARTIAL_GENERATOR);
+        Dump(table, desc.base);
+    }
+
+    void SignalDocument::Dump(toml::table& table, ModifierBaseDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(MODIFIER_BASE_GENERATOR);
+    }
 }

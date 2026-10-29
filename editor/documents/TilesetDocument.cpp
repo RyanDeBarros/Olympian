@@ -12,629 +12,628 @@
 
 namespace oly::editor
 {
-	Grid4x4EditorState::Grid4x4EditorState() :
-		grid_1x1(std::array<std::array<bool, 1>, 1>{
-			std::array<bool, 1>{ true }
-		}),
-		grid_3x1(std::array<std::array<bool, 3>, 1>{
-			std::array<bool, 3>{ true, true, true }
-		}),
-		grid_1x3(std::array<std::array<bool, 1>, 3>{
-			std::array<bool, 1>{ true },
-			std::array<bool, 1>{ true },
-			std::array<bool, 1>{ true }
-		}),
-		grid_3x3(std::array<std::array<bool, 3>, 3>{
-			std::array<bool, 3>{ true, true, true },
-			std::array<bool, 3>{ true, true, true },
-			std::array<bool, 3>{ true, true, true }
-		})
-	{
-	}
-
-	const detail::TileConfigGrid* Grid4x4EditorState::At(int x, int y) const
-	{
-		if (0 <= x && x <= 2)
-		{
-			if (0 <= y && y <= 2)
-				return grid_3x3.At(x, y);
-			else if (y == 4)
-				return grid_3x1.At(x, y - 4);
-			else
-				return nullptr;
-		}
-		else if (x == 4)
-		{
-			if (0 <= y && y <= 2)
-				return grid_1x3.At(x - 4, y);
-			else if (y == 4)
-				return grid_1x1.At(x - 4, y - 4);
-			else
-				return nullptr;
-		}
-		else
-			return nullptr;
-	}
-
-	detail::TileConfigGrid* Grid4x4EditorState::At(int x, int y)
-	{
-		if (0 <= x && x <= 2)
-		{
-			if (0 <= y && y <= 2)
-				return grid_3x3.At(x, y);
-			else if (y == 4)
-				return grid_3x1.At(x, y - 4);
-			else
-				return nullptr;
-		}
-		else if (x == 4)
-		{
-			if (0 <= y && y <= 2)
-				return grid_1x3.At(x - 4, y);
-			else if (y == 4)
-				return grid_1x1.At(x - 4, y - 4);
-			else
-				return nullptr;
-		}
-		else
-			return nullptr;
-	}
-
-	size_t Grid4x4EditorState::Rows() const
-	{
-		return 5;
-	}
-
-	size_t Grid4x4EditorState::Cols() const
-	{
-		return 5;
-	}
-
-	Grid5x5EditorState::Grid5x5EditorState() :
-		grid_5x5(std::array<std::array<bool, 5>, 5>{
-			std::array<bool, 5>{ true, true,  true, true,  true },
-			std::array<bool, 5>{ true, false, true, false, true },
-			std::array<bool, 5>{ true, true,  true, true,  true },
-			std::array<bool, 5>{ true, false, true, false, true },
-			std::array<bool, 5>{ true, true,  true, true,  true }
-		})
-	{
-	}
-
-	const detail::TileConfigGrid* Grid5x5EditorState::At(int x, int y) const
-	{
-		if (0 <= x && x <= 4 && 0 <= y && y <= 4)
-			return grid_5x5.At(x, y);
-		else
-			return nullptr;
-	}
-
-	detail::TileConfigGrid* Grid5x5EditorState::At(int x, int y)
-	{
-		if (0 <= x && x <= 4 && 0 <= y && y <= 4)
-			return grid_5x5.At(x, y);
-		else
-			return nullptr;
-	}
-
-	size_t Grid5x5EditorState::Rows() const
-	{
-		return 5;
-	}
-
-	size_t Grid5x5EditorState::Cols() const
-	{
-		return 5;
-	}
-
-	const char* TilesetDocument::GetVersion()
-	{
-		return "1.0";
-	}
-
-	void TilesetDocument::InitImpl()
-	{
-		if (!GetOlyPath().is_resource())
-			imtk::notify_warning("Asset is not located in resource folder");
-
-		_individual_editor = {};
-		_group_editors = {};
-
-		LoadAsset();
-	}
-
-	void TilesetDocument::Draw()
-	{
-		auto pre_draw = PreDraw();
-
-		UpdateActiveTextures();
-		imtk::id_scope scope(this);
-
-		if (auto subform = imtk::prop::subform("Advanced"))
-			_desc.scratch.storage.draw();
-
-		if (auto _ = imtk::tab_bar("##Editors"))
-		{
-			if (auto _ = imtk::tab_item("Group"))
-				DrawGroupEditor();
-
-			if (auto _ = imtk::tab_item("Individual"))
-				DrawIndividualEditor();
-		}
-	}
-
-	void TilesetDocument::LoadImpl()
-	{
-		if (_oly_path.is_file())
-		{
-			_meta = detail::MetaSplitter::decode_meta(_oly_path);
-
-			toml::table table;
-			std::string err = _oly_path.load_toml(table);
-			if (err.empty())
-				Load(imtk::toml_node(table), _desc.disk);
-			else
-				imtk::notify_error("cannot load tileset - corrupted asset: " + _oly_path.string());
-
-			MarkClean();
-		}
-		else
-		{
-			Load(imtk::toml_node(), _desc.disk);
-
-			_meta = {};
-			_meta.map[detail::Key::Meta_Version] = GetVersion();
-			_meta.map[detail::Key::Meta_Import] = "0";
-			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Tileset);
-
-			MarkDirty();
-		}
-
-		_desc.load_from_disk();
-	}
-
-	void TilesetDocument::DumpImpl()
-	{
-		toml::table table;
-		Dump(table, _desc.scratch);
-		_oly_path.dump_toml(table, _meta);
-		_desc.write_to_disk();
-		MarkClean();
-	}
-
-	void TilesetDocument::ResetAssetImpl()
-	{
-		Load(imtk::toml_node(), _desc.scratch);
-	}
-
-	const imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor() const
-	{
-		return _desc;
-	}
-
-	imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor()
-	{
-		return _desc;
-	}
-
-	void TilesetDocument::DrawGroupEditor()
-	{
-		int type_index = static_cast<int>(_group_editors.current_type);
-		if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }).modified)
-			_group_editors.current_type = static_cast<GroupEditorType>(type_index);
-
-		GridEditorStateBase* editor = nullptr;
-		switch (_group_editors.current_type)
-		{
-		case GroupEditorType::T4x4:
-			editor = &_group_editors.state_4x4;
-			break;
-
-		case GroupEditorType::T5x5:
-			editor = &_group_editors.state_5x5;
-			break;
-		}
-
-		if (!editor)
-			return;
-
-		if (auto _ = imtk::table("##Table", 2))
-		{
-			ImGui::TableNextColumn();
-			bool new_cell_selected = false;
-			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
-			{
-				const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
-				const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
-				const float cell_side = std::min(avail_cell_width, avail_cell_height);
-				const ImVec2 cell_size(cell_side, cell_side);
-				const ImVec2 cursor = ImGui::GetCursorScreenPos();
-				const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - cell_side * ImVec2(editor->Cols() + 2.f, editor->Rows() + 2.f));
-
-				for (int y = 0; y < editor->Rows(); ++y)
-				{
-					for (int x = 0; x < editor->Cols(); ++x)
-					{
-						const detail::TileConfigGrid* grid = editor->At(x, y);
-						if (!grid)
-							continue;
-
-						imtk::id_scope scope;
-						scope.push(y).push(x);
-						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
-						const ImVec2 rect_end = rect_start + cell_size;
-
-						DrawActiveTexture(rect_start, rect_end, *grid, 64);
-						auto cell = std::make_pair(x, y);
-
-						ImGui::SetCursorScreenPos(rect_start);
-						if (ImGui::InvisibleButton("##ToggleSelected", cell_size))
-						{
-							new_cell_selected = true;
-							if (editor->selected_cell == cell)
-								editor->selected_cell = std::nullopt;
-							else
-								editor->selected_cell = cell;
-						}
-
-						if (ImGui::IsItemHovered())
-						{
-							ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
-							TextureErrorTooltip(GetActiveTexture(*grid).error);
-						}
-
-						if (editor->selected_cell == cell)
-							ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::green, 0.f, 0, 4.f);
-					}
-				}
-			}
-
-			if (ImGui::IsItemClicked() && !new_cell_selected)
-				editor->selected_cell = std::nullopt;
-
-			ImGui::TableNextColumn();
-			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
-			{
-				if (auto cell = editor->selected_cell)
-					if (auto grid = editor->At(cell->first, cell->second))
-						Draw(*grid);
-			}
-		}
-	}
-
-	void TilesetDocument::DrawIndividualEditor()
-	{
-		if (auto _ = imtk::table("##Table", 2))
-		{
-			ImGui::TableNextColumn();
-			if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
-			{
-				const float avail = std::min(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
-				const float cell_width = 0.2f * avail;
-				const ImVec2 cell_size(cell_width, cell_width);
-				const ImVec2 cursor = ImGui::GetCursorScreenPos();
-				const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - ImVec2(avail, avail));
-
-				for (detail::GridCoordinate y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
-				{
-					for (detail::GridCoordinate x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
-					{
-						imtk::id_scope scope;
-						scope.push(y).push(x);
-						const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
-						const ImVec2 rect_end = rect_start + cell_size;
-
-						if (y == 1 && x == 1)
-						{
-							DrawActiveTexture(rect_start, rect_end, _individual_editor.grid, 16);
-							ImGui::Dummy(cell_size);
-						}
-						else
-							DrawToggleCell(rect_start, rect_end, _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
-
-						if (ImGui::IsItemHovered())
-							TextureErrorTooltip(GetActiveTexture(_individual_editor.grid).error);
-					}
-				}
-			}
-
-			ImGui::TableNextColumn();
-			if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
-				Draw(_individual_editor.grid);
-		}
-	}
-
-	void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
-	{
-		if (available)
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? imtk::col::azure : imtk::col::grey(64));
-		else
-		{
-			on = false;
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(32));
-		}
-
-		ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::black, 0.f, 0, 2.f);
-
-		ImGui::SetCursorScreenPos(rect_start);
-		if (available)
-		{
-			if (ImGui::InvisibleButton("##Click", rect_end - rect_start))
-				on = !on;
-
-			if (ImGui::IsItemHovered())
-				ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
-		}
-		else
-			ImGui::Dummy(rect_end - rect_start);
-	}
-
-	void TilesetDocument::Draw(const detail::TileConfigGrid grid)
-	{
-		if (auto form = imtk::prop::form())
-		{
-			TilesetAssignmentDesc& desc = GetAssignment(grid);
-
-			if (auto scope = imtk::id_scope(&desc.texture))
-			{
-				if (auto _ = imtk::prop::make_row_scope(desc.texture.label.c_str(), desc.texture.edit, desc.texture.def))
-				{
-					imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
-						imtk::id_scope scope(&desc.texture.value);
-
-						imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
-
-						if (auto target = imtk::drag_drop_target())
-						{
-							std::optional<detail::ResourcePath> path;
-							if (auto p = target.accept<TreeViewPathDDP>())
-								path = *p;
-							else if (auto p = target.accept<ContentBrowserPathDDP>())
-								path = *p;
-
-							if (path)
-							{
-								if (path->is_resource())
-								{
-									desc.texture.edit.publish_reset(path->get_resource_shorthand());
-									result.modified = true;
-								}
-								else
-									imtk::notify_error("Path is not located in resource folder");
-							}
-						}
-
-						desc.texture.edit.post_edit(result.state);
-						return result;
-					}));
-				}
-
-				desc.texture.check_undo_action();
-			}
-
-			desc.texture_index.draw();
-			desc.uvs.draw();
-			desc.reflection.draw();
-			desc.rotation.draw();
-		}
-	}
-
-	void TilesetDocument::Load(imtk::toml_node node, TilesetDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
-
-		Load(node, desc.assignments);
-	}
-
-	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc)
-	{
-		desc.map.clear();
-		if (auto table = desc.map.subnode(node).as_table())
-		{
-			for (auto&& [key, node] : *table)
-			{
-				if (auto config = imp::stoi(key.str()))
-					Load(imtk::toml_node(node), desc.map[*config]);
-			}
-		}
-	}
-
-	void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
-	}
-
-	void TilesetDocument::Dump(toml::table& table, TilesetDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
-
-		Dump(table, desc.assignments);
-	}
-
-	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentMapDesc& desc)
-	{
-		toml::table subtable;
-		for (auto& [config, subdesc] : desc.map)
-		{
-			toml::table dump;
-			Dump(dump, subdesc);
-			subtable.insert_or_assign(std::to_string(config), std::move(dump));
-		}
-		desc.map.dump_into(table, std::move(subtable));
-	}
-
-	void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
-	}
-
-	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
-	{
-		return GetAssignment(GetResolvedTileConfig(grid));
-	}
-
-	TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
-	{
-		return _desc.scratch.assignments.map[config];
-	}
-
-	void TilesetDocument::UpdateActiveTextures()
-	{
-		for (auto& [config, active] : _textures)
-		{
-			auto& desc = GetAssignment(config);
-			if (active.current_texture_index == desc.texture_index.value && active.current_texture == desc.texture.value)
-				continue;
-
-			active.current_texture_index = desc.texture_index.value;
-			active.current_texture = desc.texture.value;
-
-			active.error = TextureError::None;
-			if (desc.texture.value.empty())
-				active.texture = {};
-			else
-			{
-				imtk::breakout_error::notify_scope ns(true);
-				try
-				{
-					std::string filepath = detail::ResourcePath(desc.texture.value).string();
-					GLenum min_filter, mag_filter;
-					float scale = 1.f;
-					bool generate_mipmaps = false;
-					auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
-					if (result == TextureDocument::TextureSettingsLoadResult::Success)
-						active.texture = imtk::texture::load_generic(filepath, min_filter, mag_filter, scale, generate_mipmaps);
-					else
-					{
-						switch (result)
-						{
-						case TextureDocument::TextureSettingsLoadResult::NotAFile:
-							active.error = TextureError::NotAFile;
-							break;
-						case TextureDocument::TextureSettingsLoadResult::NotAResource:
-							active.error = TextureError::NotAResource;
-							break;
-						case TextureDocument::TextureSettingsLoadResult::MissingImport:
-							active.error = TextureError::MissingImport;
-							break;
-						case TextureDocument::TextureSettingsLoadResult::NotATexture:
-							active.error = TextureError::NotATexture;
-							break;
-						case TextureDocument::TextureSettingsLoadResult::BadSlot:
-							active.error = TextureError::BadSlot;
-							break;
-						case TextureDocument::TextureSettingsLoadResult::Corrupted:
-						default:
-							active.error = TextureError::CorruptedAsset;
-							break;
-						}
-					}
-				}
-				catch (const imtk::breakout_error& e)
-				{
-					e.log();
-					active.error = TextureError::CannotLoad;
-				}
-			}
-		}
-	}
-
-	bool TilesetDocument::TextureErrorIsWarning(TextureError error)
-	{
-		return error == TextureError::BadSlot || error == TextureError::NotAResource;
-	}
-
-	void TilesetDocument::DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value)
-	{
-		auto& active = GetActiveTexture(grid);
-		if (active.error != TextureError::None && !TextureErrorIsWarning(active.error))
-			imtk::overlays::quad_error(rect_start, rect_end, imtk::col::magenta);
-		else if (active.error != TextureError::None && TextureErrorIsWarning(active.error))
-		{
-			DrawActiveTextureDirect(grid, rect_start, rect_end);
-			imtk::overlays::quad_warning(rect_start, rect_end, imtk::col::magenta);
-		}
-		else if (active.texture.empty())
-			ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(empty_gray_value));
-		else
-			DrawActiveTextureDirect(grid, rect_start, rect_end);
-	}
-
-	void TilesetDocument::DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end)
-	{
-		auto& desc = GetAssignment(grid);
-		auto& active = GetActiveTexture(grid);
-		auto uv_rect = desc.uvs.value;
-		detail::TileReflection reflection = desc.reflection.value;
-		detail::TileRotation rotation = desc.rotation.value;
-
-		std::array<ImVec2, 4> uvs;
-		uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);
-		uvs[1] = ImVec2(uv_rect.x2, uv_rect.y1);
-		uvs[2] = ImVec2(uv_rect.x2, uv_rect.y2);
-		uvs[3] = ImVec2(uv_rect.x1, uv_rect.y2);
-
-		if (static_cast<bool>(reflection & detail::TileReflection::X))
-		{
-			std::swap(uvs[0], uvs[1]);
-			std::swap(uvs[2], uvs[3]);
-		}
-
-		if (static_cast<bool>(reflection & detail::TileReflection::Y))
-		{
-			std::swap(uvs[0], uvs[3]);
-			std::swap(uvs[1], uvs[2]);
-		}
-
-		{
-			std::array<ImVec2, 4> temp;
-			for (int i = 0; i < 4; ++i)
-				temp[i] = uvs[static_cast<size_t>((i + static_cast<int>(rotation)) % 4)];
-			uvs = temp;
-		}
-
-		ImVec2 rect_delta = rect_end - rect_start;
-		ImGui::GetWindowDrawList()->AddImageQuad(active.texture.id(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
-			rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
-	}
-
-	void TilesetDocument::TextureErrorTooltip(TextureError error)
-	{
-		switch (error)
-		{
-		case TextureError::NotAFile:
-			ImGui::SetTooltip("Cannot find texture file");
-			break;
-		case TextureError::NotAResource:
-			ImGui::SetTooltip("Texture is not located in resource folder");
-			break;
-		case TextureError::MissingImport:
-			ImGui::SetTooltip("Texture is missing import file");
-			break;
-		case TextureError::NotATexture:
-			ImGui::SetTooltip("File is not imported as a texture");
-			break;
-		case TextureError::CorruptedAsset:
-			ImGui::SetTooltip("Import file is corrupted");
-			break;
-		case TextureError::BadSlot:
-			ImGui::SetTooltip("Bad slot index");
-			break;
-		case TextureError::CannotLoad:
-			ImGui::SetTooltip("Editor cannot load texture");
-			break;
-		}
-	}
-
-	TilesetDocument::ActiveTexture& TilesetDocument::GetActiveTexture(const detail::TileConfigGrid grid)
-	{
-		return _textures[GetResolvedTileConfig(grid)];
-	}
-
-	detail::TileConfig TilesetDocument::GetResolvedTileConfig(const detail::TileConfigGrid grid)
-	{
-		auto config = detail::tile_config_from_grid(grid);
-		detail::simplify_tile_config(config);
-		return config;
-	}
+    Grid4x4EditorState::Grid4x4EditorState() :
+        grid_1x1(std::array<std::array<bool, 1>, 1>{
+        std::array<bool, 1>{ true }
+    }),
+        grid_3x1(std::array<std::array<bool, 3>, 1>{
+        std::array<bool, 3>{ true, true, true }
+    }),
+        grid_1x3(std::array<std::array<bool, 1>, 3>{
+        std::array<bool, 1>{ true },
+            std::array<bool, 1>{ true },
+            std::array<bool, 1>{ true }
+    }),
+        grid_3x3(std::array<std::array<bool, 3>, 3>{
+        std::array<bool, 3>{ true, true, true },
+            std::array<bool, 3>{ true, true, true },
+            std::array<bool, 3>{ true, true, true }
+    })
+    {
+    }
+
+    const detail::TileConfigGrid* Grid4x4EditorState::At(int x, int y) const
+    {
+        if (0 <= x && x <= 2)
+        {
+            if (0 <= y && y <= 2)
+                return grid_3x3.At(x, y);
+            else if (y == 4)
+                return grid_3x1.At(x, y - 4);
+            else
+                return nullptr;
+        }
+        else if (x == 4)
+        {
+            if (0 <= y && y <= 2)
+                return grid_1x3.At(x - 4, y);
+            else if (y == 4)
+                return grid_1x1.At(x - 4, y - 4);
+            else
+                return nullptr;
+        }
+        else
+            return nullptr;
+    }
+
+    detail::TileConfigGrid* Grid4x4EditorState::At(int x, int y)
+    {
+        if (0 <= x && x <= 2)
+        {
+            if (0 <= y && y <= 2)
+                return grid_3x3.At(x, y);
+            else if (y == 4)
+                return grid_3x1.At(x, y - 4);
+            else
+                return nullptr;
+        }
+        else if (x == 4)
+        {
+            if (0 <= y && y <= 2)
+                return grid_1x3.At(x - 4, y);
+            else if (y == 4)
+                return grid_1x1.At(x - 4, y - 4);
+            else
+                return nullptr;
+        }
+        else
+            return nullptr;
+    }
+
+    size_t Grid4x4EditorState::Rows() const
+    {
+        return 5;
+    }
+
+    size_t Grid4x4EditorState::Cols() const
+    {
+        return 5;
+    }
+
+    Grid5x5EditorState::Grid5x5EditorState()
+        : grid_5x5(std::array<std::array<bool, 5>, 5>{
+            std::array<bool, 5>{ true, true, true, true, true },
+            std::array<bool, 5>{ true, false, true, false, true },
+            std::array<bool, 5>{ true, true, true, true, true },
+            std::array<bool, 5>{ true, false, true, false, true },
+            std::array<bool, 5>{ true, true, true, true, true }})
+    {
+    }
+
+    const detail::TileConfigGrid* Grid5x5EditorState::At(int x, int y) const
+    {
+        if (0 <= x && x <= 4 && 0 <= y && y <= 4)
+            return grid_5x5.At(x, y);
+        else
+            return nullptr;
+    }
+
+    detail::TileConfigGrid* Grid5x5EditorState::At(int x, int y)
+    {
+        if (0 <= x && x <= 4 && 0 <= y && y <= 4)
+            return grid_5x5.At(x, y);
+        else
+            return nullptr;
+    }
+
+    size_t Grid5x5EditorState::Rows() const
+    {
+        return 5;
+    }
+
+    size_t Grid5x5EditorState::Cols() const
+    {
+        return 5;
+    }
+
+    const char* TilesetDocument::GetVersion()
+    {
+        return "1.0";
+    }
+
+    void TilesetDocument::InitImpl()
+    {
+        if (!GetOlyPath().is_resource())
+            imtk::notify_warning("Asset is not located in resource folder");
+
+        _individual_editor = {};
+        _group_editors = {};
+
+        LoadAsset();
+    }
+
+    void TilesetDocument::Draw()
+    {
+        auto pre_draw = PreDraw();
+
+        UpdateActiveTextures();
+        imtk::id_scope scope(this);
+
+        if (auto subform = imtk::prop::subform("Advanced"))
+            _desc.scratch.storage.draw();
+
+        if (auto _ = imtk::tab_bar("##Editors"))
+        {
+            if (auto _ = imtk::tab_item("Group"))
+                DrawGroupEditor();
+
+            if (auto _ = imtk::tab_item("Individual"))
+                DrawIndividualEditor();
+        }
+    }
+
+    void TilesetDocument::LoadImpl()
+    {
+        if (_oly_path.is_file())
+        {
+            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+
+            toml::table table;
+            std::string err = _oly_path.load_toml(table);
+            if (err.empty())
+                Load(imtk::toml_node(table), _desc.disk);
+            else
+                imtk::notify_error("cannot load tileset - corrupted asset: " + _oly_path.string());
+
+            MarkClean();
+        }
+        else
+        {
+            Load(imtk::toml_node(), _desc.disk);
+
+            _meta = {};
+            _meta.map[detail::Key::Meta_Version] = GetVersion();
+            _meta.map[detail::Key::Meta_Import] = "0";
+            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Tileset);
+
+            MarkDirty();
+        }
+
+        _desc.load_from_disk();
+    }
+
+    void TilesetDocument::DumpImpl()
+    {
+        toml::table table;
+        Dump(table, _desc.scratch);
+        _oly_path.dump_toml(table, _meta);
+        _desc.write_to_disk();
+        MarkClean();
+    }
+
+    void TilesetDocument::ResetAssetImpl()
+    {
+        Load(imtk::toml_node(), _desc.scratch);
+    }
+
+    const imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor() const
+    {
+        return _desc;
+    }
+
+    imtk::desc::idoubler& TilesetDocument::GetDoubleDescriptor()
+    {
+        return _desc;
+    }
+
+    void TilesetDocument::DrawGroupEditor()
+    {
+        int type_index = static_cast<int>(_group_editors.current_type);
+        if (imtk::controls::combo("Grid type", type_index, { "Standard 4x4", "Standard 5x5" }).modified)
+            _group_editors.current_type = static_cast<GroupEditorType>(type_index);
+
+        GridEditorStateBase* editor = nullptr;
+        switch (_group_editors.current_type)
+        {
+        case GroupEditorType::T4x4:
+            editor = &_group_editors.state_4x4;
+            break;
+
+        case GroupEditorType::T5x5:
+            editor = &_group_editors.state_5x5;
+            break;
+        }
+
+        if (!editor)
+            return;
+
+        if (auto _ = imtk::table("##Table", 2))
+        {
+            ImGui::TableNextColumn();
+            bool new_cell_selected = false;
+            if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+            {
+                const float avail_cell_width = ImGui::GetContentRegionAvail().x / (editor->Cols() + 2.f);
+                const float avail_cell_height = ImGui::GetContentRegionAvail().y / (editor->Rows() + 2.f);
+                const float cell_side = std::min(avail_cell_width, avail_cell_height);
+                const ImVec2 cell_size(cell_side, cell_side);
+                const ImVec2 cursor = ImGui::GetCursorScreenPos();
+                const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - cell_side * ImVec2(editor->Cols() + 2.f, editor->Rows() + 2.f));
+
+                for (int y = 0; y < editor->Rows(); ++y)
+                {
+                    for (int x = 0; x < editor->Cols(); ++x)
+                    {
+                        const detail::TileConfigGrid* grid = editor->At(x, y);
+                        if (!grid)
+                            continue;
+
+                        imtk::id_scope scope;
+                        scope.push(y).push(x);
+                        const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
+                        const ImVec2 rect_end = rect_start + cell_size;
+
+                        DrawActiveTexture(rect_start, rect_end, *grid, 64);
+                        auto cell = std::make_pair(x, y);
+
+                        ImGui::SetCursorScreenPos(rect_start);
+                        if (ImGui::InvisibleButton("##ToggleSelected", cell_size))
+                        {
+                            new_cell_selected = true;
+                            if (editor->selected_cell == cell)
+                                editor->selected_cell = std::nullopt;
+                            else
+                                editor->selected_cell = cell;
+                        }
+
+                        if (ImGui::IsItemHovered())
+                        {
+                            ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
+                            TextureErrorTooltip(GetActiveTexture(*grid).error);
+                        }
+
+                        if (editor->selected_cell == cell)
+                            ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::green, 0.f, 0, 4.f);
+                    }
+                }
+            }
+
+            if (ImGui::IsItemClicked() && !new_cell_selected)
+                editor->selected_cell = std::nullopt;
+
+            ImGui::TableNextColumn();
+            if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+            {
+                if (auto cell = editor->selected_cell)
+                    if (auto grid = editor->At(cell->first, cell->second))
+                        Draw(*grid);
+            }
+        }
+    }
+
+    void TilesetDocument::DrawIndividualEditor()
+    {
+        if (auto _ = imtk::table("##Table", 2))
+        {
+            ImGui::TableNextColumn();
+            if (auto _ = imtk::child("##Grid", ImVec2(0, 0), ImGuiChildFlags_Borders))
+            {
+                const float avail = std::min(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y);
+                const float cell_width = 0.2f * avail;
+                const ImVec2 cell_size(cell_width, cell_width);
+                const ImVec2 cursor = ImGui::GetCursorScreenPos();
+                const ImVec2 offset = 0.5f * (ImGui::GetContentRegionAvail() - ImVec2(avail, avail));
+
+                for (detail::GridCoordinate y = detail::GridCoordinate::Top; y <= detail::GridCoordinate::Bottom; ++y)
+                {
+                    for (detail::GridCoordinate x = detail::GridCoordinate::Left; x <= detail::GridCoordinate::Right; ++x)
+                    {
+                        imtk::id_scope scope;
+                        scope.push(y).push(x);
+                        const ImVec2 rect_start = cursor + offset + cell_size * ImVec2(x + 1, y + 1);
+                        const ImVec2 rect_end = rect_start + cell_size;
+
+                        if (y == 1 && x == 1)
+                        {
+                            DrawActiveTexture(rect_start, rect_end, _individual_editor.grid, 16);
+                            ImGui::Dummy(cell_size);
+                        }
+                        else
+                            DrawToggleCell(rect_start, rect_end, _individual_editor.grid[y][x], detail::tile_config_is_available(x, y, _individual_editor.grid));
+
+                        if (ImGui::IsItemHovered())
+                            TextureErrorTooltip(GetActiveTexture(_individual_editor.grid).error);
+                    }
+                }
+            }
+
+            ImGui::TableNextColumn();
+            if (auto _ = imtk::child("##Desc", ImVec2(0, 0), ImGuiChildFlags_Borders))
+                Draw(_individual_editor.grid);
+        }
+    }
+
+    void TilesetDocument::DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available)
+    {
+        if (available)
+            ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, on ? imtk::col::azure : imtk::col::grey(64));
+        else
+        {
+            on = false;
+            ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(32));
+        }
+
+        ImGui::GetWindowDrawList()->AddRect(rect_start, rect_end, imtk::col::black, 0.f, 0, 2.f);
+
+        ImGui::SetCursorScreenPos(rect_start);
+        if (available)
+        {
+            if (ImGui::InvisibleButton("##Click", rect_end - rect_start))
+                on = !on;
+
+            if (ImGui::IsItemHovered())
+                ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, ImGui::GetColorU32(imtk::col::white, 0.3f));
+        }
+        else
+            ImGui::Dummy(rect_end - rect_start);
+    }
+
+    void TilesetDocument::Draw(const detail::TileConfigGrid grid)
+    {
+        if (auto form = imtk::prop::form())
+        {
+            TilesetAssignmentDesc& desc = GetAssignment(grid);
+
+            if (auto scope = imtk::id_scope(&desc.texture))
+            {
+                if (auto _ = imtk::prop::make_row_scope(desc.texture.label.c_str(), desc.texture.edit, desc.texture.def))
+                {
+                    imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, grid]() -> imtk::item_result {
+                        imtk::id_scope scope(&desc.texture.value);
+
+                        imtk::item_result result = imtk::w::bound_widget<std::string>(desc.texture.edit.buffer()).draw();
+
+                        if (auto target = imtk::drag_drop_target())
+                        {
+                            std::optional<detail::ResourcePath> path;
+                            if (auto p = target.accept<TreeViewPathDDP>())
+                                path = *p;
+                            else if (auto p = target.accept<ContentBrowserPathDDP>())
+                                path = *p;
+
+                            if (path)
+                            {
+                                if (path->is_resource())
+                                {
+                                    desc.texture.edit.publish_reset(path->get_resource_shorthand());
+                                    result.modified = true;
+                                }
+                                else
+                                    imtk::notify_error("Path is not located in resource folder");
+                            }
+                        }
+
+                        desc.texture.edit.post_edit(result.state);
+                        return result;
+                    }));
+                }
+
+                desc.texture.check_undo_action();
+            }
+
+            desc.texture_index.draw();
+            desc.uvs.draw();
+            desc.reflection.draw();
+            desc.rotation.draw();
+        }
+    }
+
+    void TilesetDocument::Load(imtk::toml_node node, TilesetDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(TILESET_PARTIAL_GENERATOR);
+
+        Load(node, desc.assignments);
+    }
+
+    void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentMapDesc& desc)
+    {
+        desc.map.clear();
+        if (auto table = desc.map.subnode(node).as_table())
+        {
+            for (auto&& [key, node] : *table)
+            {
+                if (auto config = imp::stoi(key.str()))
+                    Load(imtk::toml_node(node), desc.map[*config]);
+            }
+        }
+    }
+
+    void TilesetDocument::Load(imtk::toml_node node, TilesetAssignmentDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+    }
+
+    void TilesetDocument::Dump(toml::table& table, TilesetDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(TILESET_PARTIAL_GENERATOR);
+
+        Dump(table, desc.assignments);
+    }
+
+    void TilesetDocument::Dump(toml::table& table, TilesetAssignmentMapDesc& desc)
+    {
+        toml::table subtable;
+        for (auto& [config, subdesc] : desc.map)
+        {
+            toml::table dump;
+            Dump(dump, subdesc);
+            subtable.insert_or_assign(std::to_string(config), std::move(dump));
+        }
+        desc.map.dump_into(table, std::move(subtable));
+    }
+
+    void TilesetDocument::Dump(toml::table& table, TilesetAssignmentDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(TILESET_ASSIGNMENT_GENERATOR);
+    }
+
+    TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfigGrid grid)
+    {
+        return GetAssignment(GetResolvedTileConfig(grid));
+    }
+
+    TilesetAssignmentDesc& TilesetDocument::GetAssignment(const detail::TileConfig config)
+    {
+        return _desc.scratch.assignments.map[config];
+    }
+
+    void TilesetDocument::UpdateActiveTextures()
+    {
+        for (auto& [config, active] : _textures)
+        {
+            auto& desc = GetAssignment(config);
+            if (active.current_texture_index == desc.texture_index.value && active.current_texture == desc.texture.value)
+                continue;
+
+            active.current_texture_index = desc.texture_index.value;
+            active.current_texture = desc.texture.value;
+
+            active.error = TextureError::None;
+            if (desc.texture.value.empty())
+                active.texture = {};
+            else
+            {
+                imtk::breakout_error::notify_scope ns(true);
+                try
+                {
+                    std::string filepath = detail::ResourcePath(desc.texture.value).string();
+                    GLenum min_filter, mag_filter;
+                    float scale = 1.f;
+                    bool generate_mipmaps = false;
+                    auto result = TextureDocument::LoadTextureSettings(filepath, desc.texture_index.value, min_filter, mag_filter, scale, generate_mipmaps);
+                    if (result == TextureDocument::TextureSettingsLoadResult::Success)
+                        active.texture = imtk::texture::load_generic(filepath, min_filter, mag_filter, scale, generate_mipmaps);
+                    else
+                    {
+                        switch (result)
+                        {
+                        case TextureDocument::TextureSettingsLoadResult::NotAFile:
+                            active.error = TextureError::NotAFile;
+                            break;
+                        case TextureDocument::TextureSettingsLoadResult::NotAResource:
+                            active.error = TextureError::NotAResource;
+                            break;
+                        case TextureDocument::TextureSettingsLoadResult::MissingImport:
+                            active.error = TextureError::MissingImport;
+                            break;
+                        case TextureDocument::TextureSettingsLoadResult::NotATexture:
+                            active.error = TextureError::NotATexture;
+                            break;
+                        case TextureDocument::TextureSettingsLoadResult::BadSlot:
+                            active.error = TextureError::BadSlot;
+                            break;
+                        case TextureDocument::TextureSettingsLoadResult::Corrupted:
+                        default:
+                            active.error = TextureError::CorruptedAsset;
+                            break;
+                        }
+                    }
+                }
+                catch (const imtk::breakout_error& e)
+                {
+                    e.log();
+                    active.error = TextureError::CannotLoad;
+                }
+            }
+        }
+    }
+
+    bool TilesetDocument::TextureErrorIsWarning(TextureError error)
+    {
+        return error == TextureError::BadSlot || error == TextureError::NotAResource;
+    }
+
+    void TilesetDocument::DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value)
+    {
+        auto& active = GetActiveTexture(grid);
+        if (active.error != TextureError::None && !TextureErrorIsWarning(active.error))
+            imtk::overlays::quad_error(rect_start, rect_end, imtk::col::magenta);
+        else if (active.error != TextureError::None && TextureErrorIsWarning(active.error))
+        {
+            DrawActiveTextureDirect(grid, rect_start, rect_end);
+            imtk::overlays::quad_warning(rect_start, rect_end, imtk::col::magenta);
+        }
+        else if (active.texture.empty())
+            ImGui::GetWindowDrawList()->AddRectFilled(rect_start, rect_end, imtk::col::grey(empty_gray_value));
+        else
+            DrawActiveTextureDirect(grid, rect_start, rect_end);
+    }
+
+    void TilesetDocument::DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end)
+    {
+        auto& desc = GetAssignment(grid);
+        auto& active = GetActiveTexture(grid);
+        auto uv_rect = desc.uvs.value;
+        detail::TileReflection reflection = desc.reflection.value;
+        detail::TileRotation rotation = desc.rotation.value;
+
+        std::array<ImVec2, 4> uvs;
+        uvs[0] = ImVec2(uv_rect.x1, uv_rect.y1);
+        uvs[1] = ImVec2(uv_rect.x2, uv_rect.y1);
+        uvs[2] = ImVec2(uv_rect.x2, uv_rect.y2);
+        uvs[3] = ImVec2(uv_rect.x1, uv_rect.y2);
+
+        if (static_cast<bool>(reflection & detail::TileReflection::X))
+        {
+            std::swap(uvs[0], uvs[1]);
+            std::swap(uvs[2], uvs[3]);
+        }
+
+        if (static_cast<bool>(reflection & detail::TileReflection::Y))
+        {
+            std::swap(uvs[0], uvs[3]);
+            std::swap(uvs[1], uvs[2]);
+        }
+
+        {
+            std::array<ImVec2, 4> temp;
+            for (int i = 0; i < 4; ++i)
+                temp[i] = uvs[static_cast<size_t>((i + static_cast<int>(rotation)) % 4)];
+            uvs = temp;
+        }
+
+        ImVec2 rect_delta = rect_end - rect_start;
+        ImGui::GetWindowDrawList()->AddImageQuad(active.texture.id(), rect_start, rect_start + ImVec2(rect_delta.x, 0.f),
+            rect_start + rect_delta, rect_start + ImVec2(0.f, rect_delta.y), uvs[0], uvs[1], uvs[2], uvs[3]);
+    }
+
+    void TilesetDocument::TextureErrorTooltip(TextureError error)
+    {
+        switch (error)
+        {
+        case TextureError::NotAFile:
+            ImGui::SetTooltip("Cannot find texture file");
+            break;
+        case TextureError::NotAResource:
+            ImGui::SetTooltip("Texture is not located in resource folder");
+            break;
+        case TextureError::MissingImport:
+            ImGui::SetTooltip("Texture is missing import file");
+            break;
+        case TextureError::NotATexture:
+            ImGui::SetTooltip("File is not imported as a texture");
+            break;
+        case TextureError::CorruptedAsset:
+            ImGui::SetTooltip("Import file is corrupted");
+            break;
+        case TextureError::BadSlot:
+            ImGui::SetTooltip("Bad slot index");
+            break;
+        case TextureError::CannotLoad:
+            ImGui::SetTooltip("Editor cannot load texture");
+            break;
+        }
+    }
+
+    TilesetDocument::ActiveTexture& TilesetDocument::GetActiveTexture(const detail::TileConfigGrid grid)
+    {
+        return _textures[GetResolvedTileConfig(grid)];
+    }
+
+    detail::TileConfig TilesetDocument::GetResolvedTileConfig(const detail::TileConfigGrid grid)
+    {
+        auto config = detail::tile_config_from_grid(grid);
+        detail::simplify_tile_config(config);
+        return config;
+    }
 }

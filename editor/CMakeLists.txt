@@ -5,8 +5,8 @@ include(FetchContent)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 
@@ -49,9 +49,9 @@ set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
-	glfw
-	GIT_REPOSITORY https://github.com/glfw/glfw.git
-	GIT_TAG        3.4
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
 )
 
 FetchContent_MakeAvailable(glfw)
@@ -106,7 +106,7 @@ set(GLM_BUILD_INSTALL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(
     glm
     GIT_REPOSITORY https://github.com/g-truc/glm.git
-    GIT_TAG	       1.0.1
+    GIT_TAG           1.0.1
 )
 
 FetchContent_MakeAvailable(glm)
@@ -159,13 +159,13 @@ add_executable(OlympianEditor)
 
 # Editor compile options (MSVC specific)
 if (MSVC)
-	target_compile_options(OlympianEditor PUBLIC /Zc:__cplusplus)
+    target_compile_options(OlympianEditor PUBLIC /Zc:__cplusplus)
 endif()
 
 # Editor compile definitions
 target_compile_definitions(OlympianEditor PUBLIC
-	GLEW_STATIC
-	IMGUI_DEFINE_MATH_OPERATORS
+    GLEW_STATIC
+    IMGUI_DEFINE_MATH_OPERATORS
     IMTK_KEY_TYPE=oly::detail::Key
     IMTK_KEY_DECL_PATH="assets/KeyDecl.h"
 )
@@ -174,7 +174,7 @@ target_link_libraries(OlympianEditor PRIVATE
     imgui-toolkit
     imgui_file_dialog
     glm::glm
-	libglew_static
+    libglew_static
     tomlplusplus::tomlplusplus
     imperious
 )
@@ -184,7 +184,7 @@ target_link_libraries(OlympianEditor PUBLIC OlympianDetail)
 target_include_directories(OlympianEditor PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${stb_SOURCE_DIR}
-	${nanosvg_SOURCE_DIR}/src
+    ${nanosvg_SOURCE_DIR}/src
 )
 
 target_sources(OlympianEditor PRIVATE

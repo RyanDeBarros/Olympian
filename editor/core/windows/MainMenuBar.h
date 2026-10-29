@@ -2,14 +2,14 @@
 
 namespace oly::editor
 {
-	class MainMenuBar
-	{
-	public:
-		void Init();
-		void Draw();
+    class MainMenuBar
+    {
+    public:
+        void Init();
+        void Draw();
 
-	private:
-		void DrawFileMenu();
-		void DrawViewMenu();
-	};
+    private:
+        void DrawFileMenu();
+        void DrawViewMenu();
+    };
 }

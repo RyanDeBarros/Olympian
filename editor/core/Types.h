@@ -4,75 +4,75 @@
 
 namespace oly::editor
 {
-	struct Rect
-	{
-		static inline const size_t N = 4;
+    struct Rect
+    {
+        static inline const size_t N = 4;
 
-		union
-		{
-			struct { float x1, x2, y1, y2; };
-			float v[N];
-		};
+        union
+        {
+            struct { float x1, x2, y1, y2; };
+            float v[N];
+        };
 
-		Rect();
-		Rect(float x1, float x2, float y1, float y2);
+        Rect();
+        Rect(float x1, float x2, float y1, float y2);
 
-		bool operator==(const Rect&) const;
-		bool operator!=(const Rect&) const;
+        bool operator==(const Rect&) const;
+        bool operator!=(const Rect&) const;
 
-		float* ValuePtr();
-		const float* ValuePtr() const;
-		float& operator[](size_t i);
-		float operator[](size_t i) const;
+        float* ValuePtr();
+        const float* ValuePtr() const;
+        float& operator[](size_t i);
+        float operator[](size_t i) const;
 
-		friend std::ostream& operator<<(std::ostream& os, Rect rect);
-	};
+        friend std::ostream& operator<<(std::ostream& os, Rect rect);
+    };
 
-	struct UVRect
-	{
-		static inline const size_t N = 4;
+    struct UVRect
+    {
+        static inline const size_t N = 4;
 
-		union
-		{
-			struct { float x1, x2, y1, y2; };
-			float v[N];
-		};
+        union
+        {
+            struct { float x1, x2, y1, y2; };
+            float v[N];
+        };
 
-		UVRect();
-		UVRect(float x1, float x2, float y1, float y2);
+        UVRect();
+        UVRect(float x1, float x2, float y1, float y2);
 
-		bool operator==(const UVRect&) const;
-		bool operator!=(const UVRect&) const;
+        bool operator==(const UVRect&) const;
+        bool operator!=(const UVRect&) const;
 
-		float* ValuePtr();
-		const float* ValuePtr() const;
-		float& operator[](size_t i);
-		float operator[](size_t i) const;
+        float* ValuePtr();
+        const float* ValuePtr() const;
+        float& operator[](size_t i);
+        float operator[](size_t i) const;
 
-		friend std::ostream& operator<<(std::ostream& os, UVRect uv_rect);
-	};
+        friend std::ostream& operator<<(std::ostream& os, UVRect uv_rect);
+    };
 
-	struct TopSidePadding
-	{
-		static inline const size_t N = 3;
+    struct TopSidePadding
+    {
+        static inline const size_t N = 3;
 
-		union
-		{
-			struct { float left, right, top; };
-			float v[N];
-		};
+        union
+        {
+            struct { float left, right, top; };
+            float v[N];
+        };
 
-		TopSidePadding();
-		TopSidePadding(float left, float right, float top);
+        TopSidePadding();
+        TopSidePadding(float left, float right, float top);
 
-		bool operator==(const TopSidePadding&) const;
-		bool operator!=(const TopSidePadding&) const;
+        bool operator==(const TopSidePadding&) const;
+        bool operator!=(const TopSidePadding&) const;
 
-		float* ValuePtr();
-		const float* ValuePtr() const;
-		float& operator[](size_t i);
-		float operator[](size_t i) const;
+        float* ValuePtr();
+        const float* ValuePtr() const;
+        float& operator[](size_t i);
+        float operator[](size_t i) const;
 
-		friend std::ostream& operator<<(std::ostream& os, TopSidePadding padding);
-	};
+        friend std::ostream& operator<<(std::ostream& os, TopSidePadding padding);
+    };
 }

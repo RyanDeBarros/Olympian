@@ -19,397 +19,397 @@
 
 namespace oly::editor
 {
-	TreeViewNode::TreeViewNode(std::filesystem::path path)
-		: path(std::move(path))
-	{
-		Analyse();
-	}
+    TreeViewNode::TreeViewNode(std::filesystem::path path)
+        : path(std::move(path))
+    {
+        Analyse();
+    }
 
-	void TreeViewNode::Analyse()
-	{
-		is_import = PathInfo::IsImportFile(path);
+    void TreeViewNode::Analyse()
+    {
+        is_import = PathInfo::IsImportFile(path);
 
-		detail::ResourcePath res(path);
-		if (res.is_resource() && !std::filesystem::is_directory(path))
-			icon = PathInfo::GetIcon(res.get_import_path().get_absolute());
-		else
-			icon = PathInfo::GetIcon(path);
-	}
+        detail::ResourcePath res(path);
+        if (res.is_resource() && !std::filesystem::is_directory(path))
+            icon = PathInfo::GetIcon(res.get_import_path().get_absolute());
+        else
+            icon = PathInfo::GetIcon(path);
+    }
 
-	void TreeViewNode::Update()
-	{
-		const float update_interval = Editor::GetPreferences().tree_view->advanced->AnalysisInterval();
-		timer += ImGui::GetIO().DeltaTime;
-		if (timer >= update_interval)
-		{
-			timer = fmod(timer, update_interval);
-			Analyse();
-		}
-	}
+    void TreeViewNode::Update()
+    {
+        const float update_interval = Editor::GetPreferences().tree_view->advanced->AnalysisInterval();
+        timer += ImGui::GetIO().DeltaTime;
+        if (timer >= update_interval)
+        {
+            timer = fmod(timer, update_interval);
+            Analyse();
+        }
+    }
 
-	std::string TreeViewNode::Name() const
-	{
-		return path.filename().generic_string();
-	}
+    std::string TreeViewNode::Name() const
+    {
+        return path.filename().generic_string();
+    }
 
-	std::string TreeViewNode::DisplayName() const
-	{
-		const std::string name = Name();
-		return path == ProjectInfo::Instance().ProjectRoot() ? name + " (" + path.generic_string() + ")" : name;
-	}
+    std::string TreeViewNode::DisplayName() const
+    {
+        const std::string name = Name();
+        return path == ProjectInfo::Instance().ProjectRoot() ? name + " (" + path.generic_string() + ")" : name;
+    }
 
-	void TreeViewNode::Validate()
-	{
-		if (!std::filesystem::exists(path))
-		{
-			subnodes.clear();
-			return;
-		}
+    void TreeViewNode::Validate()
+    {
+        if (!std::filesystem::exists(path))
+        {
+            subnodes.clear();
+            return;
+        }
 
-		if (IsBranching() && dropdown_open)
-			RefreshSubnodes();
+        if (IsBranching() && dropdown_open)
+            RefreshSubnodes();
 
-		for (auto& subnode : subnodes)
-			subnode->Validate();
-	}
+        for (auto& subnode : subnodes)
+            subnode->Validate();
+    }
 
-	bool TreeViewNode::IsBranching() const
-	{
-		return std::filesystem::is_directory(path);
-	}
+    bool TreeViewNode::IsBranching() const
+    {
+        return std::filesystem::is_directory(path);
+    }
 
-	void TreeViewNode::Open()
-	{
-		if (std::filesystem::is_regular_file(path))
-			Editor::OpenFile(path);
-		else if (std::filesystem::is_directory(path))
-			OpenBranch();
-	}
+    void TreeViewNode::Open()
+    {
+        if (std::filesystem::is_regular_file(path))
+            Editor::OpenFile(path);
+        else if (std::filesystem::is_directory(path))
+            OpenBranch();
+    }
 
-	void TreeViewNode::OpenBranch()
-	{
-		if (IsBranching() && !dropdown_open)
-		{
-			dropdown_open = true;
-			RefreshSubnodes();
-		}
-	}
+    void TreeViewNode::OpenBranch()
+    {
+        if (IsBranching() && !dropdown_open)
+        {
+            dropdown_open = true;
+            RefreshSubnodes();
+        }
+    }
 
-	void TreeViewNode::CloseBranch()
-	{
-		if (IsBranching() && dropdown_open)
-		{
-			dropdown_open = false;
-			if (IsFullyCollapsed())
-				subnodes.clear();
-		}
-	}
+    void TreeViewNode::CloseBranch()
+    {
+        if (IsBranching() && dropdown_open)
+        {
+            dropdown_open = false;
+            if (IsFullyCollapsed())
+                subnodes.clear();
+        }
+    }
 
-	void TreeViewNode::RefreshSubnodes()
-	{
-		std::unordered_set<std::filesystem::path> existing;
-		std::error_code ec;
-		for (const auto& entry : std::filesystem::directory_iterator(path, std::filesystem::directory_options::skip_permission_denied, ec))
-		{
-			if (ec)
-			{
-				imtk::log_error("TreeViewNode::RefreshSubnodes(): " + ec.message());
-				subnodes.clear();
-				return;
-			}
+    void TreeViewNode::RefreshSubnodes()
+    {
+        std::unordered_set<std::filesystem::path> existing;
+        std::error_code ec;
+        for (const auto& entry : std::filesystem::directory_iterator(path, std::filesystem::directory_options::skip_permission_denied, ec))
+        {
+            if (ec)
+            {
+                imtk::log_error("TreeViewNode::RefreshSubnodes(): " + ec.message());
+                subnodes.clear();
+                return;
+            }
 
-			existing.insert(entry.path());
-		}
+            existing.insert(entry.path());
+        }
 
-		// remove old paths
-		for (auto it = subnodes.begin(); it != subnodes.end();)
-		{
-			auto eit = existing.find((*it)->path);
-			if (eit != existing.end())
-			{
-				existing.erase(eit);
-				++it;
-			}
-			else
-				it = subnodes.erase(it);
-		}
+        // remove old paths
+        for (auto it = subnodes.begin(); it != subnodes.end();)
+        {
+            auto eit = existing.find((*it)->path);
+            if (eit != existing.end())
+            {
+                existing.erase(eit);
+                ++it;
+            }
+            else
+                it = subnodes.erase(it);
+        }
 
-		// add new paths
-		for (auto it = existing.begin(); it != existing.end(); ++it)
-			subnodes.push_back(std::make_unique<TreeViewNode>(*it));
+        // add new paths
+        for (auto it = existing.begin(); it != existing.end(); ++it)
+            subnodes.push_back(std::make_unique<TreeViewNode>(*it));
 
-		std::ranges::sort(subnodes, [](const auto& a, const auto& b) {
-			const bool adir = std::filesystem::is_directory(a->path);
-			const bool bdir = std::filesystem::is_directory(b->path);
+        std::ranges::sort(subnodes, [](const auto& a, const auto& b) {
+            const bool adir = std::filesystem::is_directory(a->path);
+            const bool bdir = std::filesystem::is_directory(b->path);
 
-			if (adir != bdir)
-				return adir > bdir;
+            if (adir != bdir)
+                return adir > bdir;
 
-			return a->path.filename() < b->path.filename();
-		});
-	}
+            return a->path.filename() < b->path.filename();
+        });
+    }
 
-	void TreeViewNode::CollapseAll()
-	{
-		dropdown_open = false;
-		for (auto& subnode : subnodes)
-			subnode->CollapseAll();
-	}
+    void TreeViewNode::CollapseAll()
+    {
+        dropdown_open = false;
+        for (auto& subnode : subnodes)
+            subnode->CollapseAll();
+    }
 
-	bool TreeViewNode::IsFullyCollapsed() const
-	{
-		if (dropdown_open)
-			return false;
+    bool TreeViewNode::IsFullyCollapsed() const
+    {
+        if (dropdown_open)
+            return false;
 
-		for (auto& subnode : subnodes)
-		{
-			if (!subnode->IsFullyCollapsed())
-				return false;
-		}
+        for (auto& subnode : subnodes)
+        {
+            if (!subnode->IsFullyCollapsed())
+                return false;
+        }
 
-		return true;
-	}
+        return true;
+    }
 
-	TreeViewConfig::TreeViewConfig()
-	{
-		ignore_imports.config.selected = true;
-		ignore_imports.config.icon = Icon(IconResource::FilterOff);
-		ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
-		ignore_imports.config.str_id = "##IgnoreImports";
-		ignore_imports.config.tooltip = "Ignore import files";
-	}
+    TreeViewConfig::TreeViewConfig()
+    {
+        ignore_imports.config.selected = true;
+        ignore_imports.config.icon = Icon(IconResource::FilterOff);
+        ignore_imports.config.selected_icon = Icon(IconResource::FilterOn);
+        ignore_imports.config.str_id = "##IgnoreImports";
+        ignore_imports.config.tooltip = "Ignore import files";
+    }
 
-	TreeViewPanel& TreeViewPanel::Instance()
-	{
-		if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
-			return *panel;
-		else
-			imtk::breakout_error::throw_("No instance of TreeViewPanel");
-	}
+    TreeViewPanel& TreeViewPanel::Instance()
+    {
+        if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
+            return *panel;
+        else
+            imtk::breakout_error::throw_("No instance of TreeViewPanel");
+    }
 
-	void TreeViewPanel::InitImpl()
-	{
-		_root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
-		_root->Open();
-	}
+    void TreeViewPanel::InitImpl()
+    {
+        _root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
+        _root->Open();
+    }
 
-	const char* TreeViewPanel::GetTitle() const
-	{
-		return "Tree View";
-	}
+    const char* TreeViewPanel::GetTitle() const
+    {
+        return "Tree View";
+    }
 
-	void TreeViewPanel::Draw()
-	{
-		auto window = DrawDockedWindow();
-		if (window.IsVisible())
-		{
-			DrawHeader();
+    void TreeViewPanel::Draw()
+    {
+        auto window = DrawDockedWindow();
+        if (window.IsVisible())
+        {
+            DrawHeader();
 
-			_root->Validate();
+            _root->Validate();
 
-			std::stack<std::pair<TreeViewNode*, int>> process;
-			process.push(std::make_pair(_root.get(), 0));
-			int local_file_index = 0;
+            std::stack<std::pair<TreeViewNode*, int>> process;
+            process.push(std::make_pair(_root.get(), 0));
+            int local_file_index = 0;
 
-			while (!process.empty())
-			{
-				auto [node, indent] = process.top();
-				process.pop();
-				node->Update();
+            while (!process.empty())
+            {
+                auto [node, indent] = process.top();
+                process.pop();
+                node->Update();
 
-				if (!PassesFilter(*node))
-					continue;
+                if (!PassesFilter(*node))
+                    continue;
 
-				DrawNode(*node, indent, local_file_index);
+                DrawNode(*node, indent, local_file_index);
 
-				if (node->IsBranching() && node->dropdown_open)
-				{
-					for (auto it = node->subnodes.rbegin(); it != node->subnodes.rend(); ++it)
-						process.push(std::make_pair(it->get(), indent + 1));
-				}
-			}
-		}
-	}
+                if (node->IsBranching() && node->dropdown_open)
+                {
+                    for (auto it = node->subnodes.rbegin(); it != node->subnodes.rend(); ++it)
+                        process.push(std::make_pair(it->get(), indent + 1));
+                }
+            }
+        }
+    }
 
-	TreeViewPanel& TreeViewPanel::FocusInstance()
-	{
-		TreeViewPanel& panel = Instance();
-		panel.Open();
-		panel.GainFocus();
-		return panel;
-	}
+    TreeViewPanel& TreeViewPanel::FocusInstance()
+    {
+        TreeViewPanel& panel = Instance();
+        panel.Open();
+        panel.GainFocus();
+        return panel;
+    }
 
-	void TreeViewPanel::ShowResourceFolderInTreeView(const detail::ResourcePath& folder)
-	{
-		std::vector<std::string> parts;
+    void TreeViewPanel::ShowResourceFolderInTreeView(const detail::ResourcePath& folder)
+    {
+        std::vector<std::string> parts;
 
-		if (folder.is_resource_root())
-			parts = { "res" };
-		else
-		{
-			if (!folder.is_directory())
-			{
-				imtk::notify_error("\"" + folder.string() + "\" is not a folder");
-				return;
-			}
+        if (folder.is_resource_root())
+            parts = { "res" };
+        else
+        {
+            if (!folder.is_directory())
+            {
+                imtk::notify_error("\"" + folder.string() + "\" is not a folder");
+                return;
+            }
 
-			if (!folder.resource_parents(parts))
-			{
-				imtk::notify_error("\"" + folder.string() + "\" is not located in the project resource folder");
-				return;
-			}
+            if (!folder.resource_parents(parts))
+            {
+                imtk::notify_error("\"" + folder.string() + "\" is not located in the project resource folder");
+                return;
+            }
 
-			parts.push_back(folder.filename());
-			parts.insert(parts.begin(), "res");
-		}
+            parts.push_back(folder.filename());
+            parts.insert(parts.begin(), "res");
+        }
 
-		std::vector<TreeViewNode*> open_nodes;
-		TreeViewNode* node = FocusInstance()._root.get();
-		open_nodes.push_back(node);
-		for (const auto& parent : parts)
-		{
-			bool found = false;
-			for (auto& subnode : node->subnodes)
-			{
-				if (detail::ResourcePath(subnode->path).filename() == parent)
-				{
-					node = subnode.get();
-					node->RefreshSubnodes();
-					open_nodes.push_back(node);
-					found = true;
-					break;
-				}
-			}
+        std::vector<TreeViewNode*> open_nodes;
+        TreeViewNode* node = FocusInstance()._root.get();
+        open_nodes.push_back(node);
+        for (const auto& parent : parts)
+        {
+            bool found = false;
+            for (auto& subnode : node->subnodes)
+            {
+                if (detail::ResourcePath(subnode->path).filename() == parent)
+                {
+                    node = subnode.get();
+                    node->RefreshSubnodes();
+                    open_nodes.push_back(node);
+                    found = true;
+                    break;
+                }
+            }
 
-			if (!found)
-			{
-				imtk::notify_error("Could not locate \"" + folder.string() + "\" in tree view");
-				return;
-			}
-		}
+            if (!found)
+            {
+                imtk::notify_error("Could not locate \"" + folder.string() + "\" in tree view");
+                return;
+            }
+        }
 
-		for (TreeViewNode* node : open_nodes)
-			node->OpenBranch();
-	}
+        for (TreeViewNode* node : open_nodes)
+            node->OpenBranch();
+    }
 
-	bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
-	{
-		if (_config.ignore_imports.selected() && node.is_import)
-			return false;
+    bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
+    {
+        if (_config.ignore_imports.selected() && node.is_import)
+            return false;
 
-		if (node.Name()[0] == '.')
-			return false;
+        if (node.Name()[0] == '.')
+            return false;
 
-		return true;
-	}
+        return true;
+    }
 
-	void TreeViewPanel::DrawHeader()
-	{
-		_config.ignore_imports.draw();
-		
-		ImGui::SameLine();
-		if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
-			_root->CollapseAll();
-		
-		ImGui::Separator();
-	}
+    void TreeViewPanel::DrawHeader()
+    {
+        _config.ignore_imports.draw();
 
-	void TreeViewPanel::DrawNode(TreeViewNode& node, int indent, int& local_file_index)
-	{
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + indent * ImGui::GetStyle().IndentSpacing);
+        ImGui::SameLine();
+        if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
+            _root->CollapseAll();
 
-		DrawRowBg(node, local_file_index);
-		DrawNodePrefix(node);
+        ImGui::Separator();
+    }
 
-		imtk::id_scope scope(&node);
-		ImGui::Selectable(node.DisplayName().c_str());
+    void TreeViewPanel::DrawNode(TreeViewNode& node, int indent, int& local_file_index)
+    {
+        ImGui::SetCursorPosX(ImGui::GetCursorPosX() + indent * ImGui::GetStyle().IndentSpacing);
 
-		if (auto _ = imtk::drag_drop_source())
-		{
-			imtk::send_drag_drop_payload(TreeViewPathDDP(node.path.string()));
-			ImGui::TextUnformatted("Drag path");
-		}
+        DrawRowBg(node, local_file_index);
+        DrawNodePrefix(node);
 
-		if (auto _ = imtk::context_menu::item("##NodeContextMenu"))
-		{
-			if (ImGui::MenuItem("Open"))
-				node.Open();
+        imtk::id_scope scope(&node);
+        ImGui::Selectable(node.DisplayName().c_str());
 
-			if (ImGui::MenuItem("Show in Content Browser"))
-				ContentBrowserPanel::ShowInContentBrowser(node.path);
+        if (auto _ = imtk::drag_drop_source())
+        {
+            imtk::send_drag_drop_payload(TreeViewPathDDP(node.path.string()));
+            ImGui::TextUnformatted("Drag path");
+        }
 
-			if (ImGui::MenuItem("Reveal in Explorer"))
-				PathInfo::RevealInExplorer(node.path, false);
-		}
+        if (auto _ = imtk::context_menu::item("##NodeContextMenu"))
+        {
+            if (ImGui::MenuItem("Open"))
+                node.Open();
 
-		if (ImGui::IsItemHovered())
-		{
-			if (imtk::nav::lmb().double_clicked)
-				node.Open();
-		}
-	}
+            if (ImGui::MenuItem("Show in Content Browser"))
+                ContentBrowserPanel::ShowInContentBrowser(node.path);
 
-	void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)
-	{
-		if (node.IsBranching())
-		{
-			imtk::id_scope scope(&node);
-			if (node.dropdown_open)
-			{
-				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronDown), .str_id = "##Dropdown-Down"}).draw())
-					node.CloseBranch();
-			}
-			else
-			{
-				if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronRight), .str_id = "##Dropdown-Right"}).draw())
-					node.OpenBranch();
-			}
-			ImGui::SameLine();
-		}
-		else
-		{
-			ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
-			ImGui::SameLine();
-		}
+            if (ImGui::MenuItem("Reveal in Explorer"))
+                PathInfo::RevealInExplorer(node.path, false);
+        }
 
-		ImVec2 cursor = ImGui::GetCursorScreenPos();
-		ImVec2 size(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
-		ImGui::GetWindowDrawList()->AddImage(node.icon.id(), cursor, cursor + size);
-		ImGui::Dummy(size);
-		ImGui::SameLine();
-	}
+        if (ImGui::IsItemHovered())
+        {
+            if (imtk::nav::lmb().double_clicked)
+                node.Open();
+        }
+    }
 
-	void TreeViewPanel::DrawRowBg(TreeViewNode& node, int& local_file_index)
-	{
-		ImVec2 start = ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight(), 0);
-		ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
+    void TreeViewPanel::DrawNodePrefix(TreeViewNode& node)
+    {
+        if (node.IsBranching())
+        {
+            imtk::id_scope scope(&node);
+            if (node.dropdown_open)
+            {
+                if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronDown), .str_id = "##Dropdown-Down" }).draw())
+                    node.CloseBranch();
+            }
+            else
+            {
+                if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronRight), .str_id = "##Dropdown-Right" }).draw())
+                    node.OpenBranch();
+            }
+            ImGui::SameLine();
+        }
+        else
+        {
+            ImGui::Dummy(ImVec2(ImGui::GetFrameHeight(), ImGui::GetFrameHeight()));
+            ImGui::SameLine();
+        }
 
-		if (node.IsBranching())
-		{
-			ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_Header, 0.6f), 6.0f);
-			local_file_index = 0;
-		}
-		else
-		{
-			if (local_file_index % 2 == 1)
-				ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.15f));
+        ImVec2 cursor = ImGui::GetCursorScreenPos();
+        ImVec2 size(ImGui::GetFrameHeight(), ImGui::GetFrameHeight());
+        ImGui::GetWindowDrawList()->AddImage(node.icon.id(), cursor, cursor + size);
+        ImGui::Dummy(size);
+        ImGui::SameLine();
+    }
 
-			++local_file_index;
-		}
-	}
+    void TreeViewPanel::DrawRowBg(TreeViewNode& node, int& local_file_index)
+    {
+        ImVec2 start = ImGui::GetCursorScreenPos() + ImVec2(ImGui::GetFrameHeight(), 0);
+        ImVec2 end = start + ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetFrameHeight());
 
-	TreeViewPathDDP::TreeViewPathDDP(std::string path)
-		: path(std::move(path))
-	{
-	}
+        if (node.IsBranching())
+        {
+            ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_Header, 0.6f), 6.0f);
+            local_file_index = 0;
+        }
+        else
+        {
+            if (local_file_index % 2 == 1)
+                ImGui::GetWindowDrawList()->AddRectFilled(start, end, ImGui::GetColorU32(ImGuiCol_FrameBg, 0.15f));
 
-	void TreeViewPathDDP::send(const std::function<void(const void*, size_t)>& dump) const
-	{
-		dump(path.data(), path.size());
-	}
+            ++local_file_index;
+        }
+    }
+
+    TreeViewPathDDP::TreeViewPathDDP(std::string path)
+        : path(std::move(path))
+    {
+    }
+
+    void TreeViewPathDDP::send(const std::function<void(const void*, size_t)>& dump) const
+    {
+        dump(path.data(), path.size());
+    }
 }
 
 std::string_view imtk::drag_drop_convert<oly::editor::TreeViewPathDDP>::view(const void* buf, size_t size) const
 {
-	return std::string_view(static_cast<const char*>(buf), size);
+    return std::string_view(static_cast<const char*>(buf), size);
 }

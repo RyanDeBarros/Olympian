@@ -12,46 +12,46 @@
 
 namespace oly::editor
 {
-	class FontDocument : public IDocument
-	{
-		imtk::desc::doubler<FullFontDesc> _desc;
-		detail::MetaMap _meta;
-		imtk::w::owned_list_indexer _atlas_slots;
-		imtk::w::simple_widget<std::string> _display_text;
-		imtk::font_instance _preview_font;
-		imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> _glyph_counter;
-		
-	public:
-		FontDocument(detail::ResourcePath oly_path);
+    class FontDocument : public IDocument
+    {
+        imtk::desc::doubler<FullFontDesc> _desc;
+        detail::MetaMap _meta;
+        imtk::w::owned_list_indexer _atlas_slots;
+        imtk::w::simple_widget<std::string> _display_text;
+        imtk::font_instance _preview_font;
+        imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> _glyph_counter;
 
-		static const char* GetVersion();
+    public:
+        FontDocument(detail::ResourcePath oly_path);
 
-		void InitImpl() override;
-		void Draw() override;
-		void LoadImpl() override;
-		void DumpImpl() override;
-		void ResetAssetImpl() override;
-		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
-		imtk::desc::idoubler& GetDoubleDescriptor() override;
+        static const char* GetVersion();
 
-		detail::ResourcePath GetSourcePath() const;
+        void InitImpl() override;
+        void Draw() override;
+        void LoadImpl() override;
+        void DumpImpl() override;
+        void ResetAssetImpl() override;
+        const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+        imtk::desc::idoubler& GetDoubleDescriptor() override;
 
-	private:
-		void DrawFontFace();
-		void DrawFontAtlases();
-		void DrawAtlasPreview();
-		
-		void Draw(FontFaceDesc& desc);
-		void Draw(FontAtlasDesc& desc);
+        detail::ResourcePath GetSourcePath() const;
 
-		void Load(imtk::toml_node node, FullFontDesc& desc);
-		void Load(imtk::toml_node node, FontFaceDesc& desc);
-		void Load(imtk::toml_node node, KerningDesc& desc);
-		void Load(imtk::toml_node node, FontAtlasDesc& desc);
+    private:
+        void DrawFontFace();
+        void DrawFontAtlases();
+        void DrawAtlasPreview();
 
-		void Dump(toml::table& table, FullFontDesc& desc);
-		void Dump(toml::table& table, FontFaceDesc& desc);
-		void Dump(toml::table& table, KerningDesc& desc);
-		void Dump(toml::table& table, FontAtlasDesc& desc);
-	};
+        void Draw(FontFaceDesc& desc);
+        void Draw(FontAtlasDesc& desc);
+
+        void Load(imtk::toml_node node, FullFontDesc& desc);
+        void Load(imtk::toml_node node, FontFaceDesc& desc);
+        void Load(imtk::toml_node node, KerningDesc& desc);
+        void Load(imtk::toml_node node, FontAtlasDesc& desc);
+
+        void Dump(toml::table& table, FullFontDesc& desc);
+        void Dump(toml::table& table, FontFaceDesc& desc);
+        void Dump(toml::table& table, KerningDesc& desc);
+        void Dump(toml::table& table, FontAtlasDesc& desc);
+    };
 }

@@ -1,4 +1,4 @@
 target_sources(OlympianEditor PRIVATE
-	FIOOperation.cpp
-	Trashcan.cpp
+    FIOOperation.cpp
+    Trashcan.cpp
 )

@@ -8,32 +8,32 @@
 
 namespace oly::editor
 {
-	class FontFamilyDocument : public IDocument
-	{
-		imtk::desc::doubler<FontFamilyDesc> _desc;
-		detail::MetaMap _meta;
+    class FontFamilyDocument : public IDocument
+    {
+        imtk::desc::doubler<FontFamilyDesc> _desc;
+        detail::MetaMap _meta;
 
-	public:
-		using IDocument::IDocument;
+    public:
+        using IDocument::IDocument;
 
-		static const char* GetVersion();
+        static const char* GetVersion();
 
-		void InitImpl() override;
-		void Draw() override;
-		void LoadImpl() override;
-		void DumpImpl() override;
-		void ResetAssetImpl() override;
-		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
-		imtk::desc::idoubler& GetDoubleDescriptor() override;
+        void InitImpl() override;
+        void Draw() override;
+        void LoadImpl() override;
+        void DumpImpl() override;
+        void ResetAssetImpl() override;
+        const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+        imtk::desc::idoubler& GetDoubleDescriptor() override;
 
-	private:
-		void Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
-		void Draw(FontStyleDesc& desc);
+    private:
+        void Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);
+        void Draw(FontStyleDesc& desc);
 
-		void Load(imtk::toml_node node, FontFamilyDesc& desc);
-		void Load(imtk::toml_node node, FontStyleDesc& desc);
+        void Load(imtk::toml_node node, FontFamilyDesc& desc);
+        void Load(imtk::toml_node node, FontStyleDesc& desc);
 
-		void Dump(toml::table& table, FontFamilyDesc& desc);
-		void Dump(toml::table& table, FontStyleDesc& desc);
-	};
+        void Dump(toml::table& table, FontFamilyDesc& desc);
+        void Dump(toml::table& table, FontStyleDesc& desc);
+    };
 }

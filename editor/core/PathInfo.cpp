@@ -18,10 +18,10 @@
 
 namespace oly::editor
 {
-	bool PathInfo::IsImportFile(const std::filesystem::path& path)
-	{
-		return path.extension() == ".oly" && detail::MetaSplitter::decode_meta(path.string().c_str()).is_import();
-	}
+    bool PathInfo::IsImportFile(const std::filesystem::path& path)
+    {
+        return path.extension() == ".oly" && detail::MetaSplitter::decode_meta(path.string().c_str()).is_import();
+    }
 
     static IconResource GetIconResource(const std::filesystem::path& path)
     {
@@ -69,8 +69,8 @@ namespace oly::editor
         }
     }
 
-	void PathInfo::RevealInExplorer(const std::filesystem::path& path, bool open_folder_contents)
-	{
+    void PathInfo::RevealInExplorer(const std::filesystem::path& path, bool open_folder_contents)
+    {
 #ifdef OLY_OS_WINDOWS
         std::filesystem::path abs = std::filesystem::absolute(path);
 
@@ -109,7 +109,7 @@ namespace oly::editor
 
         std::system(cmd.c_str());
 #endif
-	}
+    }
 
     std::string PathInfo::NameOf(const std::filesystem::path& path)
     {

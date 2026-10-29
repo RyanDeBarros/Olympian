@@ -8,40 +8,40 @@
 namespace oly::editor
 {
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
-		M((imtk::field::string_fld), texture) \
-		M((imtk::field::int_fld<imp::potential<int>(0), imp::nullpotential>), texture_index) \
-		M((imtk::field::uv_rect_fld), uvs) \
-		M((imtk::field::bitset_fld<detail::TileReflection, detail::kTileReflectionBitsetCount>), reflection) \
-		M((imtk::field::enum_fld<detail::TileRotation>), rotation)
+        M((imtk::field::string_fld), texture) \
+        M((imtk::field::int_fld<imp::potential<int>(0), imp::nullpotential>), texture_index) \
+        M((imtk::field::uv_rect_fld), uvs) \
+        M((imtk::field::bitset_fld<detail::TileReflection, detail::kTileReflectionBitsetCount>), reflection) \
+        M((imtk::field::enum_fld<detail::TileRotation>), rotation)
 
-	struct TilesetAssignmentDesc
-	{
-		IMTK_DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
+    struct TilesetAssignmentDesc
+    {
+        IMTK_DESCRIPTOR_BODY(TilesetAssignmentDesc, TILESET_ASSIGNMENT_GENERATOR);
 
-		TilesetAssignmentDesc(imtk::datapath_link link = {});
-	};
+        TilesetAssignmentDesc(imtk::datapath_link link = {});
+    };
 
 #define TILESET_ASSIGNMENT_MAP_GENERATOR(M) \
-		M((imtk::desc::map<detail::TileConfig, TilesetAssignmentDesc>), map)
+        M((imtk::desc::map<detail::TileConfig, TilesetAssignmentDesc>), map)
 
-	struct TilesetAssignmentMapDesc
-	{
-		IMTK_DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
+    struct TilesetAssignmentMapDesc
+    {
+        IMTK_DESCRIPTOR_BODY(TilesetAssignmentMapDesc, TILESET_ASSIGNMENT_MAP_GENERATOR);
 
-		TilesetAssignmentMapDesc(imtk::datapath_link link = {});
-	};
+        TilesetAssignmentMapDesc(imtk::datapath_link link = {});
+    };
 
 #define TILESET_PARTIAL_GENERATOR(M) \
-		M((imtk::field::enum_fld<detail::StorageMode>), storage)
+        M((imtk::field::enum_fld<detail::StorageMode>), storage)
 
 #define TILESET_GENERATOR(M) \
-		TILESET_PARTIAL_GENERATOR(M) \
-		M((TilesetAssignmentMapDesc), assignments)
+        TILESET_PARTIAL_GENERATOR(M) \
+        M((TilesetAssignmentMapDesc), assignments)
 
-	struct TilesetDesc
-	{
-		IMTK_DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
+    struct TilesetDesc
+    {
+        IMTK_DESCRIPTOR_BODY(TilesetDesc, TILESET_GENERATOR);
 
-		TilesetDesc(imtk::datapath_link link = {});
-	};
+        TilesetDesc(imtk::datapath_link link = {});
+    };
 }

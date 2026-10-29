@@ -8,103 +8,103 @@
 
 namespace oly::editor
 {
-	struct PreviewNav
-	{
-		ImVec2 pos = ImVec2(0, 0);
-		float zoom = 0.f;
-		float svg_scale = 1.f;
-	};
+    struct PreviewNav
+    {
+        ImVec2 pos = ImVec2(0, 0);
+        float zoom = 0.f;
+        float svg_scale = 1.f;
+    };
 
-	struct SpritesheetPreviewData
-	{
-		imtk::w::icon_button preview;
-		imtk::w::icon_button playing;
+    struct SpritesheetPreviewData
+    {
+        imtk::w::icon_button preview;
+        imtk::w::icon_button playing;
 
-		int active_index = 0;
-		float timer = 0.f;
+        int active_index = 0;
+        float timer = 0.f;
 
-		SpritesheetPreviewData();
-	};
+        SpritesheetPreviewData();
+    };
 
-	struct SpritesheetInfo
-	{
-		int rows, cols;
-		float cell_width, cell_height;
-		float full_width, full_height;
-		ImVec2 rect_offset;
-	};
+    struct SpritesheetInfo
+    {
+        int rows, cols;
+        float cell_width, cell_height;
+        float full_width, full_height;
+        ImVec2 rect_offset;
+    };
 
-	class TextureDocument : public IDocument
-	{
-		imtk::desc::doubler<TextureFullDesc> _desc;
-		detail::MetaMap _meta;
-		bool _gif = false;
-		bool _svg = false;
-		imtk::w::owned_list_indexer _slots;
-		imtk::texture _texture;
-		PreviewNav _preview_nav;
-		
-		bool _stale_preview_texture = true;
-		SpritesheetPreviewData _spritesheet_preview_data;
+    class TextureDocument : public IDocument
+    {
+        imtk::desc::doubler<TextureFullDesc> _desc;
+        detail::MetaMap _meta;
+        bool _gif = false;
+        bool _svg = false;
+        imtk::w::owned_list_indexer _slots;
+        imtk::texture _texture;
+        PreviewNav _preview_nav;
 
-	public:
-		TextureDocument(detail::ResourcePath oly_path);
+        bool _stale_preview_texture = true;
+        SpritesheetPreviewData _spritesheet_preview_data;
 
-		static const char* GetVersion();
+    public:
+        TextureDocument(detail::ResourcePath oly_path);
 
-		void InitImpl() override;
-		void Draw() override;
-		void LoadImpl() override;
-		void DumpImpl() override;
-		void ResetAssetImpl() override;
-		const imtk::desc::idoubler& GetDoubleDescriptor() const override;
-		imtk::desc::idoubler& GetDoubleDescriptor() override;
+        static const char* GetVersion();
 
-		detail::ResourcePath GetSourcePath() const;
+        void InitImpl() override;
+        void Draw() override;
+        void LoadImpl() override;
+        void DumpImpl() override;
+        void ResetAssetImpl() override;
+        const imtk::desc::idoubler& GetDoubleDescriptor() const override;
+        imtk::desc::idoubler& GetDoubleDescriptor() override;
 
-	private:
-		void UpdatePreviewTexture();
-		void DrawPreview();
-		SpritesheetDesc* SpritesheetPreview();
-		SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
-		void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
-		void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
-		
-		void Draw(TextureFullDesc& desc);
-		void Draw(RasterTextureDesc& desc);
-		void Draw(VectorTextureDesc& desc);
-		void Draw(BaseTextureDesc& desc);
-		void Draw(SpritesheetDesc& desc);
+        detail::ResourcePath GetSourcePath() const;
 
-		static void Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif);
-		static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
-		static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
-		static void Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif);
-		static void Load(imtk::toml_node node, SpritesheetDesc& desc);
+    private:
+        void UpdatePreviewTexture();
+        void DrawPreview();
+        SpritesheetDesc* SpritesheetPreview();
+        SpritesheetInfo CalcSpritesheetInfo(const SpritesheetDesc& desc);
+        void DrawSpritesheetOverlay(const SpritesheetDesc& desc, ImVec2 rect_start, ImVec2 size);
+        void PlaySpritesheetAnimation(const SpritesheetDesc& desc);
 
-		void Dump(toml::table& table, TextureFullDesc& desc);
-		void Dump(toml::table& table, RasterTextureDesc& desc);
-		void Dump(toml::table& table, VectorTextureDesc& desc);
-		void Dump(toml::table& table, BaseTextureDesc& desc);
-		void Dump(toml::table& table, SpritesheetDesc& desc);
+        void Draw(TextureFullDesc& desc);
+        void Draw(RasterTextureDesc& desc);
+        void Draw(VectorTextureDesc& desc);
+        void Draw(BaseTextureDesc& desc);
+        void Draw(SpritesheetDesc& desc);
 
-		void OnActiveSlotChanged();
+        static void Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif);
+        static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
+        static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
+        static void Load(imtk::toml_node node, BaseTextureDesc& desc, bool gif);
+        static void Load(imtk::toml_node node, SpritesheetDesc& desc);
 
-		imtk::list_adapter ListAdapter();
-		std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
+        void Dump(toml::table& table, TextureFullDesc& desc);
+        void Dump(toml::table& table, RasterTextureDesc& desc);
+        void Dump(toml::table& table, VectorTextureDesc& desc);
+        void Dump(toml::table& table, BaseTextureDesc& desc);
+        void Dump(toml::table& table, SpritesheetDesc& desc);
 
-	public:
-		enum class TextureSettingsLoadResult
-		{
-			Success,
-			NotAFile,
-			NotAResource,
-			MissingImport,
-			NotATexture,
-			Corrupted,
-			BadSlot
-		};
+        void OnActiveSlotChanged();
 
-		static TextureSettingsLoadResult LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps);
-	};
+        imtk::list_adapter ListAdapter();
+        std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
+
+    public:
+        enum class TextureSettingsLoadResult
+        {
+            Success,
+            NotAFile,
+            NotAResource,
+            MissingImport,
+            NotATexture,
+            Corrupted,
+            BadSlot
+        };
+
+        static TextureSettingsLoadResult LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps);
+    };
 }

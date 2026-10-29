@@ -5,230 +5,230 @@
 
 namespace oly::editor
 {
-	static auto MakeGlyphComboName(auto& double_desc)
-	{
-		return [&double_desc](size_t i) -> std::string {
-			auto& desc = double_desc.scratch;
-			if (i < desc.glyphs.size() && !desc.glyphs[i].codepoint.value.empty())
-				return desc.glyphs[i].codepoint.value;
-			else
-				return "Glyph #" + std::to_string(i);
+    static auto MakeGlyphComboName(auto& double_desc)
+    {
+        return [&double_desc](size_t i) -> std::string {
+            auto& desc = double_desc.scratch;
+            if (i < desc.glyphs.size() && !desc.glyphs[i].codepoint.value.empty())
+                return desc.glyphs[i].codepoint.value;
+            else
+                return "Glyph #" + std::to_string(i);
         };
-	}
+    }
 
-	static imtk::w::list_indexer::config GlyphListConfig()
-	{
-		return {
-		    .prompt	        = "Select glyph",
-			.create_tooltip = "New glyph",
-			.delete_tooltip = "Delete glyph",
-			.clear_tooltip  = "Clear glyphs"
-		};
-	}
+    static imtk::w::list_indexer::config GlyphListConfig()
+    {
+        return {
+            .prompt = "Select glyph",
+            .create_tooltip = "New glyph",
+            .delete_tooltip = "Delete glyph",
+            .clear_tooltip = "Clear glyphs"
+        };
+    }
 
-	RasterFontDocument::RasterFontDocument(detail::ResourcePath oly_path)
-		: IDocument(std::move(oly_path)), _glyphs(GlyphListConfig(), MakeGlyphComboName(_desc))
-	{
-	}
+    RasterFontDocument::RasterFontDocument(detail::ResourcePath oly_path)
+        : IDocument(std::move(oly_path)), _glyphs(GlyphListConfig(), MakeGlyphComboName(_desc))
+    {
+    }
 
-	const char* RasterFontDocument::GetVersion()
-	{
-		return "1.0";
-	}
+    const char* RasterFontDocument::GetVersion()
+    {
+        return "1.0";
+    }
 
-	void RasterFontDocument::InitImpl()
-	{
-		if (!GetOlyPath().is_resource())
-			imtk::notify_warning("Asset is not located in resource folder");
+    void RasterFontDocument::InitImpl()
+    {
+        if (!GetOlyPath().is_resource())
+            imtk::notify_warning("Asset is not located in resource folder");
 
-		LoadAsset();
-	}
+        LoadAsset();
+    }
 
-	void RasterFontDocument::Draw()
-	{
-		auto pre_draw = PreDraw();
+    void RasterFontDocument::Draw()
+    {
+        auto pre_draw = PreDraw();
 
-		imtk::id_scope scope(this);
-		Draw(_desc.scratch);
-	}
+        imtk::id_scope scope(this);
+        Draw(_desc.scratch);
+    }
 
-	void RasterFontDocument::LoadImpl()
-	{
-		if (_oly_path.is_file())
-		{
-			_meta = detail::MetaSplitter::decode_meta(_oly_path);
+    void RasterFontDocument::LoadImpl()
+    {
+        if (_oly_path.is_file())
+        {
+            _meta = detail::MetaSplitter::decode_meta(_oly_path);
 
-			toml::table table;
-			std::string err = _oly_path.load_toml(table);
-			if (err.empty())
-				Load(imtk::toml_node(table), _desc.disk);
-			else
-				imtk::notify_error("cannot load raster font - corrupted asset: " + _oly_path.string());
+            toml::table table;
+            std::string err = _oly_path.load_toml(table);
+            if (err.empty())
+                Load(imtk::toml_node(table), _desc.disk);
+            else
+                imtk::notify_error("cannot load raster font - corrupted asset: " + _oly_path.string());
 
-			MarkClean();
-		}
-		else
-		{
-			Load(imtk::toml_node(), _desc.disk);
+            MarkClean();
+        }
+        else
+        {
+            Load(imtk::toml_node(), _desc.disk);
 
-			_meta = {};
-			_meta.map[detail::Key::Meta_Version] = GetVersion();
-			_meta.map[detail::Key::Meta_Import] = "0";
-			_meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_RasterFont);
+            _meta = {};
+            _meta.map[detail::Key::Meta_Version] = GetVersion();
+            _meta.map[detail::Key::Meta_Import] = "0";
+            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_RasterFont);
 
-			MarkDirty();
-		}
+            MarkDirty();
+        }
 
-		_desc.load_from_disk();
-		
-		_codepoint_counter.clear();
-		for (auto& desc : _desc.scratch.glyphs)
-			_codepoint_counter.increment(desc.codepoint.value);
+        _desc.load_from_disk();
 
-		_glyphs.model.init(ListAdapter());
-	}
+        _codepoint_counter.clear();
+        for (auto& desc : _desc.scratch.glyphs)
+            _codepoint_counter.increment(desc.codepoint.value);
 
-	void RasterFontDocument::DumpImpl()
-	{
-		toml::table table;
-		Dump(table, _desc.scratch);
-		_oly_path.dump_toml(table, _meta);
-		_desc.write_to_disk();
-		MarkClean();
-	}
+        _glyphs.model.init(ListAdapter());
+    }
 
-	void RasterFontDocument::ResetAssetImpl()
-	{
-		Load(imtk::toml_node(), _desc.scratch);
-	}
+    void RasterFontDocument::DumpImpl()
+    {
+        toml::table table;
+        Dump(table, _desc.scratch);
+        _oly_path.dump_toml(table, _meta);
+        _desc.write_to_disk();
+        MarkClean();
+    }
 
-	const imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor() const
-	{
-		return _desc;
-	}
+    void RasterFontDocument::ResetAssetImpl()
+    {
+        Load(imtk::toml_node(), _desc.scratch);
+    }
 
-	imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor()
-	{
-		return _desc;
-	}
+    const imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor() const
+    {
+        return _desc;
+    }
 
-	void RasterFontDocument::Draw(RasterFontDesc& desc)
-	{
-		if (auto form = imtk::prop::form())
-		{
-			IMTK_DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+    imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor()
+    {
+        return _desc;
+    }
 
-			if (auto subform = imtk::prop::subform("Glyphs"))
-			{
-				if (auto pause = imtk::prop::form::pause())
-				{
-					_glyphs.model.sync(ListAdapter());
+    void RasterFontDocument::Draw(RasterFontDesc& desc)
+    {
+        if (auto form = imtk::prop::form())
+        {
+            IMTK_DRAW_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-					if (auto scope = imtk::id_scope("##Glyph"))
-						_glyphs.draw();
-				}
+            if (auto subform = imtk::prop::subform("Glyphs"))
+            {
+                if (auto pause = imtk::prop::form::pause())
+                {
+                    _glyphs.model.sync(ListAdapter());
 
-				if (imtk::prop::in_form())
-				{
-					if (!desc.glyphs.empty())
-						Draw(desc.glyphs[_glyphs.model.index()]);
-				}
+                    if (auto scope = imtk::id_scope("##Glyph"))
+                        _glyphs.draw();
+                }
 
-				if (_glyphs.model.consume_ops(*ListOpAdapter()))
-					MarkDirty();
+                if (imtk::prop::in_form())
+                {
+                    if (!desc.glyphs.empty())
+                        Draw(desc.glyphs[_glyphs.model.index()]);
+                }
 
-				_glyphs.model.consume_index_modified();
-			}
-		}
-	}
+                if (_glyphs.model.consume_ops(*ListOpAdapter()))
+                    MarkDirty();
 
-	void RasterFontDocument::Draw(GlyphDesc& desc)
-	{
-		const bool empty_codepoint = desc.codepoint.value.empty();
-		const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
-		std::string previous_codepoint = desc.codepoint.value;
+                _glyphs.model.consume_index_modified();
+            }
+        }
+    }
 
-		imtk::style_stack style_stack;
-		if (empty_codepoint || duplicate_codepoint)
-		{
-			style_stack.push(ImGuiCol_Border, imtk::col::error);
-			style_stack.push(ImGuiStyleVar_FrameBorderSize, 1.f);
-		}
+    void RasterFontDocument::Draw(GlyphDesc& desc)
+    {
+        const bool empty_codepoint = desc.codepoint.value.empty();
+        const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
+        std::string previous_codepoint = desc.codepoint.value;
 
-		{
-			auto styles = style_stack.apply();
-			desc.codepoint.draw();
-		}
-		
-		if (imtk::prop::row::dirty())
-		{
-			_codepoint_counter.increment(desc.codepoint.value);
-			_codepoint_counter.decrement(previous_codepoint);
-		}
+        imtk::style_stack style_stack;
+        if (empty_codepoint || duplicate_codepoint)
+        {
+            style_stack.push(ImGuiCol_Border, imtk::col::error);
+            style_stack.push(ImGuiStyleVar_FrameBorderSize, 1.f);
+        }
+
+        {
+            auto styles = style_stack.apply();
+            desc.codepoint.draw();
+        }
+
+        if (imtk::prop::row::dirty())
+        {
+            _codepoint_counter.increment(desc.codepoint.value);
+            _codepoint_counter.decrement(previous_codepoint);
+        }
 
 
-		if (imtk::prop::row::get_draw_result().state.hovered())
-		{
-			if (empty_codepoint)
-				ImGui::SetTooltip("Codepoint is empty");
-			else if (duplicate_codepoint)
-				ImGui::SetTooltip("Duplicate codepoint");
-		}
+        if (imtk::prop::row::get_draw_result().state.hovered())
+        {
+            if (empty_codepoint)
+                ImGui::SetTooltip("Codepoint is empty");
+            else if (duplicate_codepoint)
+                ImGui::SetTooltip("Duplicate codepoint");
+        }
 
-		IMTK_DRAW_FIELDS(GLYPH_BODY_GENERATOR);
-	}
+        IMTK_DRAW_FIELDS(GLYPH_BODY_GENERATOR);
+    }
 
-	void RasterFontDocument::Load(imtk::toml_node node, RasterFontDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+    void RasterFontDocument::Load(imtk::toml_node node, RasterFontDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-		desc.glyphs.clear();
-		if (auto array = desc.glyphs.subnode(node).as_array())
-		{
-			for (size_t i = 0; i < array->size(); ++i)
-			{
-				desc.glyphs.push_back();
-				Load(imtk::toml_node(array->get(i)), desc.glyphs.back());
-			}
-		}
-	}
+        desc.glyphs.clear();
+        if (auto array = desc.glyphs.subnode(node).as_array())
+        {
+            for (size_t i = 0; i < array->size(); ++i)
+            {
+                desc.glyphs.push_back();
+                Load(imtk::toml_node(array->get(i)), desc.glyphs.back());
+            }
+        }
+    }
 
-	void RasterFontDocument::Load(imtk::toml_node node, GlyphDesc& desc)
-	{
-		IMTK_LOAD_FIELDS(GLYPH_GENERATOR);
-	}
+    void RasterFontDocument::Load(imtk::toml_node node, GlyphDesc& desc)
+    {
+        IMTK_LOAD_FIELDS(GLYPH_GENERATOR);
+    }
 
-	void RasterFontDocument::Dump(toml::table& table, RasterFontDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
+    void RasterFontDocument::Dump(toml::table& table, RasterFontDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(RASTER_FONT_PARTIAL_GENERATOR);
 
-		toml::array array;
-		array.reserve(desc.glyphs.size());
-		for (auto& subdesc : desc.glyphs)
-			Dump(array.emplace_back<toml::table>(), subdesc);
-		desc.glyphs.dump_into(table, std::move(array));
-	}
+        toml::array array;
+        array.reserve(desc.glyphs.size());
+        for (auto& subdesc : desc.glyphs)
+            Dump(array.emplace_back<toml::table>(), subdesc);
+        desc.glyphs.dump_into(table, std::move(array));
+    }
 
-	void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)
-	{
-		IMTK_DUMP_FIELDS(GLYPH_GENERATOR);
-	}
+    void RasterFontDocument::Dump(toml::table& table, GlyphDesc& desc)
+    {
+        IMTK_DUMP_FIELDS(GLYPH_GENERATOR);
+    }
 
-	imtk::list_adapter RasterFontDocument::ListAdapter()
-	{
-		return {
-			.sized = std::make_unique<imtk::vector_sized<GlyphDesc>>(_desc.scratch.glyphs),
-			.ops = ListOpAdapter()
-		};
-	}
+    imtk::list_adapter RasterFontDocument::ListAdapter()
+    {
+        return {
+            .sized = std::make_unique<imtk::vector_sized<GlyphDesc>>(_desc.scratch.glyphs),
+            .ops = ListOpAdapter()
+        };
+    }
 
-	std::unique_ptr<imtk::ilist_op_adapter> RasterFontDocument::ListOpAdapter()
-	{
-		auto callback = imtk::make_counter_callback(_codepoint_counter,
-													[this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; });
-		return std::make_unique<imtk::list_callback_adapter>(
-			std::make_unique<imtk::vector_op_adapter<GlyphDesc, GlyphDesc::Printer>>(_desc.scratch.glyphs),
-			std::move(callback)
-		);
-	}
+    std::unique_ptr<imtk::ilist_op_adapter> RasterFontDocument::ListOpAdapter()
+    {
+        auto callback = imtk::make_counter_callback(_codepoint_counter,
+            [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; });
+        return std::make_unique<imtk::list_callback_adapter>(
+            std::make_unique<imtk::vector_op_adapter<GlyphDesc, GlyphDesc::Printer>>(_desc.scratch.glyphs),
+            std::move(callback)
+        );
+    }
 }
