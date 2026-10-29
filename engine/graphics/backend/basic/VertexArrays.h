@@ -4,17 +4,17 @@
 
 namespace oly::graphics
 {
-	class VertexArray
-	{
-		GLuint id_;
+    class VertexArray
+    {
+        GLuint id_;
 
-	public:
-		VertexArray();
-		VertexArray(const VertexArray&) = delete;
-		VertexArray(VertexArray&&) noexcept;
-		~VertexArray();
-		VertexArray& operator=(VertexArray&&) noexcept;
+    public:
+        VertexArray();
+        VertexArray(const VertexArray&) = delete;
+        VertexArray(VertexArray&&) noexcept;
+        ~VertexArray();
+        VertexArray& operator=(VertexArray&&) noexcept;
 
         operator GLuint () const;
-	};
+    };
 }

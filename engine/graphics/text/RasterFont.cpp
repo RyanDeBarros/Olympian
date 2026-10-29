@@ -4,41 +4,41 @@
 
 namespace oly::rendering
 {
-	RasterFontGlyph::RasterFontGlyph(
+    RasterFontGlyph::RasterFontGlyph(
         const graphics::BindlessTextureRef& texture,
         math::IRect2D location,
-		math::TopSidePadding padding,
+        math::TopSidePadding padding,
         detail::PositioningMode origin_offset_mode,
         glm::vec2 origin_offset)
-		: texture_(texture)
-	{
-		const glm::vec2 dimensions = context::get_texture_size(texture_);
+        : texture_(texture)
+    {
+        const glm::vec2 dimensions = context::get_texture_size(texture_);
 
-		uvs_ = {
-			.x1 = location.x1 / dimensions.x,
-			.x2 = (location.x2 + 1) / dimensions.x,
-			.y1 = location.y1 / dimensions.y,
-			.y2 = (location.y2 + 1) / dimensions.y
-		};
+        uvs_ = {
+            .x1 = location.x1 / dimensions.x,
+            .x2 = (location.x2 + 1) / dimensions.x,
+            .y1 = location.y1 / dimensions.y,
+            .y2 = (location.y2 + 1) / dimensions.y
+        };
 
-		if (origin_offset_mode == detail::PositioningMode::Relative)
-		{
-			origin_offset = {
-				(location.width() + 1.0f) * origin_offset.x,
-				(location.height() + 1.0f) * (1.0f - origin_offset.y),
-			};
-		}
+        if (origin_offset_mode == detail::PositioningMode::Relative)
+        {
+            origin_offset = {
+                (location.width() + 1.0f) * origin_offset.x,
+                (location.height() + 1.0f) * (1.0f - origin_offset.y),
+            };
+        }
 
-		box_ = {
-			.x1 = -origin_offset.x,
-			.x2 = location.width() + 1 - origin_offset.x,
-			.y1 = -origin_offset.y - padding.top,
-			.y2 = location.height() + 1 - origin_offset.y - padding.top
-		};
+        box_ = {
+            .x1 = -origin_offset.x,
+            .x2 = location.width() + 1 - origin_offset.x,
+            .y1 = -origin_offset.y - padding.top,
+            .y2 = location.height() + 1 - origin_offset.y - padding.top
+        };
 
-		left_bearing_ = padding.left;
-		advance_width_ = box_.width() + padding.left + padding.right;
-	}
+        left_bearing_ = padding.left;
+        advance_width_ = box_.width() + padding.left + padding.right;
+    }
 
     graphics::BindlessTextureRef RasterFontGlyph::texture() const
     {
@@ -70,7 +70,7 @@ namespace oly::rendering
         float space_advance_width,
         float line_height,
         glm::vec2 font_scale,
-        Kerning&& kerning )
+        Kerning&& kerning)
         : glyphs_(std::move(glyphs))
         , font_scale_(font_scale)
         , kerning_(std::move(kerning))

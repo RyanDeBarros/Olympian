@@ -4,19 +4,19 @@
 
 namespace oly::rendering
 {
-	class LineExtension
-	{
-		mutable Polygon poly_;
+    class LineExtension
+    {
+        mutable Polygon poly_;
         glm::vec2 start_ = {};
         glm::vec2 end_ = {};
         glm::vec4 start_color_ = {};
         glm::vec4 end_color_ = {};
-		float width_ = 1.0f;
-		mutable bool dirty_ = false;
+        float width_ = 1.0f;
+        mutable bool dirty_ = false;
 
-	public:
-		LineExtension(Unbatched = kUnbatched);
-		LineExtension(PolygonBatch& batch);
+    public:
+        LineExtension(Unbatched = kUnbatched);
+        LineExtension(PolygonBatch& batch);
 
     public:
         internal::PolygonReference::accessor get_batch() const;
@@ -26,7 +26,7 @@ namespace oly::rendering
         void set_camera_invariant(bool camera_invariant) const;
         bool is_camera_invariant() const;
 
-		void draw() const;
+        void draw() const;
 
         glm::vec2 get_start() const;
         glm::vec2& set_start();
@@ -34,7 +34,7 @@ namespace oly::rendering
         glm::vec2& set_end();
         float get_width() const;
         void set_width(float w);
-		
+
         glm::vec4 get_start_color() const;
         glm::vec4& set_start_color();
         glm::vec4 get_end_color() const;
@@ -46,7 +46,7 @@ namespace oly::rendering
         const Transform2D& get_local() const;
         Transform2D& set_local();
 
-	private:
-		void set_default_polygon() const;
-	};
+    private:
+        void set_default_polygon() const;
+    };
 }

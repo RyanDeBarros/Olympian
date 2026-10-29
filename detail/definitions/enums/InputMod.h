@@ -2,7 +2,7 @@
 
 namespace oly::detail
 {
-	typedef unsigned int InputMod;
+	using InputMod = unsigned int;
 
 	constexpr size_t INPUT_MOD_COUNT = 6;
 	extern InputMod INPUT_MOD_DEFAULT;

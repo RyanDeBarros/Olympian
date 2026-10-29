@@ -4,60 +4,60 @@
 
 namespace oly::graphics::textures
 {
-	BindlessTextureRef white1x1_;
+    BindlessTextureRef white1x1_;
 
     BindlessTextureRef white1x1()
     {
         return white1x1_;
     }
 
-	void internal::load()
-	{
-		ImageDimensions dim{ .w = 1, .h = 1, .cpp = 4 };
-		unsigned char* buf = dim.pxnew();
-		memcpy(buf, std::array<unsigned char, 4>{ 255, 255, 255, 255 }.data(), 4 * sizeof(unsigned char));
-		white1x1_ = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
-		white1x1_->set_and_use_handle();
-	}
+    void internal::load()
+    {
+        ImageDimensions dim{ .w = 1, .h = 1, .cpp = 4 };
+        unsigned char* buf = dim.pxnew();
+        memcpy(buf, std::array<unsigned char, 4>{ 255, 255, 255, 255 }.data(), 4 * sizeof(unsigned char));
+        white1x1_ = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
+        white1x1_->set_and_use_handle();
+    }
 
-	void internal::unload()
-	{
-		white1x1_.invalidate();
-	}
+    void internal::unload()
+    {
+        white1x1_.invalidate();
+    }
 
-	BindlessTextureRef mod2x2(
+    BindlessTextureRef mod2x2(
         glm::vec<4, unsigned char> c1,
         glm::vec<4, unsigned char> c2,
         glm::vec<4, unsigned char> c3,
         glm::vec<4, unsigned char> c4)
-	{
-		ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
-		unsigned char* buf = dim.pxnew();
-		memcpy(buf + 4 * 0, glm::value_ptr(c1), 4 * sizeof(unsigned char));
-		memcpy(buf + 4 * 1, glm::value_ptr(c2), 4 * sizeof(unsigned char));
-		memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(unsigned char));
-		memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(unsigned char));
-		auto tex = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
-		tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		tex->set_and_use_handle();
-		return tex;
-	}
+    {
+        ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
+        unsigned char* buf = dim.pxnew();
+        memcpy(buf + 4 * 0, glm::value_ptr(c1), 4 * sizeof(unsigned char));
+        memcpy(buf + 4 * 1, glm::value_ptr(c2), 4 * sizeof(unsigned char));
+        memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(unsigned char));
+        memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(unsigned char));
+        auto tex = graphics::BindlessTextureRef(load_bindless_texture_2d(Image(buf, dim)));
+        tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        tex->set_and_use_handle();
+        return tex;
+    }
 
-	BindlessTextureRef mod2x2(glm::vec4 c1, glm::vec4 c2, glm::vec4 c3, glm::vec4 c4)
-	{
-		ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
-		float* buf = dim.pxnew<float>();
-		memcpy(buf + 4 * 0, glm::value_ptr(c1), 4 * sizeof(float));
-		memcpy(buf + 4 * 1, glm::value_ptr(c2), 4 * sizeof(float));
-		memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(float));
-		memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(float));
-		Texture texture(GL_TEXTURE_2D);
-		tex::image_2d(texture, buf, dim, false);
-		graphics::BindlessTextureRef tex(std::move(texture));
-		tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		tex->set_and_use_handle();
-		return tex;
-	}
+    BindlessTextureRef mod2x2(glm::vec4 c1, glm::vec4 c2, glm::vec4 c3, glm::vec4 c4)
+    {
+        ImageDimensions dim{ .w = 2, .h = 2, .cpp = 4 };
+        float* buf = dim.pxnew<float>();
+        memcpy(buf + 4 * 0, glm::value_ptr(c1), 4 * sizeof(float));
+        memcpy(buf + 4 * 1, glm::value_ptr(c2), 4 * sizeof(float));
+        memcpy(buf + 4 * 2, glm::value_ptr(c4), 4 * sizeof(float));
+        memcpy(buf + 4 * 3, glm::value_ptr(c3), 4 * sizeof(float));
+        Texture texture(GL_TEXTURE_2D);
+        tex::image_2d(texture, buf, dim, false);
+        graphics::BindlessTextureRef tex(std::move(texture));
+        tex->texture().set_parameter(GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        tex->texture().set_parameter(GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        tex->set_and_use_handle();
+        return tex;
+    }
 }

@@ -1,7 +1,7 @@
 target_sources(OlympianEngine PRIVATE
-	Camera.cpp
-	Drawable.cpp
-	Stencil.cpp
+    Camera.cpp
+    Drawable.cpp
+    Stencil.cpp
 )
 
 add_subdirectory(backend)

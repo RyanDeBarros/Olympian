@@ -2,9 +2,9 @@
 
 namespace oly::graphics
 {
-	enum class Mutability
-	{
-		Immutable,
-		Mutable
-	};
+    enum class Mutability
+    {
+        Immutable,
+        Mutable
+    };
 }

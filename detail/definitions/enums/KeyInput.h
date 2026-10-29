@@ -2,7 +2,7 @@
 
 namespace oly::detail
 {
-	typedef unsigned int KeyInput;
+	using KeyInput = unsigned int;
 
 	constexpr size_t KEY_INPUT_COUNT = 120;
 	extern KeyInput KEY_INPUT_DEFAULT;

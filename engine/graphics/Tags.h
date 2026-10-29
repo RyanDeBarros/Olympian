@@ -2,9 +2,9 @@
 
 namespace oly::rendering
 {
-	struct Unbatched
-	{
-	};
+    struct Unbatched
+    {
+    };
 
-	constexpr Unbatched kUnbatched;
+    constexpr Unbatched kUnbatched;
 }

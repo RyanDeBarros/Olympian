@@ -2,7 +2,7 @@
 
 namespace oly::detail
 {
-	typedef unsigned int MouseButton;
+	using MouseButton = unsigned int;
 
 	constexpr size_t MOUSE_BUTTON_COUNT = 8;
 	extern MouseButton MOUSE_BUTTON_DEFAULT;

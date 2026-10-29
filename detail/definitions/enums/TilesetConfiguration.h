@@ -10,8 +10,8 @@ namespace oly::detail
 	 * 7 - 3
 	 * 6 5 4
 	 */
-	typedef unsigned char TileConfig;
-	typedef std::array<std::array<bool, 3>, 3> TileConfigGrid;
+	typedef TileConfig = unsigned char;
+	typedef TileConfigGrid = std::array<std::array<bool, 3>, 3>;
 
 	enum TileConfigIndividual : TileConfig
 	{

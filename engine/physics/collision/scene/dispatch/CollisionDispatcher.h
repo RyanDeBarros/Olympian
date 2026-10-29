@@ -239,14 +239,14 @@ namespace oly::col2d
         };\
         struct Type##Hash\
         {\
-            typedef std::unique_ptr<Type##HandlerBase> Ptr;\
+            using Ptr = std::unique_ptr<Type##HandlerBase>;\
             size_t operator()(const Ptr& a) const { return std::hash<const void*>{}(a->controller) ^ (std::hash<const void*>{}(a->raw_handler()) << 1); }\
             size_t operator()(const std::pair<const Collider*, Ptr>& a) const\
             { return std::hash<const void*>{}(a.first) ^ (Type##Hash{}(a.second) << 1); }\
         };\
         struct Type##Equal\
         {\
-            typedef std::unique_ptr<Type##HandlerBase> Ptr;\
+            using Ptr = std::unique_ptr<Type##HandlerBase>;\
             bool operator()(const Ptr& a, const Ptr& b) const\
             { return a->controller == b->controller && a->raw_handler() == b->raw_handler(); }\
             bool operator()(const std::pair<const Collider*, Ptr>& a, const std::pair<const Collider*, Ptr>& b) const\

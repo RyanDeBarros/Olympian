@@ -26,7 +26,10 @@ namespace oly::rendering
     public:
         float scale_for_pixel_height(float font_size) const;
         void get_glyph_horizontal_metrics(int glyph_index, int& advance_width, int& left_bearing) const;
-        void get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const;
+        void get_codepoint_horizontal_metrics(
+            imp::utf::codepoint codepoint,
+            int& advance_width,
+            int& left_bearing) const;
         void get_vertical_metrics(int& ascent, int& descent, int& linegap) const;
         int find_glyph_index(imp::utf::codepoint codepoint) const;
         void get_bitmap_box(int glyph_index, float scale, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const;

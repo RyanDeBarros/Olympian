@@ -33,7 +33,10 @@ namespace oly
             stbtt_GetGlyphHMetrics(&info_, glyph_index, &advance_width, &left_bearing);
         }
 
-        void FontFace::get_codepoint_horizontal_metrics(imp::utf::codepoint codepoint, int& advance_width, int& left_bearing) const
+        void FontFace::get_codepoint_horizontal_metrics(
+            imp::utf::codepoint codepoint,
+            int& advance_width,
+            int& left_bearing) const
         {
             stbtt_GetCodepointHMetrics(&info_, codepoint, &advance_width, &left_bearing);
         }
@@ -48,14 +51,20 @@ namespace oly
             return stbtt_FindGlyphIndex(&info_, codepoint);
         }
 
-        void FontFace::get_bitmap_box(int glyph_index, float scale_, int& ch_x0, int& ch_x1, int& ch_y0, int& ch_y1) const
+        void FontFace::get_bitmap_box(
+            int glyph_index,
+            float scale,
+            int& ch_x0,
+            int& ch_x1,
+            int& ch_y0,
+            int& ch_y1) const
         {
-            return stbtt_GetGlyphBitmapBox(&info_, glyph_index, scale_, scale_, &ch_x0, &ch_y0, &ch_x1, &ch_y1);
+            return stbtt_GetGlyphBitmapBox(&info_, glyph_index, scale, scale, &ch_x0, &ch_y0, &ch_x1, &ch_y1);
         }
 
-        void FontFace::make_bitmap(unsigned char* buf, int w, int h, float scale_, int glyph_index) const
+        void FontFace::make_bitmap(unsigned char* buf, int w, int h, float scale, int glyph_index) const
         {
-            stbtt_MakeGlyphBitmap(&info_, buf, w, h, w, scale_, scale_, glyph_index);
+            stbtt_MakeGlyphBitmap(&info_, buf, w, h, w, scale, scale, glyph_index);
 
             imp::fixed_array<unsigned char> temp(w);
             
@@ -110,13 +119,21 @@ namespace oly
             return texture_;
         }
 
-        void FontGlyph::render_on_bitmap_shared(const FontAtlas& font_, unsigned char* buffer, int w, int h, int left_padding, int right_padding, int bottom_padding, int top_padding) const
+        void FontGlyph::render_on_bitmap_shared(
+            const FontAtlas& font,
+            unsigned char* buffer,
+            int w,
+            int h,
+            int left_padding,
+            int right_padding,
+            int bottom_padding,
+            int top_padding) const
         {
             int width = box_.width();
             int height = box_.height();
             unsigned char* temp = new unsigned char[width * height];
 
-            font_.font_->make_bitmap(temp, width, height, font_.scale_, index_);
+            font.font_->make_bitmap(temp, width, height, font.scale_, index_);
 
             for (int row = 0; row < bottom_padding; ++row)
                 memset(buffer + row * w, 0, left_padding + width + right_padding);
@@ -134,13 +151,13 @@ namespace oly
             delete[] temp;
         }
 
-        void FontGlyph::render_on_bitmap_unique(const FontAtlas& font_, unsigned char* buffer, int w, int h) const
+        void FontGlyph::render_on_bitmap_unique(const FontAtlas& font, unsigned char* buffer, int w, int h) const
         {
-            font_.font_->make_bitmap(buffer, box_.width(), box_.height(), font_.scale_, index_);
+            font.font_->make_bitmap(buffer, box_.width(), box_.height(), font.scale_, index_);
         }
 
-        FontAtlas::FontAtlas(const FontFaceRef& font_, FontOptions options, const imp::utf::string& common_buffer)
-            : font_(font_)
+        FontAtlas::FontAtlas(const FontFaceRef& font, FontOptions options, const imp::utf::string& common_buffer)
+            : font_(font)
             , options_(options)
         {
             common_dim_.cpp = 1;
@@ -181,11 +198,20 @@ namespace oly
                 for (imp::utf::codepoint codepoint : codepoints)
                 {
                     auto it = glyphs_.find(codepoint);
-                    it->second.render_on_bitmap_shared(*this, common_buf + it->second.buffer_pos_, common_dim_.w, common_dim_.h, 1, 1, 1, 1);
+                    it->second.render_on_bitmap_shared(
+                        *this,
+                        common_buf + it->second.buffer_pos_,
+                        common_dim_.w,
+                        common_dim_.h,
+                        1,
+                        1,
+                        1,
+                        1);
                 }
 
                 graphics::Image common_image(common_buf, common_dim_);
-                common_texture_ = graphics::BindlessTextureRef(graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
+                common_texture_ = graphics::BindlessTextureRef(
+                    graphics::load_bindless_texture_2d(common_image, options.auto_generate_mipmaps));
                 common_texture_->texture().set_parameter(GL_TEXTURE_MIN_FILTER, options.min_filter);
                 common_texture_->texture().set_parameter(GL_TEXTURE_MAG_FILTER, options.mag_filter);
                 common_texture_->set_and_use_handle();

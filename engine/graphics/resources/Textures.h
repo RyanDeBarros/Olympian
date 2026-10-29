@@ -4,15 +4,15 @@
 
 namespace oly::graphics::textures
 {
-	extern BindlessTextureRef white1x1();
+    extern BindlessTextureRef white1x1();
 
-	namespace internal
-	{
-		extern void load();
-		extern void unload();
-	}
+    namespace internal
+    {
+        extern void load();
+        extern void unload();
+    }
 
-	extern BindlessTextureRef mod2x2(
+    extern BindlessTextureRef mod2x2(
         glm::vec<4, unsigned char> c1,
         glm::vec<4, unsigned char> c2,
         glm::vec<4, unsigned char> c3,
