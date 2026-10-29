@@ -9,7 +9,7 @@
 
 namespace oly::detail
 {
-    static const std::string meta_prefix = "#meta";
+    static const std::string kMetaPrefix = "#meta";
 
     Key MetaMap::get_type() const
     {
@@ -40,8 +40,8 @@ namespace oly::detail
         return decode_meta(file.string().c_str());
     }
 
-	MetaMap MetaSplitter::decode_meta(const char* filepath)
-	{
+    MetaMap MetaSplitter::decode_meta(const char* filepath)
+    {
         std::ifstream file(filepath);
         if (!file.is_open())
             return {};
@@ -50,11 +50,11 @@ namespace oly::detail
         if (!std::getline(file, first_line))
             return {};
 
-        if (!first_line.starts_with(meta_prefix.c_str()))
+        if (!first_line.starts_with(kMetaPrefix.c_str()))
             return {};
 
         MetaMap meta;
-        std::istringstream iss(first_line.substr(meta_prefix.size()));
+        std::istringstream iss(first_line.substr(kMetaPrefix.size()));
         std::string token;
         while (iss >> token)
         {
@@ -75,12 +75,12 @@ namespace oly::detail
                 meta.map[decode_key(token)] = encode_key(Key::Meta_Exists);
         }
         return meta;
-	}
+    }
 
     std::string MetaSplitter::encode_meta(const MetaMap& meta)
     {
         std::ostringstream oss;
-        oss << meta_prefix << ' ';
+        oss << kMetaPrefix << ' ';
 
         for (const auto& [key, value] : meta.map)
             oss << encode_key(key) << "=\"" << value << "\" ";

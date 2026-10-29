@@ -5,15 +5,15 @@
 
 namespace oly::detail
 {
-	constexpr size_t MIN_FILTER_COUNT = 6;
-	extern const GLenum MIN_FILTER_VALUES[MIN_FILTER_COUNT];
-	extern const char* MIN_FILTER_NAMES[MIN_FILTER_COUNT];
+    constexpr size_t kMinFilterCount = 6;
+    extern const GLenum kMinFilterValues[kMinFilterCount];
+    extern const char* const kMinFilterNames[kMinFilterCount];
 
-	constexpr size_t MAG_FILTER_COUNT = 2;
-	extern const GLenum MAG_FILTER_VALUES[MAG_FILTER_COUNT];
-	extern const char* MAG_FILTER_NAMES[MAG_FILTER_COUNT];
+    constexpr size_t kMagFilterCount = 2;
+    extern const GLenum kMagFilterValues[kMagFilterCount];
+    extern const char* const kMagFilterNames[kMagFilterCount];
 
-	constexpr size_t WRAP_COUNT = 5;
-	extern const GLenum WRAP_VALUES[WRAP_COUNT];
-	extern const char* WRAP_NAMES[WRAP_COUNT];
+    constexpr size_t kWrapCount = 5;
+    extern const GLenum kWrapValues[kWrapCount];
+    extern const char* const kWrapNames[kWrapCount];
 }

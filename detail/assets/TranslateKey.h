@@ -6,8 +6,8 @@
 
 namespace oly::detail
 {
-	constexpr size_t KeySize = 8;
+    constexpr size_t kKeySize = 8;
 
-	extern std::string encode_key(Key key);
-	extern Key decode_key(std::string_view code);
+    extern std::string encode_key(Key key);
+    extern Key decode_key(std::string_view code);
 }

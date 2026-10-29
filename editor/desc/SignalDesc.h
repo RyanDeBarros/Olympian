@@ -67,8 +67,8 @@ namespace oly::editor
 
 #define KEY_PARTIAL_GENERATOR(M) \
 		M((imtk::field::disjoint_enum_fld<detail::KeyInput>), key) \
-		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
-		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
+		M((imtk::field::bitset_fld<detail::InputMod, detail::kInputModCount>), required_mods) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::kInputModCount>), forbidden_mods)
 
 #define KEY_GENERATOR(M) \
 		KEY_PARTIAL_GENERATOR(M) \
@@ -83,8 +83,8 @@ namespace oly::editor
 
 #define MOUSE_BUTTON_PARTIAL_GENERATOR(M) \
 		M((imtk::field::disjoint_enum_fld<detail::MouseButton>), button) \
-		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), required_mods) \
-		M((imtk::field::bitset_fld<detail::InputMod, detail::INPUT_MOD_COUNT>), forbidden_mods)
+		M((imtk::field::bitset_fld<detail::InputMod, detail::kInputModCount>), required_mods) \
+		M((imtk::field::bitset_fld<detail::InputMod, detail::kInputModCount>), forbidden_mods)
 
 #define MOUSE_BUTTON_GENERATOR(M) \
 		MOUSE_BUTTON_PARTIAL_GENERATOR(M) \

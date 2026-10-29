@@ -23,10 +23,10 @@ namespace oly::editor
 
 	BaseTextureDesc::BaseTextureDesc(GLenum default_filter, imtk::datapath_link link) :
 		link(std::move(link)),
-		min_filter(IMTK_DATAPATH_SUBLINK(subpaths.min_filter), default_filter, detail::Key::MinFilter, "Min Filter", detail::MIN_FILTER_VALUES, detail::MIN_FILTER_NAMES),
-		mag_filter(IMTK_DATAPATH_SUBLINK(subpaths.mag_filter), default_filter, detail::Key::MagFilter, "Mag Filter", detail::MAG_FILTER_VALUES, detail::MAG_FILTER_NAMES),
-		wrap_s(IMTK_DATAPATH_SUBLINK(subpaths.wrap_s), GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", detail::WRAP_VALUES, detail::WRAP_NAMES),
-		wrap_t(IMTK_DATAPATH_SUBLINK(subpaths.wrap_t), GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", detail::WRAP_VALUES, detail::WRAP_NAMES),
+		min_filter(IMTK_DATAPATH_SUBLINK(subpaths.min_filter), default_filter, detail::Key::MinFilter, "Min Filter", detail::kMinFilterValues, detail::kMinFilterNames),
+		mag_filter(IMTK_DATAPATH_SUBLINK(subpaths.mag_filter), default_filter, detail::Key::MagFilter, "Mag Filter", detail::kMagFilterValues, detail::kMagFilterNames),
+		wrap_s(IMTK_DATAPATH_SUBLINK(subpaths.wrap_s), GL_CLAMP_TO_EDGE, detail::Key::WrapS, "Wrap (S)", detail::kWrapValues, detail::kWrapNames),
+		wrap_t(IMTK_DATAPATH_SUBLINK(subpaths.wrap_t), GL_CLAMP_TO_EDGE, detail::Key::WrapT, "Wrap (T)", detail::kWrapValues, detail::kWrapNames),
 		anim(IMTK_DATAPATH_SUBLINK(subpaths.anim), false, detail::Key::Animated, "Animated"),
 		spritesheet(IMTK_DATAPATH_SUBLINK(subpaths.spritesheet))
 	{

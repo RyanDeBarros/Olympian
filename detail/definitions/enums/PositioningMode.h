@@ -4,11 +4,11 @@
 
 namespace oly::detail
 {
-	enum class PositioningMode
-	{
-		Relative = 0,
-		Absolute
-	};
+    enum class PositioningMode
+    {
+        Relative = 0,
+        Absolute
+    };
 
-	extern std::ostream& operator<<(std::ostream& os, PositioningMode mode);
+    extern std::ostream& operator<<(std::ostream& os, PositioningMode mode);
 }

@@ -9,8 +9,8 @@ namespace oly::editor
 		texture(IMTK_DATAPATH_SUBLINK(subpaths.texture), "", detail::Key::TextureFile, "Texture"),
 		texture_index(IMTK_DATAPATH_SUBLINK(subpaths.texture_index), 0, detail::Key::TextureIndex, "Texture Slot"),
 		uvs(IMTK_DATAPATH_SUBLINK(subpaths.uvs), {}, detail::Key::UVvec4, "Texture UVs"),
-		reflection(IMTK_DATAPATH_SUBLINK(subpaths.reflection), detail::TILE_REFLECTION_BITSET_DEFAULT, detail::Key::Reflection, "Reflection",
-			detail::TILE_REFLECTION_BITSET_VALUES, detail::TILE_REFLECTION_BITSET_NAMES, true),
+		reflection(IMTK_DATAPATH_SUBLINK(subpaths.reflection), detail::kTileReflectionBitsetDefault, detail::Key::Reflection, "Reflection",
+			detail::kTileReflectionBitsetValues, detail::kTileReflectionBitsetNames, true),
 		rotation(IMTK_DATAPATH_SUBLINK(subpaths.rotation), detail::TileRotation::None, detail::Key::Rotation, "Rotation")
 	{
 	}

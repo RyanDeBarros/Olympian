@@ -7,87 +7,88 @@
 
 namespace oly::detail
 {
-	class MetaMap;
+    class MetaMap;
 
-	template <typename T, typename... Set>
-	constexpr bool is_in(const T& v, const Set&... set)
-	{
-		return ((v == set) || ...);
-	}
+    template <typename T, typename... Set>
+    constexpr bool is_in(const T& v, const Set&... set)
+    {
+        return ((v == set) || ...);
+    }
 
-	class ResourcePath
-	{
-		std::filesystem::path _absolute;
+    class ResourcePath
+    {
+        std::filesystem::path absolute_;
 
-	public:
-		ResourcePath();
+    public:
+        ResourcePath();
 
         ResourcePath(const std::string_view path, const ResourcePath& relative_to = {});
-		ResourcePath(const std::string& path, const ResourcePath& relative_to = {});
-		ResourcePath(const char* path, const ResourcePath& relative_to = {});
-		ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {});
+        ResourcePath(const std::string& path, const ResourcePath& relative_to = {});
+        ResourcePath(const char* path, const ResourcePath& relative_to = {});
+        ResourcePath(const std::filesystem::path& path, const ResourcePath& relative_to = {});
 
         ResourcePath& operator=(const std::string_view path);
-		ResourcePath& operator=(const std::string& path);
-		ResourcePath& operator=(const char* path);
-		ResourcePath& operator=(const std::filesystem::path& path);
-
-        static ResourcePath _cmake_ported(const std::string_view path);
-
-	private:
-		void set(const std::filesystem::path& path, const ResourcePath& relative_to);
-
-	public:
-		static void set_resource_root(const std::filesystem::path& root);
-		bool is_resource_root() const;
+        ResourcePath& operator=(const std::string& path);
+        ResourcePath& operator=(const char* path);
+        ResourcePath& operator=(const std::filesystem::path& path);
 
         ResourcePath operator/(const std::string_view subpath) const;
         ResourcePath operator/(const std::string& subpath) const;
         ResourcePath operator/(const char* subpath) const;
         ResourcePath operator/(const std::filesystem::path& subpath) const;
 
-		std::string string() const;
-		std::string get_resource_shorthand() const;
-		std::filesystem::path get_absolute() const;
+        bool operator==(const ResourcePath& o) const;
+        bool operator<(const ResourcePath& o) const;
+
+    public:
+        static ResourcePath _cmake_ported(const std::string_view path);
+        static void set_resource_root(const std::filesystem::path& root);
+
+        bool is_resource_root() const;
+
+        std::string string() const;
+        std::string get_resource_shorthand() const;
+        std::filesystem::path get_absolute() const;
         bool has_extension() const;
         std::string extension() const;
         void create_parents() const;
 
-		template<typename... Extensions>
-		bool extension_matches(const Extensions&... extensions) const
-		{
-			return is_in(extension(), extensions...);
-		}
+        template<typename... Extensions>
+        bool extension_matches(const Extensions&... extensions) const
+        {
+            return is_in(extension(), extensions...);
+        }
 
-		ResourcePath get_import_path() const;
-		ResourcePath get_source_path() const;
-		bool is_oly_path() const;
-		bool exists() const;
-		bool is_file() const;
-		bool is_directory() const;
-		bool is_resource() const;
-		bool is_relative_to(const ResourcePath& base) const;
-		std::string tabname() const;
-		bool resource_relative_path(std::filesystem::path& out) const;
-		bool resource_parents(std::vector<std::string>& parents) const;
-		std::string filename() const;
+        ResourcePath get_import_path() const;
+        ResourcePath get_source_path() const;
+        bool is_oly_path() const;
+        bool exists() const;
+        bool is_file() const;
+        bool is_directory() const;
+        bool is_resource() const;
+        bool is_relative_to(const ResourcePath& base) const;
+        std::string tabname() const;
+        bool resource_relative_path(std::filesystem::path& out) const;
+        bool resource_parents(std::vector<std::string>& parents) const;
+        std::string filename() const;
 
         std::ifstream get_ifstream(std::ios_base::openmode mode = std::ios_base::in) const;
         std::ofstream get_ofstream(std::ios_base::openmode mode = std::ios_base::out) const;
         std::fstream get_fstream(std::ios_base::openmode mode = std::ios_base::in | std::ios_base::out) const;
 
-		std::string load_toml(toml::table& table) const;
-		void dump_toml(toml::table& table, const MetaMap& meta) const;
+        std::string load_toml(toml::table& table) const;
+        void dump_toml(toml::table& table, const MetaMap& meta) const;
 
         bool empty() const;
         size_t hash() const;
-		bool operator==(const ResourcePath& o) const;
-		bool operator<(const ResourcePath& o) const;
-	};
+
+    private:
+        void set(const std::filesystem::path& path, const ResourcePath& relative_to);
+    };
 }
 
 template<>
 struct std::hash<oly::detail::ResourcePath>
 {
-	size_t operator()(const oly::detail::ResourcePath& f) const { return f.hash(); }
+    size_t operator()(const oly::detail::ResourcePath&) const;
 };

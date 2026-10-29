@@ -2,25 +2,25 @@
 
 namespace oly::detail
 {
-	std::ostream& operator<<(std::ostream& os, GamepadAxis2D axis)
-	{
-		os << "GamepadAxis2D(";
-		
-		switch (axis)
-		{
-		case GamepadAxis2D::LeftXY:
-			os << "LeftXY";
-			break;
+    std::ostream& operator<<(std::ostream& os, GamepadAxis2D axis)
+    {
+        os << "GamepadAxis2D(";
 
-		case GamepadAxis2D::RightXY:
-			os << "RightXY";
-			break;
+        switch (axis)
+        {
+        case GamepadAxis2D::LeftXY:
+            os << "LeftXY";
+            break;
 
-		default:
-			os << "unknown";
-			break;
-		}
+        case GamepadAxis2D::RightXY:
+            os << "RightXY";
+            break;
 
-		return os << ")";
-	}
+        default:
+            os << "unknown";
+            break;
+        }
+
+        return os << ")";
+    }
 }

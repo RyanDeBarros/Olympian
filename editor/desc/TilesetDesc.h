@@ -11,7 +11,7 @@ namespace oly::editor
 		M((imtk::field::string_fld), texture) \
 		M((imtk::field::int_fld<imp::potential<int>(0), imp::nullpotential>), texture_index) \
 		M((imtk::field::uv_rect_fld), uvs) \
-		M((imtk::field::bitset_fld<detail::TileReflection, detail::TILE_REFLECTION_BITSET_COUNT>), reflection) \
+		M((imtk::field::bitset_fld<detail::TileReflection, detail::kTileReflectionBitsetCount>), reflection) \
 		M((imtk::field::enum_fld<detail::TileRotation>), rotation)
 
 	struct TilesetAssignmentDesc

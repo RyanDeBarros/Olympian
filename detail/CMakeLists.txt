@@ -5,8 +5,8 @@ include(FetchContent)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
-  cmake_policy(SET CMP0141 NEW)
-  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+    cmake_policy(SET CMP0141 NEW)
+    set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
 
@@ -19,9 +19,9 @@ set(GLFW_BUILD_TESTS off CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES off CACHE BOOL "" FORCE)
 
 FetchContent_Declare(
-	glfw
-	GIT_REPOSITORY https://github.com/glfw/glfw.git
-	GIT_TAG        3.4
+    glfw
+    GIT_REPOSITORY https://github.com/glfw/glfw.git
+    GIT_TAG        3.4
 )
 
 FetchContent_MakeAvailable(glfw)
@@ -73,15 +73,15 @@ FetchContent_MakeAvailable(imperious)
 add_library(OlympianDetail STATIC)
 
 if (MSVC)
-	target_compile_options(OlympianDetail PUBLIC /Zc:__cplusplus)
+    target_compile_options(OlympianDetail PUBLIC /Zc:__cplusplus)
 endif()
 
 target_compile_definitions(OlympianDetail PUBLIC
-	GLEW_STATIC
+    GLEW_STATIC
 )
 
 target_link_libraries(OlympianDetail PRIVATE
-	libglew_static
+    libglew_static
     glfw
     tomlplusplus::tomlplusplus
     imperious

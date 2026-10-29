@@ -41,18 +41,18 @@ namespace oly::editor
 
 	KeyDesc::KeyDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		key(IMTK_DATAPATH_SUBLINK(subpaths.key), detail::KEY_INPUT_DEFAULT, detail::Key::Key, "Key button", detail::KEY_INPUT_VALUES, detail::KEY_INPUT_NAMES),
-		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		key(IMTK_DATAPATH_SUBLINK(subpaths.key), detail::kKeyInputDefault, detail::Key::Key, "Key button", detail::kKeyInputValues, detail::kKeyInputNames),
+		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::kInputModDefault, detail::Key::RequiredMods, "Required mods", detail::kInputModValues, detail::kInputModNames, false),
+		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::kInputModDefault, detail::Key::ForbiddenMods, "Forbidden mods", detail::kInputModValues, detail::kInputModNames, false),
 		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}
 
 	MouseButtonDesc::MouseButtonDesc(imtk::datapath_link link) :
 		link(std::move(link)),
-		button(IMTK_DATAPATH_SUBLINK(subpaths.button), detail::MOUSE_BUTTON_DEFAULT, detail::Key::Button, "Mouse button", detail::MOUSE_BUTTON_VALUES, detail::MOUSE_BUTTON_NAMES),
-		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::INPUT_MOD_DEFAULT, detail::Key::RequiredMods, "Required mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
-		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::INPUT_MOD_DEFAULT, detail::Key::ForbiddenMods, "Forbidden mods", detail::INPUT_MOD_VALUES, detail::INPUT_MOD_NAMES, false),
+		button(IMTK_DATAPATH_SUBLINK(subpaths.button), detail::kMouseButtonDefault, detail::Key::Button, "Mouse button", detail::kMouseButtonValues, detail::kMouseButtonNames),
+		required_mods(IMTK_DATAPATH_SUBLINK(subpaths.required_mods), detail::kInputModDefault, detail::Key::RequiredMods, "Required mods", detail::kInputModValues, detail::kInputModNames, false),
+		forbidden_mods(IMTK_DATAPATH_SUBLINK(subpaths.forbidden_mods), detail::kInputModDefault, detail::Key::ForbiddenMods, "Forbidden mods", detail::kInputModValues, detail::kInputModNames, false),
 		modifier(detail::Key::Modifier, IMTK_DATAPATH_SUBLINK(subpaths.modifier))
 	{
 	}

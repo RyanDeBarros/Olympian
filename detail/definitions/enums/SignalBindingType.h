@@ -4,16 +4,16 @@
 
 namespace oly::detail
 {
-	enum class SignalBindingType
-	{
-		Key = 0,
-		MouseButton,
-		GamepadButton,
-		GamepadAxis1D,
-		GamepadAxis2D,
-		CursorPos,
-		Scroll
-	};
+    enum class SignalBindingType
+    {
+        Key = 0,
+        MouseButton,
+        GamepadButton,
+        GamepadAxis1D,
+        GamepadAxis2D,
+        CursorPos,
+        Scroll
+    };
 
-	extern std::ostream& operator<<(std::ostream& os, SignalBindingType type);
+    extern std::ostream& operator<<(std::ostream& os, SignalBindingType type);
 }

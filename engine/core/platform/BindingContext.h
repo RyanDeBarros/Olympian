@@ -186,7 +186,7 @@ namespace oly
                 {
                     std::array<ButtonPoll, GamepadButton::kLast + 1> button_polls;
                     std::array<Axis1DPoll, GamepadAxis1D::kLast + 1> axis_1d_polls;
-                    std::array<Axis2DPoll, static_cast<size_t>(detail::GamepadAxis2D::_LAST) + 1> axis_2d_polls;
+                    std::array<Axis2DPoll, static_cast<size_t>(detail::GamepadAxis2D::_last) + 1> axis_2d_polls;
                 };
 
                 struct ControllerHandler

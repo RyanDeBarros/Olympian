@@ -2,10 +2,10 @@
 
 namespace oly::detail
 {
-	using MouseButton = unsigned int;
+    using MouseButton = unsigned int;
 
-	constexpr size_t MOUSE_BUTTON_COUNT = 8;
-	extern MouseButton MOUSE_BUTTON_DEFAULT;
-	extern MouseButton MOUSE_BUTTON_VALUES[MOUSE_BUTTON_COUNT];
-	extern const char* MOUSE_BUTTON_NAMES[MOUSE_BUTTON_COUNT];
+    constexpr size_t kMouseButtonCount = 8;
+    extern const MouseButton kMouseButtonDefault;
+    extern const MouseButton kMouseButtonValues[kMouseButtonCount];
+    extern const char* const kMouseButtonNames[kMouseButtonCount];
 }

@@ -4,8 +4,8 @@
 
 namespace oly::detail
 {
-	Key null_key()
-	{
-		return Key::_;
-	}
+    Key null_key()
+    {
+        return Key::_;
+    }
 }

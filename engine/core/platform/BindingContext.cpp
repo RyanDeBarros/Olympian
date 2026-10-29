@@ -346,8 +346,8 @@ namespace oly::input
 
             for (int g = 0; g < (int)gamepad_polls_.size(); ++g)
             {
-                static constexpr int first = static_cast<int>(detail::GamepadAxis2D::_FIRST);
-                static constexpr int last = static_cast<int>(detail::GamepadAxis2D::_LAST);
+                static constexpr int first = static_cast<int>(detail::GamepadAxis2D::_first);
+                static constexpr int last = static_cast<int>(detail::GamepadAxis2D::_last);
                 for (int i = first; i <= last; ++i)
                     poll_gamepad_axis_2d(g, i);
             }

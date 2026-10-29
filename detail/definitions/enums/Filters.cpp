@@ -2,7 +2,7 @@
 
 namespace oly::detail
 {
-	const GLenum MIN_FILTER_VALUES[MIN_FILTER_COUNT] = {
+	const GLenum kMinFilterValues[kMinFilterCount] = {
 		GL_NEAREST,
 		GL_LINEAR,
 		GL_NEAREST_MIPMAP_NEAREST,
@@ -11,7 +11,7 @@ namespace oly::detail
 		GL_LINEAR_MIPMAP_LINEAR
 	};
 
-	const char* MIN_FILTER_NAMES[MIN_FILTER_COUNT] = {
+	const char* const kMinFilterNames[kMinFilterCount] = {
 		"Nearest",
 		"Linear",
 		"Nearest (Nearest Mipmap)",
@@ -20,17 +20,17 @@ namespace oly::detail
 		"Linear (Linear Mipmap)"
 	};
 
-	const GLenum MAG_FILTER_VALUES[MAG_FILTER_COUNT] = {
+	const GLenum kMagFilterValues[kMagFilterCount] = {
 		GL_NEAREST,
 		GL_LINEAR,
 	};
 
-	const char* MAG_FILTER_NAMES[MAG_FILTER_COUNT] = {
+	const char* const kMagFilterNames[kMagFilterCount] = {
 		"Nearest",
 		"Linear",
 	};
 
-	const GLenum WRAP_VALUES[WRAP_COUNT] = {
+	const GLenum kWrapValues[kWrapCount] = {
 		GL_CLAMP_TO_EDGE,
 		GL_CLAMP_TO_BORDER,
 		GL_MIRRORED_REPEAT,
@@ -38,7 +38,7 @@ namespace oly::detail
 		GL_MIRROR_CLAMP_TO_EDGE
 	};
 
-	const char* WRAP_NAMES[WRAP_COUNT] = {
+	const char* const kWrapNames[kWrapCount] = {
 		"Clamp To Edge",
 		"Clamp To Border",
 		"Repeat (Mirrored)",

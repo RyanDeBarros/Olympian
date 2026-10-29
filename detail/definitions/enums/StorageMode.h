@@ -4,11 +4,11 @@
 
 namespace oly::detail
 {
-	enum class StorageMode
-	{
-		Discard = 0,
-		Keep
-	};
+    enum class StorageMode
+    {
+        Discard = 0,
+        Keep
+    };
 
-	extern std::ostream& operator<<(std::ostream& os, StorageMode mode);
+    extern std::ostream& operator<<(std::ostream& os, StorageMode mode);
 }
