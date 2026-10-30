@@ -3,7 +3,11 @@
 namespace imtk::w
 {
     bound_widget<oly::editor::Rect>::bound_widget(oly::editor::Rect& data)
-        : data(data), x1(data.x1), x2(data.x2), y1(data.y1), y2(data.y2)
+        : data(data)
+        , x1(data.x1)
+        , x2(data.x2)
+        , y1(data.y1)
+        , y2(data.y2)
     {
         x1.config.label = "x1";
         x2.config.label = "x2";
@@ -27,7 +31,11 @@ namespace imtk::w
     }
 
     bound_widget<oly::editor::UVRect>::bound_widget(oly::editor::UVRect& data)
-        : data(data), x1(data.x1), x2(data.x2), y1(data.y1), y2(data.y2)
+        : data(data)
+        , x1(data.x1)
+        , x2(data.x2)
+        , y1(data.y1)
+        , y2(data.y2)
     {
         x1.config.label = "x1";
         x1.config.min = 0.f;
@@ -59,7 +67,10 @@ namespace imtk::w
     }
 
     bound_widget<oly::editor::TopSidePadding>::bound_widget(oly::editor::TopSidePadding& data)
-        : data(data), left(data.left), right(data.right), top(data.top)
+        : data(data)
+        , left(data.left)
+        , right(data.right)
+        , top(data.top)
     {
         left.config.label = "left";
         right.config.label = "right";
@@ -77,7 +88,8 @@ namespace imtk::w
             result |= bound_widget_row(subwidgets, { .separators = true }).draw();
         }
 
-        result.modified |= prop::grid::check_property(std::make_unique<prop::simple_view<oly::editor::TopSidePadding>>(data));
+        result.modified |= prop::grid::check_property(
+            std::make_unique<prop::simple_view<oly::editor::TopSidePadding>>(data));
         return result;
     }
 }

@@ -7,7 +7,8 @@
 namespace imtk::w
 {
     template<>
-    struct bound_widget<oly::editor::Rect> : public widget
+    struct bound_widget<oly::editor::Rect>
+        : public widget
     {
         oly::editor::Rect& data;
         bound_widget<float> x1;
@@ -22,7 +23,8 @@ namespace imtk::w
     };
 
     template<>
-    struct bound_widget<oly::editor::UVRect> : public widget
+    struct bound_widget<oly::editor::UVRect>
+        : public widget
     {
         oly::editor::UVRect& data;
         bound_widget<float> x1;
@@ -37,7 +39,8 @@ namespace imtk::w
     };
 
     template<>
-    struct bound_widget<oly::editor::TopSidePadding> : public widget
+    struct bound_widget<oly::editor::TopSidePadding>
+        : public widget
     {
         oly::editor::TopSidePadding& data;
         bound_widget<float> left;

@@ -1,8 +1,9 @@
 #pragma once
 
 #include "core/Types.h"
-#include "bindings/Widgets.h"
+
 #include "bindings/Serializer.h"
+#include "bindings/Widgets.h"
 
 namespace imtk::field
 {
