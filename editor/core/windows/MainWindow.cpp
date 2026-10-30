@@ -1,25 +1,26 @@
 #include "MainWindow.h"
 
 #include "core/editor/Editor.h"
-#include "core/windows/MainMenuBar.h"
 
-#include "panels/PanelManager.h"
-#include "panels/IPanel.h"
-#include "panels/AssetEditorPanel.h"
-#include "panels/ContentBrowserPanel.h"
-#include "panels/LogPanel.h"
-#include "panels/PreferencesPanel.h"
-#include "panels/TreeViewPanel.h"
+#include "core/windows/MainMenuBar.h"
 
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
+#include "panels/AssetEditorPanel.h"
+#include "panels/ContentBrowserPanel.h"
+#include "panels/IPanel.h"
+#include "panels/LogPanel.h"
+#include "panels/PanelManager.h"
+#include "panels/PreferencesPanel.h"
+#include "panels/TreeViewPanel.h"
+
 namespace oly::editor
 {
     MainWindow::MainWindow()
-        : _panel_manager(std::make_unique<PanelManager>()),
-        _document_manager(std::make_unique<DocumentManager>()),
-        _main_menu_bar(std::make_unique<MainMenuBar>())
+        : panel_manager_(std::make_unique<PanelManager>())
+        , document_manager_(std::make_unique<DocumentManager>())
+        , main_menu_bar_(std::make_unique<MainMenuBar>())
     {
     }
 
@@ -30,45 +31,6 @@ namespace oly::editor
         return Editor::GetMainWindow();
     }
 
-    void MainWindow::Init()
-    {
-        _notif_handle = imtk::on_receive_notification().subscribe([this](imtk::notification notif) {
-            imtk::log(notif.level, notif.message);
-            _notifications.push_back(std::move(notif));
-        });
-
-        _panel_manager->Add<AssetEditorPanel>().Open();
-        _panel_manager->Add<ContentBrowserPanel>().Open();
-        _panel_manager->Add<LogPanel>().Open();
-        _panel_manager->Add<PreferencesPanel>().Close();
-        _panel_manager->Add<TreeViewPanel>().Open();
-
-        _dockspace_id = ImGui::GetID("MainWindowDockspace");
-
-        imtk::dock::make_branch(
-            ImGuiDir_Down,
-            imtk::dock::make_branch(
-                ImGuiDir_Right,
-                imtk::dock::make_leaf({
-                    TreeViewPanel::Instance().GetTitle()
-                }),
-                imtk::dock::make_leaf({
-                    AssetEditorPanel::Instance().GetTitle(),
-                    PreferencesPanel::Instance().GetTitle()
-                }),
-                0.2f
-            ),
-            imtk::dock::make_leaf({
-                LogPanel::Instance().GetTitle(),
-                ContentBrowserPanel::Instance().GetTitle()
-            }),
-            0.75f
-        )->setup_layout(_dockspace_id);
-
-        _panel_manager->Init();
-        _main_menu_bar->Init();
-    }
-
     void MainWindow::Open()
     {
         Editor::SetOSWindowMaximized(true);
@@ -76,10 +38,10 @@ namespace oly::editor
 
     void MainWindow::Draw()
     {
-        if (!_ui_initialized)
+        if (!ui_initialized_)
         {
             Init();
-            _ui_initialized = true;
+            ui_initialized_ = true;
         }
 
         const ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -104,39 +66,82 @@ namespace oly::editor
         {
             window_styling.kill();
 
-            _main_menu_bar->Draw();
+            main_menu_bar_->Draw();
 
-            ImGui::DockSpace(_dockspace_id, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
-            _panel_manager->Draw();
+            ImGui::DockSpace(dockspace_id_, ImVec2(0.0f, 0.0f), ImGuiDockNodeFlags_PassthruCentralNode);
+            panel_manager_->Draw();
             DrawNotifications();
         }
     }
 
     PanelManager& MainWindow::GetPanelManager()
     {
-        return *_panel_manager;
+        return *panel_manager_;
     }
 
     DocumentManager& MainWindow::GetDocumentManager()
     {
-        return *_document_manager;
+        return *document_manager_;
     }
 
     MainMenuBar& MainWindow::GetMainMenuBar()
     {
-        return *_main_menu_bar;
+        return *main_menu_bar_;
+    }
+
+    void MainWindow::Init()
+    {
+        notif_handle_ = imtk::on_receive_notification().subscribe(
+            [this](imtk::notification notif) {
+                imtk::log(notif.level, notif.message);
+                notifications_.push_back(std::move(notif));
+            });
+
+        panel_manager_->Add<AssetEditorPanel>().Open();
+        panel_manager_->Add<ContentBrowserPanel>().Open();
+        panel_manager_->Add<LogPanel>().Open();
+        panel_manager_->Add<PreferencesPanel>().Close();
+        panel_manager_->Add<TreeViewPanel>().Open();
+
+        dockspace_id_ = ImGui::GetID("MainWindowDockspace");
+
+        imtk::dock::make_branch(
+            ImGuiDir_Down,
+            imtk::dock::make_branch(
+                ImGuiDir_Right,
+                imtk::dock::make_leaf(
+                    {
+                        TreeViewPanel::Instance().GetTitle()
+                    }),
+                imtk::dock::make_leaf(
+                    {
+                        AssetEditorPanel::Instance().GetTitle(),
+                        PreferencesPanel::Instance().GetTitle()
+                    }),
+                0.2f
+            ),
+            imtk::dock::make_leaf(
+                {
+                    LogPanel::Instance().GetTitle(),
+                    ContentBrowserPanel::Instance().GetTitle()
+                }),
+            0.75f)->setup_layout(dockspace_id_);
+
+        panel_manager_->Init();
+        main_menu_bar_->Init();
     }
 
     void MainWindow::DrawNotifications()
     {
-        for (size_t i = 0; i < _notifications.size(); ++i)
+        for (size_t i = 0; i < notifications_.size(); ++i)
         {
-            auto& notif = _notifications[i];
+            auto& notif = notifications_[i];
 
             imtk::style_var alpha_var(ImGuiStyleVar_Alpha, notif.age_alpha());
-            ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize |
-                                     ImGuiWindowFlags_NoDecoration |
-                                     ImGuiWindowFlags_NoInputs;
+            const ImGuiWindowFlags flags =
+                ImGuiWindowFlags_AlwaysAutoResize |
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoInputs;
 
             if (auto _ = imtk::window("##notif" + std::to_string(i), flags))
             {
@@ -147,7 +152,10 @@ namespace oly::editor
             notif.update();
         }
         
-        auto it = std::remove_if(_notifications.begin(), _notifications.end(), [](const imtk::notification& notif) { return notif.expired(); });
-        _notifications.erase(it, _notifications.end());
+        auto it = std::remove_if(
+            notifications_.begin(),
+            notifications_.end(),
+            [](const imtk::notification& notif) { return notif.expired(); });
+        notifications_.erase(it, notifications_.end());
     }
 }

@@ -4,19 +4,20 @@
 #include "core/editor/ProjectInfo.h"
 
 #include "assets/MetaSplitter.h"
+
 #include "definitions/Keys.h"
 
 #include <ImGuiFileDialog.h>
 
 namespace oly::editor
 {
-    static const std::string OPEN_PROJECT_FILE = "OpenProjectFolder";
+    static const std::string kOpenProjectFile = "OpenProjectFolder";
 
     void ProjectSelectWindow::Open()
     {
         Editor::SetOSWindowSize(920, 690);
 
-        _project_file = "D:/Projects/Visual Studio/Olympian/Tester/OlympianTester.oly";
+        project_file_ = "D:/Projects/Visual Studio/Olympian/Tester/OlympianTester.oly";
         CheckProjectFile();
     }
 
@@ -57,33 +58,37 @@ namespace oly::editor
         ImGui::TextUnformatted("Project File");
 
         ImGui::SameLine();
-        if (imtk::controls::input_text("##ProjectFile", _project_file))
+        if (imtk::controls::input_text("##ProjectFile", project_file_))
             CheckProjectFile();
 
         ImGui::SameLine();
         if (ImGui::Button("..."))
         {
             IGFD::FileDialogConfig config;
-            config.path = _project_file;
+            config.path = project_file_;
             config.flags = ImGuiFileDialogFlags_Modal;
 
-            ImGuiFileDialog::Instance()->OpenDialog(OPEN_PROJECT_FILE, "Select Project", "Olympian files (*.oly){.oly}", config);
+            ImGuiFileDialog::Instance()->OpenDialog(
+                kOpenProjectFile,
+                "Select Project",
+                "Olympian files (*.oly){.oly}",
+                config);
         }
 
         ImGui::SetNextWindowSize(ImGui::GetMainViewport()->WorkSize, ImGuiCond_FirstUseEver);
 
-        if (ImGuiFileDialog::Instance()->Display(OPEN_PROJECT_FILE, ImGuiWindowFlags_NoCollapse))
+        if (ImGuiFileDialog::Instance()->Display(kOpenProjectFile, ImGuiWindowFlags_NoCollapse))
         {
             if (ImGuiFileDialog::Instance()->IsOk())
             {
-                _project_file = ImGuiFileDialog::Instance()->GetCurrentPath();
+                project_file_ = ImGuiFileDialog::Instance()->GetCurrentPath();
                 CheckProjectFile();
             }
 
             ImGuiFileDialog::Instance()->Close();
         }
 
-        if (auto d = imtk::disabled(!_valid_project_file))
+        if (auto d = imtk::disabled(!valid_project_file_))
         {
             if (ImGui::Button("Open"))
                 OpenProject();
@@ -92,17 +97,18 @@ namespace oly::editor
 
     void ProjectSelectWindow::CheckProjectFile()
     {
-        std::filesystem::path path = _project_file;
-        _valid_project_file = path.is_absolute() && std::filesystem::is_regular_file(path);
-        if (_valid_project_file)
+        std::filesystem::path path = project_file_;
+        valid_project_file_ = path.is_absolute() && std::filesystem::is_regular_file(path);
+        if (valid_project_file_)
         {
-            auto meta = detail::MetaSplitter::decode_meta(_project_file.c_str());
-            _valid_project_file = _valid_project_file && meta.get_version() == ProjectInfo::GetVersion() && meta.has_type(detail::Key::Meta_Project);
+            auto meta = detail::MetaSplitter::decode_meta(project_file_.c_str());
+            valid_project_file_ = meta.get_version() == ProjectInfo::GetVersion()
+                && meta.has_type(detail::Key::Meta_Project);
         }
     }
 
     void ProjectSelectWindow::OpenProject()
     {
-        Editor::OpenProject(_project_file);
+        Editor::OpenProject(project_file_);
     }
 }

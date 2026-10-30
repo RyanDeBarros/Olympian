@@ -9,31 +9,29 @@ namespace oly::editor
 
     class MainMenuBar;
 
-    enum class LogLevel : int;
+    enum class LogLevel
+        : int;
 
     class MainWindow
     {
-        bool _ui_initialized = false;
-        ImGuiID _dockspace_id = 0;
+        bool ui_initialized_ = false;
+        ImGuiID dockspace_id_ = 0;
 
-        std::unique_ptr<PanelManager> _panel_manager;
-        std::unique_ptr<DocumentManager> _document_manager;
+        std::unique_ptr<PanelManager> panel_manager_;
+        std::unique_ptr<DocumentManager> document_manager_;
 
-        std::unique_ptr<MainMenuBar> _main_menu_bar;
+        std::unique_ptr<MainMenuBar> main_menu_bar_;
 
-        imp::event_listener _notif_handle;
-        std::vector<imtk::notification> _notifications;
+        imp::event_listener notif_handle_;
+        std::vector<imtk::notification> notifications_;
 
     public:
         MainWindow();
         ~MainWindow();
 
+    public:
         static MainWindow& Instance();
 
-    private:
-        void Init();
-
-    public:
         void Open();
         void Draw();
 
@@ -43,6 +41,7 @@ namespace oly::editor
         MainMenuBar& GetMainMenuBar();
 
     private:
+        void Init();
         void DrawNotifications();
     };
 }
