@@ -4,7 +4,8 @@
 
 namespace oly::editor
 {
-    class LogPanel : public IPanel
+    class LogPanel
+        : public IPanel
     {
     public:
         static LogPanel& Instance();

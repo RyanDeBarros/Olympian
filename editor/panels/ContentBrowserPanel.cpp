@@ -21,7 +21,14 @@
 namespace oly::editor
 {
     ContentBrowserPanel::NewAssetInfo::NewAssetInfo(detail::Key type, std::string name, const char* popup_label)
-        : type(type), name(std::move(name)), popup(popup_label, imtk::popup_config{ .center_window = imtk::center_window::always, .window_flags = ImGuiWindowFlags_AlwaysAutoResize })
+        : type(type)
+        , name(std::move(name))
+        , popup(
+            popup_label,
+            imtk::popup_config{
+                .center_window = imtk::center_window::always,
+                .window_flags = ImGuiWindowFlags_AlwaysAutoResize
+            })
     {
         popup.open();
     }
@@ -39,31 +46,28 @@ namespace oly::editor
     }
 
     ContentBrowserPanel::ContentBrowserPanel()
-        : _folder_history(Editor::GetPreferences().content_browser->folder_history_limit.value),
-        _undo_history(Editor::GetPreferences().content_browser->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
+        : folder_history_(Editor::GetPreferences().content_browser->folder_history_limit.value)
+        , undo_history_(
+            Editor::GetPreferences().content_browser->undo_history->CountLimit(),
+            Editor::GetPreferences().edit->undo_history->SizeLimit())
     {
-        _listener = Editor::OnPreferencesChanged().subscribe([this]() {
-            const auto& pref = Editor::GetPreferences();
-            _folder_history.set_limit(pref.content_browser->folder_history_limit.value);
-            _undo_history.set_limits(pref.content_browser->undo_history->CountLimit(), pref.edit->undo_history->SizeLimit());
-        });
+        listener_ = Editor::OnPreferencesChanged().subscribe(
+            [this]() {
+                const auto& pref = Editor::GetPreferences();
+                folder_history_.set_limit(pref.content_browser->folder_history_limit.value);
+                undo_history_.set_limits(
+                    pref.content_browser->undo_history->CountLimit(),
+                    pref.edit->undo_history->SizeLimit());
+            });
 
-        _favorited.config.selected = false;
-        _favorited.config.icon = Icon(IconResource::StarOutline);
-        _favorited.config.selected_icon = Icon(IconResource::StarFilled);
-    }
-
-    ContentBrowserPanel& ContentBrowserPanel::Instance()
-    {
-        if (auto panel = MainWindow::Instance().GetPanelManager().Get<ContentBrowserPanel>())
-            return *panel;
-        else
-            imtk::breakout_error::throw_("No instance of ContentBrowserPanel");
+        favorited_.config.selected = false;
+        favorited_.config.icon = Icon(IconResource::StarOutline);
+        favorited_.config.selected_icon = Icon(IconResource::StarFilled);
     }
 
     void ContentBrowserPanel::InitImpl()
     {
-        _folder_history.clear();
+        folder_history_.clear();
         const auto res_root = ProjectInfo::Instance().ResourceRoot();
         GetFavoritesList().insert(res_root);
         SetFolder(res_root);
@@ -83,23 +87,28 @@ namespace oly::editor
 
             if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
             {
-                if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-                    _undo_history.undo();
+                static const ImGuiInputFlags input_flags = ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat;
 
-                if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
-                    _undo_history.redo();
+                if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, input_flags))
+                    undo_history_.undo();
+
+                if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, input_flags))
+                    undo_history_.redo();
             }
 
             if (auto _ = imtk::child("##ContentBrowserBox", ImVec2(0, 0), ImGuiChildFlags_Borders))
             {
                 CompoundUndoActionQueue fio_queue;
 
-                if (auto _ = imtk::table("##ContentBrowserToolbar", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
+                if (auto _ = imtk::table(
+                    "##ContentBrowserToolbar",
+                    2,
+                    ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerV))
                 {
                     ImGui::TableNextRow();
 
                     ImGui::TableSetColumnIndex(0);
-                    std::string preview = detail::ResourcePath(_folder).get_resource_shorthand();
+                    std::string preview = detail::ResourcePath(folder_).get_resource_shorthand();
                     ImGui::SetNextItemWidth(ImGui::CalcTextSize(preview.c_str()).x + 10.f);
                     imtk::controls::readonly_text("##Folder", preview);
 
@@ -110,7 +119,10 @@ namespace oly::editor
                 const float font_global_scale = ImGui::GetIO().FontGlobalScale;
                 ImGui::GetIO().FontGlobalScale *= *Editor::GetLiveSettings().content_browser->font_scale;
 
-                if (auto _ = imtk::table("##MainTable", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
+                if (auto _ = imtk::table(
+                    "##MainTable",
+                    2,
+                    ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable))
                 {
                     ImGui::TableSetupColumn("##Favorites", ImGuiTableColumnFlags_WidthStretch, 0.25f);
 
@@ -129,9 +141,17 @@ namespace oly::editor
                 DrawImportFolderPopup(fio_queue);
                 DrawPruneFolderPopup(fio_queue);
 
-                fio_queue.PushAll(_undo_history);
+                fio_queue.PushAll(undo_history_);
             }
         }
+    }
+
+    ContentBrowserPanel& ContentBrowserPanel::Instance()
+    {
+        if (auto panel = MainWindow::Instance().GetPanelManager().Get<ContentBrowserPanel>())
+            return *panel;
+        else
+            imtk::breakout_error::throw_("No instance of ContentBrowserPanel");
     }
 
     ContentBrowserPanel& ContentBrowserPanel::FocusInstance()
@@ -170,10 +190,10 @@ namespace oly::editor
 
     void ContentBrowserPanel::DrawMainToolbar(CompoundUndoActionQueue& fio_queue)
     {
-        if (auto d = imtk::disabled(_on_res_root))
+        if (auto d = imtk::disabled(on_res_root_))
         {
-            _favorited.config.tooltip = d.is_disabled() ? "Favorite (disabled for root folder)" : "Favorite";
-            if (_favorited.draw())
+            favorited_.config.tooltip = d.is_disabled() ? "Favorite (disabled for root folder)" : "Favorite";
+            if (favorited_.draw())
             {
                 if (!d.is_disabled())
                     SyncFavoritesList();
@@ -181,17 +201,32 @@ namespace oly::editor
         }
 
         ImGui::SameLine();
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::OpenInTreeView), .str_id = "##OpenInTreeView", .tooltip = "Open in tree view" }).draw())
-            TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::OpenInTreeView),
+            .str_id = "##OpenInTreeView",
+            .tooltip = "Open in tree view" }).draw())
+        {
+            TreeViewPanel::ShowResourceFolderInTreeView(folder_);
+        }
 
         ImGui::SameLine();
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::FolderOpen), .str_id = "##RevealInExplorer", .tooltip = "Reveal in explorer" }).draw())
-            PathInfo::RevealInExplorer(_folder, true);
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::FolderOpen),
+            .str_id = "##RevealInExplorer",
+            .tooltip = "Reveal in explorer" }).draw())
+        {
+            PathInfo::RevealInExplorer(folder_, true);
+        }
 
         ImGui::SameLine();
         imtk::popup new_asset_popup("New");
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::CirclePlus), .str_id = "##New", .tooltip = "New" }).draw())
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::CirclePlus),
+            .str_id = "##New",
+            .tooltip = "New" }).draw())
+        {
             new_asset_popup.open();
+        }
 
         if (auto d = new_asset_popup.draw())
         {
@@ -204,39 +239,51 @@ namespace oly::editor
 
         imtk::controls::vertical_separator();
 
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::Import), .str_id = "##Import", .tooltip = "Import" }).draw())
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::Import),
+            .str_id = "##Import",
+            .tooltip = "Import" }).draw())
         {
-            ImportFromPath(_folder, fio_queue);
+            ImportFromPath(folder_, fio_queue);
             ImGui::CloseCurrentPopup();
         }
 
         ImGui::SameLine();
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::Prune), .str_id = "##Prune", .tooltip = "Prune" }).draw())
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::Prune),
+            .str_id = "##Prune",
+            .tooltip = "Prune" }).draw())
         {
-            PruneFromPath(_folder, fio_queue);
+            PruneFromPath(folder_, fio_queue);
             ImGui::CloseCurrentPopup();
         }
 
         imtk::controls::vertical_separator();
 
-        if (auto d = imtk::disabled(_folder_history.empty_backwards()))
+        if (auto d = imtk::disabled(folder_history_.empty_backwards()))
         {
-            if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleLeft), .str_id = "##FolderHistoryBack", .tooltip = "Back" }).draw())
+            if (imtk::w::icon_button({
+                .icon = Icon(IconResource::CircleLeft),
+                .str_id = "##FolderHistoryBack",
+                .tooltip = "Back" }).draw())
             {
-                _folder_history.move_backward();
-                if (auto f = _folder_history.get_present())
+                folder_history_.move_backward();
+                if (auto f = folder_history_.get_present())
                     SwitchFolder(*f);
             }
         }
 
         ImGui::SameLine();
 
-        if (auto d = imtk::disabled(_folder_history.empty_forwards()))
+        if (auto d = imtk::disabled(folder_history_.empty_forwards()))
         {
-            if (imtk::w::icon_button({ .icon = Icon(IconResource::CircleRight), .str_id = "##FolderHistoryForward", .tooltip = "forward" }).draw())
+            if (imtk::w::icon_button({
+                .icon = Icon(IconResource::CircleRight),
+                .str_id = "##FolderHistoryForward",
+                .tooltip = "forward" }).draw())
             {
-                _folder_history.move_forward();
-                if (auto f = _folder_history.get_present())
+                folder_history_.move_forward();
+                if (auto f = folder_history_.get_present())
                     SwitchFolder(*f);
             }
         }
@@ -251,20 +298,28 @@ namespace oly::editor
         imtk::controls::vertical_separator();
 
         if (auto _ = imtk::item_width_scope(120.f))
-            imtk::controls::float_popout("Font scale", *Editor::GetLiveSettings().content_browser->font_scale, 0.1f, 10.f, "%.1f", ImGuiSliderFlags_Logarithmic);
+        {
+            imtk::controls::float_popout(
+                "Font scale",
+                *Editor::GetLiveSettings().content_browser->font_scale,
+                0.1f,
+                10.f,
+                "%.1f",
+                ImGuiSliderFlags_Logarithmic);
+        }
     }
 
     void ContentBrowserPanel::SetFolder(std::filesystem::path folder)
     {
         SwitchFolder(std::move(folder));
-        _folder_history.push(_folder);
+        folder_history_.push(folder_);
     }
 
     void ContentBrowserPanel::SwitchFolder(std::filesystem::path folder)
     {
-        _folder = std::move(folder);
-        _favorited.config.selected = ShouldBeFavorited();
-        _on_res_root = std::filesystem::equivalent(_folder, ProjectInfo::Instance().ResourceRoot());
+        folder_ = std::move(folder);
+        favorited_.config.selected = ShouldBeFavorited();
+        on_res_root_ = std::filesystem::equivalent(folder_, ProjectInfo::Instance().ResourceRoot());
         ClearSelection();
     }
 
@@ -275,15 +330,15 @@ namespace oly::editor
 
     bool ContentBrowserPanel::ShouldBeFavorited() const
     {
-        return GetFavoritesList().contains(_folder);
+        return GetFavoritesList().contains(folder_);
     }
 
     void ContentBrowserPanel::SyncFavoritesList() const
     {
-        if (_favorited.selected())
-            GetFavoritesList().insert(_folder);
+        if (favorited_.selected())
+            GetFavoritesList().insert(folder_);
         else
-            GetFavoritesList().erase(_folder);
+            GetFavoritesList().erase(folder_);
     }
 
     void ContentBrowserPanel::DrawFavoritesList()
@@ -331,29 +386,37 @@ namespace oly::editor
 
                     ImGui::Separator();
 
-                    if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = "Import" }).draw())
+                    if (imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::Import),
+                        .label = "Import" }).draw())
                     {
-                        ImportFromPath(_folder, fio_queue);
+                        ImportFromPath(folder_, fio_queue);
                         ImGui::CloseCurrentPopup();
                     }
 
-                    if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = "Prune" }).draw())
+                    if (imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::Prune),
+                        .label = "Prune" }).draw())
                     {
-                        PruneFromPath(_folder, fio_queue);
+                        PruneFromPath(folder_, fio_queue);
                         ImGui::CloseCurrentPopup();
                     }
 
                     ImGui::Separator();
 
-                    if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::OpenInTreeView), .label = "Open in tree view" }).draw())
+                    if (imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::OpenInTreeView),
+                        .label = "Open in tree view" }).draw())
                     {
-                        TreeViewPanel::ShowResourceFolderInTreeView(_folder);
+                        TreeViewPanel::ShowResourceFolderInTreeView(folder_);
                         ImGui::CloseCurrentPopup();
                     }
 
-                    if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = "Reveal in explorer" }).draw())
+                    if (imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::FolderOpen),
+                        .label = "Reveal in explorer" }).draw())
                     {
-                        PathInfo::RevealInExplorer(_folder, true);
+                        PathInfo::RevealInExplorer(folder_, true);
                         ImGui::CloseCurrentPopup();
                     }
                 }
@@ -389,16 +452,16 @@ namespace oly::editor
 
             ImGui::TableNextRow();
 
-            const std::filesystem::path folder = _folder;
+            const std::filesystem::path folder = folder_;
 
-            if (!_on_res_root)
+            if (!on_res_root_)
             {
                 ImGui::TableNextColumn();
                 DrawPathEntry(folder.parent_path(), true, entry_table_state, fio_queue);
             }
 
             std::error_code ec;
-            for (const auto& path : _selectable_entry_paths)
+            for (const auto& path : selectable_entry_paths_)
             {
                 ImGui::TableNextColumn();
                 DrawPathEntry(path, false, entry_table_state, fio_queue);
@@ -423,12 +486,22 @@ namespace oly::editor
         }
     }
 
-    void ContentBrowserPanel::DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, CompoundUndoActionQueue& fio_queue)
+    void ContentBrowserPanel::DrawPathEntry(
+        const std::filesystem::path& path,
+        bool dotdot,
+        const EntryTableState& entry_table_state,
+        CompoundUndoActionQueue& fio_queue)
     {
         imtk::id_scope id(path.string().c_str());
-        if (auto _ = imtk::child(path.generic_string().c_str(), entry_table_state.entry_size, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoScrollbar))
+        if (auto _ = imtk::child(
+            path.generic_string().c_str(),
+            entry_table_state.entry_size,
+            ImGuiChildFlags_Borders,
+            ImGuiWindowFlags_NoScrollbar))
         {
-            imtk::popup rename_popup("Rename path", imtk::popup_config{ .center_window = imtk::center_window::appearing });
+            imtk::popup rename_popup(
+                "Rename path",
+                imtk::popup_config{ .center_window = imtk::center_window::appearing });
 
             if (!dotdot)
             {
@@ -448,13 +521,17 @@ namespace oly::editor
 
                     ImGui::Separator();
 
-                    if (!detail::ResourcePath(path).get_import_path().exists() && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Import), .label = "Import" }).draw())
+                    if (!detail::ResourcePath(path).get_import_path().exists() && imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::Import),
+                        .label = "Import" }).draw())
                     {
                         ImportFromPath(path, fio_queue);
                         ImGui::CloseCurrentPopup();
                     }
 
-                    if (std::filesystem::is_directory(path) && imtk::w::icon_menu_item({ .icon = Icon(IconResource::Prune), .label = "Prune" }).draw())
+                    if (std::filesystem::is_directory(path) && imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::Prune),
+                        .label = "Prune" }).draw())
                     {
                         PruneFromPath(path, fio_queue);
                         ImGui::CloseCurrentPopup();
@@ -462,7 +539,9 @@ namespace oly::editor
 
                     ImGui::Separator();
 
-                    if (imtk::w::icon_menu_item({ .icon = Icon(IconResource::FolderOpen), .label = "Reveal in explorer" }).draw())
+                    if (imtk::w::icon_menu_item({
+                        .icon = Icon(IconResource::FolderOpen),
+                        .label = "Reveal in explorer" }).draw())
                     {
                         PathInfo::RevealInExplorer(path, false);
                         ImGui::CloseCurrentPopup();
@@ -484,12 +563,16 @@ namespace oly::editor
 
             if (IsSelected(path))
             {
-                ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset,
+                ImGui::GetWindowDrawList()->AddRectFilled(
+                    cursor - padding_offset,
+                    cursor + child_size + padding_offset,
                     ImGui::GetColorU32(ImGuiCol_FrameBgActive));
 
-                if (path == _active_selected_path)
+                if (path == active_selected_path_)
                 {
-                    ImGui::GetWindowDrawList()->AddRect(cursor - padding_offset, cursor + child_size + padding_offset,
+                    ImGui::GetWindowDrawList()->AddRect(
+                        cursor - padding_offset,
+                        cursor + child_size + padding_offset,
                         ImGui::GetColorU32(ImGuiCol_TabSelectedOverline), 16.f, 0, 12.f);
                 }
             }
@@ -505,14 +588,21 @@ namespace oly::editor
                 if (imtk::nav::lmb().clicked)
                     ClickSelect(path);
 
-                ImGui::GetWindowDrawList()->AddRectFilled(cursor - padding_offset, cursor + child_size + padding_offset, ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
+                ImGui::GetWindowDrawList()->AddRectFilled(
+                    cursor - padding_offset,
+                    cursor + child_size + padding_offset,
+                    ImGui::GetColorU32(ImGuiCol_FrameBgHovered));
 
                 if (imtk::nav::lmb().double_clicked)
                     OpenPath(path);
             }
 
-            ImGui::GetWindowDrawList()->AddImage(PathInfo::GetIcon(std::filesystem::is_directory(path) ? path : res.get_import_path().get_absolute()).id(),
-                icon_start, icon_start + icon_size);
+            ImGui::GetWindowDrawList()->AddImage(
+                PathInfo::GetIcon(std::filesystem::is_directory(path)
+                    ? path
+                    : res.get_import_path().get_absolute()).id(),
+                icon_start,
+                icon_start + icon_size);
 
             if (entry_table_state.focused && IsSelected(path) && !dotdot)
             {
@@ -538,14 +628,14 @@ namespace oly::editor
             }
 
             if (rename_popup.is_opening())
-                _rename_buffer = path.filename().generic_string();
+                rename_buffer_ = path.filename().generic_string();
 
             if (auto d = rename_popup.draw())
             {
                 if (ImGui::IsWindowAppearing())
                     ImGui::SetKeyboardFocusHere();
 
-                imtk::controls::input_text("Name", _rename_buffer);
+                imtk::controls::input_text("Name", rename_buffer_);
 
                 if (imtk::nav::escape().pressed)
                     d.close();
@@ -556,7 +646,7 @@ namespace oly::editor
 
                     auto action = std::make_unique<fio::RenamePathAction>();
                     action->old_path = path;
-                    action->new_path = path.parent_path() / _rename_buffer;
+                    action->new_path = path.parent_path() / rename_buffer_;
                     if (action->old_path != action->new_path)
                         fio_queue.Append(std::move(action), true);
                 }
@@ -602,13 +692,17 @@ namespace oly::editor
 
     void ContentBrowserPanel::NewAssetMenu()
     {
-        if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Tileset)), .label = "Tileset" }).draw())
+        if (imtk::w::icon_menu_item({
+            .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Tileset)),
+            .label = "Tileset" }).draw())
         {
             _new_asset = NewAssetInfo(detail::Key::Meta_Tileset, "New Tileset", "New tileset");
             ImGui::CloseCurrentPopup();
         }
 
-        if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Signal)), .label = "Signal" }).draw())
+        if (imtk::w::icon_menu_item({
+            .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Signal)),
+            .label = "Signal" }).draw())
         {
             _new_asset = NewAssetInfo(detail::Key::Meta_Signal, "New Signal", "New signal");
             ImGui::CloseCurrentPopup();
@@ -616,13 +710,17 @@ namespace oly::editor
 
         if (auto _ = imtk::menu("Fonts"))
         {
-            if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)), .label = "Font family" }).draw())
+            if (imtk::w::icon_menu_item({
+                .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_FontFamily)),
+                .label = "Font family" }).draw())
             {
                 _new_asset = NewAssetInfo(detail::Key::Meta_FontFamily, "New Font Family", "New font family");
                 ImGui::CloseCurrentPopup();
             }
 
-            if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_RasterFont)), .label = "Raster font" }).draw())
+            if (imtk::w::icon_menu_item({
+                .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_RasterFont)),
+                .label = "Raster font" }).draw())
             {
                 _new_asset = NewAssetInfo(detail::Key::Meta_RasterFont, "New Raster Font", "New raster font");
                 ImGui::CloseCurrentPopup();
@@ -632,7 +730,9 @@ namespace oly::editor
 
     void ContentBrowserPanel::NewFolderMenu()
     {
-        if (imtk::w::icon_menu_item({ .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Folder)), .label = "New folder" }).draw())
+        if (imtk::w::icon_menu_item({
+            .icon = Icon(PathInfo::GetAssetIcon(detail::Key::Meta_Folder)),
+            .label = "New folder" }).draw())
         {
             _new_asset = NewAssetInfo(detail::Key::Meta_Folder, "New Folder", "New folder");
             ImGui::CloseCurrentPopup();
@@ -685,7 +785,7 @@ namespace oly::editor
     {
         std::string ext = _new_asset->type != detail::Key::Meta_Folder ? ".oly" : "";
 
-        std::filesystem::path asset_path = _folder / (_new_asset->name + ext);
+        std::filesystem::path asset_path = folder_ / (_new_asset->name + ext);
 
         if (std::filesystem::exists(asset_path))
         {
@@ -694,7 +794,7 @@ namespace oly::editor
             {
                 std::stringstream ss;
                 ss << _new_asset->name << " (" << counter++ << ")" << ext;
-                asset_path = _folder / ss.str();
+                asset_path = folder_ / ss.str();
             }
         }
 
@@ -703,8 +803,8 @@ namespace oly::editor
             auto action = std::make_unique<fio::CreateAssetAction>();
             action->asset_path = asset_path;
             fio_queue.Append(std::move(action), false);
-            _selected_paths = { asset_path };
-            _active_selected_path = asset_path;
+            selected_paths_ = { asset_path };
+            active_selected_path_ = asset_path;
         }
 
         _new_asset.reset();
@@ -712,17 +812,20 @@ namespace oly::editor
 
     void ContentBrowserPanel::ClearSelection()
     {
-        _selected_paths.clear();
-        _active_selected_path.reset();
+        selected_paths_.clear();
+        active_selected_path_.reset();
     }
 
     void ContentBrowserPanel::PruneSelection()
     {
         std::vector<std::filesystem::path> folders;
         std::vector<std::filesystem::path> files;
-        _selectable_entry_paths.clear();
+        selectable_entry_paths_.clear();
         std::error_code ec;
-        for (const auto& entry : std::filesystem::directory_iterator(_folder, std::filesystem::directory_options::skip_permission_denied, ec))
+        for (const auto& entry :
+            std::filesystem::directory_iterator(
+                folder_,
+                std::filesystem::directory_options::skip_permission_denied, ec))
         {
             const auto& path = entry.path();
             if (!PathInfo::IsImportFile(path))
@@ -735,75 +838,92 @@ namespace oly::editor
         }
 
         for (auto& folder : folders)
-            _selectable_entry_paths.push_back(std::move(folder));
+            selectable_entry_paths_.push_back(std::move(folder));
 
         for (auto& file : files)
-            _selectable_entry_paths.push_back(std::move(file));
+            selectable_entry_paths_.push_back(std::move(file));
 
-        for (auto it = _selected_paths.begin(); it != _selected_paths.end(); )
+        for (auto it = selected_paths_.begin(); it != selected_paths_.end(); )
         {
-            if (std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *it) == _selectable_entry_paths.end())
-                it = _selected_paths.erase(it);
+            if (std::find(
+                selectable_entry_paths_.begin(),
+                selectable_entry_paths_.end(), *it) == selectable_entry_paths_.end())
+            {
+                it = selected_paths_.erase(it);
+            }
             else
                 ++it;
         }
 
-        if (_active_selected_path && std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *_active_selected_path) == _selectable_entry_paths.end())
-            _active_selected_path.reset();
+        if (active_selected_path_ && std::find(
+            selectable_entry_paths_.begin(),
+            selectable_entry_paths_.end(),
+            *active_selected_path_) == selectable_entry_paths_.end())
+        {
+            active_selected_path_.reset();
+        }
 
-        if (!_active_selected_path && !_selected_paths.empty())
-            _active_selected_path = _selected_paths.back();
+        if (!active_selected_path_ && !selected_paths_.empty())
+            active_selected_path_ = selected_paths_.back();
     }
 
     void ContentBrowserPanel::ClickSelect(const std::filesystem::path& path)
     {
-        if (imtk::nav::shift().down && _active_selected_path)
+        if (imtk::nav::shift().down && active_selected_path_)
         {
-            const auto active_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), *_active_selected_path);
-            const auto current_it = std::find(_selectable_entry_paths.begin(), _selectable_entry_paths.end(), path);
+            const auto active_it = std::find(
+                selectable_entry_paths_.begin(),
+                selectable_entry_paths_.end(),
+                *active_selected_path_);
+
+            const auto current_it = std::find(
+                selectable_entry_paths_.begin(),
+                selectable_entry_paths_.end(),
+                path);
+
             const auto min_it = std::min(active_it, current_it);
             const auto max_it = std::max(active_it, current_it);
 
             for (auto it = min_it; it != std::next(max_it); ++it)
             {
                 if (!IsSelected(*it))
-                    _selected_paths.push_back(*it);
+                    selected_paths_.push_back(*it);
             }
 
-            _active_selected_path = path;
+            active_selected_path_ = path;
         }
         else if (imtk::nav::ctrl().down)
         {
-            for (auto it = _selected_paths.begin(); it != _selected_paths.end(); ++it)
+            for (auto it = selected_paths_.begin(); it != selected_paths_.end(); ++it)
             {
                 if (*it == path)
                 {
-                    _selected_paths.erase(it);
-                    if (_active_selected_path == path)
+                    selected_paths_.erase(it);
+                    if (active_selected_path_ == path)
                     {
-                        if (_selected_paths.empty())
-                            _active_selected_path.reset();
+                        if (selected_paths_.empty())
+                            active_selected_path_.reset();
                         else
-                            _active_selected_path = _selected_paths.back();
+                            active_selected_path_ = selected_paths_.back();
                     }
 
                     return;
                 }
             }
 
-            _selected_paths.push_back(path);
-            _active_selected_path = path;
+            selected_paths_.push_back(path);
+            active_selected_path_ = path;
         }
         else
         {
-            _selected_paths = { path };
-            _active_selected_path = path;
+            selected_paths_ = { path };
+            active_selected_path_ = path;
         }
     }
 
     bool ContentBrowserPanel::IsSelected(const std::filesystem::path& path) const
     {
-        for (auto it = _selected_paths.begin(); it != _selected_paths.end(); ++it)
+        for (auto it = selected_paths_.begin(); it != selected_paths_.end(); ++it)
         {
             if (*it == path)
                 return true;
@@ -814,7 +934,7 @@ namespace oly::editor
 
     bool ContentBrowserPanel::IsOnlySelected(const std::filesystem::path& path) const
     {
-        return _selected_paths.size() == 1 && _selected_paths[0] == path;
+        return selected_paths_.size() == 1 && selected_paths_[0] == path;
     }
 
     void ContentBrowserPanel::DeletePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue) const
@@ -863,7 +983,10 @@ namespace oly::editor
                 d.close();
 
                 std::error_code ec;
-                for (const auto& entry : std::filesystem::directory_iterator(detail::ResourcePath(folder).get_absolute(), std::filesystem::directory_options::skip_permission_denied, ec))
+                for (const auto& entry :
+                    std::filesystem::directory_iterator(
+                        detail::ResourcePath(folder).get_absolute(),
+                        std::filesystem::directory_options::skip_permission_denied, ec))
                 {
                     const auto& path = entry.path();
                     if (std::filesystem::is_regular_file(path))
@@ -886,7 +1009,10 @@ namespace oly::editor
                     std::filesystem::path folder = folders.back();
                     folders.pop_back();
 
-                    for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+                    for (const auto& entry :
+                        std::filesystem::directory_iterator(
+                            folder,
+                            std::filesystem::directory_options::skip_permission_denied, ec))
                     {
                         const auto& path = entry.path();
                         if (std::filesystem::is_regular_file(path))
@@ -909,7 +1035,7 @@ namespace oly::editor
 
     void ContentBrowserPanel::PruneFromPath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
     {
-        _prune_folder = PruneFolderInfo(path);
+        prune_folder_ = PruneFolderInfo(path);
     }
 
     void ContentBrowserPanel::PrunePath(const std::filesystem::path& path, CompoundUndoActionQueue& fio_queue)
@@ -929,14 +1055,14 @@ namespace oly::editor
 
     void ContentBrowserPanel::DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue)
     {
-        if (!_prune_folder)
+        if (!prune_folder_)
             return;
 
-        if (auto d = _prune_folder->popup.draw())
+        if (auto d = prune_folder_->popup.draw())
         {
             ImGui::TextUnformatted("Folder");
             ImGui::SameLine();
-            std::string folder = detail::ResourcePath(_prune_folder->folder).get_resource_shorthand();
+            std::string folder = detail::ResourcePath(prune_folder_->folder).get_resource_shorthand();
             imtk::controls::readonly_text("##Folder", folder);
 
             if (ImGui::Button("Prune direct contents only"))
@@ -944,10 +1070,15 @@ namespace oly::editor
                 d.close();
 
                 std::error_code ec;
-                for (const auto& entry : std::filesystem::directory_iterator(detail::ResourcePath(folder).get_absolute(), std::filesystem::directory_options::skip_permission_denied, ec))
+                for (const auto& entry :
+                    std::filesystem::directory_iterator(
+                        detail::ResourcePath(folder).get_absolute(),
+                        std::filesystem::directory_options::skip_permission_denied, ec))
+                {
                     PrunePath(entry.path(), fio_queue);
+                }
 
-                _prune_folder.reset();
+                prune_folder_.reset();
             }
 
             if (ImGui::Button("Prune recursively"))
@@ -963,21 +1094,26 @@ namespace oly::editor
                     std::filesystem::path folder = folders.back();
                     folders.pop_back();
 
-                    for (const auto& entry : std::filesystem::directory_iterator(folder, std::filesystem::directory_options::skip_permission_denied, ec))
+                    for (const auto& entry :
+                        std::filesystem::directory_iterator(
+                            folder,
+                            std::filesystem::directory_options::skip_permission_denied, ec))
+                    {
                         PrunePath(entry.path(), fio_queue);
+                    }
                 }
 
-                _prune_folder.reset();
+                prune_folder_.reset();
             }
 
             if (imtk::nav::escape().pressed)
             {
                 d.close();
-                _prune_folder.reset();
+                prune_folder_.reset();
             }
         }
         else
-            _prune_folder.reset();
+            prune_folder_.reset();
     }
 
     ContentBrowserPathDDP::ContentBrowserPathDDP(std::string path)

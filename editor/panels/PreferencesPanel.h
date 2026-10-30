@@ -1,29 +1,32 @@
 #pragma once
 
-#include "panels/IPanel.h"
 #include "documents/PreferencesDocument.h"
+
+#include "panels/IPanel.h"
 
 namespace oly::editor
 {
-    class PreferencesPanel : public IPanel
+    class PreferencesPanel
+        : public IPanel
     {
-        PreferencesDocument _doc;
-        imtk::unsaved_changes_modal _window_unsaved_changes_modal;
-        imtk::unsaved_changes_modal _shutdown_unsaved_changes_modal;
+        PreferencesDocument doc_;
+        imtk::unsaved_changes_modal window_unsaved_changes_modal_;
+        imtk::unsaved_changes_modal shutdown_unsaved_changes_modal_;
 
     public:
-        static PreferencesPanel& Instance();
-
         PreferencesPanel();
 
+    public:
         void InitImpl() override;
         const char* GetTitle() const override;
         void Draw() override;
 
+    public:
+        static PreferencesPanel& Instance();
+
+        bool RequestShutdown();
+
     private:
         bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal);
-
-    public:
-        bool RequestShutdown();
     };
 }

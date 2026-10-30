@@ -1,6 +1,7 @@
 #include "LogPanel.h"
 
 #include "core/windows/MainWindow.h"
+
 #include "panels/PanelManager.h"
 
 #include <imtk.hpp>

@@ -3,21 +3,20 @@
 namespace oly::editor
 {
     DrawDockedWindowImpl::DrawDockedWindowImpl(std::unique_ptr<imtk::window>&& window, bool request_close)
-        : _window(std::move(window)), _request_close(request_close)
+        : window_(std::move(window))
+        , request_close_(request_close)
     {
     }
 
     bool DrawDockedWindowImpl::IsVisible() const
     {
-        return _window && *_window;
+        return window_ && *window_;
     }
 
     bool DrawDockedWindowImpl::RequestsClose() const
     {
-        return _request_close;
+        return request_close_;
     }
-
-    IPanel* IPanel::_gain_next = nullptr;
 
     void IPanel::Init()
     {
@@ -31,48 +30,49 @@ namespace oly::editor
 
     void IPanel::Open()
     {
-        _open = true;
+        open_ = true;
     }
 
     void IPanel::Close()
     {
-        _open = false;
+        open_ = false;
     }
 
     bool IPanel::IsOpen() const
     {
-        return _open;
+        return open_;
     }
 
     void IPanel::ToggleOpen()
     {
-        _open = !_open;
+        open_ = !open_;
     }
 
     void IPanel::GainFocus()
     {
-        _gain_next = this;
+        gain_next_ = this;
     }
 
     DrawDockedWindowImpl IPanel::DrawDockedWindow(ImGuiWindowFlags flags)
     {
-        if (_open)
+        if (open_)
         {
-            auto window = std::make_unique<imtk::window>(GetTitle(), flags, &_open);
+            auto window = std::make_unique<imtk::window>(GetTitle(), flags, &open_);
 
-            if (_gain_next == this)
+            if (gain_next_ == this)
             {
                 if (window)
                     ImGui::SetWindowFocus();
-                _gain_next = nullptr;
+
+                gain_next_ = nullptr;
             }
 
-            return DrawDockedWindowImpl(std::move(window), !_open);
+            return DrawDockedWindowImpl(std::move(window), !open_);
         }
         else
         {
-            if (_gain_next == this)
-                _gain_next = nullptr;
+            if (gain_next_ == this)
+                gain_next_ = nullptr;
 
             return DrawDockedWindowImpl(nullptr, false);
         }

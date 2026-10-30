@@ -1,19 +1,23 @@
 #include "AssetEditorPanel.h"
 
-#include "core/windows/MainWindow.h"
-#include "core/editor/Editor.h"
-#include "core/editor/ProjectInfo.h"
 #include "core/PathInfo.h"
 
-#include "panels/PanelManager.h"
-#include "panels/ContentBrowserPanel.h"
+#include "core/editor/Editor.h"
+#include "core/editor/ProjectInfo.h"
+
+#include "core/windows/MainWindow.h"
 
 #include "documents/DocumentManager.h"
 #include "documents/IDocument.h"
 
+#include "panels/ContentBrowserPanel.h"
+#include "panels/PanelManager.h"
+
 #include "assets/MetaSplitter.h"
 
 #include <ImGuiFileDialog.h>
+
+#include <imp/macros.hpp>
 
 namespace oly::editor
 {
@@ -21,18 +25,10 @@ namespace oly::editor
 
     static std::string open_file_parent = ".";
 
-    AssetEditorPanel& AssetEditorPanel::Instance()
-    {
-        if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
-            return *panel;
-        else
-            imtk::breakout_error::throw_("No instance of AssetEditorPanel");
-    }
-
     AssetEditorPanel::AssetEditorPanel()
-        : _tab_unsaved_changes_modal("Tab")
-        , _window_unsaved_changes_modal("Window")
-        , _shutdown_unsaved_changes_modal("Shutdown")
+        : tab_unsaved_changes_modal_("Tab")
+        , window_unsaved_changes_modal_("Window")
+        , shutdown_unsaved_changes_modal_("Shutdown")
     {
     }
 
@@ -52,8 +48,8 @@ namespace oly::editor
         bool draw_window = true;
         if (window.RequestsClose())
         {
-            CloseAllTabs(_window_unsaved_changes_modal.pop);
-            if (_window_unsaved_changes_modal.pop.is_opening())
+            CloseAllTabs(window_unsaved_changes_modal_.pop);
+            if (window_unsaved_changes_modal_.pop.is_opening())
             {
                 Open();
                 ImGui::SetWindowFocus();
@@ -68,8 +64,8 @@ namespace oly::editor
 
             DrawTabBar();
 
-            if (_selected_tab)
-                _selected_tab->DrawMenuBar();
+            if (selected_tab_)
+                selected_tab_->DrawMenuBar();
             else
                 DrawDefaultMenuBar();
 
@@ -88,14 +84,88 @@ namespace oly::editor
             }
         }
 
-        if (DrawUnsavedChangesModal(_window_unsaved_changes_modal))
+        if (DrawUnsavedChangesModal(window_unsaved_changes_modal_))
             Close();
 
-        if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal))
+        if (DrawUnsavedChangesModal(shutdown_unsaved_changes_modal_))
         {
             Close();
             Editor::RequestShutdown();
         }
+    }
+
+    AssetEditorPanel& AssetEditorPanel::Instance()
+    {
+        if (auto panel = MainWindow::Instance().GetPanelManager().Get<AssetEditorPanel>())
+            return *panel;
+        else
+            imtk::breakout_error::throw_("No instance of AssetEditorPanel");
+    }
+
+    void AssetEditorPanel::OpenFile()
+    {
+        IGFD::FileDialogConfig config;
+        config.path = open_file_parent;
+        config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
+
+        static const char* const kFilters =
+            "Olympian files (*.oly){.oly},"
+            "Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},"
+            "Font files (*.ttf, *.otf){.ttf,.otf},"
+            "Any files{.*}";
+
+        ImGuiFileDialog::Instance()->OpenDialog(
+            kOpenFile,
+            "Select File",
+            kFilters,
+            config);
+    }
+
+    void AssetEditorPanel::FocusTab(IDocument* doc)
+    {
+        focused_tab_ = doc;
+    }
+
+    bool AssetEditorPanel::IsSelected(IDocument* doc) const
+    {
+        return selected_tab_ == doc;
+    }
+
+    void AssetEditorPanel::SaveSelectedTab() const
+    {
+        if (selected_tab_)
+            selected_tab_->DumpAsset();
+    }
+
+    void AssetEditorPanel::SaveAllTabs() const
+    {
+        for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
+            DocumentManager::Instance().GetDocument(i).DumpAsset();
+    }
+
+    void AssetEditorPanel::SelectedTabUndo() const
+    {
+        if (selected_tab_)
+            selected_tab_->Undo();
+    }
+
+    void AssetEditorPanel::SelectedTabRedo() const
+    {
+        if (selected_tab_)
+            selected_tab_->Redo();
+    }
+
+    bool AssetEditorPanel::RequestShutdown()
+    {
+        CloseAllTabs(shutdown_unsaved_changes_modal_.pop);
+        if (shutdown_unsaved_changes_modal_.pop.is_opening())
+        {
+            Open();
+            GainFocus();
+            return false;
+        }
+        else
+            return true;
     }
 
     void AssetEditorPanel::PollShortcuts()
@@ -111,11 +181,19 @@ namespace oly::editor
 
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_ChildWindows))
         {
-            if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+            if (ImGui::Shortcut(
+                ImGuiKey_Z | ImGuiMod_Ctrl,
+                ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+            {
                 SelectedTabUndo();
+            }
 
-            if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+            if (ImGui::Shortcut(
+                ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift,
+                ImGuiInputFlags_RouteGlobal | ImGuiInputFlags_Repeat))
+            {
                 SelectedTabRedo();
+            }
         }
     }
 
@@ -131,25 +209,25 @@ namespace oly::editor
         {
             std::vector<size_t> closed;
 
-            for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); )
+            for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); IMP_NOP)
             {
                 IDocument& doc = DocumentManager::Instance().GetDocument(i);
                 if (doc.Exists())
                     ++i;
                 else
                 {
-                    if (_selected_tab == &doc)
-                        _selected_tab = nullptr;
+                    if (selected_tab_ == &doc)
+                        selected_tab_ = nullptr;
 
-                    if (_focused_tab == &doc)
-                        _focused_tab = nullptr;
+                    if (focused_tab_ == &doc)
+                        focused_tab_ = nullptr;
 
                     DocumentManager::Instance().Remove(i);
                 }
             }
 
-            IDocument* previously_selected_doc = _selected_tab;
-            _selected_tab = nullptr;
+            IDocument* previously_selected_doc = selected_tab_;
+            selected_tab_ = nullptr;
             std::unordered_set<IDocument*> seen_documents;
 
             for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
@@ -163,7 +241,7 @@ namespace oly::editor
                 if (doc.IsDirty())
                     tab_item_flags |= ImGuiTabItemFlags_UnsavedDocument;
 
-                if (_focused_tab == &doc)
+                if (focused_tab_ == &doc)
                     tab_item_flags |= ImGuiTabItemFlags_SetSelected;
 
                 if (auto _ = imtk::tab_item(doc.TabName() + "##" + std::to_string(i), tab_item_flags, &open))
@@ -182,7 +260,7 @@ namespace oly::editor
                     }
 
                     doc.Draw();
-                    _selected_tab = &doc;
+                    selected_tab_ = &doc;
                 }
 
                 if (!open)
@@ -190,58 +268,60 @@ namespace oly::editor
                     if (!doc.IsDirty())
                     {
                         closed.push_back(i);
-                        if (&doc == _selected_tab)
-                            _selected_tab = nullptr;
+                        if (&doc == selected_tab_)
+                            selected_tab_ = nullptr;
                     }
-                    else if (!_pending_close_set.contains(&doc))
+                    else if (!pending_close_set_.contains(&doc))
                     {
-                        _pending_close_set.insert(&doc);
-                        _pending_close.push_back(&doc);
-                        _tab_unsaved_changes_modal.pop.open();
+                        pending_close_set_.insert(&doc);
+                        pending_close_.push_back(&doc);
+                        tab_unsaved_changes_modal_.pop.open();
                     }
                 }
             }
 
             RemoveOldPendingDocuments(seen_documents);
 
-            if (!_window_unsaved_changes_modal.pop.is_opening())
+            if (!window_unsaved_changes_modal_.pop.is_opening())
             {
                 DrawTabUnsavedChangesModal(closed);
             }
             else
             {
-                _pending_close.clear();
-                _pending_close_set.clear();
+                pending_close_.clear();
+                pending_close_set_.clear();
             }
 
             std::sort(closed.begin(), closed.end());
             for (auto it = closed.rbegin(); it != closed.rend(); ++it)
                 DocumentManager::Instance().Remove(*it);
 
-            _focused_tab = nullptr;
+            focused_tab_ = nullptr;
         }
     }
 
     void AssetEditorPanel::RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents)
     {
-        for (auto it = _pending_close.begin(); it != _pending_close.end();)
+        for (auto it = pending_close_.begin(); it != pending_close_.end();)
         {
             if (seen_documents.contains(*it))
                 ++it;
             else
-                it = _pending_close.erase(it);
+                it = pending_close_.erase(it);
         }
 
-        for (auto it = _pending_close_set.begin(); it != _pending_close_set.end();)
+        for (auto it = pending_close_set_.begin(); it != pending_close_set_.end();)
         {
             if (seen_documents.contains(*it))
                 ++it;
             else
-                it = _pending_close_set.erase(it);
+                it = pending_close_set_.erase(it);
         }
     }
 
-    static imtk::unsaved_changes_modal::result DrawUnsavedChangesModalImpl(imtk::unsaved_changes_modal& modal, IDocument* doc)
+    static imtk::unsaved_changes_modal::result DrawUnsavedChangesModalImpl(
+        imtk::unsaved_changes_modal& modal,
+        IDocument* doc)
     {
         if (!doc)
             return imtk::unsaved_changes_modal::result::no_draw;
@@ -262,29 +342,30 @@ namespace oly::editor
 
     void AssetEditorPanel::DrawTabUnsavedChangesModal(std::vector<size_t>& closed)
     {
-        if (_pending_close.empty())
+        if (pending_close_.empty())
             return;
 
-        IDocument* doc = _pending_close.front();
-        const auto result = DrawUnsavedChangesModalImpl(_tab_unsaved_changes_modal, doc);
+        IDocument* doc = pending_close_.front();
+        const auto result = DrawUnsavedChangesModalImpl(tab_unsaved_changes_modal_, doc);
 
-        if (_tab_unsaved_changes_modal.closing(result))
+        if (tab_unsaved_changes_modal_.closing(result))
         {
             closed.push_back(DocumentManager::Instance().GetDocumentIndex(doc));
-            if (doc == _selected_tab)
-                _selected_tab = nullptr;
+            if (doc == selected_tab_)
+                selected_tab_ = nullptr;
         }
 
-        if (result != imtk::unsaved_changes_modal::result::no_draw && result != imtk::unsaved_changes_modal::result::no_interaction)
+        if (result != imtk::unsaved_changes_modal::result::no_draw
+            && result != imtk::unsaved_changes_modal::result::no_interaction)
         {
-            _pending_close.erase(_pending_close.begin());
-            _pending_close_set.erase(doc);
+            pending_close_.erase(pending_close_.begin());
+            pending_close_set_.erase(doc);
         }
     }
 
     bool AssetEditorPanel::DrawUnsavedChangesModal(imtk::unsaved_changes_modal& popup)
     {
-        switch (DrawUnsavedChangesModalImpl(popup, _selected_tab))
+        switch (DrawUnsavedChangesModalImpl(popup, selected_tab_))
         {
         case imtk::unsaved_changes_modal::result::save_changes:
         case imtk::unsaved_changes_modal::result::discard_changes:
@@ -302,14 +383,14 @@ namespace oly::editor
 
     void AssetEditorPanel::CloseAllTabs(imtk::popup& popup)
     {
-        _pending_close.clear();
-        _pending_close_set.clear();
+        pending_close_.clear();
+        pending_close_set_.clear();
         popup.close();
 
         for (int i = DocumentManager::Instance().DocumentCount() - 1; i >= 0; --i)
         {
             IDocument& doc = DocumentManager::Instance().GetDocument(i);
-            _selected_tab = &doc;
+            selected_tab_ = &doc;
 
             if (doc.IsDirty())
             {
@@ -318,7 +399,7 @@ namespace oly::editor
             }
 
             DocumentManager::Instance().Remove(i);
-            _selected_tab = nullptr;
+            selected_tab_ = nullptr;
         }
     }
 
@@ -332,61 +413,5 @@ namespace oly::editor
                     OpenFile();
             }
         }
-    }
-
-    void AssetEditorPanel::OpenFile()
-    {
-        IGFD::FileDialogConfig config;
-        config.path = open_file_parent;
-        config.flags = ImGuiFileDialogFlags_CaseInsensitiveExtentionFiltering | ImGuiFileDialogFlags_Modal;
-
-        ImGuiFileDialog::Instance()->OpenDialog(kOpenFile, "Select File", "Olympian files (*.oly){.oly},Image files (*.png, *.jpg, *.gif){.png,.jpg,.gif},Font files (*.ttf, *.otf){.ttf,.otf},Any files{.*}", config);
-    }
-
-    void AssetEditorPanel::FocusTab(IDocument* doc)
-    {
-        _focused_tab = doc;
-    }
-
-    bool AssetEditorPanel::IsSelected(IDocument* doc) const
-    {
-        return _selected_tab == doc;
-    }
-
-    void AssetEditorPanel::SaveSelectedTab() const
-    {
-        if (_selected_tab)
-            _selected_tab->DumpAsset();
-    }
-
-    void AssetEditorPanel::SaveAllTabs() const
-    {
-        for (size_t i = 0; i < DocumentManager::Instance().DocumentCount(); ++i)
-            DocumentManager::Instance().GetDocument(i).DumpAsset();
-    }
-
-    void AssetEditorPanel::SelectedTabUndo() const
-    {
-        if (_selected_tab)
-            _selected_tab->Undo();
-    }
-
-    void AssetEditorPanel::SelectedTabRedo() const
-    {
-        if (_selected_tab)
-            _selected_tab->Redo();
-    }
-
-    bool AssetEditorPanel::RequestShutdown()
-    {
-        CloseAllTabs(_shutdown_unsaved_changes_modal.pop);
-        if (_shutdown_unsaved_changes_modal.pop.is_opening())
-        {
-            Open();
-            GainFocus();
-            return false;
-        }
-        else
-            return true;
     }
 }

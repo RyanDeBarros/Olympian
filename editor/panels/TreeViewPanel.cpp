@@ -1,15 +1,15 @@
 #include "TreeViewPanel.h"
 
+#include "core/PathInfo.h"
+
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
 #include "core/editor/ResourceLoader.h"
 
 #include "core/windows/MainWindow.h"
 
-#include "core/PathInfo.h"
-
-#include "panels/PanelManager.h"
 #include "panels/ContentBrowserPanel.h"
+#include "panels/PanelManager.h"
 
 #include "desc/PreferencesDesc.h"
 
@@ -109,7 +109,8 @@ namespace oly::editor
     {
         std::unordered_set<std::filesystem::path> existing;
         std::error_code ec;
-        for (const auto& entry : std::filesystem::directory_iterator(path, std::filesystem::directory_options::skip_permission_denied, ec))
+        for (const auto& entry :
+            std::filesystem::directory_iterator(path, std::filesystem::directory_options::skip_permission_denied, ec))
         {
             if (ec)
             {
@@ -179,18 +180,10 @@ namespace oly::editor
         ignore_imports.config.tooltip = "Ignore import files";
     }
 
-    TreeViewPanel& TreeViewPanel::Instance()
-    {
-        if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
-            return *panel;
-        else
-            imtk::breakout_error::throw_("No instance of TreeViewPanel");
-    }
-
     void TreeViewPanel::InitImpl()
     {
-        _root = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
-        _root->Open();
+        root_ = std::make_unique<TreeViewNode>(ProjectInfo::Instance().ProjectRoot());
+        root_->Open();
     }
 
     const char* TreeViewPanel::GetTitle() const
@@ -205,10 +198,10 @@ namespace oly::editor
         {
             DrawHeader();
 
-            _root->Validate();
+            root_->Validate();
 
             std::stack<std::pair<TreeViewNode*, int>> process;
-            process.push(std::make_pair(_root.get(), 0));
+            process.push(std::make_pair(root_.get(), 0));
             int local_file_index = 0;
 
             while (!process.empty())
@@ -229,6 +222,14 @@ namespace oly::editor
                 }
             }
         }
+    }
+
+    TreeViewPanel& TreeViewPanel::Instance()
+    {
+        if (auto panel = MainWindow::Instance().GetPanelManager().Get<TreeViewPanel>())
+            return *panel;
+        else
+            imtk::breakout_error::throw_("No instance of TreeViewPanel");
     }
 
     TreeViewPanel& TreeViewPanel::FocusInstance()
@@ -264,7 +265,7 @@ namespace oly::editor
         }
 
         std::vector<TreeViewNode*> open_nodes;
-        TreeViewNode* node = FocusInstance()._root.get();
+        TreeViewNode* node = FocusInstance().root_.get();
         open_nodes.push_back(node);
         for (const auto& parent : parts)
         {
@@ -294,7 +295,7 @@ namespace oly::editor
 
     bool TreeViewPanel::PassesFilter(TreeViewNode& node) const
     {
-        if (_config.ignore_imports.selected() && node.is_import)
+        if (config_.ignore_imports.selected() && node.is_import)
             return false;
 
         if (node.Name()[0] == '.')
@@ -305,11 +306,16 @@ namespace oly::editor
 
     void TreeViewPanel::DrawHeader()
     {
-        _config.ignore_imports.draw();
+        config_.ignore_imports.draw();
 
         ImGui::SameLine();
-        if (imtk::w::icon_button({ .icon = Icon(IconResource::CollapseAll), .str_id = "##CollapseAll", .tooltip = "Collapse all" }).draw())
-            _root->CollapseAll();
+        if (imtk::w::icon_button({
+            .icon = Icon(IconResource::CollapseAll),
+            .str_id = "##CollapseAll",
+            .tooltip = "Collapse all" }).draw())
+        {
+            root_->CollapseAll();
+        }
 
         ImGui::Separator();
     }
@@ -356,13 +362,21 @@ namespace oly::editor
             imtk::id_scope scope(&node);
             if (node.dropdown_open)
             {
-                if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronDown), .str_id = "##Dropdown-Down" }).draw())
+                if (imtk::w::icon_button({
+                    .icon = Icon(IconResource::ChevronDown),
+                    .str_id = "##Dropdown-Down" }).draw())
+                {
                     node.CloseBranch();
+                }
             }
             else
             {
-                if (imtk::w::icon_button({ .icon = Icon(IconResource::ChevronRight), .str_id = "##Dropdown-Right" }).draw())
+                if (imtk::w::icon_button({
+                    .icon = Icon(IconResource::ChevronRight),
+                    .str_id = "##Dropdown-Right" }).draw())
+                {
                     node.OpenBranch();
+                }
             }
             ImGui::SameLine();
         }

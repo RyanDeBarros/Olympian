@@ -1,11 +1,11 @@
 #pragma once
 
-#include "panels/IPanel.h"
-
 #include "core/SpecialUndoActions.h"
 
-#include "assets/ResourcePath.h"
+#include "panels/IPanel.h"
+
 #include "assets/KeyDecl.h"
+#include "assets/ResourcePath.h"
 
 #include <imtk.hpp>
 
@@ -17,19 +17,9 @@
 
 namespace oly::editor
 {
-    class ContentBrowserPanel : public IPanel
+    class ContentBrowserPanel
+        : public IPanel
     {
-        std::filesystem::path _folder;
-        imtk::w::icon_button _favorited;
-        bool _on_res_root = true;
-        std::vector<std::filesystem::path> _selectable_entry_paths;
-        std::vector<std::filesystem::path> _selected_paths;
-        std::optional<std::filesystem::path> _active_selected_path;
-        imp::timeline_queue<std::filesystem::path> _folder_history;
-        imp::undo_history _undo_history;
-        std::string _rename_buffer;
-        imp::event_listener _listener;
-
         struct NewAssetInfo
         {
             imtk::popup popup;
@@ -39,8 +29,6 @@ namespace oly::editor
             NewAssetInfo(detail::Key type, std::string name, const char* popup_label);
         };
 
-        std::optional<NewAssetInfo> _new_asset;
-
         struct ImportFolderInfo
         {
             imtk::popup popup;
@@ -48,8 +36,6 @@ namespace oly::editor
 
             ImportFolderInfo(std::filesystem::path folder);
         };
-
-        std::optional<ImportFolderInfo> _import_folder;
 
         struct PruneFolderInfo
         {
@@ -59,16 +45,30 @@ namespace oly::editor
             PruneFolderInfo(std::filesystem::path folder);
         };
 
-        std::optional<PruneFolderInfo> _prune_folder;
+    private:
+        std::filesystem::path folder_;
+        imtk::w::icon_button favorited_;
+        bool on_res_root_ = true;
+        std::vector<std::filesystem::path> selectable_entry_paths_;
+        std::vector<std::filesystem::path> selected_paths_;
+        std::optional<std::filesystem::path> active_selected_path_;
+        imp::timeline_queue<std::filesystem::path> folder_history_;
+        imp::undo_history undo_history_;
+        std::string rename_buffer_;
+        imp::event_listener listener_;
+
+        std::optional<NewAssetInfo> _new_asset;
+        std::optional<ImportFolderInfo> _import_folder;
+        std::optional<PruneFolderInfo> prune_folder_;
 
     public:
         ContentBrowserPanel();
-        static ContentBrowserPanel& Instance();
 
         void InitImpl() override;
         const char* GetTitle() const override;
         void Draw() override;
 
+        static ContentBrowserPanel& Instance();
         static ContentBrowserPanel& FocusInstance();
         static void ShowInContentBrowser(const detail::ResourcePath& path);
         static void ShowInContentBrowser(const std::filesystem::path& path);
@@ -89,7 +89,12 @@ namespace oly::editor
 
         struct EntryTableState;
 
-        void DrawPathEntry(const std::filesystem::path& path, bool dotdot, const EntryTableState& entry_table_state, CompoundUndoActionQueue& fio_queue);
+        void DrawPathEntry(
+            const std::filesystem::path& path,
+            bool dotdot,
+            const EntryTableState& entry_table_state,
+            CompoundUndoActionQueue& fio_queue);
+
         ImVec2 FitPathLabel(std::string& label, const float width);
         void OpenPath(const std::filesystem::path& path);
 
@@ -115,7 +120,8 @@ namespace oly::editor
         void DrawPruneFolderPopup(CompoundUndoActionQueue& fio_queue);
     };
 
-    struct ContentBrowserPathDDP : public imtk::drag_droppable
+    struct ContentBrowserPathDDP
+        : public imtk::drag_droppable
     {
         std::string path;
 

@@ -38,18 +38,19 @@ namespace oly::editor
         TreeViewConfig();
     };
 
-    class TreeViewPanel : public IPanel
+    class TreeViewPanel
+        : public IPanel
     {
-        std::unique_ptr<TreeViewNode> _root;
-        TreeViewConfig _config;
+        std::unique_ptr<TreeViewNode> root_;
+        TreeViewConfig config_;
 
     public:
-        static TreeViewPanel& Instance();
-
         void InitImpl() override;
         const char* GetTitle() const override;
         void Draw() override;
 
+    public:
+        static TreeViewPanel& Instance();
         static TreeViewPanel& FocusInstance();
         static void ShowResourceFolderInTreeView(const detail::ResourcePath& folder);
 
@@ -62,7 +63,8 @@ namespace oly::editor
         void DrawRowBg(TreeViewNode& node, int& local_file_index);
     };
 
-    struct TreeViewPathDDP : public imtk::drag_droppable
+    struct TreeViewPathDDP
+        : public imtk::drag_droppable
     {
         std::string path;
 

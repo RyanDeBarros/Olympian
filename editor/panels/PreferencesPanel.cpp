@@ -1,7 +1,9 @@
 #include "PreferencesPanel.h"
 
 #include "core/editor/Editor.h"
+
 #include "core/windows/MainWindow.h"
+
 #include "panels/PanelManager.h"
 
 #include "definitions/Keys.h"
@@ -10,6 +12,12 @@
 
 namespace oly::editor
 {
+    PreferencesPanel::PreferencesPanel()
+        : window_unsaved_changes_modal_("Window", { "Editor preferences" })
+        , shutdown_unsaved_changes_modal_("Shutdown", { "Editor preferences" })
+    {
+    }
+
     PreferencesPanel& PreferencesPanel::Instance()
     {
         if (auto panel = MainWindow::Instance().GetPanelManager().Get<PreferencesPanel>())
@@ -18,15 +26,9 @@ namespace oly::editor
             imtk::breakout_error::throw_("No instance of PreferencesPanel");
     }
 
-    PreferencesPanel::PreferencesPanel()
-        : _window_unsaved_changes_modal("Window", { "Editor preferences" })
-        , _shutdown_unsaved_changes_modal("Shutdown", { "Editor preferences" })
-    {
-    }
-
     void PreferencesPanel::InitImpl()
     {
-        _doc.Init();
+        doc_.Init();
     }
 
     const char* PreferencesPanel::GetTitle() const
@@ -37,41 +39,54 @@ namespace oly::editor
     void PreferencesPanel::Draw()
     {
         ImGuiWindowFlags flags = ImGuiWindowFlags_MenuBar;
-        if (_doc.IsDirty())
+        if (doc_.IsDirty())
             flags |= ImGuiWindowFlags_UnsavedDocument;
 
         auto window = DrawDockedWindow(flags);
-        if (window.RequestsClose() && _doc.IsDirty())
+        if (window.RequestsClose() && doc_.IsDirty())
         {
             Open();
             ImGui::SetWindowFocus();
 
-            _window_unsaved_changes_modal.pop.open();
+            window_unsaved_changes_modal_.pop.open();
         }
 
         if (window.IsVisible())
         {
             if (ImGui::Shortcut(ImGuiMod_Ctrl | ImGuiKey_S, ImGuiInputFlags_RouteGlobal))
-                _doc.DumpAsset();
+                doc_.DumpAsset();
 
             if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl, ImGuiInputFlags_RouteGlobal))
-                _doc.Undo();
+                doc_.Undo();
 
             if (ImGui::Shortcut(ImGuiKey_Z | ImGuiMod_Ctrl | ImGuiMod_Shift, ImGuiInputFlags_RouteGlobal))
-                _doc.Redo();
+                doc_.Redo();
 
-            _doc.DrawMenuBar();
-            _doc.Draw();
+            doc_.DrawMenuBar();
+            doc_.Draw();
         }
 
-        if (DrawUnsavedChangesModal(_window_unsaved_changes_modal))
+        if (DrawUnsavedChangesModal(window_unsaved_changes_modal_))
             Close();
 
-        if (DrawUnsavedChangesModal(_shutdown_unsaved_changes_modal))
+        if (DrawUnsavedChangesModal(shutdown_unsaved_changes_modal_))
         {
             Close();
             Editor::RequestShutdown();
         }
+    }
+
+    bool PreferencesPanel::RequestShutdown()
+    {
+        if (doc_.IsDirty())
+        {
+            Open();
+            GainFocus();
+            shutdown_unsaved_changes_modal_.pop.open();
+            return false;
+        }
+        else
+            return true;
     }
 
     bool PreferencesPanel::DrawUnsavedChangesModal(imtk::unsaved_changes_modal& modal)
@@ -79,24 +94,11 @@ namespace oly::editor
         auto result = modal.draw();
 
         if (result == imtk::unsaved_changes_modal::result::save_changes)
-            _doc.DumpAsset();
+            doc_.DumpAsset();
 
         if (result == imtk::unsaved_changes_modal::result::discard_changes)
-            _doc.LoadAsset();
+            doc_.LoadAsset();
 
         return modal.closing(result);
-    }
-
-    bool PreferencesPanel::RequestShutdown()
-    {
-        if (_doc.IsDirty())
-        {
-            Open();
-            GainFocus();
-            _shutdown_unsaved_changes_modal.pop.open();
-            return false;
-        }
-        else
-            return true;
     }
 }

@@ -1,9 +1,9 @@
 #pragma once
 
+#include <imp/type_erasure.hpp>
+
 #include <memory>
 #include <unordered_map>
-
-#include <imp/type_erasure.hpp>
 
 namespace oly::editor
 {
@@ -11,11 +11,14 @@ namespace oly::editor
 
     class PanelManager
     {
-        std::unordered_map<imp::type_erasure, std::unique_ptr<IPanel>> _panels;
+        std::unordered_map<imp::type_erasure, std::unique_ptr<IPanel>> panels_;
 
     public:
         void Init();
         void Draw();
+
+        IPanel& Add(imp::type_erasure index, std::unique_ptr<IPanel>&& panel);
+        IPanel* Get(imp::type_erasure index);
 
         template<typename T>
         T& Add()
@@ -24,14 +27,10 @@ namespace oly::editor
             return static_cast<T&>(panel);
         }
 
-        IPanel& Add(imp::type_erasure index, std::unique_ptr<IPanel>&& panel);
-
         template<typename T>
         T* Get()
         {
             return static_cast<T*>(Get(imp::erase_type<T>()));
         }
-
-        IPanel* Get(imp::type_erasure index);
     };
 }

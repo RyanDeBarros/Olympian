@@ -10,35 +10,25 @@ namespace oly::editor
 
     class AssetEditorPanel : public IPanel
     {
-        IDocument* _selected_tab = nullptr;
-        IDocument* _focused_tab = nullptr;
-        std::vector<IDocument*> _pending_close;
-        std::unordered_set<IDocument*> _pending_close_set;
-        imtk::unsaved_changes_modal _tab_unsaved_changes_modal;
-        imtk::unsaved_changes_modal _window_unsaved_changes_modal;
-        imtk::unsaved_changes_modal _shutdown_unsaved_changes_modal;
+        IDocument* selected_tab_ = nullptr;
+        IDocument* focused_tab_ = nullptr;
+        std::vector<IDocument*> pending_close_;
+        std::unordered_set<IDocument*> pending_close_set_;
+        imtk::unsaved_changes_modal tab_unsaved_changes_modal_;
+        imtk::unsaved_changes_modal window_unsaved_changes_modal_;
+        imtk::unsaved_changes_modal shutdown_unsaved_changes_modal_;
 
     public:
-        static AssetEditorPanel& Instance();
-
         AssetEditorPanel();
 
+    public:
         void InitImpl() override;
         const char* GetTitle() const override;
         void Draw() override;
 
-    private:
-        void PollShortcuts();
-        void DrawTabBar();
-        void RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents);
-        void DrawTabUnsavedChangesModal(std::vector<size_t>& closed);
-
-        bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& popup);
-        void CloseAllTabs(imtk::popup& popup);
-
-        void DrawDefaultMenuBar();
-
     public:
+        static AssetEditorPanel& Instance();
+
         void OpenFile();
 
         void FocusTab(IDocument* doc);
@@ -51,5 +41,16 @@ namespace oly::editor
         void SelectedTabRedo() const;
 
         bool RequestShutdown();
+
+    private:
+        void PollShortcuts();
+        void DrawTabBar();
+        void RemoveOldPendingDocuments(const std::unordered_set<IDocument*>& seen_documents);
+        void DrawTabUnsavedChangesModal(std::vector<size_t>& closed);
+
+        bool DrawUnsavedChangesModal(imtk::unsaved_changes_modal& popup);
+        void CloseAllTabs(imtk::popup& popup);
+
+        void DrawDefaultMenuBar();
     };
 }
