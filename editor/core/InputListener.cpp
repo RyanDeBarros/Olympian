@@ -253,13 +253,10 @@ namespace oly::editor
         {
         case ImGuiMouseButton_Left:
             return GLFW_MOUSE_BUTTON_LEFT;
-
         case ImGuiMouseButton_Right:
             return GLFW_MOUSE_BUTTON_RIGHT;
-
         case ImGuiMouseButton_Middle:
             return GLFW_MOUSE_BUTTON_MIDDLE;
-
         default:
             return std::nullopt;
         }
@@ -476,7 +473,9 @@ namespace oly::editor
         }
     }
 
-    imtk::item_result InputListener::DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input)
+    imtk::item_result InputListener::DrawMouseButtonListener(
+        ListenMode& mode,
+        std::optional<detail::MouseButton>& input)
     {
         input.reset();
         if (mode == ListenMode::MouseButton)
@@ -553,7 +552,9 @@ namespace oly::editor
         }
     }
 
-    imtk::item_result InputListener::DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input)
+    imtk::item_result InputListener::DrawGamepadAxis2DListener(
+        ListenMode& mode,
+        std::optional<detail::GamepadAxis2D>& input)
     {
         input.reset();
         if (mode == ListenMode::GamepadAxis2D)

@@ -10,7 +10,14 @@ namespace oly::editor
 
         union
         {
-            struct { float x1, x2, y1, y2; };
+            struct
+            {
+                float x1;
+                float x2;
+                float y1;
+                float y2;
+            };
+
             float v[N];
         };
 
@@ -34,7 +41,14 @@ namespace oly::editor
 
         union
         {
-            struct { float x1, x2, y1, y2; };
+            struct
+            {
+                float x1;
+                float x2;
+                float y1;
+                float y2;
+            };
+
             float v[N];
         };
 
@@ -58,7 +72,13 @@ namespace oly::editor
 
         union
         {
-            struct { float left, right, top; };
+            struct
+            {
+                float left;
+                float right;
+                float top;
+            };
+
             float v[N];
         };
 

@@ -38,6 +38,8 @@ namespace oly::editor
         static imtk::item_result DrawMouseButtonListener(ListenMode& mode, std::optional<detail::MouseButton>& input);
         static imtk::item_result DrawGamepadButtonListener(ListenMode& mode, std::optional<GLenum>& input);
         static imtk::item_result DrawGamepadAxis1DListener(ListenMode& mode, std::optional<GLenum>& input);
-        static imtk::item_result DrawGamepadAxis2DListener(ListenMode& mode, std::optional<detail::GamepadAxis2D>& input);
+        static imtk::item_result DrawGamepadAxis2DListener(
+            ListenMode& mode,
+            std::optional<detail::GamepadAxis2D>& input);
     };
 }

@@ -1,15 +1,16 @@
 #include "PathInfo.h"
 
-#include "core/editor/ResourceLoader.h"
-
 #include "core/Macros.h"
 
+#include "core/editor/ResourceLoader.h"
+
 #include "assets/MetaSplitter.h"
+
 #include "definitions/Keys.h"
 
 #ifdef OLY_OS_WINDOWS
-#include <windows.h>
 #include <shlobj.h>
+#include <windows.h>
 #elif OLY_OS_APPLE
 #include <cstdlib>
 #elif OLY_OS_LINUX

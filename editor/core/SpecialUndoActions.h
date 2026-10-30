@@ -5,7 +5,8 @@
 namespace oly::editor
 {
     template<std::derived_from<imp::undo_action> Action>
-    struct ReversedUndoAction : public Action
+    struct ReversedUndoAction
+        : public Action
     {
         bool forward() override
         {
@@ -18,7 +19,8 @@ namespace oly::editor
         }
     };
 
-    struct CompoundUndoAction : public imp::undo_action
+    struct CompoundUndoAction
+        : public imp::undo_action
     {
         std::vector<std::unique_ptr<imp::undo_action>> forward_queue;
 
@@ -31,11 +33,11 @@ namespace oly::editor
     {
         struct Entry
         {
-            std::unique_ptr<imp::undo_action> _action;
-            bool _execute_on_push;
+            std::unique_ptr<imp::undo_action> action;
+            bool execute_on_push;
         };
 
-        std::vector<Entry> _entries;
+        std::vector<Entry> entries_;
 
     public:
         void Append(std::unique_ptr<imp::undo_action>&& action, bool execute_on_push);

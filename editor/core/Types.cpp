@@ -5,12 +5,18 @@
 namespace oly::editor
 {
     Rect::Rect()
-        : x1(0.f), x2(0.f), y1(0.f), y2(0.f)
+        : x1(0.f)
+        , x2(0.f)
+        , y1(0.f)
+        , y2(0.f)
     {
     }
 
     Rect::Rect(float x1, float x2, float y1, float y2)
-        : x1(x1), x2(x2), y1(y1), y2(y2)
+        : x1(x1)
+        , x2(x2)
+        , y1(y1)
+        , y2(y2)
     {
     }
 
@@ -56,12 +62,18 @@ namespace oly::editor
     }
 
     UVRect::UVRect()
-        : x1(0.f), x2(1.f), y1(0.f), y2(1.f)
+        : x1(0.f)
+        , x2(1.f)
+        , y1(0.f)
+        , y2(1.f)
     {
     }
 
     UVRect::UVRect(float x1, float x2, float y1, float y2)
-        : x1(x1), x2(x2), y1(y1), y2(y2)
+        : x1(x1)
+        , x2(x2)
+        , y1(y1)
+        , y2(y2)
     {
     }
 
@@ -103,16 +115,21 @@ namespace oly::editor
 
     std::ostream& operator<<(std::ostream& os, UVRect uv_rect)
     {
-        return os << "UVRect([" << uv_rect.x1 << ", " << uv_rect.y1 << "], [" << uv_rect.x2 << ", " << uv_rect.y2 << "])";
+        return os << "UVRect([" << uv_rect.x1 << ", " << uv_rect.y1 << "],"
+            << " [" << uv_rect.x2 << ", " << uv_rect.y2 << "])";
     }
 
     TopSidePadding::TopSidePadding()
-        : left(0.f), right(0.f), top(0.f)
+        : left(0.f)
+        , right(0.f)
+        , top(0.f)
     {
     }
 
     TopSidePadding::TopSidePadding(float left, float right, float top)
-        : left(left), right(right), top(top)
+        : left(left)
+        , right(right)
+        , top(top)
     {
     }
 
@@ -154,6 +171,7 @@ namespace oly::editor
 
     std::ostream& operator<<(std::ostream& os, TopSidePadding padding)
     {
-        return os << "TopSidePadding(left=" << padding.left << ", right=" << padding.right << ", top=" << padding.top << ")";
+        return os << "TopSidePadding(left=" << padding.left << ", right=" << padding.right
+            << ", top=" << padding.top << ")";
     }
 }
