@@ -24,11 +24,16 @@ namespace oly::editor
         {
             switch (resource)
             {
-#define THROW_MISSING_ICON(Icon) case IconResource::Icon: imtk::breakout_error::throw_("Texture not available for resource: \"" "res/icons/" #Icon ".png\"");
+#define THROW_MISSING_ICON(Icon) case IconResource::Icon: \
+        imtk::breakout_error::throw_("Texture not available for resource: \"" "res/icons/" #Icon ".png\"");
+
                 ICON_RESOURCE_GENERATOR(THROW_MISSING_ICON)
+
 #undef THROW_MISSING_ICON
             default:
-                imtk::breakout_error::throw_("Texture not available for unknown resource: " + std::to_string(static_cast<int>(resource)));
+                // TODO rename to do_throw() in code-style cleanup
+                imtk::breakout_error::throw_(
+                    "Texture not available for unknown resource: " + std::to_string(static_cast<int>(resource)));
             }
         }
     }

@@ -18,7 +18,7 @@ namespace oly::editor
 
     void ProjectInfo::Init(const std::filesystem::path& project_file)
     {
-        _project_file = project_file;
+        project_file_ = project_file;
         oly::detail::ResourcePath::set_resource_root(ResourceRoot());
     }
 
@@ -29,7 +29,7 @@ namespace oly::editor
 
     std::filesystem::path ProjectInfo::ProjectPath() const
     {
-        return _project_file;
+        return project_file_;
     }
 
     std::filesystem::path ProjectInfo::ProjectRoot() const

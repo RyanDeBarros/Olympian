@@ -26,28 +26,27 @@ namespace oly::editor
         Main
     };
 
-    class Editor : public imp::instance_guard<Editor>
+    class Editor
+        : public imp::instance_guard<Editor>
     {
-        std::unique_ptr<imtk::os_window> _os_window;
-        AppState _app_state = AppState::ProjectSelect;
+        std::unique_ptr<imtk::os_window> os_window_;
+        AppState app_state_ = AppState::ProjectSelect;
 
-        std::unique_ptr<ProjectSelectWindow> _project_select_window;
+        std::unique_ptr<ProjectSelectWindow> project_select_window_;
 
-        std::unique_ptr<MainWindow> _main_window;
-        std::unique_ptr<ShortcutManager> _shortcut_manager;
-        std::unique_ptr<ProjectInfo> _project_info;
-        std::unique_ptr<PreferencesDesc> _preferences_desc;
-        std::unique_ptr<LiveSettings> _live_settings;
-        imp::event<> _on_preferences_changed;
+        std::unique_ptr<MainWindow> main_window_;
+        std::unique_ptr<ShortcutManager> shortcut_manager_;
+        std::unique_ptr<ProjectInfo> project_info_;
+        std::unique_ptr<PreferencesDesc> preferences_desc_;
+        std::unique_ptr<LiveSettings> live_settings_;
+        imp::event<> on_preferences_changed_;
 
     public:
         Editor();
         ~Editor();
 
+    public:
         static imp::event<>& OnPreferencesChanged();
-
-        bool ShouldClose() const;
-        void Tick();
 
         static void SetOSWindowSize(int width, int height);
         static void SetOSWindowMaximized(bool maximized);
@@ -69,5 +68,8 @@ namespace oly::editor
         static void OpenFile(const std::filesystem::path& path);
         static bool InitNewAsset(detail::ResourcePath path, detail::Key meta_type);
         static bool ImportAsset(const detail::ResourcePath& source_asset);
+
+        bool ShouldClose() const;
+        void Tick();
     };
 }

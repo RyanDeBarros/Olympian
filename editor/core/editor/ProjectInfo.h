@@ -6,7 +6,7 @@ namespace oly::editor
 {
     class ProjectInfo
     {
-        std::filesystem::path _project_file;
+        std::filesystem::path project_file_;
 
     public:
         static ProjectInfo& Instance();

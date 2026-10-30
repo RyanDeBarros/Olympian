@@ -1,6 +1,7 @@
 #include "ShortcutManager.h"
 
 #include "core/editor/Editor.h"
+
 #include "core/windows/MainWindow.h"
 
 #include "panels/AssetEditorPanel.h"
