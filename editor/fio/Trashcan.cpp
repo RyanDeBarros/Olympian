@@ -1,8 +1,9 @@
 #include "Trashcan.h"
 
+#include "core/PathInfo.h"
+
 #include "core/editor/Editor.h"
 #include "core/editor/ProjectInfo.h"
-#include "core/PathInfo.h"
 
 #include "desc/PreferencesDesc.h"
 
@@ -90,9 +91,9 @@ namespace oly::editor::fio
         struct Entry
         {
 #define ENTRY_GENERATOR(M) \
-		M(trash_path) \
-		M(last_write_time) \
-		M(size)
+        M(trash_path) \
+        M(last_write_time) \
+        M(size)
 
             imtk::field::simple<std::string> trash_path;
             imtk::field::simple<int64_t> last_write_time;
@@ -172,7 +173,10 @@ namespace oly::editor::fio
                 }
             }
 
-            std::sort(entries.descs.begin(), entries.descs.end(), [](const Entry& a, const Entry& b) { return *a.last_write_time < *b.last_write_time; });
+            std::sort(
+                entries.descs.begin(),
+                entries.descs.end(),
+                [](const Entry& a, const Entry& b) { return *a.last_write_time < *b.last_write_time; });
 
             for (auto it = entries.begin(); it != entries.end() && total_size > size_limit; )
             {
@@ -277,8 +281,11 @@ namespace oly::editor::fio
             return false;
 
         resource.create_parents();
-        if ((std::filesystem::is_regular_file(version_path) && resource.is_directory()) || (std::filesystem::is_directory(version_path) && resource.is_file()))
+        if ((std::filesystem::is_regular_file(version_path) && resource.is_directory())
+            || (std::filesystem::is_directory(version_path) && resource.is_file()))
+        {
             return false;
+        }
 
         std::error_code ec;
         std::filesystem::rename(version_path, resource.get_absolute(), ec);

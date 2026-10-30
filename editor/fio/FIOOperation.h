@@ -6,7 +6,8 @@
 
 namespace oly::editor::fio
 {
-    struct RenamePathAction : public imp::undo_action
+    struct RenamePathAction
+        : public imp::undo_action
     {
         std::filesystem::path old_path;
         std::filesystem::path new_path;
@@ -16,12 +17,14 @@ namespace oly::editor::fio
         size_t empirical_size() const override;
     };
 
-    struct DeletePathAction : public imp::undo_action
+    struct DeletePathAction
+        : public imp::undo_action
     {
-        detail::ResourcePath del_path;
-
     private:
-        std::optional<detail::ResourcePath> _aux_path;
+        std::optional<detail::ResourcePath> aux_path_;
+
+    public:
+        detail::ResourcePath del_path;
 
     public:
         bool forward() override;
@@ -29,7 +32,8 @@ namespace oly::editor::fio
         size_t empirical_size() const override;
     };
 
-    struct CreateAssetAction : public imp::undo_action
+    struct CreateAssetAction
+        : public imp::undo_action
     {
         detail::ResourcePath asset_path;
 

@@ -1,8 +1,10 @@
 #include "FIOOperation.h"
 
 #include "core/PathInfo.h"
-#include "fio/Trashcan.h"
+
 #include "documents/DocumentManager.h"
+
+#include "fio/Trashcan.h"
 
 namespace oly::editor::fio
 {
@@ -25,7 +27,8 @@ namespace oly::editor::fio
         std::filesystem::rename(old_path, new_path, ec);
 
         std::stringstream ss;
-        ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << old_path.generic_string() << "\" to \"" << new_path.generic_string() << "\"";
+        ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << old_path.generic_string()
+            << "\" to \"" << new_path.generic_string() << "\"";
 
         if (ec)
         {
@@ -43,7 +46,8 @@ namespace oly::editor::fio
             std::filesystem::rename(aux_old_path->get_absolute(), aux_new_path.get_absolute(), ec);
 
             std::stringstream ss;
-            ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_old_path->string() << "\" to \"" << aux_new_path.string() << "\"";
+            ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_old_path->string()
+                << "\" to \"" << aux_new_path.string() << "\"";
 
             if (ec)
             {
@@ -66,7 +70,8 @@ namespace oly::editor::fio
         std::filesystem::rename(new_path, old_path, ec);
 
         std::stringstream ss;
-        ss << "fio::RenameFile::backward() " << (ec ? "fail" : "success") << ": \"" << new_path.generic_string() << "\" to \"" << old_path.generic_string() << "\"";
+        ss << "fio::RenameFile::backward() " << (ec ? "fail" : "success") << ": \"" << new_path.generic_string()
+            << "\" to \"" << old_path.generic_string() << "\"";
 
         if (ec)
         {
@@ -84,7 +89,8 @@ namespace oly::editor::fio
             std::filesystem::rename(aux_new_path->get_absolute(), aux_old_path.get_absolute(), ec);
 
             std::stringstream ss;
-            ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_new_path->string() << "\" to \"" << aux_old_path.string() << "\"";
+            ss << "fio::RenameFile::forward() " << (ec ? "fail" : "success") << ": \"" << aux_new_path->string()
+                << "\" to \"" << aux_old_path.string() << "\"";
 
             if (ec)
             {
@@ -107,7 +113,7 @@ namespace oly::editor::fio
 
     bool DeletePathAction::forward()
     {
-        _aux_path = GetAuxPath(del_path);
+        aux_path_ = GetAuxPath(del_path);
 
         if (!Trashcan::Delete(del_path))
         {
@@ -121,18 +127,20 @@ namespace oly::editor::fio
         ss << "fio::DeletePathAction::forward() success: deleted \"" << del_path.get_resource_shorthand() << "\"";
         imtk::log_success(ss.str());
 
-        if (_aux_path)
+        if (aux_path_)
         {
-            if (!Trashcan::Delete(*_aux_path))
+            if (!Trashcan::Delete(*aux_path_))
             {
                 std::stringstream ss;
-                ss << "fio::DeletePathAction::forward() failed to delete \"" << _aux_path->get_resource_shorthand() << "\"";
+                ss << "fio::DeletePathAction::forward() failed to delete \""
+                    << aux_path_->get_resource_shorthand() << "\"";
                 imtk::log_error(ss.str());
                 return false;
             }
 
             std::stringstream ss;
-            ss << "fio::DeletePathAction::forward() success: deleted \"" << _aux_path->get_resource_shorthand() << "\"";
+            ss << "fio::DeletePathAction::forward() success: deleted \""
+                << aux_path_->get_resource_shorthand() << "\"";
             imtk::log_success(ss.str());
         }
 
@@ -141,25 +149,28 @@ namespace oly::editor::fio
 
     bool DeletePathAction::backward()
     {
-        if (_aux_path)
+        if (aux_path_)
         {
-            if (!Trashcan::Restore(*_aux_path))
+            if (!Trashcan::Restore(*aux_path_))
             {
                 std::stringstream ss;
-                ss << "fio::DeletePathAction::backward() failed to restore \"" << _aux_path->get_resource_shorthand() << "\"";
+                ss << "fio::DeletePathAction::backward() failed to restore \""
+                    << aux_path_->get_resource_shorthand() << "\"";
                 imtk::log_error(ss.str());
                 return false;
             }
 
             std::stringstream ss;
-            ss << "fio::DeletePathAction::backward() success: restored \"" << _aux_path->get_resource_shorthand() << "\"";
+            ss << "fio::DeletePathAction::backward() success: restored \""
+                << aux_path_->get_resource_shorthand() << "\"";
             imtk::log_success(ss.str());
         }
 
         if (!Trashcan::Restore(del_path))
         {
             std::stringstream ss;
-            ss << "fio::DeletePathAction::backward() failed to restore \"" << del_path.get_resource_shorthand() << "\"";
+            ss << "fio::DeletePathAction::backward() failed to restore \""
+                << del_path.get_resource_shorthand() << "\"";
             imtk::log_error(ss.str());
             return false;
         }
@@ -181,7 +192,8 @@ namespace oly::editor::fio
         if (Trashcan::Restore(asset_path))
         {
             std::stringstream ss;
-            ss << "fio::CreateAssetAction::forward() success: restored \"" << asset_path.get_resource_shorthand() << "\"";
+            ss << "fio::CreateAssetAction::forward() success: restored \""
+                << asset_path.get_resource_shorthand() << "\"";
             imtk::log_success(ss.str());
 
             return true;
@@ -198,7 +210,8 @@ namespace oly::editor::fio
         if (Trashcan::Delete(asset_path))
         {
             std::stringstream ss;
-            ss << "fio::CreateAssetAction::backward() success: deleted \"" << asset_path.get_resource_shorthand() << "\"";
+            ss << "fio::CreateAssetAction::backward() success: deleted \""
+                << asset_path.get_resource_shorthand() << "\"";
             imtk::log_success(ss.str());
 
             return true;
