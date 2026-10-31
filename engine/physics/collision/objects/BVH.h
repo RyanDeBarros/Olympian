@@ -28,7 +28,7 @@ namespace oly::col2d
         {
             Shape operator()(const Element* elements, size_t count) const
             {
-                static_assert(imp::dependent_false_v<Shape>, "oly::col2d::internal::Wrap::operator()() not defined for the provided Shape");
+                static_assert(imp::kDependentFalse<Shape>, "oly::col2d::internal::Wrap::operator()() not defined for the provided Shape");
             }
         };
 

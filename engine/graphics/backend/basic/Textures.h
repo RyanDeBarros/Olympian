@@ -117,7 +117,7 @@ namespace oly::graphics
         template<typename Pixel>
         struct PixelDataType
         {
-            static_assert(imp::dependent_false_v<Pixel>, "Unsupported pixel type");
+            static_assert(imp::kDependentFalse<Pixel>, "Unsupported pixel type");
         };
 
         template<>

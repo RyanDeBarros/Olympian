@@ -73,7 +73,7 @@ namespace oly::input
         template<typename T>
         T get() const
         {
-            static_assert(imp::dependent_false_v<T>, "oly::input::Signal::get<T>() does not support the invoked type");
+            static_assert(imp::kDependentFalse<T>, "oly::input::Signal::get<T>() does not support the invoked type");
         }
 
         template<>

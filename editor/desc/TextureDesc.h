@@ -12,19 +12,19 @@
 namespace oly::editor
 {
 #define SPRITESHEET_PARTIAL_GENERATOR(M) \
-        M((imtk::field::int_fld<0, imp::nullpotential>), col_offset_index) \
-        M((imtk::field::int_fld<0, imp::nullpotential>), col_offset_pixel) \
-        M((imtk::field::int_fld<0, imp::nullpotential>), row_offset_index) \
-        M((imtk::field::int_fld<0, imp::nullpotential>), row_offset_pixel) \
-        M((imtk::field::float_fld<0.f, imp::nullpotential>), delay) \
+        M((imtk::field::int_fld<0, imp::kNullPotential>), col_offset_index) \
+        M((imtk::field::int_fld<0, imp::kNullPotential>), col_offset_pixel) \
+        M((imtk::field::int_fld<0, imp::kNullPotential>), row_offset_index) \
+        M((imtk::field::int_fld<0, imp::kNullPotential>), row_offset_pixel) \
+        M((imtk::field::float_fld<0.f, imp::kNullPotential>), delay) \
         M((imtk::field::bool_fld), row_major) \
         M((imtk::field::bool_fld), row_up)
 
 #define SPRITESHEET_GENERATOR(M) \
         M((imtk::field::enum_fld<detail::SpritesheetParamType>), col_type) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), col_value) \
+        M((imtk::field::int_fld<1, imp::kNullPotential>), col_value) \
         M((imtk::field::enum_fld<detail::SpritesheetParamType>), row_type) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), row_value) \
+        M((imtk::field::int_fld<1, imp::kNullPotential>), row_value) \
         SPRITESHEET_PARTIAL_GENERATOR(M)
 
     struct SpritesheetDesc
@@ -76,7 +76,7 @@ namespace oly::editor
         M((imtk::field::enum_fld<detail::SVGMipmapGenerationMode>), generate_mipmaps) \
         M((imtk::field::enum_fld<detail::StorageMode>), image_storage) \
         M((imtk::field::enum_fld<detail::StorageMode>), abstract_storage) \
-        M((imtk::field::float_fld<0.f, imp::nullpotential>), scale)
+        M((imtk::field::float_fld<0.f, imp::kNullPotential>), scale)
 
 #define VECTOR_TEXTURE_GENERATOR(M) \
         M((BaseTextureDesc), base) \

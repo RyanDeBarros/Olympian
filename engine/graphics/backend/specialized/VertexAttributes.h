@@ -17,7 +17,7 @@ namespace oly::graphics
     template<VertexAttributeType T>
     struct VertexAttribute
     {
-        static_assert(imp::dependent_false_v<T>);
+        static_assert(imp::kDependentFalse<T>);
     };
 
     template<>

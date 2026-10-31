@@ -7,8 +7,8 @@ namespace oly::col2d::internal
 
     struct LUTVariant
     {
-        VariantFn variant[CObj_count];
-        ConstVariantFn const_variant[CObj_count];
+        VariantFn variant[CObj_kCount];
+        ConstVariantFn const_variant[CObj_kCount];
     } lut;
 
     static void load_variant_lut()

@@ -10,7 +10,7 @@ namespace oly
     template<typename T>
     struct Distance
     {
-        static_assert(imp::dependent_false_v<T>, "Distance not implemented for this type");
+        static_assert(imp::kDependentFalse<T>, "Distance not implemented for this type");
     };
 
     template<imp::numeric T>
@@ -34,7 +34,7 @@ namespace oly
     template<typename T>
     struct ToleranceImpl
     {
-        static_assert(imp::dependent_false_v<T>, "Tolerance not implemented for this type");
+        static_assert(imp::kDependentFalse<T>, "Tolerance not implemented for this type");
     };
 
     template<typename T>

@@ -27,25 +27,25 @@ namespace oly::col2d::internal
 
     struct LUT
     {
-        PointHitsFn      point_hits_       [CObj_count];
-        RayHitsFn        ray_hits_         [CObj_count];
-        RaycastFn        raycast_          [CObj_count];
-        OverlapsFn       overlaps_         [CObj_count][CObj_count];
-        CollidesFn       collides_         [CObj_count][CObj_count];
-        ContactsFn       contacts_         [CObj_count][CObj_count];
-        CircleCastHitsFn circle_cast_hits_ [CObj_count];
-        RectCastHitsFn   rect_cast_hits_   [CObj_count];
+        PointHitsFn      point_hits_       [CObj_kCount];
+        RayHitsFn        ray_hits_         [CObj_kCount];
+        RaycastFn        raycast_          [CObj_kCount];
+        OverlapsFn       overlaps_         [CObj_kCount][CObj_kCount];
+        CollidesFn       collides_         [CObj_kCount][CObj_kCount];
+        ContactsFn       contacts_         [CObj_kCount][CObj_kCount];
+        CircleCastHitsFn circle_cast_hits_ [CObj_kCount];
+        RectCastHitsFn   rect_cast_hits_   [CObj_kCount];
 
-        FlushFn        flush_                [CObj_count];
-        IsDirtyFn      is_dirty_             [CObj_count];
-        DebugOverlayFn create_debug_overlay_ [CObj_count];
-        UpdateViewFn   modify_debug_overlay_ [CObj_count];
+        FlushFn        flush_                [CObj_kCount];
+        IsDirtyFn      is_dirty_             [CObj_kCount];
+        DebugOverlayFn create_debug_overlay_ [CObj_kCount];
+        UpdateViewFn   modify_debug_overlay_ [CObj_kCount];
 
-        TransformerFn transformer_ [CObj_count];
-        ConstLayerFn  layer_const_ [CObj_count];
-        LayerFn       layer_       [CObj_count];
-        ConstMaskFn   mask_const_  [CObj_count];
-        MaskFn        mask_        [CObj_count];
+        TransformerFn transformer_ [CObj_kCount];
+        ConstLayerFn  layer_const_ [CObj_kCount];
+        LayerFn       layer_       [CObj_kCount];
+        ConstMaskFn   mask_const_  [CObj_kCount];
+        MaskFn        mask_        [CObj_kCount];
 
 #define OLY_LUT_LIST_TBVH(Macro)\
             Macro(TBVH<AABB>)\

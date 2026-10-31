@@ -100,19 +100,19 @@ namespace oly::editor
             "Mouse passthrough")
         , window_position_x(
             IMTK_DATAPATH_SUBLINK(subpaths.window_position_x),
-            imp::nullpotential,
+            imp::kNullPotential,
             GLFW_ANY_POSITION,
             detail::Key::PositionX,
             "Position (X)")
         , window_position_y(
             IMTK_DATAPATH_SUBLINK(subpaths.window_position_y),
-            imp::nullpotential,
+            imp::kNullPotential,
             GLFW_ANY_POSITION,
             detail::Key::PositionY,
             "Position (Y)")
         , window_refresh_rate(
             IMTK_DATAPATH_SUBLINK(subpaths.window_refresh_rate),
-            imp::nullpotential,
+            imp::kNullPotential,
             GLFW_DONT_CARE,
             detail::Key::RefreshRate,
             "Refresh rate")
@@ -237,13 +237,13 @@ namespace oly::editor
             "Use Console")
         , max_prior_log_files(
             IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_files),
-            imp::nullpotential,
+            imp::kNullPotential,
             detail::Key::MaxPriorLogFiles,
             detail::Key::EnableMaxPriorLogFiles,
             "Max Prior Log Files")
         , max_prior_log_bytes(
             IMTK_DATAPATH_SUBLINK(subpaths.max_prior_log_bytes),
-            imp::nullpotential,
+            imp::kNullPotential,
             detail::Key::MaxPriorLogBytes,
             detail::Key::EnableMaxPriorLogBytes,
             "Max Prior Log Bytes")

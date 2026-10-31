@@ -9,7 +9,7 @@ namespace oly::editor
 {
 #define TILESET_ASSIGNMENT_GENERATOR(M) \
         M((imtk::field::string_fld), texture) \
-        M((imtk::field::int_fld<imp::potential<int>(0), imp::nullpotential>), texture_index) \
+        M((imtk::field::int_fld<imp::potential<int>(0), imp::kNullPotential>), texture_index) \
         M((imtk::field::uv_rect_fld), uvs) \
         M((imtk::field::bitset_fld<detail::TileReflection, detail::kTileReflectionBitsetCount>), reflection) \
         M((imtk::field::enum_fld<detail::TileRotation>), rotation)

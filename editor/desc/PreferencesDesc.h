@@ -7,8 +7,8 @@
 namespace oly::editor
 {
 #define UNDO_HISTORY_SETTINGS_GENERATOR(M) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), count_limit) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), size_limit) \
+        M((imtk::field::int_fld<1, imp::kNullPotential>), count_limit) \
+        M((imtk::field::int_fld<1, imp::kNullPotential>), size_limit) \
         M((imtk::field::enum_fld<MemoryUnit>), size_limit_unit)
 
     struct UndoHistorySettingsDesc
@@ -32,7 +32,7 @@ namespace oly::editor
     };
 
 #define CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR(M) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), folder_history_limit)
+        M((imtk::field::int_fld<1, imp::kNullPotential>), folder_history_limit)
 
 #define CONTENT_BROWSER_SETTINGS_GENERATOR(M) \
         CONTENT_BROWSER_SETTINGS_PARTIAL_GENERATOR(M) \
@@ -46,7 +46,7 @@ namespace oly::editor
     };
 
 #define TREE_VIEW_ADVANCED_SETTINGS_GENERATOR(M) \
-        M((imtk::field::float_fld<0.1f, imp::nullpotential>), analysis_interval)
+        M((imtk::field::float_fld<0.1f, imp::kNullPotential>), analysis_interval)
 
     struct TreeViewAdvancedSettingsDesc
     {
@@ -68,7 +68,7 @@ namespace oly::editor
     };
 
 #define FILESYSTEM_SETTINGS_GENERATOR(M) \
-        M((imtk::field::int_fld<1, imp::nullpotential>), trash_limit) \
+        M((imtk::field::int_fld<1, imp::kNullPotential>), trash_limit) \
         M((imtk::field::enum_fld<MemoryUnit>), trash_limit_unit)
 
     struct FilesystemSettingsDesc

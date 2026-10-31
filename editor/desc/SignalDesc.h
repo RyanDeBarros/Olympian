@@ -13,7 +13,7 @@ namespace oly::editor
 {
 #define MODIFIER_BASE_GENERATOR(M) \
         M((imtk::field::enum_fld<detail::Swizzle>), swizzle) \
-        M((imtk::field::vec3_fld<imp::nullpotential, imp::nullpotential>), multiplier) \
+        M((imtk::field::vec3_fld<imp::kNullPotential, imp::kNullPotential>), multiplier) \
         M((imtk::field::bool_array_fld<3>), invert)
 
     struct ModifierBaseDesc

@@ -127,7 +127,7 @@ namespace oly::col2d
             template<typename T>
             std::optional<T> get(const Collider& c1, const Collider& c2) const
             {
-                static_assert(imp::dependent_false_v<T>, "invoked type not supported");
+                static_assert(imp::kDependentFalse<T>, "invoked type not supported");
             }
 
             template<>

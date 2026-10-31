@@ -19,7 +19,7 @@ namespace oly::col2d::sat
         template<typename Shape1, typename Shape2>
         struct OverlapTest
         {
-            static_assert(imp::dependent_false_v<Shape1>, "OverlapTest not supported for the provided shape combo.");
+            static_assert(imp::kDependentFalse<Shape1>, "OverlapTest not supported for the provided shape combo.");
         };
 
         template<typename Shape1, typename Shape2>
@@ -34,7 +34,7 @@ namespace oly::col2d::sat
         template<typename Shape1, typename Shape2>
         struct CollisionTest
         {
-            static_assert(imp::dependent_false_v<Shape1>, "CollisionTest not supported for the provided shape combo.");
+            static_assert(imp::kDependentFalse<Shape1>, "CollisionTest not supported for the provided shape combo.");
         };
 
         template<typename Shape1, typename Shape2>

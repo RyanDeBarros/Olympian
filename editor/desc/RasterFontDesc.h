@@ -9,11 +9,11 @@ namespace oly::editor
 {
 #define GLYPH_BODY_GENERATOR(M) \
         M((imtk::field::string_fld), texture_file) \
-        M((imtk::field::int_fld<0, imp::nullpotential>), texture_slot) \
+        M((imtk::field::int_fld<0, imp::kNullPotential>), texture_slot) \
         M((imtk::field::rect_fld), location) \
         M((imtk::field::top_side_padding_fld), padding) \
         M((imtk::field::enum_fld<detail::PositioningMode>), origin_offset_mode) \
-        M((imtk::field::vec2_fld<imp::nullpotential, imp::nullpotential>), origin_offset)
+        M((imtk::field::vec2_fld<imp::kNullPotential, imp::kNullPotential>), origin_offset)
 
 #define GLYPH_GENERATOR(M) \
         M((imtk::field::string_fld), codepoint) \
@@ -32,9 +32,9 @@ namespace oly::editor
     };
 
 #define RASTER_FONT_PARTIAL_GENERATOR(M) \
-        M((imtk::field::float_fld<imp::nullpotential, imp::nullpotential>), space_advance_width) \
-        M((imtk::field::float_fld<imp::nullpotential, imp::nullpotential>), line_height) \
-        M((imtk::field::vec2_fld<0.f, imp::nullpotential>), font_scale) \
+        M((imtk::field::float_fld<imp::kNullPotential, imp::kNullPotential>), space_advance_width) \
+        M((imtk::field::float_fld<imp::kNullPotential, imp::kNullPotential>), line_height) \
+        M((imtk::field::vec2_fld<0.f, imp::kNullPotential>), font_scale) \
         M((imtk::field::enum_fld<detail::StorageMode>), storage)
 
 #define RASTER_FONT_GENERATOR(M) \

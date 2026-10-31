@@ -9,7 +9,7 @@ namespace oly::editor
 {
 #define KERNING_GENERATOR(M) \
         M((imtk::field::array_fld<imtk::field::string_fld, 2>), pair) \
-        M((imtk::field::int_fld<imp::nullpotential, imp::nullpotential>), distance)
+        M((imtk::field::int_fld<imp::kNullPotential, imp::kNullPotential>), distance)
 
     struct KerningDesc
     {
@@ -48,7 +48,7 @@ namespace oly::editor
         M((imtk::field::bool_fld), auto_generate_mipmaps)
 
 #define FONT_ATLAS_GENERATOR(M) \
-        M((imtk::field::float_fld<1.f, imp::nullpotential>), font_size) \
+        M((imtk::field::float_fld<1.f, imp::kNullPotential>), font_size) \
         FONT_ATLAS_NONPREVIEW_GENERATOR(M) \
         M((imtk::field::bool_fld), use_common_buffer_preset) \
         M((imtk::field::enum_fld<detail::CommonBufferPreset>), common_buffer_preset) \

@@ -254,7 +254,7 @@ namespace oly
     template<size_t N>
     struct CompoundTransformModifier2D
     {
-        static_assert(imp::dependent_false_v<N>);
+        static_assert(imp::kDependentFalse<N>);
     };
 
     template<>
