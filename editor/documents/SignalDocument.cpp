@@ -1,6 +1,7 @@
 #include "SignalDocument.h"
 
 #include "assets/TranslateKey.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -15,6 +16,7 @@ namespace oly::editor
                 if (!id.empty())
                     return id;
             }
+
             return "<Signal #" + std::to_string(i) + ">";
         };
     }
@@ -29,6 +31,7 @@ namespace oly::editor
                 if (!id.empty())
                     return id;
             }
+
             return "<Route #" + std::to_string(i) + ">";
         };
     }
@@ -55,14 +58,9 @@ namespace oly::editor
 
     SignalDocument::SignalDocument(detail::ResourcePath oly_path)
         : IDocument(std::move(oly_path))
-        , _signal_slots(SignalListConfig(), MakeSignalComboName(_desc))
-        , _route_slots(RouteListConfig(), MakeRouteComboName(_desc))
+        , signal_slots_(SignalListConfig(), MakeSignalComboName(desc_))
+        , route_slots_(RouteListConfig(), MakeRouteComboName(desc_))
     {
-    }
-
-    const char* SignalDocument::GetVersion()
-    {
-        return "1.0";
     }
 
     void SignalDocument::InitImpl()
@@ -77,125 +75,130 @@ namespace oly::editor
     {
         auto pre_draw = PreDraw();
 
-        _signal_id_counter.clear();
-        for (const auto& subdesc : _desc.scratch.signals)
-            _signal_id_counter.increment(subdesc.id.value);
+        signal_id_counter_.clear();
+        for (const auto& subdesc : desc_.scratch.signals)
+            signal_id_counter_.increment(subdesc.id.value);
 
-        _route_id_counter.clear();
-        for (const auto& subdesc : _desc.scratch.routes)
-            _route_id_counter.increment(subdesc.id.value);
+        route_id_counter_.clear();
+        for (const auto& subdesc : desc_.scratch.routes)
+            route_id_counter_.increment(subdesc.id.value);
 
-        _id_counter.clear();
-        _id_counter.accumulate(_signal_id_counter);
-        _id_counter.accumulate(_route_id_counter);
+        id_counter_.clear();
+        id_counter_.accumulate(signal_id_counter_);
+        id_counter_.accumulate(route_id_counter_);
 
-        _stop_listening = true;
+        stop_listening_ = true;
         imtk::id_scope scope(this);
 
         if (auto _ = imtk::tab_bar(""))
         {
             if (auto _ = imtk::tab_item("Signals"))
-                Draw(_desc.scratch.signals);
+                Draw(desc_.scratch.signals);
 
             if (auto _ = imtk::tab_item("Routes"))
-                Draw(_desc.scratch.routes);
+                Draw(desc_.scratch.routes);
         }
 
-        if (_stop_listening)
-            _listen_mode = ListenMode::None;
+        if (stop_listening_)
+            listen_mode_ = ListenMode::None;
     }
 
     void SignalDocument::LoadImpl()
     {
-        if (_oly_path.is_file())
+        if (oly_path_.is_file())
         {
-            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+            meta_ = detail::MetaSplitter::decode_meta(oly_path_);
 
             toml::table table;
-            std::string err = _oly_path.load_toml(table);
+            std::string err = oly_path_.load_toml(table);
             if (err.empty())
-                Load(imtk::toml_node(table), _desc.disk);
+                Load(imtk::toml_node(table), desc_.disk);
             else
-                imtk::notify_error("cannot load signal - corrupted asset: " + _oly_path.string());
+                imtk::notify_error("cannot load signal - corrupted asset: " + oly_path_.string());
 
             MarkClean();
         }
         else
         {
-            Load(imtk::toml_node(), _desc.disk);
+            Load(imtk::toml_node(), desc_.disk);
 
-            _meta = {};
-            _meta.map[detail::Key::Meta_Version] = GetVersion();
-            _meta.map[detail::Key::Meta_Import] = "0";
-            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Signal);
+            meta_ = {};
+            meta_.map[detail::Key::Meta_Version] = GetVersion();
+            meta_.map[detail::Key::Meta_Import] = "0";
+            meta_.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Signal);
 
             MarkDirty();
         }
 
-        _desc.load_from_disk();
-        _signal_slots.model.init(imtk::make_vector_adapter<SignalDesc::Printer>(_desc.scratch.signals));
-        _route_slots.model.init(imtk::make_vector_adapter<RouteDesc::Printer>(_desc.scratch.routes));
+        desc_.load_from_disk();
+        signal_slots_.model.init(imtk::make_vector_adapter<SignalDesc::Printer>(desc_.scratch.signals));
+        route_slots_.model.init(imtk::make_vector_adapter<RouteDesc::Printer>(desc_.scratch.routes));
     }
 
     void SignalDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        _oly_path.dump_toml(table, _meta);
-        _desc.write_to_disk();
+        Dump(table, desc_.scratch);
+        oly_path_.dump_toml(table, meta_);
+        desc_.write_to_disk();
         MarkClean();
     }
 
     void SignalDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& SignalDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
+    }
+
+    const char* SignalDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     void SignalDocument::Draw(imtk::desc::vector<SignalDesc>& desc)
     {
-        _signal_slots.model.sync(imtk::make_vector_adapter<SignalDesc::Printer>(desc));
+        signal_slots_.model.sync(imtk::make_vector_adapter<SignalDesc::Printer>(desc));
 
         if (auto scope = imtk::id_scope("##Signal"))
-            _signal_slots.draw();
+            signal_slots_.draw();
 
         if (auto form = imtk::prop::form())
         {
             if (!desc.empty())
-                Draw(desc[_signal_slots.model.index()]);
+                Draw(desc[signal_slots_.model.index()]);
 
-            if (_signal_slots.model.consume_ops(imtk::make_vector_op_adapter<SignalDesc::Printer>(desc)))
+            if (signal_slots_.model.consume_ops(imtk::make_vector_op_adapter<SignalDesc::Printer>(desc)))
                 MarkDirty();
 
-            _signal_slots.model.consume_index_modified();
+            signal_slots_.model.consume_index_modified();
         }
     }
 
     void SignalDocument::Draw(imtk::desc::vector<RouteDesc>& desc)
     {
-        _route_slots.model.sync(imtk::make_vector_adapter<RouteDesc::Printer>(desc));
+        route_slots_.model.sync(imtk::make_vector_adapter<RouteDesc::Printer>(desc));
 
         if (auto scope = imtk::id_scope("##Route"))
-            _route_slots.draw();
+            route_slots_.draw();
 
         if (auto form = imtk::prop::form())
         {
             if (!desc.empty())
-                Draw(desc[_route_slots.model.index()]);
+                Draw(desc[route_slots_.model.index()]);
 
-            if (_route_slots.model.consume_ops(imtk::make_vector_op_adapter<RouteDesc::Printer>(desc)))
+            if (route_slots_.model.consume_ops(imtk::make_vector_op_adapter<RouteDesc::Printer>(desc)))
                 MarkDirty();
 
-            _route_slots.model.consume_index_modified();
+            route_slots_.model.consume_index_modified();
         }
     }
 
@@ -204,7 +207,7 @@ namespace oly::editor
         if (auto dup_outline = imtk::prop::value_outline())
         {
             desc.id.draw();
-            if (_id_counter.count(desc.id.value) > 1)
+            if (id_counter_.count(desc.id.value) > 1)
             {
                 if (imtk::prop::value::get_draw_result().state.hovered())
                     ImGui::SetTooltip("Duplicate signal/route id");
@@ -226,7 +229,10 @@ namespace oly::editor
                 SignalDesc initial_desc = imtk::desc::clone_data(desc); \
                 initial_desc.binding.value = initial_binding; \
                 desc.variant.set<T##Desc>(); \
-                imtk::desc::push_set_action<SignalDesc, SignalDesc::Printer>(desc.link.compute_path(), std::move(initial_desc), imtk::desc::clone_data(desc)); \
+                imtk::desc::push_set_action<SignalDesc, SignalDesc::Printer>( \
+                    desc.link.compute_path(), \
+                    std::move(initial_desc), \
+                    imtk::desc::clone_data(desc)); \
             } \
             break; \
         }
@@ -241,13 +247,13 @@ namespace oly::editor
 
     void SignalDocument::Draw(RouteDesc& desc)
     {
-        _route_local_signal_id_counter.clear();
-        _route_local_signal_id_counter.accumulate(desc.signals.value);
+        route_local_signal_id_counter_.clear();
+        route_local_signal_id_counter_.accumulate(desc.signals.value);
 
         if (auto dup_outline = imtk::prop::value_outline())
         {
             desc.id.draw();
-            if (_id_counter.count(desc.id.value) > 1)
+            if (id_counter_.count(desc.id.value) > 1)
             {
                 if (imtk::prop::row::get_draw_result().state.hovered())
                     ImGui::SetTooltip("Duplicate signal/route id");
@@ -264,13 +270,13 @@ namespace oly::editor
                 imtk::outline outline;
                 auto result = imtk::w::bound_widget<std::string>(element).draw();
 
-                if (!_signal_id_counter.contains(element))
+                if (!signal_id_counter_.contains(element))
                 {
                     outline.draw(imtk::col::warning);
                     if (result.state.hovered())
                         ImGui::SetTooltip("Signal id is not present in asset");
                 }
-                else if (_route_local_signal_id_counter.count(element) > 1)
+                else if (route_local_signal_id_counter_.count(element) > 1)
                 {
                     outline.draw(imtk::col::warning);
                     if (result.state.hovered())
@@ -284,8 +290,15 @@ namespace oly::editor
             };
         }
 
-        if (auto _ = imtk::prop::vector_row_scope<std::string>(desc.signals.label.c_str(), desc.signals.edit, desc.signals.def, desc.signals.widget.model))
-            imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
+        if (auto _ = imtk::prop::vector_row_scope<std::string>(
+            desc.signals.label.c_str(),
+            desc.signals.edit,
+            desc.signals.def,
+            desc.signals.widget.model))
+        {
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::bound_dynamic_list>(desc.signals.widget, desc.signals.edit.buffer().size()));
+        }
 
         desc.signals.consume_ops();
         desc.signals.check_undo_action();
@@ -296,23 +309,26 @@ namespace oly::editor
         const auto initial = desc.key.index_;
         if (auto row = imtk::prop::make_row_scope(desc.key.label.c_str(), desc.key.index_, desc.key.def_index))
         {
-            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-                _stop_listening = false;
-                std::optional<detail::KeyInput> key;
-                imtk::item_result result = InputListener::DrawKeyListener(_listen_mode, key);
-                ImGui::SameLine();
-                if (key)
-                {
-                    if (*key != desc.key.value())
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                    stop_listening_ = false;
+                    std::optional<detail::KeyInput> key;
+                    imtk::item_result result = InputListener::DrawKeyListener(listen_mode_, key);
+                    ImGui::SameLine();
+                    
+                    if (key)
                     {
-                        desc.key.set_value(*key);
-                        result.modified = true;
+                        if (*key != desc.key.value())
+                        {
+                            desc.key.set_value(*key);
+                            result.modified = true;
+                        }
+                        else
+                            result.modified = false;
                     }
-                    else
-                        result.modified = false;
-                }
-                return result | imtk::w::combo_widget(desc.key.index_, desc.key.names).draw();
-            }));
+
+                    return result | imtk::w::combo_widget(desc.key.index_, desc.key.names).draw();
+                }));
         }
 
         if (initial != desc.key.index_)
@@ -322,12 +338,20 @@ namespace oly::editor
         {
             bool disabled_required_mods[desc.required_mods.count]{};
             for (size_t i = 0; i < desc.required_mods.count; ++i)
-                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+            {
+                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i])
+                    && !(desc.required_mods.value & desc.required_mods.values[i]);
+            }
+
             desc.required_mods.draw(disabled_required_mods);
 
             bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
             for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
-                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            {
+                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i])
+                    && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            }
+
             desc.forbidden_mods.draw(disabled_forbidden_mods);
         }
 
@@ -338,25 +362,31 @@ namespace oly::editor
     void SignalDocument::Draw(MouseButtonDesc& desc)
     {
         const auto initial = desc.button.index_;
-        if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
+        if (auto row = imtk::prop::make_row_scope(
+            desc.button.label.c_str(),
+            desc.button.index_,
+            desc.button.def_index))
         {
-            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-                _stop_listening = false;
-                std::optional<detail::MouseButton> mb;
-                imtk::item_result result = InputListener::DrawMouseButtonListener(_listen_mode, mb);
-                ImGui::SameLine();
-                if (mb)
-                {
-                    if (*mb != desc.button.value())
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                    stop_listening_ = false;
+                    std::optional<detail::MouseButton> mb;
+                    imtk::item_result result = InputListener::DrawMouseButtonListener(listen_mode_, mb);
+                    ImGui::SameLine();
+
+                    if (mb)
                     {
-                        desc.button.set_value(*mb);
-                        result.modified = true;
+                        if (*mb != desc.button.value())
+                        {
+                            desc.button.set_value(*mb);
+                            result.modified = true;
+                        }
+                        else
+                            result.modified = false;
                     }
-                    else
-                        result.modified = false;
-                }
-                return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
-            }));
+
+                    return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
+                }));
         }
 
         if (initial != desc.button.index_)
@@ -366,12 +396,20 @@ namespace oly::editor
         {
             bool disabled_required_mods[desc.required_mods.count]{};
             for (size_t i = 0; i < desc.required_mods.count; ++i)
-                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i]) && !(desc.required_mods.value & desc.required_mods.values[i]);
+            {
+                disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i])
+                    && !(desc.required_mods.value & desc.required_mods.values[i]);
+            }
+
             desc.required_mods.draw(disabled_required_mods);
 
             bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
             for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
-                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i]) && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            {
+                disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i])
+                    && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
+            }
+
             desc.forbidden_mods.draw(disabled_forbidden_mods);
         }
 
@@ -382,25 +420,29 @@ namespace oly::editor
     void SignalDocument::Draw(GamepadButtonDesc& desc)
     {
         const auto initial = desc.button.index_;
-        if (auto row = imtk::prop::make_row_scope(desc.button.label.c_str(), desc.button.index_, desc.button.def_index))
+        if (auto row = imtk::prop::make_row_scope(
+            desc.button.label.c_str(),
+            desc.button.index_,
+            desc.button.def_index))
         {
-            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-                _stop_listening = false;
-                std::optional<GLenum> button;
-                imtk::item_result result = InputListener::DrawGamepadButtonListener(_listen_mode, button);
-                ImGui::SameLine();
-                if (button)
-                {
-                    if (*button != desc.button.value())
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                    stop_listening_ = false;
+                    std::optional<GLenum> button;
+                    imtk::item_result result = InputListener::DrawGamepadButtonListener(listen_mode_, button);
+                    ImGui::SameLine();
+                    if (button)
                     {
-                        desc.button.set_value(*button);
-                        result.modified = true;
+                        if (*button != desc.button.value())
+                        {
+                            desc.button.set_value(*button);
+                            result.modified = true;
+                        }
+                        else
+                            result.modified = false;
                     }
-                    else
-                        result.modified = false;
-                }
-                return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
-            }));
+                    return result | imtk::w::combo_widget(desc.button.index_, desc.button.names).draw();
+                }));
         }
 
         if (initial != desc.button.index_)
@@ -415,23 +457,24 @@ namespace oly::editor
         const auto initial = desc.axis.index_;
         if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), desc.axis.index_, desc.axis.def_index))
         {
-            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
-                _stop_listening = false;
-                std::optional<GLenum> axis;
-                imtk::item_result result = InputListener::DrawGamepadAxis1DListener(_listen_mode, axis);
-                ImGui::SameLine();
-                if (axis)
-                {
-                    if (*axis != desc.axis.value())
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::generic_widget>([this, &desc]() -> imtk::item_result {
+                    stop_listening_ = false;
+                    std::optional<GLenum> axis;
+                    imtk::item_result result = InputListener::DrawGamepadAxis1DListener(listen_mode_, axis);
+                    ImGui::SameLine();
+                    if (axis)
                     {
-                        desc.axis.set_value(*axis);
-                        result.modified = true;
+                        if (*axis != desc.axis.value())
+                        {
+                            desc.axis.set_value(*axis);
+                            result.modified = true;
+                        }
+                        else
+                            result.modified = false;
                     }
-                    else
-                        result.modified = false;
-                }
-                return result | imtk::w::combo_widget(desc.axis.index_, desc.axis.names).draw();
-            }));
+                    return result | imtk::w::combo_widget(desc.axis.index_, desc.axis.names).draw();
+                }));
         }
 
         if (initial != desc.axis.index_)
@@ -450,23 +493,24 @@ namespace oly::editor
 
         if (auto row = imtk::prop::make_row_scope(desc.axis.label.c_str(), int_value, int_default))
         {
-            imtk::prop::value::add_component(std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
-                _stop_listening = false;
-                std::optional<detail::GamepadAxis2D> axis;
-                imtk::item_result result = InputListener::DrawGamepadAxis2DListener(_listen_mode, axis);
-                ImGui::SameLine();
-                if (axis)
-                {
-                    if (static_cast<int>(*axis) != int_value)
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::generic_widget>([this, &desc, &int_value]() -> imtk::item_result {
+                    stop_listening_ = false;
+                    std::optional<detail::GamepadAxis2D> axis;
+                    imtk::item_result result = InputListener::DrawGamepadAxis2DListener(listen_mode_, axis);
+                    ImGui::SameLine();
+                    if (axis)
                     {
-                        int_value = static_cast<int>(*axis);
-                        result.modified = true;
+                        if (static_cast<int>(*axis) != int_value)
+                        {
+                            int_value = static_cast<int>(*axis);
+                            result.modified = true;
+                        }
+                        else
+                            result.modified = false;
                     }
-                    else
-                        result.modified = false;
-                }
-                return result | imtk::w::combo_widget(int_value, desc.axis.combo_names()).draw();
-            }));
+                    return result | imtk::w::combo_widget(int_value, desc.axis.combo_names()).draw();
+                }));
         }
 
         desc.axis.value = static_cast<detail::GamepadAxis2D>(int_value);

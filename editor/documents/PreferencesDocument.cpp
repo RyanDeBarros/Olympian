@@ -9,11 +9,6 @@
 
 namespace oly::editor
 {
-    const char* PreferencesDocument::GetVersion()
-    {
-        return "1.0";
-    }
-
     PreferencesDocument::PreferencesDocument()
         : IDocument(ProjectInfo::Instance().EditorRoot() / "Preferences.toml")
     {
@@ -28,7 +23,7 @@ namespace oly::editor
     {
         auto pre_draw = PreDraw();
 
-        Draw(_desc.scratch);
+        Draw(desc_.scratch);
 
         if (pre_draw.grid.dirty())
             MarkDirty();
@@ -57,7 +52,7 @@ namespace oly::editor
 
     void PreferencesDocument::LoadImpl()
     {
-        std::filesystem::path path = _oly_path.get_absolute();
+        std::filesystem::path path = oly_path_.get_absolute();
         toml::table table;
         if (std::filesystem::is_regular_file(path))
         {
@@ -71,9 +66,9 @@ namespace oly::editor
             }
         }
 
-        Load(imtk::toml_node(table), _desc.disk);
+        Load(imtk::toml_node(table), desc_.disk);
 
-        _desc.load_from_disk();
+        desc_.load_from_disk();
         RevertEditorPreferences();
         MarkClean();
     }
@@ -81,40 +76,45 @@ namespace oly::editor
     void PreferencesDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        std::filesystem::path path = _oly_path.get_absolute();
+        Dump(table, desc_.scratch);
+        std::filesystem::path path = oly_path_.get_absolute();
         std::filesystem::create_directories(path.parent_path());
         std::ofstream file(path);
         file << table;
-        _desc.write_to_disk();
+        desc_.write_to_disk();
         RevertEditorPreferences();
         MarkClean();
     }
 
     void PreferencesDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& PreferencesDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
+    }
+
+    const char* PreferencesDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     void PreferencesDocument::ApplyEditorPreferences()
     {
-        Editor::GetPreferences().copy_data(_desc.scratch);
+        Editor::GetPreferences().copy_data(desc_.scratch);
         ActiveDescChanged();
     }
 
     void PreferencesDocument::RevertEditorPreferences()
     {
-        Editor::GetPreferences().copy_data(_desc.disk);
+        Editor::GetPreferences().copy_data(desc_.disk);
         ActiveDescChanged();
     }
 
@@ -184,10 +184,18 @@ namespace oly::editor
         if (auto subform = imtk::prop::subform("Advanced"))
         {
             imtk::prop::key::set_label("Estimated trash folder size");
-            imtk::prop::value::add_component(std::make_unique<imtk::w::readonly_text_owned>(std::to_string(fio::Trashcan::EstimatedSize()) + " bytes"));
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::readonly_text_owned>(
+                    std::to_string(fio::Trashcan::EstimatedSize()) + " bytes"));
             imtk::prop::row::submit();
 
-            imtk::popup clear_trash_popup("Clear trash folder", imtk::popup_config{ .center_window = imtk::center_window::appearing, .modal = true, .window_flags = ImGuiWindowFlags_AlwaysAutoResize });
+            imtk::popup clear_trash_popup(
+                "Clear trash folder",
+                imtk::popup_config{
+                    .center_window = imtk::center_window::appearing,
+                    .modal = true,
+                    .window_flags = ImGuiWindowFlags_AlwaysAutoResize
+                });
 
             if (auto pause = imtk::prop::form::pause())
             {

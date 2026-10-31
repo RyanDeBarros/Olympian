@@ -1,25 +1,25 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/RasterFontDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
 {
-    class RasterFontDocument : public IDocument
+    class RasterFontDocument
+        : public IDocument
     {
-        imtk::desc::doubler<RasterFontDesc> _desc;
-        detail::MetaMap _meta;
-        imtk::w::owned_list_indexer _glyphs;
-        imp::counter<std::string> _codepoint_counter;
+        imtk::desc::doubler<RasterFontDesc> desc_;
+        detail::MetaMap meta_;
+        imtk::w::owned_list_indexer glyphs_;
+        imp::counter<std::string> codepoint_counter_;
 
     public:
         RasterFontDocument(detail::ResourcePath oly_path);
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -27,6 +27,9 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
 
     private:
         void Draw(RasterFontDesc& desc);

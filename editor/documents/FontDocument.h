@@ -1,8 +1,8 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/FontDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -12,20 +12,24 @@
 
 namespace oly::editor
 {
-    class FontDocument : public IDocument
+    class FontDocument
+        : public IDocument
     {
-        imtk::desc::doubler<FullFontDesc> _desc;
-        detail::MetaMap _meta;
-        imtk::w::owned_list_indexer _atlas_slots;
-        imtk::w::simple_widget<std::string> _display_text;
-        imtk::font_instance _preview_font;
-        imp::counter<std::array<std::string, 2>, imp::stl_hash<imp::cdpt_hash>, imp::stl_equal<imp::cdpt_equal>> _glyph_counter;
+        imtk::desc::doubler<FullFontDesc> desc_;
+        detail::MetaMap meta_;
+        imtk::w::owned_list_indexer atlas_slots_;
+        imtk::w::simple_widget<std::string> display_text_;
+        imtk::font_instance preview_font_;
+        imp::counter<
+            std::array<std::string, 2>,
+            imp::stl_hash<imp::cdpt_hash>,
+            imp::stl_equal<imp::cdpt_equal>
+        > glyph_counter_;
 
     public:
         FontDocument(detail::ResourcePath oly_path);
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -33,6 +37,9 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
 
         detail::ResourcePath GetSourcePath() const;
 

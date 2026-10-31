@@ -1,20 +1,20 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/PreferencesDesc.h"
+
+#include "documents/IDocument.h"
 
 namespace oly::editor
 {
-    class PreferencesDocument : public IDocument
+    class PreferencesDocument
+        : public IDocument
     {
-        imtk::desc::doubler<PreferencesDesc> _desc;
+        imtk::desc::doubler<PreferencesDesc> desc_;
 
     public:
-        static const char* GetVersion();
-
         PreferencesDocument();
 
+    public:
         void InitImpl() override;
         void Draw() override;
         void DrawMenuBar() override;
@@ -23,6 +23,9 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
 
         void ApplyEditorPreferences();
         void RevertEditorPreferences();

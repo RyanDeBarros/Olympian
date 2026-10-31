@@ -10,35 +10,33 @@ namespace oly::editor
 {
     struct imtk::desc::idoubler;
 
-    class IDocument : public imtk::tick_processor, public imtk::data_accessor
+    class IDocument
+        : public imtk::tick_processor
+        , public imtk::data_accessor
     {
     protected:
-        detail::ResourcePath _oly_path;
+        detail::ResourcePath oly_path_;
 
     private:
-        imp::checkpoint_undo_history _undo_history;
-        imp::event_listener _preferences_listener;
-        imp::event_listener _uh_listener;
+        imp::checkpoint_undo_history undo_history_;
+        imp::event_listener preferences_listener_;
+        imp::event_listener uh_listener_;
 
-        bool _dirty = false;
-        bool _initialized = false;
+        bool dirty_ = false;
+        bool initialized_ = false;
 
     public:
         IDocument(detail::ResourcePath oly_path);
         virtual ~IDocument() = default;
 
-        void Init();
+    public:
         virtual void InitImpl() = 0;
         virtual void Draw() = 0;
         virtual void DrawMenuBar();
 
-        void LoadAsset();
         virtual void LoadImpl() = 0;
-        void DumpAsset();
         virtual void DumpImpl() = 0;
-        void ResetAsset();
         virtual void ResetAssetImpl() = 0;
-        bool Exists();
 
         virtual const imtk::desc::idoubler& GetDoubleDescriptor() const = 0;
         virtual imtk::desc::idoubler& GetDoubleDescriptor() = 0;
@@ -46,6 +44,13 @@ namespace oly::editor
         void* resolve(imtk::datapath_view path, imp::type_erasure type) override;
         void describe(std::ostream& os, imtk::datapath_view path) const override;
         void on_last_process_frame() override;
+
+    public:
+        void Init();
+        void LoadAsset();
+        void DumpAsset();
+        void ResetAsset();
+        bool Exists();
 
         const detail::ResourcePath& GetOlyPath() const;
         void Rename(const detail::ResourcePath& new_path);

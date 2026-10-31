@@ -1,19 +1,20 @@
 #include "DocumentManager.h"
 
-#include "documents/IDocument.h"
-
 #include "core/windows/MainWindow.h"
-#include "panels/AssetEditorPanel.h"
 
 #include "documents/FontDocument.h"
 #include "documents/FontFamilyDocument.h"
+#include "documents/IDocument.h"
 #include "documents/ProjectDocument.h"
 #include "documents/RasterFontDocument.h"
 #include "documents/SignalDocument.h"
 #include "documents/TextureDocument.h"
 #include "documents/TilesetDocument.h"
 
+#include "panels/AssetEditorPanel.h"
+
 #include "assets/MetaSplitter.h"
+
 #include "definitions/Keys.h"
 
 #define DOCUMENT_GENERATOR(M) \
@@ -34,7 +35,7 @@ namespace oly::editor
 
     void DocumentManager::Draw()
     {
-        for (const auto& doc : _documents)
+        for (const auto& doc : documents_)
             doc->Draw();
     }
 
@@ -85,7 +86,13 @@ namespace oly::editor
             }
         }
         else if (path.exists() && path.is_file())
-            return ProcessUnimportedAsset(path, [this]<typename T>(ImportableTypeTag<T>, detail::ResourcePath oly_file) { Add<T>(std::move(oly_file)); });
+        {
+            return ProcessUnimportedAsset(
+                path,
+                [this]<typename T>(ImportableTypeTag<T>, detail::ResourcePath oly_file) {
+                    Add<T>(std::move(oly_file));
+                });
+        }
         else
             return OpenAssetCode::DoesNotExist;
 
@@ -93,7 +100,7 @@ namespace oly::editor
     }
 
     template<std::derived_from<IDocument> D>
-    bool InitNewAssetImpl(detail::ResourcePath path)
+    static bool InitNewAssetImpl(detail::ResourcePath path)
     {
         try
         {
@@ -134,11 +141,13 @@ namespace oly::editor
 
         try
         {
-            return ProcessUnimportedAsset(source_asset, []<typename T>(ImportableTypeTag<T>, detail::ResourcePath import_path) {
-                T doc(std::move(import_path));
-                doc.Init();
-                doc.DumpAsset();
-            }) == OpenAssetCode::Success;
+            return ProcessUnimportedAsset(
+                source_asset,
+                []<typename T>(ImportableTypeTag<T>, detail::ResourcePath import_path) {
+                    T doc(std::move(import_path));
+                    doc.Init();
+                    doc.DumpAsset();
+                }) == OpenAssetCode::Success;
         }
         catch (const imtk::breakout_error& e)
         {
@@ -149,49 +158,49 @@ namespace oly::editor
 
     size_t DocumentManager::DocumentCount() const
     {
-        return _documents.size();
+        return documents_.size();
     }
 
     const IDocument& DocumentManager::GetDocument(size_t i) const
     {
-        return *_documents[i];
+        return *documents_[i];
     }
 
     IDocument& DocumentManager::GetDocument(size_t i)
     {
-        return *_documents[i];
+        return *documents_[i];
     }
 
     size_t DocumentManager::GetDocumentIndex(const detail::ResourcePath& oly_path) const
     {
-        for (size_t i = 0; i < _documents.size(); ++i)
+        for (size_t i = 0; i < documents_.size(); ++i)
         {
-            if (_documents[i]->GetOlyPath() == oly_path)
+            if (documents_[i]->GetOlyPath() == oly_path)
                 return i;
         }
 
-        return _documents.size();
+        return documents_.size();
     }
 
     size_t DocumentManager::GetDocumentIndex(const IDocument* doc) const
     {
-        for (size_t i = 0; i < _documents.size(); ++i)
+        for (size_t i = 0; i < documents_.size(); ++i)
         {
-            if (_documents[i].get() == doc)
+            if (documents_[i].get() == doc)
                 return i;
         }
 
-        return _documents.size();
+        return documents_.size();
     }
 
     bool DocumentManager::DocumentExists(const detail::ResourcePath& oly_path) const
     {
-        return GetDocumentIndex(oly_path) < _documents.size();
+        return GetDocumentIndex(oly_path) < documents_.size();
     }
 
     void DocumentManager::NotifyRename(const detail::ResourcePath& old_path, const detail::ResourcePath& new_path)
     {
-        for (auto& doc : _documents)
+        for (auto& doc : documents_)
         {
             if (doc->GetOlyPath() == old_path)
                 doc->Rename(new_path);
@@ -201,23 +210,23 @@ namespace oly::editor
     void DocumentManager::Add(std::unique_ptr<IDocument>&& doc)
     {
         size_t idx = GetDocumentIndex(doc->GetOlyPath());
-        if (idx < _documents.size())
-            AssetEditorPanel::Instance().FocusTab(_documents[idx].get());
+        if (idx < documents_.size())
+            AssetEditorPanel::Instance().FocusTab(documents_[idx].get());
         else
         {
             AssetEditorPanel::Instance().FocusTab(doc.get());
             doc->Init();
-            _documents.push_back(std::move(doc));
+            documents_.push_back(std::move(doc));
         }
     }
 
     void DocumentManager::Remove(IDocument& document)
     {
-        for (auto it = _documents.begin(); it != _documents.end(); ++it)
+        for (auto it = documents_.begin(); it != documents_.end(); ++it)
         {
             if (it->get() == &document)
             {
-                _documents.erase(it);
+                documents_.erase(it);
                 break;
             }
         }
@@ -225,16 +234,16 @@ namespace oly::editor
 
     void DocumentManager::Remove(size_t i)
     {
-        _documents.erase(_documents.begin() + i);
+        documents_.erase(documents_.begin() + i);
     }
 
     void DocumentManager::Remove(const detail::ResourcePath& oly_path)
     {
-        for (auto it = _documents.begin(); it != _documents.end(); ++it)
+        for (auto it = documents_.begin(); it != documents_.end(); ++it)
         {
             if ((*it)->GetOlyPath() == oly_path)
             {
-                _documents.erase(it);
+                documents_.erase(it);
                 break;
             }
         }

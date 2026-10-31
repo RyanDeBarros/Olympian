@@ -1,23 +1,23 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/FontFamilyDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
 {
-    class FontFamilyDocument : public IDocument
+    class FontFamilyDocument
+        : public IDocument
     {
-        imtk::desc::doubler<FontFamilyDesc> _desc;
-        detail::MetaMap _meta;
+        imtk::desc::doubler<FontFamilyDesc> desc_;
+        detail::MetaMap meta_;
 
     public:
         using IDocument::IDocument;
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -25,6 +25,9 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
 
     private:
         void Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style);

@@ -7,11 +7,6 @@
 
 namespace oly::editor
 {
-    const char* FontFamilyDocument::GetVersion()
-    {
-        return "1.0";
-    }
-
     void FontFamilyDocument::InitImpl()
     {
         if (!GetOlyPath().is_resource())
@@ -27,65 +22,70 @@ namespace oly::editor
         imtk::id_scope scope(this);
         if (auto form = imtk::prop::form())
         {
-            Draw(_desc.scratch, "Regular", detail::FontStyleMode::Regular);
-            Draw(_desc.scratch, "Bold", detail::FontStyleMode::Bold);
-            Draw(_desc.scratch, "Italic", detail::FontStyleMode::Italic);
-            Draw(_desc.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
+            Draw(desc_.scratch, "Regular", detail::FontStyleMode::Regular);
+            Draw(desc_.scratch, "Bold", detail::FontStyleMode::Bold);
+            Draw(desc_.scratch, "Italic", detail::FontStyleMode::Italic);
+            Draw(desc_.scratch, "Bold-italic", detail::FontStyleMode::BoldItalic);
         }
     }
 
     void FontFamilyDocument::LoadImpl()
     {
-        if (_oly_path.is_file())
+        if (oly_path_.is_file())
         {
-            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+            meta_ = detail::MetaSplitter::decode_meta(oly_path_);
 
             toml::table table;
-            std::string err = _oly_path.load_toml(table);
+            std::string err = oly_path_.load_toml(table);
             if (err.empty())
-                Load(imtk::toml_node(table), _desc.disk);
+                Load(imtk::toml_node(table), desc_.disk);
             else
-                imtk::notify_error("cannot load font family - corrupted asset: " + _oly_path.string());
+                imtk::notify_error("cannot load font family - corrupted asset: " + oly_path_.string());
 
             MarkClean();
         }
         else
         {
-            Load(imtk::toml_node(), _desc.disk);
+            Load(imtk::toml_node(), desc_.disk);
 
-            _meta = {};
-            _meta.map[detail::Key::Meta_Version] = GetVersion();
-            _meta.map[detail::Key::Meta_Import] = "0";
-            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_FontFamily);
+            meta_ = {};
+            meta_.map[detail::Key::Meta_Version] = GetVersion();
+            meta_.map[detail::Key::Meta_Import] = "0";
+            meta_.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_FontFamily);
 
             MarkDirty();
         }
 
-        _desc.load_from_disk();
+        desc_.load_from_disk();
     }
 
     void FontFamilyDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        _oly_path.dump_toml(table, _meta);
-        _desc.write_to_disk();
+        Dump(table, desc_.scratch);
+        oly_path_.dump_toml(table, meta_);
+        desc_.write_to_disk();
         MarkClean();
     }
 
     void FontFamilyDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& FontFamilyDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& FontFamilyDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
+    }
+
+    const char* FontFamilyDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     void FontFamilyDocument::Draw(FontFamilyDesc& desc, const char* subform_header, detail::FontStyleMode style)

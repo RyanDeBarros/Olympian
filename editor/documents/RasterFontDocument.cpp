@@ -1,6 +1,7 @@
 #include "RasterFontDocument.h"
 
 #include "assets/TranslateKey.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
@@ -27,13 +28,9 @@ namespace oly::editor
     }
 
     RasterFontDocument::RasterFontDocument(detail::ResourcePath oly_path)
-        : IDocument(std::move(oly_path)), _glyphs(GlyphListConfig(), MakeGlyphComboName(_desc))
+        : IDocument(std::move(oly_path))
+        , glyphs_(GlyphListConfig(), MakeGlyphComboName(desc_))
     {
-    }
-
-    const char* RasterFontDocument::GetVersion()
-    {
-        return "1.0";
     }
 
     void RasterFontDocument::InitImpl()
@@ -49,67 +46,72 @@ namespace oly::editor
         auto pre_draw = PreDraw();
 
         imtk::id_scope scope(this);
-        Draw(_desc.scratch);
+        Draw(desc_.scratch);
     }
 
     void RasterFontDocument::LoadImpl()
     {
-        if (_oly_path.is_file())
+        if (oly_path_.is_file())
         {
-            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+            meta_ = detail::MetaSplitter::decode_meta(oly_path_);
 
             toml::table table;
-            std::string err = _oly_path.load_toml(table);
+            std::string err = oly_path_.load_toml(table);
             if (err.empty())
-                Load(imtk::toml_node(table), _desc.disk);
+                Load(imtk::toml_node(table), desc_.disk);
             else
-                imtk::notify_error("cannot load raster font - corrupted asset: " + _oly_path.string());
+                imtk::notify_error("cannot load raster font - corrupted asset: " + oly_path_.string());
 
             MarkClean();
         }
         else
         {
-            Load(imtk::toml_node(), _desc.disk);
+            Load(imtk::toml_node(), desc_.disk);
 
-            _meta = {};
-            _meta.map[detail::Key::Meta_Version] = GetVersion();
-            _meta.map[detail::Key::Meta_Import] = "0";
-            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_RasterFont);
+            meta_ = {};
+            meta_.map[detail::Key::Meta_Version] = GetVersion();
+            meta_.map[detail::Key::Meta_Import] = "0";
+            meta_.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_RasterFont);
 
             MarkDirty();
         }
 
-        _desc.load_from_disk();
+        desc_.load_from_disk();
 
-        _codepoint_counter.clear();
-        for (auto& desc : _desc.scratch.glyphs)
-            _codepoint_counter.increment(desc.codepoint.value);
+        codepoint_counter_.clear();
+        for (auto& desc : desc_.scratch.glyphs)
+            codepoint_counter_.increment(desc.codepoint.value);
 
-        _glyphs.model.init(ListAdapter());
+        glyphs_.model.init(ListAdapter());
     }
 
     void RasterFontDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        _oly_path.dump_toml(table, _meta);
-        _desc.write_to_disk();
+        Dump(table, desc_.scratch);
+        oly_path_.dump_toml(table, meta_);
+        desc_.write_to_disk();
         MarkClean();
     }
 
     void RasterFontDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& RasterFontDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
+    }
+
+    const char* RasterFontDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     void RasterFontDocument::Draw(RasterFontDesc& desc)
@@ -122,22 +124,22 @@ namespace oly::editor
             {
                 if (auto pause = imtk::prop::form::pause())
                 {
-                    _glyphs.model.sync(ListAdapter());
+                    glyphs_.model.sync(ListAdapter());
 
                     if (auto scope = imtk::id_scope("##Glyph"))
-                        _glyphs.draw();
+                        glyphs_.draw();
                 }
 
                 if (imtk::prop::in_form())
                 {
                     if (!desc.glyphs.empty())
-                        Draw(desc.glyphs[_glyphs.model.index()]);
+                        Draw(desc.glyphs[glyphs_.model.index()]);
                 }
 
-                if (_glyphs.model.consume_ops(*ListOpAdapter()))
+                if (glyphs_.model.consume_ops(*ListOpAdapter()))
                     MarkDirty();
 
-                _glyphs.model.consume_index_modified();
+                glyphs_.model.consume_index_modified();
             }
         }
     }
@@ -145,7 +147,7 @@ namespace oly::editor
     void RasterFontDocument::Draw(GlyphDesc& desc)
     {
         const bool empty_codepoint = desc.codepoint.value.empty();
-        const bool duplicate_codepoint = _codepoint_counter.count(desc.codepoint.value) > 1;
+        const bool duplicate_codepoint = codepoint_counter_.count(desc.codepoint.value) > 1;
         std::string previous_codepoint = desc.codepoint.value;
 
         imtk::style_stack style_stack;
@@ -162,8 +164,8 @@ namespace oly::editor
 
         if (imtk::prop::row::dirty())
         {
-            _codepoint_counter.increment(desc.codepoint.value);
-            _codepoint_counter.decrement(previous_codepoint);
+            codepoint_counter_.increment(desc.codepoint.value);
+            codepoint_counter_.decrement(previous_codepoint);
         }
 
 
@@ -217,18 +219,17 @@ namespace oly::editor
     imtk::list_adapter RasterFontDocument::ListAdapter()
     {
         return {
-            .sized = std::make_unique<imtk::vector_sized<GlyphDesc>>(_desc.scratch.glyphs),
+            .sized = std::make_unique<imtk::vector_sized<GlyphDesc>>(desc_.scratch.glyphs),
             .ops = ListOpAdapter()
         };
     }
 
     std::unique_ptr<imtk::ilist_op_adapter> RasterFontDocument::ListOpAdapter()
     {
-        auto callback = imtk::make_counter_callback(_codepoint_counter,
-            [this](size_t i) -> const std::string& { return _desc.scratch.glyphs[i].codepoint.value; });
+        auto callback = imtk::make_counter_callback(codepoint_counter_,
+            [this](size_t i) -> const std::string& { return desc_.scratch.glyphs[i].codepoint.value; });
         return std::make_unique<imtk::list_callback_adapter>(
-            std::make_unique<imtk::vector_op_adapter<GlyphDesc, GlyphDesc::Printer>>(_desc.scratch.glyphs),
-            std::move(callback)
-        );
+            std::make_unique<imtk::vector_op_adapter<GlyphDesc, GlyphDesc::Printer>>(desc_.scratch.glyphs),
+            std::move(callback));
     }
 }

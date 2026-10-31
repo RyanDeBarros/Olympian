@@ -1,8 +1,8 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/TextureDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -28,30 +28,46 @@ namespace oly::editor
 
     struct SpritesheetInfo
     {
-        int rows, cols;
-        float cell_width, cell_height;
-        float full_width, full_height;
+        int rows;
+        int cols;
+        float cell_width;
+        float cell_height;
+        float full_width;
+        float full_height;
         ImVec2 rect_offset;
     };
 
-    class TextureDocument : public IDocument
+    class TextureDocument
+        : public IDocument
     {
-        imtk::desc::doubler<TextureFullDesc> _desc;
-        detail::MetaMap _meta;
-        bool _gif = false;
-        bool _svg = false;
-        imtk::w::owned_list_indexer _slots;
-        imtk::texture _texture;
-        PreviewNav _preview_nav;
+    public:
+        enum class TextureSettingsLoadResult
+        {
+            Success,
+            NotAFile,
+            NotAResource,
+            MissingImport,
+            NotATexture,
+            Corrupted,
+            BadSlot
+        };
 
-        bool _stale_preview_texture = true;
-        SpritesheetPreviewData _spritesheet_preview_data;
+    private:
+        imtk::desc::doubler<TextureFullDesc> desc_;
+        detail::MetaMap meta_;
+        bool gif_ = false;
+        bool svg_ = false;
+        imtk::w::owned_list_indexer slots_;
+        imtk::texture texture_;
+        PreviewNav preview_nav_;
+
+        bool stale_preview_texture_ = true;
+        SpritesheetPreviewData spritesheet_preview_data_;
 
     public:
         TextureDocument(detail::ResourcePath oly_path);
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -59,6 +75,16 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
+        static TextureSettingsLoadResult LoadTextureSettings(
+            const detail::ResourcePath path,
+            int slot,
+            GLenum& min_filter,
+            GLenum& mag_filter,
+            float& scale,
+            bool& generate_mipmaps);
 
         detail::ResourcePath GetSourcePath() const;
 
@@ -76,6 +102,7 @@ namespace oly::editor
         void Draw(BaseTextureDesc& desc);
         void Draw(SpritesheetDesc& desc);
 
+        // TODO can make Load() methods in all document classes 'static', possibly even Draw()/Dump().
         static void Load(imtk::toml_node node, TextureFullDesc& desc, bool svg, bool gif);
         static void Load(imtk::toml_node node, RasterTextureDesc& desc, bool gif);
         static void Load(imtk::toml_node node, VectorTextureDesc& desc, bool gif);
@@ -92,19 +119,5 @@ namespace oly::editor
 
         imtk::list_adapter ListAdapter();
         std::unique_ptr<imtk::ilist_op_adapter> ListOpAdapter();
-
-    public:
-        enum class TextureSettingsLoadResult
-        {
-            Success,
-            NotAFile,
-            NotAResource,
-            MissingImport,
-            NotATexture,
-            Corrupted,
-            BadSlot
-        };
-
-        static TextureSettingsLoadResult LoadTextureSettings(const detail::ResourcePath path, int slot, GLenum& min_filter, GLenum& mag_filter, float& scale, bool& generate_mipmaps);
     };
 }

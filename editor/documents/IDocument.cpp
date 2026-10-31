@@ -9,20 +9,41 @@
 namespace oly::editor
 {
     IDocument::IDocument(detail::ResourcePath oly_path)
-        : imtk::tick_processor(imtk::tick_process_phase::query_dirty), _oly_path(std::move(oly_path)),
-        _undo_history(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit())
+        : imtk::tick_processor(imtk::tick_process_phase::query_dirty)
+        , oly_path_(std::move(oly_path))
+        , undo_history_(
+            Editor::GetPreferences().edit->undo_history->CountLimit(),
+            Editor::GetPreferences().edit->undo_history->SizeLimit())
     {
-        _preferences_listener = Editor::OnPreferencesChanged().subscribe([this]() {
-            _undo_history.set_limits(Editor::GetPreferences().edit->undo_history->CountLimit(), Editor::GetPreferences().edit->undo_history->SizeLimit());
-        });
+        preferences_listener_ = Editor::OnPreferencesChanged().subscribe(
+            [this]() {
+                undo_history_.set_limits(
+                    Editor::GetPreferences().edit->undo_history->CountLimit(),
+                    Editor::GetPreferences().edit->undo_history->SizeLimit());
+            });
 
-        _uh_listener = _undo_history.on_potential_clean.subscribe([this]() { query_dirty(); });
+        uh_listener_ = undo_history_.on_potential_clean.subscribe([this]() { query_dirty(); });
+    }
+
+    void* IDocument::resolve(imtk::datapath_view path, imp::type_erasure type)
+    {
+        return GetDoubleDescriptor().resolve(path, type);
+    }
+
+    void IDocument::describe(std::ostream& os, imtk::datapath_view path) const
+    {
+        GetDoubleDescriptor().describe(os, path);
+    }
+
+    void IDocument::on_last_process_frame()
+    {
+        query_dirty();
     }
 
     void IDocument::Init()
     {
         InitImpl();
-        _initialized = true;
+        initialized_ = true;
     }
 
     void IDocument::DrawMenuBar()
@@ -54,9 +75,9 @@ namespace oly::editor
         if (GetDoubleDescriptor().scratch_undo_action_query(std::move(original), action))
         {
             if (action)
-                _undo_history.push(std::move(action));
+                undo_history_.push(std::move(action));
             else
-                _undo_history.clear();
+                undo_history_.clear();
         }
     }
 
@@ -66,12 +87,12 @@ namespace oly::editor
 
         LoadImpl();
 
-        if (_initialized)
+        if (initialized_)
         {
             if (auto action = GetDoubleDescriptor().scratch_undo_action(std::move(original)))
-                _undo_history.push(std::move(action));
+                undo_history_.push(std::move(action));
             else
-                _undo_history.clear();
+                undo_history_.clear();
         }
     }
 
@@ -83,74 +104,61 @@ namespace oly::editor
 
     bool IDocument::Exists()
     {
-        return _oly_path.exists();
-    }
-
-    void* IDocument::resolve(imtk::datapath_view path, imp::type_erasure type)
-    {
-        return GetDoubleDescriptor().resolve(path, type);
-    }
-
-    void IDocument::describe(std::ostream& os, imtk::datapath_view path) const
-    {
-        GetDoubleDescriptor().describe(os, path);
-    }
-
-    void IDocument::on_last_process_frame()
-    {
-        query_dirty();
+        return oly_path_.exists();
     }
 
     const detail::ResourcePath& IDocument::GetOlyPath() const
     {
-        return _oly_path;
+        return oly_path_;
     }
 
     void IDocument::Rename(const detail::ResourcePath& new_path)
     {
-        _oly_path = new_path;
+        oly_path_ = new_path;
     }
 
     std::string IDocument::TabName() const
     {
-        return _oly_path.tabname();
+        return oly_path_.tabname();
     }
 
     void IDocument::MarkDirty()
     {
-        _dirty = true;
+        dirty_ = true;
     }
 
     void IDocument::MarkClean()
     {
-        _dirty = false;
-        _undo_history.mark_clean();
+        dirty_ = false;
+        undo_history_.mark_clean();
     }
 
     bool IDocument::IsDirty() const
     {
-        return _dirty;
+        return dirty_;
     }
 
     void IDocument::query_dirty()
     {
-        _dirty = GetDoubleDescriptor().query_dirty();
+        dirty_ = GetDoubleDescriptor().query_dirty();
     }
 
     void IDocument::Undo()
     {
         imtk::active_data_accessor active(*this);
-        _undo_history.undo();
+        undo_history_.undo();
     }
 
     void IDocument::Redo()
     {
         imtk::active_data_accessor active(*this);
-        _undo_history.redo();
+        undo_history_.redo();
     }
 
-    IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc) :
-        _doc(doc), _uh(doc._undo_history), _active_instance(doc)
+    IDocument::PreDrawImpl::PreDrawImpl(IDocument& doc)
+        : _doc(doc)
+        , _uh(doc.undo_history_)
+        , _active_instance(doc)
     {
     }
 

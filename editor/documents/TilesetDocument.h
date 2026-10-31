@@ -1,8 +1,8 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/TilesetDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
@@ -18,9 +18,13 @@ namespace oly::editor
     {
         detail::TileConfigGrid subgrid{};
         const auto ActiveCell = [&grid](int x, int y) { return x >= 0 && x < M && y >= 0 && y < N && grid[y][x]; };
+        
         for (int dy = -1; dy <= 1; ++dy)
+        {
             for (int dx = -1; dx <= 1; ++dx)
                 subgrid[static_cast<size_t>(1 + dy)][static_cast<size_t>(1 + dx)] = ActiveCell(x + dx, y + dy);
+        }
+
         return subgrid;
     }
 
@@ -78,7 +82,8 @@ namespace oly::editor
         T5x5
     };
 
-    struct Grid4x4EditorState : public GridEditorStateBase
+    struct Grid4x4EditorState
+        : public GridEditorStateBase
     {
         GroupEditorGrid<3, 3> grid_3x3;
         GroupEditorGrid<3, 1> grid_3x1;
@@ -93,7 +98,8 @@ namespace oly::editor
         size_t Cols() const override;
     };
 
-    struct Grid5x5EditorState : public GridEditorStateBase
+    struct Grid5x5EditorState
+        : public GridEditorStateBase
     {
         GroupEditorGrid<5, 5> grid_5x5;
 
@@ -113,13 +119,9 @@ namespace oly::editor
         GroupEditorType current_type = GroupEditorType::T4x4;
     };
 
-    class TilesetDocument : public IDocument
+    class TilesetDocument
+        : public IDocument
     {
-        imtk::desc::doubler<TilesetDesc> _desc;
-        detail::MetaMap _meta;
-        IndividualEditorState _individual_editor;
-        GroupEditorsState _group_editors;
-
         enum class TextureError
         {
             None,
@@ -140,13 +142,17 @@ namespace oly::editor
             unsigned int current_texture_index = 0;
         };
 
-        std::unordered_map<detail::TileConfig, ActiveTexture> _textures;
+    private:
+        imtk::desc::doubler<TilesetDesc> desc_;
+        detail::MetaMap meta_;
+        IndividualEditorState individual_editor_;
+        GroupEditorsState group_editors_;
+        std::unordered_map<detail::TileConfig, ActiveTexture> textures_;
 
     public:
         using IDocument::IDocument;
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -155,7 +161,13 @@ namespace oly::editor
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
 
+    public:
+        static const char* GetVersion();
+
     private:
+        static bool TextureErrorIsWarning(TilesetDocument::TextureError error);
+        static detail::TileConfig GetResolvedTileConfig(const detail::TileConfigGrid grid);
+
         void DrawGroupEditor();
         void DrawIndividualEditor();
         void DrawToggleCell(ImVec2 rect_start, ImVec2 rect_end, bool& on, const bool available);
@@ -173,11 +185,14 @@ namespace oly::editor
         TilesetAssignmentDesc& GetAssignment(const detail::TileConfig config);
         void UpdateActiveTextures();
 
-        static bool TextureErrorIsWarning(TilesetDocument::TextureError error);
-        void DrawActiveTexture(ImVec2 rect_start, ImVec2 rect_end, const detail::TileConfigGrid grid, unsigned char empty_gray_value);
+        void DrawActiveTexture(
+            ImVec2 rect_start,
+            ImVec2 rect_end,
+            const detail::TileConfigGrid grid,
+            unsigned char empty_gray_value);
+
         void DrawActiveTextureDirect(const detail::TileConfigGrid grid, ImVec2 rect_start, ImVec2 rect_end);
         void TextureErrorTooltip(TextureError error);
         ActiveTexture& GetActiveTexture(const detail::TileConfigGrid grid);
-        static detail::TileConfig GetResolvedTileConfig(const detail::TileConfigGrid grid);
     };
 }

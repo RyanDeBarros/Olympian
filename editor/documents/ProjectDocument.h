@@ -1,24 +1,24 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/ProjectDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "assets/MetaSplitter.h"
 
 namespace oly::editor
 {
-    class ProjectDocument : public IDocument
+    class ProjectDocument
+        : public IDocument
     {
-        imtk::desc::doubler<ProjectDesc> _desc;
-        detail::MetaMap _meta;
+        imtk::desc::doubler<ProjectDesc> desc_;
+        detail::MetaMap meta_;
 
     public:
         using IDocument::IDocument;
         ProjectDocument();
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void DrawMenuBar() override;
@@ -29,6 +29,9 @@ namespace oly::editor
         imtk::desc::idoubler& GetDoubleDescriptor() override;
 
         std::string TabName() const override;
+
+    public:
+        static const char* GetVersion();
 
     private:
         void Draw(ProjectDesc& desc);

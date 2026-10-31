@@ -1,8 +1,8 @@
 #pragma once
 
-#include "documents/IDocument.h"
-
 #include "desc/SignalDesc.h"
+
+#include "documents/IDocument.h"
 
 #include "core/InputListener.h"
 
@@ -12,26 +12,26 @@
 
 namespace oly::editor
 {
-    class SignalDocument : public IDocument
+    class SignalDocument
+        : public IDocument
     {
-        imtk::desc::doubler<SignalFullDesc> _desc;
-        detail::MetaMap _meta;
-        imtk::w::owned_list_indexer _signal_slots;
-        imtk::w::owned_list_indexer _route_slots;
+        imtk::desc::doubler<SignalFullDesc> desc_;
+        detail::MetaMap meta_;
+        imtk::w::owned_list_indexer signal_slots_;
+        imtk::w::owned_list_indexer route_slots_;
 
-        ListenMode _listen_mode = ListenMode::None;
-        bool _stop_listening = true;
+        ListenMode listen_mode_ = ListenMode::None;
+        bool stop_listening_ = true;
 
-        imp::counter<std::string> _signal_id_counter;
-        imp::counter<std::string> _route_id_counter;
-        imp::counter<std::string> _id_counter;
-        imp::counter<std::string> _route_local_signal_id_counter;
+        imp::counter<std::string> signal_id_counter_;
+        imp::counter<std::string> route_id_counter_;
+        imp::counter<std::string> id_counter_;
+        imp::counter<std::string> route_local_signal_id_counter_;
 
     public:
         SignalDocument(detail::ResourcePath oly_path);
 
-        static const char* GetVersion();
-
+    public:
         void InitImpl() override;
         void Draw() override;
         void LoadImpl() override;
@@ -39,6 +39,9 @@ namespace oly::editor
         void ResetAssetImpl() override;
         const imtk::desc::idoubler& GetDoubleDescriptor() const override;
         imtk::desc::idoubler& GetDoubleDescriptor() override;
+
+    public:
+        static const char* GetVersion();
 
     private:
         void Draw(imtk::desc::vector<SignalDesc>& desc);

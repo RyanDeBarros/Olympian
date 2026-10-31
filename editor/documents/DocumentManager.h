@@ -1,10 +1,10 @@
 #pragma once
 
-#include <memory>
-#include <vector>
-
 #include "assets/KeyDecl.h"
 #include "assets/ResourcePath.h"
+
+#include <memory>
+#include <vector>
 
 namespace oly::editor
 {
@@ -21,7 +21,7 @@ namespace oly::editor
 
     class DocumentManager
     {
-        std::vector<std::unique_ptr<IDocument>> _documents;
+        std::vector<std::unique_ptr<IDocument>> documents_;
 
     public:
         static DocumentManager& Instance();

@@ -18,13 +18,9 @@ namespace oly::editor
     }
 
     FontDocument::FontDocument(detail::ResourcePath oly_path)
-        : IDocument(std::move(oly_path)), _atlas_slots(AtlasListConfig(), "Atlas")
+        : IDocument(std::move(oly_path))
+        , atlas_slots_(AtlasListConfig(), "Atlas")
     {
-    }
-
-    const char* FontDocument::GetVersion()
-    {
-        return "1.0";
     }
 
     void FontDocument::InitImpl()
@@ -32,9 +28,9 @@ namespace oly::editor
         if (!GetSourcePath().is_resource())
             imtk::notify_warning("Asset is not located in resource folder");
 
-        _atlas_slots.model.policy = imtk::list_policy::minimum_one;
-        _display_text.value = "Abc 123";
-        _display_text.config().label = "Display text";
+        atlas_slots_.model.policy = imtk::list_policy::minimum_one;
+        display_text_.value = "Abc 123";
+        display_text_.config().label = "Display text";
         LoadAsset();
     }
 
@@ -56,14 +52,14 @@ namespace oly::editor
 
     void FontDocument::LoadImpl()
     {
-        if (_oly_path.is_file())
+        if (oly_path_.is_file())
         {
-            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+            meta_ = detail::MetaSplitter::decode_meta(oly_path_);
 
             toml::table table;
-            std::string err = _oly_path.load_toml(table);
+            std::string err = oly_path_.load_toml(table);
             if (err.empty())
-                Load(imtk::toml_node(table), _desc.disk);
+                Load(imtk::toml_node(table), desc_.disk);
             else
                 imtk::notify_error("cannot load font - corrupted asset: " + GetSourcePath().string());
 
@@ -71,54 +67,59 @@ namespace oly::editor
         }
         else
         {
-            Load(imtk::toml_node(), _desc.disk);
+            Load(imtk::toml_node(), desc_.disk);
 
-            _meta = {};
-            _meta.map[detail::Key::Meta_Version] = GetVersion();
-            _meta.map[detail::Key::Meta_Import] = "1";
-            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Font);
+            meta_ = {};
+            meta_.map[detail::Key::Meta_Version] = GetVersion();
+            meta_.map[detail::Key::Meta_Import] = "1";
+            meta_.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Font);
 
             MarkDirty();
         }
 
-        _desc.load_from_disk();
+        desc_.load_from_disk();
 
-        _atlas_slots.model.init(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
+        atlas_slots_.model.init(imtk::make_vector_adapter<FontAtlasDesc::Printer>(desc_.scratch.font_atlases));
     }
 
     void FontDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        _oly_path.dump_toml(table, _meta);
-        _desc.write_to_disk();
+        Dump(table, desc_.scratch);
+        oly_path_.dump_toml(table, meta_);
+        desc_.write_to_disk();
         MarkClean();
     }
 
     void FontDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& FontDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& FontDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
+    }
+
+    const char* FontDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     detail::ResourcePath FontDocument::GetSourcePath() const
     {
-        return _oly_path.get_source_path();
+        return oly_path_.get_source_path();
     }
 
     void FontDocument::DrawFontFace()
     {
         if (auto form = imtk::prop::form())
-            Draw(*_desc.scratch.font_face);
+            Draw(*desc_.scratch.font_face);
     }
 
     void FontDocument::DrawFontAtlases()
@@ -127,20 +128,23 @@ namespace oly::editor
         {
             ImGui::TableNextColumn();
 
-            _atlas_slots.model.sync(imtk::make_vector_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases));
+            atlas_slots_.model.sync(imtk::make_vector_adapter<FontAtlasDesc::Printer>(desc_.scratch.font_atlases));
             if (auto scope = imtk::id_scope("##Atlas"))
-                _atlas_slots.draw();
+                atlas_slots_.draw();
 
             if (auto form = imtk::prop::form())
             {
-                if (!_desc.scratch.font_atlases.empty())
-                    Draw(_desc.scratch.font_atlases[_atlas_slots.model.index()]);
+                if (!desc_.scratch.font_atlases.empty())
+                    Draw(desc_.scratch.font_atlases[atlas_slots_.model.index()]);
 
-                if (_atlas_slots.model.consume_ops(imtk::make_vector_op_adapter<FontAtlasDesc::Printer>(_desc.scratch.font_atlases)))
+                if (atlas_slots_.model.consume_ops(
+                    imtk::make_vector_op_adapter<FontAtlasDesc::Printer>(desc_.scratch.font_atlases)))
+                {
                     MarkDirty();
+                }
 
-                if (_atlas_slots.model.consume_index_modified())
-                    _preview_font.reset();
+                if (atlas_slots_.model.consume_index_modified())
+                    preview_font_.reset();
             }
 
             ImGui::TableNextColumn();
@@ -155,13 +159,17 @@ namespace oly::editor
             ImGui::TextUnformatted("Preview");
             ImGui::Separator();
 
-            _display_text.draw();
+            display_text_.draw();
 
-            if (!_preview_font)
-                _preview_font = imtk::font_instance(GetSourcePath().string().c_str(), _desc.scratch.font_atlases[_atlas_slots.model.index()].font_size.value);
+            if (!preview_font_)
+            {
+                preview_font_ = imtk::font_instance(
+                    GetSourcePath().string().c_str(),
+                    desc_.scratch.font_atlases[atlas_slots_.model.index()].font_size.value);
+            }
 
-            if (auto _ = imtk::font_scope(_preview_font))
-                ImGui::TextUnformatted(_display_text.value.c_str());
+            if (auto _ = imtk::font_scope(preview_font_))
+                ImGui::TextUnformatted(display_text_.value.c_str());
         }
     }
 
@@ -169,9 +177,9 @@ namespace oly::editor
     {
         desc.storage.draw();
 
-        _glyph_counter.clear();
+        glyph_counter_.clear();
         for (auto& k : desc.kerning)
-            _glyph_counter.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
+            glyph_counter_.increment({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() });
 
         if (!desc.kerning_widget.body.row_draw)
         {
@@ -179,46 +187,50 @@ namespace oly::editor
                 imtk::w::widget_row components;
                 auto& k = desc.kerning[row.index()];
 
-                bool dup_warning = _glyph_counter.count({ k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
+                bool dup_warning = glyph_counter_.count(
+                    { k.pair.fields[0].edit.buffer(), k.pair.fields[1].edit.buffer() }) > 1;
+
                 imtk::outline dup_outline;
                 for (size_t i = 0; i < 2; ++i)
                 {
-                    components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
-                        bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
-                        if (bad_codepoint)
-                            dup_warning = false;
+                    components.subwidgets.push_back(
+                        std::make_unique<imtk::w::generic_widget>(
+                            [&k, i, &dup_warning, &dup_outline]() -> imtk::item_result {
+                                bool bad_codepoint = !imp::stocdpt(k.pair.fields[i].edit.buffer()).has_value();
+                                if (bad_codepoint)
+                                    dup_warning = false;
 
-                        imtk::item_result result;
+                                imtk::item_result result;
 
-                        if (i == 0)
-                        {
-                            ImGui::TextUnformatted(k.pair.label.c_str());
-                            result |= imtk::item_result::query(false);
-                            ImGui::SameLine();
-                        }
+                                if (i == 0)
+                                {
+                                    ImGui::TextUnformatted(k.pair.label.c_str());
+                                    result |= imtk::item_result::query(false);
+                                    ImGui::SameLine();
+                                }
 
-                        imtk::outline bad_outline;
-                        result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer()).draw();
+                                imtk::outline bad_outline;
+                                result |= imtk::w::bound_widget<std::string>(k.pair.fields[i].edit.buffer()).draw();
 
-                        if (dup_warning && result.state.hovered())
-                            ImGui::SetTooltip("Duplicate codepoint pair");
+                                if (dup_warning && result.state.hovered())
+                                    ImGui::SetTooltip("Duplicate codepoint pair");
 
-                        if (bad_codepoint)
-                        {
-                            if (result.state.hovered())
-                                ImGui::SetTooltip("Bad codepoint format");
+                                if (bad_codepoint)
+                                {
+                                    if (result.state.hovered())
+                                        ImGui::SetTooltip("Bad codepoint format");
 
-                            bad_outline.draw(imtk::col::error);
-                        }
+                                    bad_outline.draw(imtk::col::error);
+                                }
 
-                        if (i == 1)
-                        {
-                            if (dup_warning)
-                                dup_outline.draw(imtk::col::error);
-                        }
+                                if (i == 1)
+                                {
+                                    if (dup_warning)
+                                        dup_outline.draw(imtk::col::error);
+                                }
 
-                        return result;
-                    }));
+                                return result;
+                            }));
                 }
 
                 components.subwidgets.push_back(std::make_unique<imtk::w::generic_widget>([&k]() -> imtk::item_result {
@@ -239,13 +251,20 @@ namespace oly::editor
         }
 
         std::vector<std::unique_ptr<imtk::prop::iresettable>> resetters;
-        resetters.push_back(std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(desc.kerning_widget.model, desc.kerning, 0));
+        resetters.push_back(
+            std::make_unique<imtk::prop::resettable_vector_size<KerningDesc>>(
+                desc.kerning_widget.model,
+                desc.kerning,
+                0));
 
         for (auto& k : desc.kerning)
             resetters.push_back(k.make_resetter());
 
         if (auto _ = imtk::prop::multi_row_scope("Kerning", std::move(resetters)))
-            imtk::prop::value::add_component(std::make_unique<imtk::w::bound_dynamic_list>(desc.kerning_widget, desc.kerning.size()));
+        {
+            imtk::prop::value::add_component(
+                std::make_unique<imtk::w::bound_dynamic_list>(desc.kerning_widget, desc.kerning.size()));
+        }
 
         desc.kerning.consume_ops(desc.kerning_widget.model);
 
@@ -257,7 +276,7 @@ namespace oly::editor
     {
         desc.font_size.draw();
         if (imtk::prop::row::dirty())
-            _preview_font.reset();
+            preview_font_.reset();
 
         IMTK_DRAW_FIELDS(FONT_ATLAS_NONPREVIEW_GENERATOR);
 
@@ -271,7 +290,9 @@ namespace oly::editor
                 desc.common_buffer_preset.draw();
                 if (auto scope = imtk::id_scope(&desc.common_buffer_preset))
                 {
-                    imtk::prop::value::add_component(std::make_unique<imtk::w::readonly_text_owned>(detail::buffer_of(desc.common_buffer_preset.value)));
+                    imtk::prop::value::add_component(
+                        std::make_unique<imtk::w::readonly_text_owned>(
+                            detail::buffer_of(desc.common_buffer_preset.value)));
                     imtk::prop::row::submit();
                 }
             }

@@ -3,15 +3,11 @@
 #include "core/editor/ProjectInfo.h"
 
 #include "assets/TranslateKey.h"
+
 #include "definitions/Keys.h"
 
 namespace oly::editor
 {
-    const char* ProjectDocument::GetVersion()
-    {
-        return "1.0";
-    }
-
     ProjectDocument::ProjectDocument()
         : IDocument(ProjectInfo::Instance().ProjectPath())
     {
@@ -27,7 +23,7 @@ namespace oly::editor
         auto pre_draw = PreDraw();
 
         imtk::id_scope scope(this);
-        Draw(_desc.scratch);
+        Draw(desc_.scratch);
     }
 
     void ProjectDocument::DrawMenuBar()
@@ -50,14 +46,14 @@ namespace oly::editor
 
     void ProjectDocument::LoadImpl()
     {
-        if (_oly_path.is_file())
+        if (oly_path_.is_file())
         {
-            _meta = detail::MetaSplitter::decode_meta(_oly_path);
+            meta_ = detail::MetaSplitter::decode_meta(oly_path_);
 
             toml::table table;
-            std::string err = _oly_path.load_toml(table);
+            std::string err = oly_path_.load_toml(table);
             if (err.empty())
-                Load(imtk::toml_node(table), _desc.disk);
+                Load(imtk::toml_node(table), desc_.disk);
             else
                 imtk::notify_error("cannot load project file - corrupted asset: " + GetOlyPath().string());
 
@@ -65,45 +61,50 @@ namespace oly::editor
         }
         else
         {
-            Load(imtk::toml_node(), _desc.disk);
+            Load(imtk::toml_node(), desc_.disk);
 
-            _meta = {};
-            _meta.map[detail::Key::Meta_Version] = GetVersion();
-            _meta.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Project);
+            meta_ = {};
+            meta_.map[detail::Key::Meta_Version] = GetVersion();
+            meta_.map[detail::Key::Meta_Type] = detail::encode_key(detail::Key::Meta_Project);
 
             MarkDirty();
         }
 
-        _desc.load_from_disk();
+        desc_.load_from_disk();
     }
 
     void ProjectDocument::DumpImpl()
     {
         toml::table table;
-        Dump(table, _desc.scratch);
-        _oly_path.dump_toml(table, _meta);
-        _desc.write_to_disk();
+        Dump(table, desc_.scratch);
+        oly_path_.dump_toml(table, meta_);
+        desc_.write_to_disk();
         MarkClean();
     }
 
     void ProjectDocument::ResetAssetImpl()
     {
-        Load(imtk::toml_node(), _desc.scratch);
+        Load(imtk::toml_node(), desc_.scratch);
     }
 
     const imtk::desc::idoubler& ProjectDocument::GetDoubleDescriptor() const
     {
-        return _desc;
+        return desc_;
     }
 
     imtk::desc::idoubler& ProjectDocument::GetDoubleDescriptor()
     {
-        return _desc;
+        return desc_;
     }
 
     std::string ProjectDocument::TabName() const
     {
         return ProjectInfo::Instance().ProjectName();
+    }
+
+    const char* ProjectDocument::GetVersion()
+    {
+        return "1.0";
     }
 
     void ProjectDocument::Draw(ProjectDesc& desc)
