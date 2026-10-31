@@ -95,7 +95,9 @@ namespace oly::editor
     };
 
 #define TEXTURE_VARIANT_GENERATOR(M) \
-        M((imtk::desc::subvariant<imtk::desc::vector<RasterTextureDesc>, imtk::desc::vector<VectorTextureDesc>>), variant)
+        M((imtk::desc::subvariant< \
+            imtk::desc::vector<RasterTextureDesc>, \
+            imtk::desc::vector<VectorTextureDesc>>), variant)
 
     struct TextureFullDesc
     {

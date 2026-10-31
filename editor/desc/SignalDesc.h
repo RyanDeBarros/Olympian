@@ -182,7 +182,14 @@ namespace oly::editor
 
 #define SIGNAL_GENERATOR(M) \
         SIGNAL_PARTIAL_GENERATOR(M) \
-        M((imtk::desc::variant<KeyDesc, MouseButtonDesc, GamepadButtonDesc, GamepadAxis1DDesc, GamepadAxis2DDesc, CursorPosDesc, ScrollDesc>), variant)
+        M((imtk::desc::variant< \
+            KeyDesc, \
+            MouseButtonDesc, \
+            GamepadButtonDesc, \
+            GamepadAxis1DDesc, \
+            GamepadAxis2DDesc, \
+            CursorPosDesc, \
+            ScrollDesc>), variant)
 
     struct SignalDesc
     {
