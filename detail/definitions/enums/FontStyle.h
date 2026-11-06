@@ -2,8 +2,7 @@
 
 namespace oly::detail
 {
-    enum FontStyleMode
-        : unsigned int
+    enum FontStyleMode : unsigned int
     {
         Regular = 0,
         Bold = 1 << 0,

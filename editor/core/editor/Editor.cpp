@@ -38,8 +38,8 @@ namespace oly::editor
         imtk::post_window_init(
             {
                 .reset_icon = Icon(IconResource::Revert),
-                .key_encoder = [](imtk::key key) -> std::string { return detail::encode_key(key); },
-                .key_decoder = [](std::string_view key) -> imtk::key { return detail::decode_key(key); },
+                .pkey_encoder = [](imtk::pkey key) -> std::string { return detail::encode_key(key); },
+                .pkey_decoder = [](std::string_view key) -> imtk::pkey { return detail::decode_key(key); },
                 .dynamic_lists = {
                     .drag_icon = Icon(IconResource::Handle),
                     .create_icon = Icon(IconResource::Plus),

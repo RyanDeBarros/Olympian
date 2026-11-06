@@ -336,8 +336,8 @@ namespace oly::editor
 
         if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
         {
-            bool disabled_required_mods[desc.required_mods.count]{};
-            for (size_t i = 0; i < desc.required_mods.count; ++i)
+            bool disabled_required_mods[desc.required_mods.kCount]{};
+            for (size_t i = 0; i < desc.required_mods.kCount; ++i)
             {
                 disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i])
                     && !(desc.required_mods.value & desc.required_mods.values[i]);
@@ -345,8 +345,8 @@ namespace oly::editor
 
             desc.required_mods.draw(disabled_required_mods);
 
-            bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
-            for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
+            bool disabled_forbidden_mods[desc.forbidden_mods.kCount]{};
+            for (size_t i = 0; i < desc.forbidden_mods.kCount; ++i)
             {
                 disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i])
                     && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);
@@ -394,8 +394,8 @@ namespace oly::editor
 
         if (auto subform = imtk::prop::subform("Keyboard Mods", { .start_open = true }))
         {
-            bool disabled_required_mods[desc.required_mods.count]{};
-            for (size_t i = 0; i < desc.required_mods.count; ++i)
+            bool disabled_required_mods[desc.required_mods.kCount]{};
+            for (size_t i = 0; i < desc.required_mods.kCount; ++i)
             {
                 disabled_required_mods[i] = (desc.forbidden_mods.value & desc.forbidden_mods.values[i])
                     && !(desc.required_mods.value & desc.required_mods.values[i]);
@@ -403,8 +403,8 @@ namespace oly::editor
 
             desc.required_mods.draw(disabled_required_mods);
 
-            bool disabled_forbidden_mods[desc.forbidden_mods.count]{};
-            for (size_t i = 0; i < desc.forbidden_mods.count; ++i)
+            bool disabled_forbidden_mods[desc.forbidden_mods.kCount]{};
+            for (size_t i = 0; i < desc.forbidden_mods.kCount; ++i)
             {
                 disabled_forbidden_mods[i] = (desc.required_mods.value & desc.required_mods.values[i])
                     && !(desc.forbidden_mods.value & desc.forbidden_mods.values[i]);

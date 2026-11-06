@@ -42,8 +42,7 @@ namespace oly::editor
 
 #define ICON_RESOURCE_ENUM(Icon) Icon,
 
-    enum class IconResource
-        : int
+    enum class IconResource : int
     {
         ICON_RESOURCE_GENERATOR(ICON_RESOURCE_ENUM)
     };

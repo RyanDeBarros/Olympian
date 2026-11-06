@@ -8,8 +8,7 @@
 
 namespace oly::editor
 {
-    enum class IconResource
-        : int;
+    enum class IconResource : int;
 
     struct PathInfo
     {

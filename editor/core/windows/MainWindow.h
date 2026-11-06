@@ -9,8 +9,7 @@ namespace oly::editor
 
     class MainMenuBar;
 
-    enum class LogLevel
-        : int;
+    enum class LogLevel : int;
 
     class MainWindow
     {
